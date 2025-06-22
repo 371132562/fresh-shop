@@ -1,0 +1,28 @@
+{
+  "name": "fresh-shop",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/371132562/fresh-shop.git"
+  },
+  "author": "lin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/371132562/fresh-shop/issues"
+  },
+  "homepage": "https://github.com/371132562/fresh-shop#readme",
+  "description": "",
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "@types/node": "^22.15.2",
+    "eslint": "^9.29.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.5.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.4.2",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.34.1"
+  }
+}
