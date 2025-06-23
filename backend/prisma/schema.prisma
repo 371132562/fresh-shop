@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Supplier {
+  // 供货商
+  id          String   @id @default(uuid()) // 主键ID（UUID）
+  name        String // 供货商名称（必填）
+  phone       Int? // 联系电话（可选）
+  wechat      String? // 微信账号（可选）
+  description String? // 供货商描述（可选）
+  rating      String? // 供货商评价（可选）
+  createdAt   DateTime @default(now()) // 创建时间
+  updatedAt   DateTime @updatedAt // 最后更新时间
+}
+
+model ProductType {
+  // 商品类型
+  id          String    @id @default(uuid()) // 主键ID（UUID）
+  name        String // 分类名称（必填）
+  description String? // 分类描述（可选）
+  createdAt   DateTime  @default(now()) // 创建时间
+  updatedAt   DateTime  @updatedAt // 最后更新时间
+  Product     Product[]
+}
+
+model Product {
+  // 商品
+  id            String      @id @default(uuid()) // 主键ID（UUID）
+  name          String // 商品名称（必填）
+  description   String? // 商品描述（可选）
+  productType   ProductType @relation(fields: [productTypeId], references: [id])
+  productTypeId String
+  createdAt     DateTime    @default(now()) // 创建时间
+  updatedAt     DateTime    @updatedAt // 最后更新时间
+}
+
+model Customer {
+  // 客户
+  id          String   @id @default(uuid()) // 主键ID（UUID）
+  name        String // 客户姓名（必填）
+  phone       Int? // 联系电话（可选）
+  wechat      String? // 微信账号（可选）
+  address     String? // 地址信息（可选）
+  description String? // 客户描述（可选）
+  createdAt   DateTime @default(now()) // 创建时间
+  updatedAt   DateTime @updatedAt // 最后更新时间
+  orders      Order[]
+}
+
+model GroupBuy {
+  // 团购单
+  id          String   @id @default(uuid()) // 主键ID（UUID）
+  name        String // 团购名称（必填）
+  description String? // 团购描述（可选）
+  price       Int // 售价（必填）
+  costPrice   Int // 成本价（必填）
+  createdAt   DateTime @default(now()) // 创建时间
+  updatedAt   DateTime @updatedAt // 最后更新时间
+  Order       Order[]
+}
+
+// 订单类型枚举
+enum OrderType {
+  SINGLE
+  GROUP
+}
+
+// 修改订单模型
+model Order {
+  id         String    @id @default(uuid())
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id])
+  number     Int
+  status     String
+  orderType  OrderType
+  groupBuyId String?
+  groupBuy   GroupBuy? @relation(fields: [groupBuyId], references: [id])
+  supplierId String?
+  price      Decimal?
+  costPrice  Decimal?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}

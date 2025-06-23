@@ -12,5 +12,7 @@ export default {
   htmlWhitespaceSensitivity: 'strict', // 处理HTML中的空白字符的方式，css表示类似CSS的处理
   endOfLine: 'lf', // 文件结尾的行尾符，lf表示Unix风格的换行符
   jsxBracketSameLine: false,
-  vueIndentScriptAndStyle: true
+  vueIndentScriptAndStyle: true,
+  plugins: ["prettier-plugin-tailwindcss"],
+  tailwindStylesheet: "./frontend/src/index.css"
 }
