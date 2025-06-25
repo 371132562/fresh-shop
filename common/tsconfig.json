@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "paths": {
+      // 关键！直接将 fresh-shop-common 内的任何子路径映射到其源文件路径
+      "fresh-shop-backend/*": ["../backend/*"]
+    },
+  }
+}

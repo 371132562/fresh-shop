@@ -1,0 +1,12 @@
+{
+  "name": "fresh-shop-common",
+  "version": "1.0.0",
+  "type": "module",
+  "author": "lin",
+  "exports": {
+    ".": "./*"
+  },
+  "dependencies": {
+    "fresh-shop-backend": "workspace:^"
+  }
+}
