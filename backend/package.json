@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "fresh-shop-backend",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -25,6 +25,7 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/client": "^6.10.1",
+    "fresh-shop-common": "workspace:^",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "sqlite3": "^5.1.7"
@@ -64,5 +65,8 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "exports": {
+    ".": "./*"
   }
 }
