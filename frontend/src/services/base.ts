@@ -2,13 +2,13 @@
 import axios from 'axios'
 
 // 创建axios实例
-const service = axios.create({
-  baseURL: process.env.VITE_API_BASE_URL, // API基础URL（从环境变量获取）
+const http = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL, // API基础URL（从环境变量获取）
   timeout: 10000 // 请求超时时间（毫秒）
 })
 
 // 请求拦截器
-service.interceptors.request.use(
+http.interceptors.request.use(
   config => {
     // 添加token到请求头
     const token = localStorage.getItem('token')
@@ -24,17 +24,16 @@ service.interceptors.request.use(
 )
 
 // 响应拦截器
-service.interceptors.response.use(
+http.interceptors.response.use(
   response => {
     // 处理响应数据
-    const res = response.data
-
+    const { status, data } = response
     // 如果响应码不是200，视为错误
-    if (res.code !== 200) {
+    if (status !== 200) {
       // 此处可添加不同错误码的处理逻辑
-      return Promise.reject(new Error(res.message || 'Error'))
+      return Promise.reject(new Error(data || 'Error'))
     } else {
-      return res
+      return data
     }
   },
   error => {
@@ -43,4 +42,4 @@ service.interceptors.response.use(
   }
 )
 
-export default service
+export default http

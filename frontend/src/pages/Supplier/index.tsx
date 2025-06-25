@@ -1,79 +1,60 @@
-import type { TableProps } from 'antd'
-import { Space, Table } from 'antd'
-import axios from 'axios'
+import { PlusOutlined } from '@ant-design/icons'
+import { FloatButton, List } from 'antd'
+import { useEffect, useState } from 'react'
+
+import useSupplierStore from '@/stores/supplierStore.ts'
+
+import CreateAndUpdate from './createAndUpdate.tsx'
 
 export const Component = () => {
-  axios.post('//localhost:3000/supplier/create', {
-    name: 'admin'
-  })
+  const [visible, setVisible] = useState(false)
 
-  interface DataType {
-    key: string
-    name: string
-    age: number
-    address: string
-    tags: string[]
-  }
+  const suppliersList = useSupplierStore(state => state.suppliersList)
+  const setPageParams = useSupplierStore(state => state.setPageParams)
 
-  const columns: TableProps<DataType>['columns'] = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      render: text => <a>{text}</a>
-    },
-    {
-      title: 'Age',
-      dataIndex: 'age',
-      key: 'age'
-    },
-    {
-      title: 'Action',
-      key: 'action',
-      render: _ => (
-        <Space size="middle">
-          <a>Delete</a>
-        </Space>
-      )
-    }
-  ]
+  useEffect(() => {
+    setPageParams({
+      page: 1,
+      pageSize: 10
+    })
+  }, [])
 
-  const data: DataType[] = [
-    {
-      key: '1',
-      name: 'John Brown',
-      age: 32,
-      address: 'New York No. 1 Lake Park',
-      tags: ['nice', 'developer']
-    },
-    {
-      key: '2',
-      name: 'Jim Green',
-      age: 42,
-      address: 'London No. 1 Lake Park',
-      tags: ['loser']
-    },
-    {
-      key: '3',
-      name: 'Joe Black',
-      age: 32,
-      address: 'Sydney No. 1 Lake Park',
-      tags: ['cool', 'teacher']
-    }
-  ]
   return (
     <>
-      <section className="mt-3 box-border flex h-14 w-[95%] flex-row items-center justify-between rounded-md bg-white p-3">
-        <div>共100家</div>
-        <div>近七日活跃100家</div>
-      </section>
-      <section className="mt-2 box-border flex w-[95%] items-center justify-between rounded-md bg-white p-3">
-        <Table<DataType>
+      <section className="mt-2 box-border flex w-full items-center justify-between rounded-md bg-white p-2">
+        <List
           className="w-full"
-          columns={columns}
-          dataSource={data}
+          itemLayout="horizontal"
+          header={
+            <div className="box-border flex w-full flex-row items-center justify-between bg-white">
+              <div>近七日活跃100家</div>
+              <div>共100家</div>
+            </div>
+          }
+          pagination={{ position: 'bottom', align: 'start' }}
+          dataSource={suppliersList}
+          renderItem={item => (
+            <List.Item>
+              <List.Item.Meta
+                title={<a href="https://ant.design">{item.name}</a>}
+                // description="Ant Design, a design language for background applications, is refined by Ant UED Team"
+              />
+            </List.Item>
+          )}
         />
       </section>
+      <FloatButton
+        icon={<PlusOutlined />}
+        type="primary"
+        shape="circle"
+        onClick={() => setVisible(true)}
+      />
+      {visible && (
+        <CreateAndUpdate
+          visible={visible}
+          setVisible={setVisible}
+        />
+      )}
     </>
   )
 }

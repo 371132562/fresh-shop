@@ -13,6 +13,6 @@ export default {
   endOfLine: 'lf', // 文件结尾的行尾符，lf表示Unix风格的换行符
   jsxBracketSameLine: false,
   vueIndentScriptAndStyle: true,
-  plugins: ["prettier-plugin-tailwindcss"],
-  tailwindStylesheet: "./frontend/src/index.css"
+  plugins: ['prettier-plugin-tailwindcss'],
+  tailwindStylesheet: './frontend/src/index.css'
 }
