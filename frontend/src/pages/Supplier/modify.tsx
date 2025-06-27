@@ -1,24 +1,34 @@
+import type { UploadFile } from 'antd'
 import { Form, Input, Modal } from 'antd'
+import { useState } from 'react'
 
 import useSupplierStore from '@/stores/supplierStore.ts'
+
+import ImagesUpload from '../../components/ImagesUpload'
 
 interface params {
   visible: boolean
   setVisible: (value: boolean) => void
 }
 
-const CreateAndUpdate = (props: params) => {
+const Modify = (props: params) => {
   const { visible, setVisible } = props
   const [form] = Form.useForm()
 
+  const [fileList, setFileList] = useState<UploadFile[]>([])
+
   const createLoading = useSupplierStore(state => state.createLoading)
-  const create = useSupplierStore(state => state.createSupplier)
+  const createSupplier = useSupplierStore(state => state.createSupplier)
 
   const handleOk = () => {
     form
       .validateFields()
       .then(async val => {
-        const res = await create(val)
+        const params = {
+          ...val,
+          images: JSON.stringify(fileList.map(item => item.response.data.url))
+        }
+        const res = await createSupplier(params)
         if (res) {
           setVisible(false)
         }
@@ -54,38 +64,42 @@ const CreateAndUpdate = (props: params) => {
           <Form.Item
             label="名称"
             name="name"
-            rules={[{ required: true, message: 'Please input your username!' }]}
+            rules={[{ required: true, message: '请输入供货商名称' }]}
           >
-            <Input />
+            <Input placeholder="必填" />
           </Form.Item>
           <Form.Item
             label="手机号"
             name="phone"
           >
-            <Input />
+            <Input placeholder="选填" />
           </Form.Item>
           <Form.Item
             label="微信号"
             name="wechat"
           >
-            <Input />
+            <Input placeholder="选填" />
           </Form.Item>
           <Form.Item
             label="描述"
             name="description"
           >
-            <Input />
+            <Input placeholder="选填，如供货商品类等" />
           </Form.Item>
           <Form.Item
             label="评价"
             name="rating"
           >
-            <Input />
+            <Input placeholder="选填，如过往印象等" />
           </Form.Item>
+          <ImagesUpload
+            fileList={fileList}
+            setFileList={setFileList}
+          />
         </Form>
       </Modal>
     </>
   )
 }
 
-export default CreateAndUpdate
+export default Modify

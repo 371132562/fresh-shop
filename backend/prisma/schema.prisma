@@ -18,6 +18,7 @@ model Supplier {
   wechat      String? // 微信账号（可选）
   description String? // 供货商描述（可选）
   rating      String? // 供货商评价（可选）
+  images      String // 供货商图片数组，以JSON字符串存储
   delete      Int      @default(0)
   createdAt   DateTime @default(now()) // 创建时间
   updatedAt   DateTime @updatedAt // 最后更新时间
@@ -73,6 +74,7 @@ model GroupBuy {
   description String? // 团购描述（可选）
   variants    GroupBuyVariant[] // 关联的规格
   Order       Order[]
+  images      String // 商品图片数组，以JSON字符串存储
   delete      Int               @default(0)
   createdAt   DateTime          @default(now()) // 创建时间
   updatedAt   DateTime          @updatedAt // 最后更新时间

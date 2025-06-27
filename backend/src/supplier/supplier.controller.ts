@@ -16,4 +16,10 @@ export class SupplierController {
   list(@Body() pageParams: PageParams) {
     return this.supplierService.list(pageParams);
   }
+
+  @Post('detail')
+  detail(@Body('id') id: string) {
+    console.log(id);
+    return this.supplierService.detail(id);
+  }
 }

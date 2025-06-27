@@ -35,4 +35,12 @@ export class SupplierService {
       totalPages: Math.ceil(totalCount / pageSize), // 计算总页数
     };
   }
+
+  async detail(id: string) {
+    return this.prisma.supplier.findUnique({
+      where: {
+        id,
+      },
+    });
+  }
 }

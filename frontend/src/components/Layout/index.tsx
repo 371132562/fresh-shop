@@ -12,7 +12,9 @@ export const Component: FC = () => {
           <UnorderedListOutlined className="text-2xl" />
         </nav>
       </header>
-      <div className="flex w-full flex-col items-center px-3 py-2">{outlet}</div>
+      <div className="mx-3 my-2 overflow-hidden rounded-lg bg-white">
+        <div className="flex w-full flex-col items-center p-2">{outlet}</div>
+      </div>
     </div>
   )
 }

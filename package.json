@@ -27,6 +27,7 @@
     "typescript-eslint": "^8.34.1"
   },
   "dependencies": {
-    "prettier-plugin-tailwindcss": "^0.6.13"
+    "prettier-plugin-tailwindcss": "^0.6.13",
+    "uuid": "^11.1.0"
   }
 }

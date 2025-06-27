@@ -17,6 +17,10 @@ const router = createBrowserRouter([
         lazy: () => import('./pages/Supplier')
       },
       {
+        path: '/supplier/detail/:id',
+        lazy: () => import('./pages/Supplier/detail.tsx')
+      },
+      {
         path: '/customer',
         lazy: () => import('./pages/Customer')
       },
