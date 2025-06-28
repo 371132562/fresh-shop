@@ -15,6 +15,9 @@ type SupplierStore = {
     totalPages: number
   }
   pageParams: {
+    name: string
+    phone: string
+    wechat: string
     page: number
     pageSize: number
   }
@@ -42,7 +45,10 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
   },
   pageParams: {
     page: 1,
-    pageSize: 10
+    pageSize: 10,
+    name: '',
+    phone: '',
+    wechat: ''
   },
   fetchSuppliersList: async (data = get().pageParams) => {
     try {
@@ -57,8 +63,15 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
     }
   },
   setPageParams: (data: { page: number; pageSize: number }) => {
-    set({ pageParams: data })
-    get().fetchSuppliersList(data)
+    const originalPageParams = get().pageParams
+    const newPageParams = {
+      ...originalPageParams,
+      ...data
+    }
+    set({
+      pageParams: newPageParams
+    })
+    get().fetchSuppliersList(newPageParams)
   },
   listLoading: false,
 

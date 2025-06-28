@@ -20,8 +20,30 @@ export class SupplierService {
   }
 
   async list(data: PageParams): Promise<ListByPage<Supplier[]>> {
-    const { page, pageSize } = data;
+    const { page, pageSize, name, phone, wechat } = data;
     const skip = (page - 1) * pageSize; // 计算要跳过的记录数
+
+    const where: any = {
+      delete: 0, // 仅查询未删除的供货商
+    };
+
+    if (name) {
+      where.name = {
+        contains: name,
+      };
+    }
+
+    if (phone) {
+      where.phone = {
+        contains: phone,
+      };
+    }
+
+    if (wechat) {
+      where.wechat = {
+        contains: wechat,
+      };
+    }
 
     const [suppliers, totalCount] = await this.prisma.$transaction([
       this.prisma.supplier.findMany({
@@ -30,8 +52,9 @@ export class SupplierService {
         orderBy: {
           createdAt: 'desc', // 假设您的表中有一个名为 'createdAt' 的字段
         },
+        where,
       }),
-      this.prisma.supplier.count(), // 获取总记录数
+      this.prisma.supplier.count({ where }), // 获取总记录数
     ]);
 
     return {

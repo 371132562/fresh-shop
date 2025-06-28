@@ -63,7 +63,6 @@ const Modify = (props: params) => {
   return (
     <>
       <Modal
-        closable={{ 'aria-label': 'Custom Close Button' }}
         open={visible}
         onOk={handleOk}
         onCancel={handleCancel}
