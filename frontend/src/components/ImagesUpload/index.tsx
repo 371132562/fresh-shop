@@ -4,12 +4,17 @@ import { useState } from 'react'
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0]
 type params = {
+  id: string
   fileList: UploadFile[]
   setFileList: (fileList: UploadFile[]) => void
 }
 
+import { ErrorCode } from 'fresh-shop-common/types/response.ts'
+
+import { deleteImage } from '@/services/common.ts'
+
 const ImagesUpload = (props: params) => {
-  const { fileList, setFileList } = props
+  const { fileList, setFileList, id } = props
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewImage, setPreviewImage] = useState('')
 
@@ -34,6 +39,21 @@ const ImagesUpload = (props: params) => {
     setFileList(newFileList)
   }
 
+  const handleRemove = async file => {
+    let filename
+    if (file.filename) {
+      filename = file.filename
+    } else {
+      filename = file.response.data.filename
+    }
+    const res = await deleteImage({ id, filename })
+    if (res.code === ErrorCode.SUCCESS) {
+      return true
+    } else {
+      return false
+    }
+  }
+
   const uploadButton = (
     <button
       style={{ border: 0, background: 'none' }}
@@ -54,6 +74,7 @@ const ImagesUpload = (props: params) => {
         fileList={fileList}
         onPreview={handlePreview}
         onChange={handleChange}
+        onRemove={handleRemove}
       >
         {fileList.length >= 9 ? null : uploadButton}
       </Upload>

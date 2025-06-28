@@ -4,7 +4,8 @@
   "type": "module",
   "author": "lin",
   "exports": {
-    ".": "./*"
+    ".": "./*",
+    "./types/*": "./types/*"
   },
   "dependencies": {
     "fresh-shop-backend": "workspace:^"

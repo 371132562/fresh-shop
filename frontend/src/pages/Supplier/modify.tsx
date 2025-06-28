@@ -1,6 +1,6 @@
 import type { UploadFile } from 'antd'
 import { Form, Input, Modal } from 'antd'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import useSupplierStore from '@/stores/supplierStore.ts'
 
@@ -9,16 +9,34 @@ import ImagesUpload from '../../components/ImagesUpload'
 interface params {
   visible: boolean
   setVisible: (value: boolean) => void
+  id?: string //编辑时会提供此id
 }
 
 const Modify = (props: params) => {
-  const { visible, setVisible } = props
+  const { visible, setVisible, id } = props
   const [form] = Form.useForm()
 
   const [fileList, setFileList] = useState<UploadFile[]>([])
 
   const createLoading = useSupplierStore(state => state.createLoading)
   const createSupplier = useSupplierStore(state => state.createSupplier)
+  const supplier = useSupplierStore(state => state.supplier)
+
+  useEffect(() => {
+    if (id) {
+      form.setFieldsValue(supplier)
+      let { images } = supplier
+      images = JSON.parse(images)
+      if (images.length > 0) {
+        setFileList(
+          images.map(image => ({
+            url: import.meta.env.VITE_SERVER_URL + import.meta.env.VITE_IMAGES_BASE_URL + image,
+            filename: image
+          }))
+        )
+      }
+    }
+  }, [])
 
   const handleOk = () => {
     form
@@ -37,6 +55,7 @@ const Modify = (props: params) => {
         console.log(err)
       })
   }
+
   const handleCancel = () => {
     setVisible(false)
   }
@@ -93,6 +112,7 @@ const Modify = (props: params) => {
             <Input placeholder="选填，如过往印象等" />
           </Form.Item>
           <ImagesUpload
+            id={id}
             fileList={fileList}
             setFileList={setFileList}
           />

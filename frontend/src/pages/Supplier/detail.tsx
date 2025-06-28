@@ -1,17 +1,25 @@
-import { Image, Spin } from 'antd'
-import { useEffect, useMemo } from 'react'
+import { EditOutlined } from '@ant-design/icons'
+import { FloatButton, Image, Spin } from 'antd'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router'
 
+import Modify from '@/pages/Supplier/modify.tsx'
 import useSupplierStore from '@/stores/supplierStore.ts'
 
 export const Component = () => {
   const { id } = useParams()
+  const [visible, setVisible] = useState(false)
+
   const supplier = useSupplierStore(state => state.supplier)
   const getSupplier = useSupplierStore(state => state.getSupplier)
   const getLoading = useSupplierStore(state => state.getLoading)
 
   const images: string[] = useMemo(() => {
-    return supplier.images ? JSON.parse(supplier.images) : []
+    return supplier.images
+      ? JSON.parse(supplier.images).map(image => {
+          return import.meta.env.VITE_SERVER_URL + import.meta.env.VITE_IMAGES_BASE_URL + image
+        })
+      : []
   }, [supplier.images])
 
   useEffect(() => {
@@ -42,9 +50,7 @@ export const Component = () => {
               return (
                 <div className="w-1/2 p-1 sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5">
                   <div className="flex aspect-square w-full items-center justify-center overflow-hidden border border-gray-200">
-                    <Image
-                      src={'//192.168.1.4:3000' + import.meta.env.VITE_IMAGES_BASE_URL + image}
-                    />
+                    <Image src={image} />
                   </div>
                 </div>
               )
@@ -52,6 +58,20 @@ export const Component = () => {
           </div>
         )}
       </Spin>
+      <FloatButton
+        style={{ position: 'absolute', left: 24 }}
+        icon={<EditOutlined />}
+        type="primary"
+        shape="circle"
+        onClick={() => setVisible(true)}
+      />
+      {visible && (
+        <Modify
+          id={id}
+          visible={visible}
+          setVisible={setVisible}
+        />
+      )}
     </div>
   )
 }

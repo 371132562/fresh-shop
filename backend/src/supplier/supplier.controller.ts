@@ -12,6 +12,11 @@ export class SupplierController {
     return this.supplierService.create(supplierData);
   }
 
+  @Post('update')
+  update(@Body() supplierData: Supplier) {
+    return this.supplierService.update(supplierData.id, supplierData);
+  }
+
   @Post('list')
   list(@Body() pageParams: PageParams) {
     return this.supplierService.list(pageParams);
@@ -19,7 +24,11 @@ export class SupplierController {
 
   @Post('detail')
   detail(@Body('id') id: string) {
-    console.log(id);
     return this.supplierService.detail(id);
+  }
+
+  @Post('deleteImage')
+  async deleteImage(@Body() data: { id: string; filename: string }) {
+    return this.supplierService.deleteImage(data.id, data.filename);
   }
 }

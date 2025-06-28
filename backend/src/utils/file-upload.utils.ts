@@ -1,5 +1,5 @@
-import { extname } from 'path';
-import { existsSync, mkdirSync } from 'fs';
+import { extname, join } from 'path';
+import { existsSync, mkdirSync, unlinkSync } from 'fs'; // 导入 unlinkSync
 import { diskStorage } from 'multer';
 import { v4 as uuid } from 'uuid';
 
@@ -35,4 +35,15 @@ export const multerOptions = {
       cb(new Error(`不支持的文件类型: ${extname(file.originalname)}`), false); // 拒绝上传
     }
   },
+};
+
+// 获取图片的完整物理路径
+export const getImagePath = (filename: string): string => {
+  // 注意：这里需要根据你的实际存储结构来构建路径。
+  // 如果你所有图片都在 UPLOAD_DIR 下，直接 join 即可。
+  // 如果你之前保留了 moduleName，这里可能需要传入 moduleName
+  // 例如：join(process.cwd(), UPLOAD_DIR, filename) 或
+  // join(process.cwd(), './uploads', moduleName, filename)
+
+  return join(process.cwd(), UPLOAD_DIR, filename);
 };
