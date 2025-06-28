@@ -16,6 +16,8 @@ coverage
 
 *.db
 
+uploads
+
 /cypress/videos/
 /cypress/screenshots/
 
