@@ -1,4 +1,5 @@
-import { ListByPage, Supplier } from 'fresh-shop-common/types/dto.ts'
+import { Supplier } from 'fresh-shop-backend/types.ts'
+import { ListByPage, SupplierPageParams } from 'fresh-shop-common/types/dto.ts'
 import { ResponseBody } from 'fresh-shop-common/types/response.ts'
 import { create } from 'zustand'
 
@@ -8,8 +9,8 @@ import {
   supplierDetailApi,
   supplierListApi,
   supplierUpdateApi
-} from '../services/apis.ts'
-import http from '../services/base.ts'
+} from '@/services/apis.ts'
+import http from '@/services/base.ts'
 
 type SupplierCreate = Omit<Supplier, 'id' | 'delete' | 'createdAt' | 'updatedAt'>
 
@@ -21,27 +22,22 @@ type SupplierStore = {
     totalCount: number
     totalPages: number
   }
-  pageParams: {
-    name: string
-    phone: string
-    wechat: string
-    page: number
-    pageSize: number
-  }
-  getSuppliersList: (data: any) => Promise<void>
-  setPageParams: (data: { page: number; pageSize: number }) => void
+  pageParams: SupplierPageParams
+  getSuppliersList: (data: SupplierPageParams) => Promise<void>
+  setPageParams: (data: SupplierPageParams) => void
   listLoading: boolean
 
   createLoading: boolean
   createSupplier: (data: SupplierCreate) => Promise<boolean>
 
-  updateSupplier: (data: SupplierCreate & SupplierId) => Promise<boolean>
-  deleteSupplier: (data: SupplierId) => Promise<void>
+  updateSupplier: (data: SupplierId & SupplierCreate) => Promise<boolean>
+
+  deleteSupplier: (data: SupplierId) => Promise<boolean>
   deleteLoading: boolean
 
-  supplier: Supplier
+  supplier: Supplier | null
   getLoading: boolean
-  getSupplier: (data: SupplierId) => Promise<Supplier>
+  getSupplier: (data: SupplierId) => Promise<void>
 }
 
 const useSupplierStore = create<SupplierStore>((set, get) => ({
@@ -69,7 +65,7 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
       set({ listLoading: false })
     }
   },
-  setPageParams: (data: { page: number; pageSize: number }) => {
+  setPageParams: data => {
     const originalPageParams = get().pageParams
     const newPageParams = {
       ...originalPageParams,
@@ -97,13 +93,13 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
     }
   },
 
-  updateSupplier: async (data: SupplierCreate & SupplierId) => {
+  updateSupplier: async data => {
     try {
       set({ createLoading: true })
       await http.post(supplierUpdateApi, data)
       return true
-    } catch (error) {
-      console.error(error)
+    } catch (err) {
+      console.error(err)
       return false
     } finally {
       set({ createLoading: false })
@@ -113,18 +109,22 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
   },
 
   deleteLoading: false,
-  deleteSupplier: async (data: SupplierId) => {
+  deleteSupplier: async data => {
     try {
       set({ deleteLoading: true })
       await http.post(supplierDeleteApi, data)
+      return true
+    } catch (err) {
+      console.error(err)
+      return false
     } finally {
       set({ deleteLoading: false })
     }
   },
 
-  supplier: {},
+  supplier: null,
   getLoading: false,
-  getSupplier: async (data: SupplierId) => {
+  getSupplier: async data => {
     try {
       set({ getLoading: true })
       const res = await http.post(supplierDetailApi, data)

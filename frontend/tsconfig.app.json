@@ -24,8 +24,7 @@
 
     "paths": {
       "@/*": ["./src/*"],
-      // 确保你的 fresh-shop-common 包名映射到其根目录
-      "fresh-shop-common": ["../common"], // <--- 根据你的 monorepo 结构调整路径
+      "fresh-shop-backend/*": ["../backend/*"], // <--- 根据你的 monorepo 结构调整路径
       // 关键！直接将 fresh-shop-common 内的任何子路径映射到其源文件路径
       "fresh-shop-common/*": ["../common/*"] // <--- 根据你的 monorepo 结构调整路径
     },

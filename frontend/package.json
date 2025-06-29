@@ -16,6 +16,7 @@
     "antd": "^5.26.1",
     "axios": "^1.10.0",
     "dayjs": "^1.11.13",
+    "fresh-shop-backend": "workspace:^",
     "fresh-shop-common": "workspace:^",
     "less": "^4.3.0",
     "normalize.css": "^8.0.1",

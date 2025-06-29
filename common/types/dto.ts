@@ -1,13 +1,6 @@
-import { Supplier } from 'fresh-shop-backend/types'
-
-export type { Supplier }
-
-export type PageParams = {
+export type CommonPageParams = {
   page: number
   pageSize: number
-  name: string
-  phone: string
-  wechat: string
 }
 
 export type ListByPage<T> = {
@@ -16,4 +9,14 @@ export type ListByPage<T> = {
   pageSize: number
   totalCount: number
   totalPages: number
+}
+
+export type SupplierPageParams = CommonPageParams & {
+  name: string
+  phone: string
+  wechat: string
+}
+
+export type ProductTypePageParams = CommonPageParams & {
+  name: string
 }

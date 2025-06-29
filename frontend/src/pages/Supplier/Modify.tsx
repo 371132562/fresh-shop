@@ -1,10 +1,10 @@
 import type { UploadFile } from 'antd'
-import { Form, Input, Modal } from 'antd'
+import { Form, Input, message, Modal } from 'antd'
+import { Supplier } from 'fresh-shop-backend/types'
 import { useEffect, useState } from 'react'
 
+import ImagesUpload from '@/components/ImagesUpload'
 import useSupplierStore from '@/stores/supplierStore.ts'
-
-import ImagesUpload from '../../components/ImagesUpload'
 
 interface params {
   visible: boolean
@@ -16,7 +16,7 @@ const Modify = (props: params) => {
   const { visible, setVisible, id } = props
   const [form] = Form.useForm()
 
-  const [fileList, setFileList] = useState<UploadFile[]>([])
+  const [fileList, setFileList] = useState<UploadFile[] | Array<{ filename: string }>>([])
 
   const createLoading = useSupplierStore(state => state.createLoading)
   const createSupplier = useSupplierStore(state => state.createSupplier)
@@ -26,11 +26,11 @@ const Modify = (props: params) => {
   useEffect(() => {
     if (id) {
       form.setFieldsValue(supplier)
-      let { images } = supplier
-      images = JSON.parse(images)
-      if (images.length > 0) {
+      const { images } = supplier as Supplier
+      const imagesArr = JSON.parse(images)
+      if (imagesArr.length > 0) {
         setFileList(
-          images.map(image => ({
+          imagesArr.map((image: string) => ({
             url: import.meta.env.VITE_SERVER_URL + import.meta.env.VITE_IMAGES_BASE_URL + image,
             filename: image
           }))
@@ -46,11 +46,19 @@ const Modify = (props: params) => {
         const params = {
           ...val,
           images: JSON.stringify(
-            fileList.map(item => (item.response ? item.response.data.url : item.filename))
+            fileList.map(item => {
+              if ('response' in item) {
+                // 检查 item 是否包含 'response' 属性
+                return (item as UploadFile).response.data.url
+              } else {
+                return (item as { filename: string }).filename
+              }
+            })
           )
         }
         const res = id ? await updateSupplier({ ...params, id }) : await createSupplier(params)
         if (res) {
+          message.success('添加成功')
           setVisible(false)
         }
       })
@@ -114,8 +122,8 @@ const Modify = (props: params) => {
             <Input placeholder="选填，如过往印象等" />
           </Form.Item>
           <ImagesUpload
-            id={id}
-            fileList={fileList}
+            id={id || ''}
+            fileList={fileList as UploadFile[]}
             setFileList={setFileList}
           />
         </Form>

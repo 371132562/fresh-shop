@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common'; // �
 import { PrismaService } from '../../prisma/prisma.service';
 import { Supplier } from '@prisma/client';
 
-import { PageParams, ListByPage } from 'fresh-shop-common/types/dto';
+import { SupplierPageParams, ListByPage } from 'fresh-shop-common/types/dto';
 
 @Injectable()
 export class SupplierService {
@@ -19,7 +19,7 @@ export class SupplierService {
     });
   }
 
-  async list(data: PageParams): Promise<ListByPage<Supplier[]>> {
+  async list(data: SupplierPageParams): Promise<ListByPage<Supplier[]>> {
     const { page, pageSize, name, phone, wechat } = data;
     const skip = (page - 1) * pageSize; // 计算要跳过的记录数
 
@@ -70,6 +70,17 @@ export class SupplierService {
     return this.prisma.supplier.findUnique({
       where: {
         id,
+      },
+    });
+  }
+
+  async delete(id: string) {
+    return this.prisma.supplier.update({
+      where: {
+        id,
+      },
+      data: {
+        delete: 1,
       },
     });
   }

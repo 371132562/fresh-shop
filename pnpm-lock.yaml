@@ -169,6 +169,9 @@ importers:
       dayjs:
         specifier: ^1.11.13
         version: 1.11.13
+      fresh-shop-backend:
+        specifier: workspace:^
+        version: link:../backend
       fresh-shop-common:
         specifier: workspace:^
         version: link:../common

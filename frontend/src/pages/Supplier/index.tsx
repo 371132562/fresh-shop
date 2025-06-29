@@ -25,6 +25,7 @@ export const Component = () => {
 
   const pageChange = (page: number = pageParams.page) => {
     setPageParams({
+      ...pageParams,
       page,
       pageSize: 10
     })

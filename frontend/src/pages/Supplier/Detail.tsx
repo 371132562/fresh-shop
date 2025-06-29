@@ -1,30 +1,42 @@
-import { EditOutlined } from '@ant-design/icons'
-import { FloatButton, Image, Spin } from 'antd'
+import type { PopconfirmProps } from 'antd'
+import { Button, Flex, Image, message, Popconfirm, Spin } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 
 import Modify from '@/pages/Supplier/Modify.tsx'
 import useSupplierStore from '@/stores/supplierStore.ts'
 
 export const Component = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [visible, setVisible] = useState(false)
 
   const supplier = useSupplierStore(state => state.supplier)
   const getSupplier = useSupplierStore(state => state.getSupplier)
   const getLoading = useSupplierStore(state => state.getLoading)
+  const deleteSupplier = useSupplierStore(state => state.deleteSupplier)
 
   const images: string[] = useMemo(() => {
-    return supplier.images
+    return supplier?.images
       ? JSON.parse(supplier.images).map((image: string) => {
           return import.meta.env.VITE_SERVER_URL + import.meta.env.VITE_IMAGES_BASE_URL + image
         })
       : []
-  }, [supplier.images])
+  }, [supplier])
 
   useEffect(() => {
-    getSupplier({ id })
+    if (id) {
+      getSupplier({ id })
+    }
   }, [])
+
+  const confirm: PopconfirmProps['onConfirm'] = async () => {
+    const res = await deleteSupplier({ id: id as string })
+    if (res) {
+      message.success('删除成功')
+      navigate('/supplier')
+    }
+  }
 
   return (
     <div className="w-full">
@@ -37,8 +49,38 @@ export const Component = () => {
         {/* Spin 调整大小和提示 */}
         {/* 主要信息卡片 */}
         <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
-          <h3 className="mb-4 border-b border-gray-100 pb-3 text-xl font-bold text-gray-800">
+          <h3 className="mb-4 flex justify-between border-b border-gray-100 pb-3 text-xl font-bold text-gray-800">
             {supplier?.name || '加载中...'} {/* 供应商名称作为卡片标题 */}
+            <div className="flex items-center">
+              <Flex
+                gap="small"
+                wrap
+              >
+                <Button
+                  color="primary"
+                  variant="outlined"
+                  onClick={() => setVisible(true)}
+                >
+                  编辑
+                </Button>
+                <Popconfirm
+                  title={<div className="text-lg">确定要删除这个供应商吗？</div>}
+                  placement="left"
+                  onConfirm={confirm}
+                  okText="是"
+                  cancelText="否"
+                  okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
+                  cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
+                >
+                  <Button
+                    color="danger"
+                    variant="outlined"
+                  >
+                    删除
+                  </Button>
+                </Popconfirm>
+              </Flex>
+            </div>
           </h3>
 
           {/* 信息列表 */}
@@ -116,13 +158,6 @@ export const Component = () => {
           </div>
         )}
       </Spin>
-      <FloatButton
-        style={{ position: 'absolute', left: 24 }}
-        icon={<EditOutlined />}
-        type="primary"
-        shape="circle"
-        onClick={() => setVisible(true)}
-      />
       {visible && (
         <Modify
           id={id}
