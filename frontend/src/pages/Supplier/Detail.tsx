@@ -3,7 +3,7 @@ import { FloatButton, Image, Spin } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router'
 
-import Modify from '@/pages/Supplier/modify.tsx'
+import Modify from '@/pages/Supplier/Modify.tsx'
 import useSupplierStore from '@/stores/supplierStore.ts'
 
 export const Component = () => {

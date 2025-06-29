@@ -5,7 +5,7 @@ import { NavLink } from 'react-router'
 
 import useSupplierStore from '@/stores/supplierStore.ts'
 
-import Modify from './modify.tsx'
+import Modify from './Modify.tsx'
 
 export const Component = () => {
   const [visible, setVisible] = useState(false)
