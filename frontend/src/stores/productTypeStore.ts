@@ -28,7 +28,7 @@ type ProductTypeStore = {
     pageSize: number
   }
   getProductTypeList: (data: ProductTypePageParams) => Promise<void>
-  setPageParams: (data: ProductTypePageParams) => void
+  setPageParams: (data: Partial<ProductTypePageParams>) => void
   listLoading: boolean
 
   createLoading: boolean
@@ -42,6 +42,7 @@ type ProductTypeStore = {
   productType: ProductType | null
   getLoading: boolean
   getProductType: (data: ProductTypeId) => Promise<void>
+  setProductType: (data: ProductType | null) => void
 }
 
 const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
@@ -59,6 +60,10 @@ const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
     try {
       set({ listLoading: true })
       const res: ResponseBody<ListByPage<ProductType[]>> = await http.post(productTypeListApi, data)
+      if (res.data.page > res.data.totalPages) {
+        get().setPageParams({ page: res.data.totalPages })
+        return
+      }
       set({
         productTypesList: res.data.data,
         listCount: { totalCount: res.data.totalCount, totalPages: res.data.totalPages }
@@ -113,7 +118,8 @@ const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
   deleteProductType: async data => {
     try {
       set({ deleteLoading: true })
-      await http.delete(productTypeDeleteApi, { data })
+      await http.post(productTypeDeleteApi, data)
+      get().getProductTypeList(get().pageParams)
       return true
     } catch (err) {
       console.error(err)
@@ -132,6 +138,11 @@ const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
     } catch (err) {
       console.error(err)
     }
+  },
+  setProductType: data => {
+    set({
+      productType: data
+    })
   },
   getLoading: false
 }))

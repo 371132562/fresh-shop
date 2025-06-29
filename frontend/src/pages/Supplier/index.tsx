@@ -25,12 +25,11 @@ export const Component = () => {
 
   const pageChange = (page: number = pageParams.page) => {
     setPageParams({
-      ...pageParams,
-      page,
-      pageSize: 10
+      page
     })
   }
 
+  //搜索
   const handleOk = () => {
     form
       .validateFields()
@@ -58,9 +57,7 @@ export const Component = () => {
     }
     form.setFieldsValue(resetValues)
     setPageParams({
-      ...resetValues,
-      page: 1,
-      pageSize: 10
+      ...resetValues
     })
     handleCancel()
   }

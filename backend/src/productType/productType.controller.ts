@@ -6,29 +6,29 @@ import { ProductTypePageParams } from 'fresh-shop-common/types/dto';
 
 @Controller('productType')
 export class ProductTypeController {
-  constructor(private readonly supplierService: ProductTypeService) {}
+  constructor(private readonly productTypeService: ProductTypeService) {}
   @Post('create')
   create(@Body() data: ProductType) {
-    return this.supplierService.create(data);
+    return this.productTypeService.create(data);
   }
 
   @Post('update')
   update(@Body() data: ProductType) {
-    return this.supplierService.update(data.id, data);
+    return this.productTypeService.update(data.id, data);
   }
 
   @Post('list')
   list(@Body() data: ProductTypePageParams) {
-    return this.supplierService.list(data);
+    return this.productTypeService.list(data);
   }
 
   @Post('detail')
   detail(@Body('id') id: string) {
-    return this.supplierService.detail(id);
+    return this.productTypeService.detail(id);
   }
 
   @Post('delete')
   delete(@Body('id') id: string) {
-    return this.supplierService.delete(id);
+    return this.productTypeService.delete(id);
   }
 }

@@ -1,4 +1,4 @@
-import { Form, Input, Modal } from 'antd'
+import { Button, Form, Input, message, Modal, Popconfirm } from 'antd'
 import { useEffect } from 'react'
 
 import useProductTypeStore from '@/stores/productTypeStore.ts'
@@ -17,12 +17,19 @@ const Modify = (props: params) => {
   const createProductType = useProductTypeStore(state => state.createProductType)
   const updateProductType = useProductTypeStore(state => state.updateProductType)
   const productType = useProductTypeStore(state => state.productType)
+  const getProductType = useProductTypeStore(state => state.getProductType)
+  const setProductType = useProductTypeStore(state => state.setProductType)
+  const deleteProductType = useProductTypeStore(state => state.deleteProductType)
 
   useEffect(() => {
     if (id) {
-      form.setFieldsValue(productType)
+      getProductType({ id })
     }
   }, [])
+
+  useEffect(() => {
+    form.setFieldsValue(productType)
+  }, [productType])
 
   const handleOk = () => {
     form
@@ -40,6 +47,15 @@ const Modify = (props: params) => {
 
   const handleCancel = () => {
     setVisible(false)
+    setProductType(null)
+  }
+
+  const handleDelete = async () => {
+    const res = await deleteProductType({ id: id as string })
+    if (res) {
+      message.success('删除成功')
+      setVisible(false)
+    }
   }
 
   return (
@@ -72,6 +88,23 @@ const Modify = (props: params) => {
             name="description"
           >
             <Input placeholder="选填" />
+          </Form.Item>
+          <Form.Item label="操作">
+            <Popconfirm
+              title={<div className="text-lg">确定要删除这个商品分类吗？</div>}
+              onConfirm={handleDelete}
+              okText="是"
+              cancelText="否"
+              okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
+              cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
+            >
+              <Button
+                color="danger"
+                variant="solid"
+              >
+                删除
+              </Button>
+            </Popconfirm>
           </Form.Item>
         </Form>
       </Modal>

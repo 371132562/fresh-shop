@@ -24,7 +24,7 @@ type SupplierStore = {
   }
   pageParams: SupplierPageParams
   getSuppliersList: (data: SupplierPageParams) => Promise<void>
-  setPageParams: (data: SupplierPageParams) => void
+  setPageParams: (data: Partial<SupplierPageParams>) => void
   listLoading: boolean
 
   createLoading: boolean
@@ -57,6 +57,10 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
     try {
       set({ listLoading: true })
       const res: ResponseBody<ListByPage<Supplier[]>> = await http.post(supplierListApi, data)
+      if (res.data.page > res.data.totalPages) {
+        get().setPageParams({ page: res.data.totalPages })
+        return
+      }
       set({
         suppliersList: res.data.data,
         listCount: { totalCount: res.data.totalCount, totalPages: res.data.totalPages }
