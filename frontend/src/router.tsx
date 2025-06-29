@@ -3,7 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router'
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/supplier" />
+    element: <Navigate to="/dashboard" />
   },
   {
     lazy: () => import('./components/Layout'),
@@ -25,8 +25,16 @@ const router = createBrowserRouter([
         lazy: () => import('./pages/Customer')
       },
       {
+        path: '/address',
+        lazy: () => import('./pages/Address')
+      },
+      {
         path: '/product',
         lazy: () => import('./pages/Product')
+      },
+      {
+        path: '/productType',
+        lazy: () => import('./pages/ProductType')
       },
       {
         path: '/group-buy',

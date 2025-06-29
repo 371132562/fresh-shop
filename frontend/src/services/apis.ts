@@ -1,0 +1,5 @@
+export const supplierCreateApi = '/supplier/create'
+export const supplierDeleteApi = '/supplier/delete'
+export const supplierDetailApi = '/supplier/detail'
+export const supplierListApi = '/supplier/list'
+export const supplierUpdateApi = '/supplier/update'

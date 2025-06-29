@@ -2,6 +2,13 @@ import { ListByPage, Supplier } from 'fresh-shop-common/types/dto.ts'
 import { ResponseBody } from 'fresh-shop-common/types/response.ts'
 import { create } from 'zustand'
 
+import {
+  supplierCreateApi,
+  supplierDeleteApi,
+  supplierDetailApi,
+  supplierListApi,
+  supplierUpdateApi
+} from '../services/apis.ts'
 import http from '../services/base.ts'
 
 type SupplierCreate = Omit<Supplier, 'id' | 'delete' | 'createdAt' | 'updatedAt'>
@@ -21,14 +28,14 @@ type SupplierStore = {
     page: number
     pageSize: number
   }
-  fetchSuppliersList: (data: any) => Promise<void>
+  getSuppliersList: (data: any) => Promise<void>
   setPageParams: (data: { page: number; pageSize: number }) => void
   listLoading: boolean
 
   createLoading: boolean
   createSupplier: (data: SupplierCreate) => Promise<boolean>
 
-  updateSupplier: (data: SupplierCreate & SupplierId) => Promise<void>
+  updateSupplier: (data: SupplierCreate & SupplierId) => Promise<boolean>
   deleteSupplier: (data: SupplierId) => Promise<void>
   deleteLoading: boolean
 
@@ -50,10 +57,10 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
     phone: '',
     wechat: ''
   },
-  fetchSuppliersList: async (data = get().pageParams) => {
+  getSuppliersList: async (data = get().pageParams) => {
     try {
       set({ listLoading: true })
-      const res: ResponseBody<ListByPage<Supplier[]>> = await http.post('/supplier/list', data)
+      const res: ResponseBody<ListByPage<Supplier[]>> = await http.post(supplierListApi, data)
       set({
         suppliersList: res.data.data,
         listCount: { totalCount: res.data.totalCount, totalPages: res.data.totalPages }
@@ -71,7 +78,7 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
     set({
       pageParams: newPageParams
     })
-    get().fetchSuppliersList(newPageParams)
+    get().getSuppliersList(newPageParams)
   },
   listLoading: false,
 
@@ -79,31 +86,37 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
   createSupplier: async data => {
     try {
       set({ createLoading: true })
-      await http.post('/supplier/create', data)
+      await http.post(supplierCreateApi, data)
       return true
     } catch (error) {
       console.error(error)
       return false
     } finally {
       set({ createLoading: false })
-      get().fetchSuppliersList(get().pageParams)
+      get().getSuppliersList(get().pageParams)
     }
   },
 
   updateSupplier: async (data: SupplierCreate & SupplierId) => {
     try {
       set({ createLoading: true })
-      await http.post(`/supplier/update`, data)
+      await http.post(supplierUpdateApi, data)
+      return true
+    } catch (error) {
+      console.error(error)
+      return false
     } finally {
       set({ createLoading: false })
-      get().fetchSuppliersList(get().pageParams)
+      // get().getSuppliersList(get().pageParams)
+      get().getSupplier({ id: data.id })
     }
   },
+
   deleteLoading: false,
   deleteSupplier: async (data: SupplierId) => {
     try {
       set({ deleteLoading: true })
-      await http.post(`/supplier/delete`, data)
+      await http.post(supplierDeleteApi, data)
     } finally {
       set({ deleteLoading: false })
     }
@@ -114,7 +127,7 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
   getSupplier: async (data: SupplierId) => {
     try {
       set({ getLoading: true })
-      const res = await http.post(`/supplier/detail`, data)
+      const res = await http.post(supplierDetailApi, data)
       set({ supplier: res.data })
     } finally {
       set({ getLoading: false })

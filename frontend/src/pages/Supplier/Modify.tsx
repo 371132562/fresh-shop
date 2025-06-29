@@ -20,6 +20,7 @@ const Modify = (props: params) => {
 
   const createLoading = useSupplierStore(state => state.createLoading)
   const createSupplier = useSupplierStore(state => state.createSupplier)
+  const updateSupplier = useSupplierStore(state => state.updateSupplier)
   const supplier = useSupplierStore(state => state.supplier)
 
   useEffect(() => {
@@ -44,9 +45,11 @@ const Modify = (props: params) => {
       .then(async val => {
         const params = {
           ...val,
-          images: JSON.stringify(fileList.map(item => item.response.data.url))
+          images: JSON.stringify(
+            fileList.map(item => (item.response ? item.response.data.url : item.filename))
+          )
         }
-        const res = await createSupplier(params)
+        const res = id ? await updateSupplier({ ...params, id }) : await createSupplier(params)
         if (res) {
           setVisible(false)
         }
