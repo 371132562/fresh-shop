@@ -1,10 +1,13 @@
-# 使用 Node.js 22 作为基础镜像
-FROM node:22-alpine AS base
+# fresh-shop/Dockerfile
+
+# --- 基础构建阶段 ---
+# 使用 Node.js 22 作为基础镜像，用于所有构建操作
+FROM node:22-alpine AS builder
 
 # 设置工作目录
 WORKDIR /app
 
-# 复制 monorepo 的 pnpm 文件
+# 复制 monorepo 的 pnpm 相关文件
 COPY pnpm-lock.yaml ./
 COPY package.json ./
 COPY pnpm-workspace.yaml ./
@@ -12,69 +15,67 @@ COPY pnpm-workspace.yaml ./
 # 安装 pnpm
 RUN npm install -g pnpm
 
-# --- 前端依赖安装阶段 ---
-FROM base AS frontend_install
-WORKDIR /app
-
-# 复制前端项目文件
+# 复制所有项目文件到构建环境
+# 注意：这里将整个 monorepo 复制进去，确保所有子项目文件都可用
 COPY frontend ./frontend
-
-# 安装前端依赖
-WORKDIR /app/frontend
-RUN pnpm install --frozen-lockfile
-
-# --- 后端依赖安装阶段 ---
-FROM base AS backend_install
-WORKDIR /app
-
-# 复制后端项目文件
 COPY backend ./backend
 
-# 安装后端依赖
-WORKDIR /app/backend
+# 安装所有项目的依赖（使用 pnpm workspace）
+# 切换到monorepo根目录执行 install，确保所有子项目依赖被安装
 RUN pnpm install --frozen-lockfile
 
-# --- 前端构建阶段 ---
-FROM base AS frontend_builder
-
-# 构建前端项目
-WORKDIR /app/frontend
-RUN pnpm build
-
-# --- 后端构建阶段 ---
-FROM base AS backend_builder
-# 安装后端依赖
+# --- 后端构建步骤 (在 builder 阶段完成) ---
+# 注意：所有后续的 RUN 命令都在 /app 目录下执行，需要通过明确的路径引用
 WORKDIR /app/backend
-RUN pnpm install --frozen-lockfile
 
-# 复制 Prisma schema 文件
-# 确保在后端构建阶段可以访问到 Prisma schema
-COPY backend/prisma ./backend/prisma
+# 复制 Prisma schema 文件 (已经通过上面的 COPY backend . 复制过，但为了清晰再次强调其重要性)
+# COPY backend/prisma ./backend/prisma # 这行可以省略，因为整个backend目录已经复制
 
 # 生成 Prisma 客户端
-WORKDIR /app/backend
+# 这将在 backend/node_modules/.prisma 目录下生成客户端
 RUN npx prisma generate
 
 # 构建后端项目
+RUN pnpm build
+
+# --- 前端构建步骤 (在 builder 阶段完成) ---
+WORKDIR /app/frontend
+
+# 构建前端项目
+# 前端构建依赖于后端生成的 Prisma 客户端（例如用于类型生成或API客户端）
+# 确保在前端的 package.json 中配置了正确的构建命令，可能包含类型生成步骤
 RUN pnpm build
 
 # --- 最终运行阶段 ---
 FROM node:22-alpine AS runner
 WORKDIR /app
 
-# 从构建阶段复制必要的文件
-COPY --from=frontend_builder /app/frontend/dist ./frontend/dist
-COPY --from=backend_builder /app/backend/dist ./backend/dist
-COPY --from=backend_builder /app/backend/node_modules ./backend/node_modules
-COPY --from=backend_builder /app/backend/package.json ./backend/package.json
-COPY --from=backend_builder /app/backend/prisma ./backend/prisma
+# 从 builder 阶段复制必要的文件
 
-# 设置环境变量，如果你的 NestJS 应用需要
+# 复制前端打包产物
+COPY --from=builder /app/frontend/dist ./frontend/dist
+
+# 复制后端打包产物
+COPY --from=builder /app/backend/dist ./backend/dist
+
+# 复制后端 node_modules (运行时依赖)
+# 确保复制了所有的生产环境依赖，特别是 Prisma 客户端相关的依赖
+COPY --from=builder /app/backend/node_modules ./backend/node_modules
+
+# 复制后端 package.json (用于运行时，例如解析依赖)
+COPY --from=builder /app/backend/package.json ./backend/package.json
+
+# 复制 Prisma schema 文件 (如果运行时需要)
+COPY --from=builder /app/backend/prisma ./backend/prisma
+
+
+# 设置环境变量
 ENV NODE_ENV production
 
 # 暴露后端端口
 EXPOSE 3000
 
 # 在启动 NestJS 应用之前运行 Prisma migrate
-# 这将初始化或更新你的数据库
-CMD ["sh", "-c", "cd backend && npx prisma migrate deploy && node dist/main"]
+# 这是为了确保数据库在应用启动前是最新状态
+# CMD 命令的路径都是相对于 WORKDIR /app 的
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=./backend/prisma/schema.prisma && node ./backend/dist/main"]
