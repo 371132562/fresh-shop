@@ -1,29 +1,18 @@
 version: '3.8'
 
 services:
-  backend:
+  app:
     build:
-      context: .          # 构建上下文是 monorepo 根目录
-      dockerfile: ./Dockerfile # 指向根目录下的 Dockerfile
+      context: . # 指定 Dockerfile 所在的目录为当前目录
+      dockerfile: Dockerfile # 指定 Dockerfile 的名称
     ports:
-      - "3000:3000"       # 将主机端口 3000 映射到容器端口 3000
-    environment:
-      # Prisma 数据库连接字符串
-      # 指向容器内 /app/data/db/shop.db (与 volumes 配置匹配)
-      DATABASE_URL: "file:/app/data/db/shop.db"
+      - "3000:3000" # 将容器的 3000 端口映射到主机的 3000 端口
     volumes:
-      # ⚠️ 关键点：将宿主机的 `./data/db` 目录挂载到容器内的 `/app/data/db`
-      # 这样 SQLite 数据库文件 (shop.db) 就会持久化到宿主机上
-      - ./data/db:/app/data/db
-      # 还需要挂载 prisma 文件夹，以便容器内部能找到 migration 文件
-      - ./backend/prisma:/app/backend/prisma # <-- 新增：挂载 Prisma 文件夹
-    command: # <-- 运行多个命令的技巧
-      bash -c "npx prisma migrate deploy && node ./backend/dist/main"
-    restart: unless-stopped # 确保容器崩溃后自动重启，但手动停止后不会在 Docker 重启时自动启动
+      # 持久化 SQLite 数据库文件
+      # 注意：假设你的 SQLite 数据库文件在 backend/prisma/dev.db (或你配置的任何路径)
+      # 这里我们映射整个 backend/prisma 目录，以便 dev.db 和 migrations 都能持久化
+      - database_data:/app/backend/prisma
+    restart: unless-stopped # 保持 Docker 容器的运维状态，除非手动停止
 
 volumes:
-  # 这里不需要定义命名卷，因为我们使用的是绑定挂载 (host path)
-  # 如果要使用命名卷，可以这样定义：
-  # fresh_shop_db_data:
-  # 然后在 services.backend.volumes 中使用 - fresh_shop_db_data:/app/data/db
-  {} # 空对象，或直接删除 volumes 块，因为我们用的是绑定挂载
+  database_data: # 定义一个命名卷用于数据库持久化
