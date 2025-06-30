@@ -42,6 +42,10 @@ RUN pnpm prisma migrate deploy
 # 构建后端项目
 RUN pnpm run build
 
+# === 诊断步骤：添加一个 LS 命令来检查 dist 目录 ===
+RUN ls -la /app/backend/dist
+RUN ls -la /app/backend
+
 # --- 最终生产镜像阶段 ---
 FROM node:22-alpine AS final
 
