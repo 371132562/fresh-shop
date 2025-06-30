@@ -31,8 +31,7 @@ WORKDIR /app/backend
 RUN pnpm install
 
 # 生成 Prisma 客户端
-# 注意：这里我们使用 --force 选项来避免交互式提示，确保在 Docker 环境中能顺利生成
-RUN pnpm prisma generate --force
+RUN pnpm prisma generate
 
 # 应用 Prisma 迁移，初始化或更新数据库结构
 # 注意：生产环境中通常不建议直接在 Dockerfile 中执行 migrate dev，
