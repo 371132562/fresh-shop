@@ -39,7 +39,7 @@ RUN pnpm install --frozen-lockfile
 
 # 复制 Prisma schema 文件
 # 确保在后端构建阶段可以访问到 Prisma schema
-# COPY backend/prisma ./backend/prisma
+COPY backend/prisma ./backend/prisma
 
 # 生成 Prisma 客户端
 WORKDIR /app/backend
@@ -53,11 +53,11 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 
 # 从构建阶段复制必要的文件
-# COPY --from=frontend_builder /app/frontend/dist ./frontend/dist
-# COPY --from=backend_builder /app/backend/dist ./backend/dist
-# COPY --from=backend_builder /app/backend/node_modules ./backend/node_modules
-# COPY --from=backend_builder /app/backend/package.json ./backend/package.json
-# COPY --from=backend_builder /app/backend/prisma ./backend/prisma
+COPY --from=frontend_builder /app/frontend/dist ./frontend/dist
+COPY --from=backend_builder /app/backend/dist ./backend/dist
+COPY --from=backend_builder /app/backend/node_modules ./backend/node_modules
+COPY --from=backend_builder /app/backend/package.json ./backend/package.json
+COPY --from=backend_builder /app/backend/prisma ./backend/prisma
 
 # 设置环境变量，如果你的 NestJS 应用需要
 ENV NODE_ENV production
@@ -67,4 +67,4 @@ EXPOSE 3000
 
 # 在启动 NestJS 应用之前运行 Prisma migrate
 # 这将初始化或更新你的数据库
-CMD ["sh", "-c", "cd /app/backend && npx prisma migrate deploy && node dist/main"]
+CMD ["sh", "-c", "cd backend && npx prisma migrate deploy && node dist/main"]
