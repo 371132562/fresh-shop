@@ -5,6 +5,8 @@ services:
     build:
       context: . # 指定 Dockerfile 所在的目录为当前目录
       dockerfile: Dockerfile # 指定 Dockerfile 的名称
+      args:
+        DATABASE_URL_BUILD: "file:./shop.db" # 将你的数据库路径作为构建参数传递
     ports:
       - "3000:3000" # 将容器的 3000 端口映射到主机的 3000 端口
     volumes:
@@ -13,6 +15,8 @@ services:
       # 这里我们映射整个 backend/prisma 目录，以便 dev.db 和 migrations 都能持久化
       - database_data:/app/backend/prisma
     restart: unless-stopped # 保持 Docker 容器的运维状态，除非手动停止
+    environment:
+      DATABASE_URL: "file:./shop.db" # 这确保了运行时容器内的 DATABASE_URL 环境变量被设置
 
 volumes:
   database_data: # 定义一个命名卷用于数据库持久化
