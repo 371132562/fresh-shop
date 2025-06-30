@@ -54,7 +54,8 @@ COPY --from=frontend_builder /app/frontend/dist ./frontend/dist
 # 拷贝构建好的后端产物 (包括 node_modules, Prisma 相关文件等)
 COPY --from=backend_builder /app/backend/dist ./backend/dist
 COPY --from=backend_builder /app/backend/node_modules ./backend/node_modules
-COPY --from=backend_builder /app/backend/prisma ./backend/prisma # 拷贝 prisma 文件夹，确保 schema.prisma 和 migrations 可用
+# 拷贝 prisma 文件夹，确保 schema.prisma 和 migrations 可用
+COPY --from=backend_builder /app/backend/prisma ./backend/prisma
 
 # 暴露 NestJS 应用程序的端口
 EXPOSE 3000
