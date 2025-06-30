@@ -68,6 +68,8 @@ COPY --from=builder /app/backend/package.json ./backend/package.json
 # 复制 Prisma schema 文件 (如果运行时需要)
 COPY --from=builder /app/backend/prisma ./backend/prisma
 
+# 复制后端 .env 文件 ***
+COPY --from=builder /app/backend/.env ./backend/.env
 
 # 设置环境变量
 ENV NODE_ENV production
