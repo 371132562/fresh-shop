@@ -4,6 +4,13 @@
 # 使用 Node.js 22 作为基础镜像，用于所有构建操作
 FROM node:22-alpine AS builder
 
+# 声明一个构建参数，用于接收 DATABASE_URL 的值
+ARG DATABASE_URL_BUILD
+
+# 将构建参数的值赋给环境变量 DATABASE_URL
+# 这样在构建时，如 Prisma 生成等操作就可以使用这个数据库URL
+ENV DATABASE_URL=${DATABASE_URL_BUILD}
+
 # 设置工作目录
 WORKDIR /app
 
@@ -68,10 +75,11 @@ COPY --from=builder /app/backend/package.json ./backend/package.json
 # 复制 Prisma schema 文件 (如果运行时需要)
 COPY --from=builder /app/backend/prisma ./backend/prisma
 
-# 复制后端 .env 文件 ***
-COPY --from=builder /app/backend/.env ./backend/.env
-
-# 设置环境变量
+# 设置运行时环境变量
+# 确保运行时也有 DATABASE_URL，因为 Prisma migrate 和你的应用都需要它
+# 如果你的应用在运行时也需要 DATABASE_URL，这一步非常关键。
+# 这里我们直接从构建阶段继承 DATABASE_URL_BUILD 的值
+ENV DATABASE_URL=${DATABASE_URL_BUILD}
 ENV NODE_ENV production
 
 # 暴露后端端口
