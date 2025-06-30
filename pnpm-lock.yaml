@@ -72,9 +72,6 @@ importers:
       class-validator:
         specifier: ^0.14.2
         version: 0.14.2
-      fresh-shop-common:
-        specifier: workspace:^
-        version: link:../common
       multer:
         specifier: ^2.0.1
         version: 2.0.1
@@ -143,12 +140,6 @@ importers:
         specifier: ^4.2.0
         version: 4.2.0
 
-  common:
-    dependencies:
-      fresh-shop-backend:
-        specifier: workspace:^
-        version: link:../backend
-
   frontend:
     dependencies:
       '@ant-design/icons':
@@ -172,9 +163,6 @@ importers:
       fresh-shop-backend:
         specifier: workspace:^
         version: link:../backend
-      fresh-shop-common:
-        specifier: workspace:^
-        version: link:../common
       less:
         specifier: ^4.3.0
         version: 4.3.0
@@ -187,6 +175,9 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      react-error-boundary:
+        specifier: ^6.0.0
+        version: 6.0.0(react@18.3.1)
       react-router:
         specifier: ^7.6.2
         version: 7.6.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -4503,6 +4494,11 @@ packages:
     resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
     peerDependencies:
       react: ^18.3.1
+
+  react-error-boundary@6.0.0:
+    resolution: {integrity: sha512-gdlJjD7NWr0IfkPlaREN2d9uUZUlksrfOx7SX62VRerwXbMY6ftGCIZua1VG1aXFNOimhISsTq+Owp725b9SiA==}
+    peerDependencies:
+      react: '>=16.13.1'
 
   react-fast-compare@3.2.2:
     resolution: {integrity: sha512-nsO+KSNgo1SbJqJEYRE9ERzo7YtYbou/OqjSQKxV7jcKox7+usiUVZOAC+XnDOABXggQTno0Y1CpVnuWEc1boQ==}
@@ -10111,6 +10107,11 @@ snapshots:
       loose-envify: 1.4.0
       react: 18.3.1
       scheduler: 0.23.2
+
+  react-error-boundary@6.0.0(react@18.3.1):
+    dependencies:
+      '@babel/runtime': 7.27.6
+      react: 18.3.1
 
   react-fast-compare@3.2.2: {}
 

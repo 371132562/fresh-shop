@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common'; // å¯
 import { PrismaService } from '../../prisma/prisma.service';
 import { Supplier } from '@prisma/client';
 
-import { SupplierPageParams, ListByPage } from 'fresh-shop-common/types/dto';
+import { SupplierPageParams, ListByPage } from '../../types/dto';
 
 @Injectable()
 export class SupplierService {

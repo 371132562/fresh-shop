@@ -9,7 +9,7 @@ type params = {
   setFileList: (fileList: UploadFile[]) => void
 }
 
-import { ErrorCode } from 'fresh-shop-common/types/response.ts'
+import { ErrorCode } from 'fresh-shop-backend/types/response.ts'
 
 import { deleteImage } from '@/services/common.ts'
 
@@ -39,19 +39,20 @@ const ImagesUpload = (props: params) => {
     setFileList(newFileList)
   }
 
-  const handleRemove = async file => {
-    let filename
-    if (file.filename) {
-      filename = file.filename
-    } else {
+  const handleRemove = async (file: UploadFile) => {
+    let filename: string
+
+    if ('filename' in file) {
+      filename = file.filename as string
+    } else if (file.response?.data?.filename) {
       filename = file.response.data.filename
-    }
-    const res = await deleteImage({ id, filename })
-    if (res.code === ErrorCode.SUCCESS) {
-      return true
     } else {
+      console.error('Filename not found in file object')
       return false
     }
+
+    const res = await deleteImage({ id, filename })
+    return res.code === ErrorCode.SUCCESS
   }
 
   const uploadButton = (

@@ -2,7 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { SupplierService } from './supplier.service';
 import { Supplier } from '@prisma/client';
 
-import { SupplierPageParams } from 'fresh-shop-common/types/dto';
+import { SupplierPageParams } from '../../types/dto';
 
 @Controller('supplier')
 export class SupplierController {

@@ -1,12 +1,13 @@
-import { ProductType } from 'fresh-shop-backend/types.ts'
-import { ListByPage, ProductTypePageParams } from 'fresh-shop-common/types/dto.ts'
-import { ResponseBody } from 'fresh-shop-common/types/response.ts'
+import { ProductType } from 'fresh-shop-backend/types/dto.ts'
+import { ListByPage, ProductTypePageParams } from 'fresh-shop-backend/types/dto.ts'
+import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
 
 import {
   productTypeCreateApi,
   productTypeDeleteApi,
   productTypeDetailApi,
+  productTypeListAllApi,
   productTypeListApi,
   productTypeUpdateApi
 } from '@/services/apis.ts'
@@ -22,11 +23,7 @@ type ProductTypeStore = {
     totalCount: number
     totalPages: number
   }
-  pageParams: {
-    name: string
-    page: number
-    pageSize: number
-  }
+  pageParams: ProductTypePageParams
   getProductTypeList: (data: ProductTypePageParams) => Promise<void>
   setPageParams: (data: Partial<ProductTypePageParams>) => void
   listLoading: boolean
@@ -39,10 +36,14 @@ type ProductTypeStore = {
   deleteProductType: (data: ProductTypeId) => Promise<boolean>
   deleteLoading: boolean
 
-  productType: ProductType | null
   getLoading: boolean
+  productType: ProductType | null
   getProductType: (data: ProductTypeId) => Promise<void>
   setProductType: (data: ProductType | null) => void
+
+  getAllProductTypesLoading: boolean
+  getAllProductTypes: () => Promise<void>
+  allProductTypes: ProductType[]
 }
 
 const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
@@ -129,6 +130,7 @@ const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
     }
   },
 
+  getLoading: false,
   productType: null,
   getProductType: async data => {
     try {
@@ -144,7 +146,22 @@ const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
       productType: data
     })
   },
-  getLoading: false
+
+  getAllProductTypesLoading: false,
+  allProductTypes: [],
+  getAllProductTypes: async () => {
+    try {
+      set({ getAllProductTypesLoading: true })
+      const res = await http.post(productTypeListAllApi)
+      set({
+        allProductTypes: res.data
+      })
+    } catch (err) {
+      console.error(err)
+    } finally {
+      set({ getAllProductTypesLoading: false })
+    }
+  }
 }))
 
 export default useProductTypeStore

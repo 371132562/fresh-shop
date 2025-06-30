@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ProductType } from '@prisma/client';
 
-import { ProductTypePageParams, ListByPage } from 'fresh-shop-common/types/dto';
+import { ProductTypePageParams, ListByPage } from '../../types/dto';
 
 @Injectable()
 export class ProductTypeService {
@@ -52,6 +52,14 @@ export class ProductTypeService {
       totalCount: totalCount,
       totalPages: Math.ceil(totalCount / pageSize), // 计算总页数
     };
+  }
+
+  async listAll() {
+    return this.prisma.productType.findMany({
+      where: {
+        delete: 0,
+      },
+    });
   }
 
   async detail(id: string) {

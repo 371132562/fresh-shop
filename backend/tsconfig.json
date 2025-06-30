@@ -1,10 +1,6 @@
 {
   "compilerOptions": {
-    "paths": {
-      // 确保你的 fresh-shop-common 包名映射到其根目录
-      // 关键！直接将 fresh-shop-common 内的任何子路径映射到其源文件路径
-//      "fresh-shop-common/*": ["../common/*"]
-    },
+    "paths": {},
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,

@@ -150,7 +150,7 @@ export const Component = () => {
           layout="vertical"
           size="large"
           name="basic"
-          labelCol={{ span: 8 }}
+          labelCol={{ span: 24 }}
           wrapperCol={{ span: 24 }}
           style={{ maxWidth: 600 }}
           autoComplete="off"

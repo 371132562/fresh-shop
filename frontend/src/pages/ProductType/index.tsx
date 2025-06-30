@@ -84,7 +84,7 @@ export const Component = () => {
                   搜索商品类型
                 </Button>
               </div>
-              <div>共 {listCount.totalCount} 家</div>
+              <div>共 {listCount.totalCount} 类</div>
             </div>
           }
           loading={listLoading}
@@ -131,6 +131,7 @@ export const Component = () => {
           id={currentId}
           visible={visible}
           setVisible={setVisible}
+          setCurrentId={setCurrentId}
         />
       )}
       <Modal
@@ -155,7 +156,7 @@ export const Component = () => {
           layout="vertical"
           size="large"
           name="basic"
-          labelCol={{ span: 8 }}
+          labelCol={{ span: 24 }}
           wrapperCol={{ span: 24 }}
           style={{ maxWidth: 600 }}
           autoComplete="off"

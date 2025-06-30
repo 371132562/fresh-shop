@@ -1,6 +1,6 @@
 import type { UploadFile } from 'antd'
 import { Form, Input, message, Modal } from 'antd'
-import { Supplier } from 'fresh-shop-backend/types'
+import { Supplier } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 
 import ImagesUpload from '@/components/ImagesUpload'
@@ -58,7 +58,7 @@ const Modify = (props: params) => {
         }
         const res = id ? await updateSupplier({ ...params, id }) : await createSupplier(params)
         if (res) {
-          message.success('添加成功')
+          message.success(id ? '编辑成功' : '添加成功')
           setVisible(false)
         }
       })
@@ -85,7 +85,7 @@ const Modify = (props: params) => {
           layout="vertical"
           size="large"
           name="basic"
-          labelCol={{ span: 8 }}
+          labelCol={{ span: 24 }}
           wrapperCol={{ span: 24 }}
           style={{ maxWidth: 600 }}
           autoComplete="off"

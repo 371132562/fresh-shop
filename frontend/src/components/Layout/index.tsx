@@ -29,10 +29,10 @@ export const Component: FC = () => {
   // 定义导航菜单项
   const navItems = [
     { to: '/supplier', label: '供货商管理', icon: <UserOutlined /> },
-    { to: '/product', label: '商品管理', icon: <ShoppingOutlined /> },
     { to: '/productType', label: '商品类型管理', icon: <TagsOutlined /> },
-    { to: '/customer', label: '客户管理', icon: <TeamOutlined /> },
+    { to: '/product', label: '商品管理', icon: <ShoppingOutlined /> },
     { to: '/address', label: '地址管理', icon: <EnvironmentOutlined /> },
+    { to: '/customer', label: '客户管理', icon: <TeamOutlined /> },
     { to: '/group-buy', label: '团购管理', icon: <GroupOutlined /> },
     { to: '/order', label: '订单管理', icon: <FileTextOutlined /> },
     { to: '/dashboard', label: '统计看板', icon: <DashboardOutlined /> }

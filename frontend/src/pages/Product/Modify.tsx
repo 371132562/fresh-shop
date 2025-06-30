@@ -1,6 +1,7 @@
-import { Button, Form, Input, message, Modal, Popconfirm } from 'antd'
+import { Button, Form, Input, message, Modal, Popconfirm, Select } from 'antd'
 import { useEffect } from 'react'
 
+import useProductStore from '@/stores/productStore.ts'
 import useProductTypeStore from '@/stores/productTypeStore.ts'
 
 interface params {
@@ -14,29 +15,32 @@ const Modify = (props: params) => {
   const { visible, setVisible, id, setCurrentId } = props
   const [form] = Form.useForm()
 
-  const createLoading = useProductTypeStore(state => state.createLoading)
-  const createProductType = useProductTypeStore(state => state.createProductType)
-  const updateProductType = useProductTypeStore(state => state.updateProductType)
-  const productType = useProductTypeStore(state => state.productType)
-  const getProductType = useProductTypeStore(state => state.getProductType)
-  const setProductType = useProductTypeStore(state => state.setProductType)
-  const deleteProductType = useProductTypeStore(state => state.deleteProductType)
+  const createLoading = useProductStore(state => state.createLoading)
+  const createProduct = useProductStore(state => state.createProduct)
+  const updateProduct = useProductStore(state => state.updateProduct)
+  const product = useProductStore(state => state.product)
+  const getProduct = useProductStore(state => state.getProduct)
+  const setProduct = useProductStore(state => state.setProduct)
+  const deleteProduct = useProductStore(state => state.deleteProduct)
+
+  const allProductTypes = useProductTypeStore(state => state.allProductTypes)
+  const getAllProductTypesLoading = useProductTypeStore(state => state.getAllProductTypesLoading)
 
   useEffect(() => {
     if (id) {
-      getProductType({ id })
+      getProduct({ id })
     }
   }, [])
 
   useEffect(() => {
-    form.setFieldsValue(productType)
-  }, [productType])
+    form.setFieldsValue(product)
+  }, [product])
 
   const handleOk = () => {
     form
       .validateFields()
       .then(async val => {
-        const res = id ? await updateProductType({ ...val, id }) : await createProductType(val)
+        const res = id ? await updateProduct({ ...val, id }) : await createProduct(val)
         if (res) {
           message.success(id ? '编辑成功' : '添加成功')
           setVisible(false)
@@ -49,12 +53,12 @@ const Modify = (props: params) => {
 
   const handleCancel = () => {
     setVisible(false)
-    setProductType(null)
+    setProduct(null)
     setCurrentId(null)
   }
 
   const handleDelete = async () => {
-    const res = await deleteProductType({ id: id as string })
+    const res = await deleteProduct({ id: id as string })
     if (res) {
       message.success('删除成功')
       setVisible(false)
@@ -82,9 +86,31 @@ const Modify = (props: params) => {
           <Form.Item
             label="名称"
             name="name"
-            rules={[{ required: true, message: '请输入商品类型名称' }]}
+            rules={[{ required: true, message: '请输入商品名称' }]}
           >
             <Input placeholder="必填" />
+          </Form.Item>
+          <Form.Item
+            label="商品类型"
+            name="productTypeId"
+            rules={[{ required: true, message: '请选择商品类型' }]}
+          >
+            <Select
+              loading={getAllProductTypesLoading}
+              showSearch
+              allowClear
+            >
+              {allProductTypes.map(item => {
+                return (
+                  <Select.Option
+                    key={item.id}
+                    value={item.id}
+                  >
+                    {item.name}
+                  </Select.Option>
+                )
+              })}
+            </Select>
           </Form.Item>
           <Form.Item
             label="描述"

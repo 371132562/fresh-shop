@@ -1,6 +1,6 @@
-import { Supplier } from 'fresh-shop-backend/types.ts'
-import { ListByPage, SupplierPageParams } from 'fresh-shop-common/types/dto.ts'
-import { ResponseBody } from 'fresh-shop-common/types/response.ts'
+import { Supplier } from 'fresh-shop-backend/types/dto.ts'
+import { ListByPage, SupplierPageParams } from 'fresh-shop-backend/types/dto.ts'
+import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
 
 import {
