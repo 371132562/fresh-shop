@@ -12,8 +12,8 @@ COPY pnpm-workspace.yaml ./
 # 安装 pnpm
 RUN npm install -g pnpm
 
-# --- 前端构建阶段 ---
-FROM base AS frontend_builder
+# --- 前端依赖安装阶段 ---
+FROM base AS frontend_install
 WORKDIR /app
 
 # 复制前端项目文件
@@ -23,16 +23,26 @@ COPY frontend ./frontend
 WORKDIR /app/frontend
 RUN pnpm install --frozen-lockfile
 
-# 构建前端项目
-RUN pnpm build
-
-# --- 后端构建阶段 ---
-FROM base AS backend_builder
+# --- 后端依赖安装阶段 ---
+FROM base AS backend_install
 WORKDIR /app
 
 # 复制后端项目文件
 COPY backend ./backend
 
+# 安装后端依赖
+WORKDIR /app/backend
+RUN pnpm install --frozen-lockfile
+
+# --- 前端构建阶段 ---
+FROM base AS frontend_builder
+
+# 构建前端项目
+WORKDIR /app/frontend
+RUN pnpm build
+
+# --- 后端构建阶段 ---
+FROM base AS backend_builder
 # 安装后端依赖
 WORKDIR /app/backend
 RUN pnpm install --frozen-lockfile
