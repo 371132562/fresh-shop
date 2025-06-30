@@ -6,9 +6,12 @@ FROM node:22-alpine AS frontend_builder
 WORKDIR /app/frontend
 
 # 使用 pnpm workspace 的方式复制 package.json 和 lock 文件
-COPY package.json ./ # 复制 monorepo 根目录的 package.json
-COPY pnpm-lock.yaml ./ # 复制 monorepo 根目录的 pnpm-lock.yaml
-COPY frontend/package.json ./frontend/ # 复制前端 package.json
+# 复制 monorepo 根目录的 package.json
+COPY package.json ./
+# 复制 monorepo 根目录的 pnpm-lock.yaml
+COPY pnpm-lock.yaml ./
+# 复制前端 package.json
+COPY frontend/package.json ./frontend/
 
 # 安装所有依赖 (包括 monorepo 根目录和前端项目的)
 RUN pnpm install --frozen-lockfile
@@ -35,7 +38,8 @@ RUN pnpm install --frozen-lockfile
 
 # 复制后端源代码和 Prisma schema 文件
 COPY backend .
-COPY prisma ./prisma # 复制 monorepo 根目录的 prisma 文件夹到 backend 内部
+# 复制 monorepo 根目录的 prisma 文件夹到 backend 内部
+COPY prisma ./prisma
 
 # 编译 NestJS 项目，产物在 /app/backend/dist
 RUN pnpm run build
@@ -65,7 +69,8 @@ COPY --from=frontend_builder /app/frontend/dist ./frontend/dist
 
 # 复制 Prisma schema 和生成的 Client
 COPY --from=backend_builder /app/backend/prisma ./backend/prisma
-COPY --from=backend_builder /app/backend/node_modules/.prisma ./backend/node_modules/.prisma # 复制生成的 prisma client
+# 复制生成的 prisma client
+COPY --from=backend_builder /app/backend/node_modules/.prisma ./backend/node_modules/.prisma
 # 确保运行时 Node.js 依赖也在最终镜像中
 COPY --from=backend_builder /app/backend/node_modules ./backend/node_modules
 
