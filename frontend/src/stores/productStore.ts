@@ -59,8 +59,8 @@ const useProductStore = create<ProductStore>((set, get) => ({
     try {
       set({ listLoading: true })
       const res: ResponseBody<ListByPage<ProductListItem[]>> = await http.post(productListApi, data)
-      if (res.data.page > res.data.totalPages) {
-        get().setPageParams({ page: res.data.totalPages })
+      if (res.data.page > res.data.totalPages && res.data.totalPages) {
+        get().setPageParams({ page: res.data.totalPages || 1 })
         return
       }
       set({

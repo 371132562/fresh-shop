@@ -61,8 +61,8 @@ const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
     try {
       set({ listLoading: true })
       const res: ResponseBody<ListByPage<ProductType[]>> = await http.post(productTypeListApi, data)
-      if (res.data.page > res.data.totalPages) {
-        get().setPageParams({ page: res.data.totalPages })
+      if (res.data.page > res.data.totalPages && res.data.totalPages) {
+        get().setPageParams({ page: res.data.totalPages || 1 })
         return
       }
       set({
@@ -154,7 +154,7 @@ const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
       set({ getAllProductTypesLoading: true })
       const res = await http.post(productTypeListAllApi)
       set({
-        allProductTypes: res.data
+        allProductTypes: res.data || []
       })
     } catch (err) {
       console.error(err)
