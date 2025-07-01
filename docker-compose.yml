@@ -1,12 +1,12 @@
 services:
   app:
-    #    build:
-    #      context: . # 指定 Dockerfile 所在的目录为当前目录
-    #      dockerfile: Dockerfile # 指定 Dockerfile 的名称
-    #      args:
-    #        DATABASE_URL_BUILD: "file:./shop.db" # 将你的数据库路径作为构建参数传递
+    build:
+      context: . # 指定 Dockerfile 所在的目录为当前目录
+      dockerfile: Dockerfile # 指定 Dockerfile 的名称
+      args:
+        DATABASE_URL_BUILD: "file:./shop.db" # 将你的数据库路径作为构建参数传递
 
-    image: linstar666/fresh-shop:latest
+    # image: linstar666/fresh-shop:latest
     ports:
       - "3000:3000" # 将容器的 3000 端口映射到主机的 3000 端口
     volumes:
