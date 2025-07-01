@@ -23,6 +23,7 @@ model Supplier {
   createdAt   DateTime @default(now()) // 创建时间
   updatedAt   DateTime @updatedAt // 最后更新时间
 
+  @@index([id])
   @@index([name])
 }
 
@@ -35,6 +36,8 @@ model ProductType {
   delete      Int       @default(0)
   createdAt   DateTime  @default(now()) // 创建时间
   updatedAt   DateTime  @updatedAt // 最后更新时间
+
+  @@index([id])
 }
 
 // 商品
@@ -48,57 +51,72 @@ model Product {
   createdAt     DateTime    @default(now()) // 创建时间
   updatedAt     DateTime    @updatedAt // 最后更新时间
 
+  @@index([id])
   @@index([name])
 }
 
 // 客户
 model Customer {
-  id          String   @id @default(uuid()) // 主键ID（UUID）
-  name        String // 客户姓名（必填）
-  phone       Int? // 联系电话（可选）
-  wechat      String? // 微信账号（可选）
-  address     String? // 地址信息（可选）
-  description String? // 客户描述（可选）
-  orders      Order[]
-  delete      Int      @default(0)
-  createdAt   DateTime @default(now()) // 创建时间
-  updatedAt   DateTime @updatedAt // 最后更新时间
+  id                String          @id @default(uuid()) // 主键ID（UUID）
+  name              String // 客户姓名（必填）
+  phone             Int? // 联系电话（可选）
+  wechat            String? // 微信账号（可选）
+  address           String? // 地址信息（可选）
+  description       String? // 客户描述（可选）
+  customerAddress   CustomerAddress @relation(fields: [customerAddressId], references: [id])
+  customerAddressId String
+  orders            Order[]
+  delete            Int             @default(0)
+  createdAt         DateTime        @default(now()) // 创建时间
+  updatedAt         DateTime        @updatedAt // 最后更新时间
 
+  @@index([id])
   @@index([name])
+}
+
+// 客户地址
+model CustomerAddress {
+  id        String     @id @default(uuid())
+  name      String
+  Customer  Customer[]
+  delete    Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
 // 团购单
 model GroupBuy {
-  id          String            @id @default(uuid()) // 主键ID（UUID）
+  id          String    @id @default(uuid()) // 主键ID（UUID）
   name        String // 团购名称（必填）
   description String? // 团购描述（可选）
   startTime   DateTime? // 团购发起时间（可选）
-  variants    GroupBuyVariant[] // 关联的规格
+  variants    String // 团购规格数组，以JSON字符串存储 包含规格,成本价,售价三个字段
   Order       Order[]
   images      String // 商品图片数组，以JSON字符串存储
-  delete      Int               @default(0)
-  createdAt   DateTime          @default(now()) // 创建时间
-  updatedAt   DateTime          @updatedAt // 最后更新时间
+  delete      Int       @default(0)
+  createdAt   DateTime  @default(now()) // 创建时间
+  updatedAt   DateTime  @updatedAt // 最后更新时间
 
+  @@index([id])
   @@index([name])
 }
 
 // 团购规格
-model GroupBuyVariant {
-  id         String   @id @default(uuid()) // 主键ID（UUID）
-  name       String // 规格名称（如"1袋"、"2袋"）
-  price      Decimal // 售价（必填）
-  costPrice  Decimal // 成本价（必填）
-  groupBuyId String
-  groupBuy   GroupBuy @relation(fields: [groupBuyId], references: [id])
-  Order      Order[]
-  delete     Int      @default(0)
-  createdAt  DateTime @default(now()) // 创建时间
-  updatedAt  DateTime @updatedAt // 最后更新时间
-
-  @@index([name])
-  @@index([groupBuyId])
-}
+// model GroupBuyVariant {
+//   id         String   @id @default(uuid()) // 主键ID（UUID）
+//   name       String // 规格名称（如"1袋"、"2袋"）
+//   price      Decimal // 售价（必填）
+//   costPrice  Decimal // 成本价（必填）
+//   groupBuyId String
+//   groupBuy   GroupBuy @relation(fields: [groupBuyId], references: [id])
+//   Order      Order[]
+//   delete     Int      @default(0)
+//   createdAt  DateTime @default(now()) // 创建时间
+//   updatedAt  DateTime @updatedAt // 最后更新时间
+//
+//   @@index([name])
+//   @@index([groupBuyId])
+// }
 
 enum OrderStatus {
   COMPLETED // 已完成
@@ -107,20 +125,21 @@ enum OrderStatus {
 
 // 订单
 model Order {
-  id                String          @id @default(uuid())
-  customerId        String
-  customer          Customer        @relation(fields: [customerId], references: [id])
-  status            OrderStatus // 订单状态（是否退款）
-  groupBuyId        String?
-  groupBuy          GroupBuy?       @relation(fields: [groupBuyId], references: [id])
-  groupBuyVariantId String
-  groupBuyVariant   GroupBuyVariant @relation(fields: [groupBuyVariantId], references: [id])
-  quantity          Int // 购买数量（如购买2个"5元2袋"规格）
-  delete            Int             @default(0)
-  createdAt         DateTime        @default(now()) // 创建时间
-  updatedAt         DateTime        @updatedAt // 最后更新时间
+  id         String      @id @default(uuid())
+  customerId String
+  customer   Customer    @relation(fields: [customerId], references: [id])
+  status     OrderStatus // 订单状态（是否退款）
+  groupBuyId String
+  groupBuy   GroupBuy    @relation(fields: [groupBuyId], references: [id])
+  // groupBuyVariantId String
+  // groupBuyVariant   GroupBuyVariant @relation(fields: [groupBuyVariantId], references: [id])
+  quantity   Int // 购买份数
+  delete     Int         @default(0)
+  createdAt  DateTime    @default(now()) // 创建时间
+  updatedAt  DateTime    @updatedAt // 最后更新时间
+  // @@index([groupBuyVariantId])
 
+  @@index([id])
   @@index([customerId])
   @@index([groupBuyId])
-  @@index([groupBuyVariantId])
 }

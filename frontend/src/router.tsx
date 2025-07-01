@@ -26,7 +26,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/address',
-        lazy: () => import('./pages/Address')
+        lazy: () => import('./pages/CustomerAddress')
       },
       {
         path: '/product',

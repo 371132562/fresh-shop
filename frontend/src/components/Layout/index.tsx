@@ -31,7 +31,7 @@ export const Component: FC = () => {
     { to: '/supplier', label: '供货商管理', icon: <UserOutlined /> },
     { to: '/productType', label: '商品类型管理', icon: <TagsOutlined /> },
     { to: '/product', label: '商品管理', icon: <ShoppingOutlined /> },
-    { to: '/address', label: '地址管理', icon: <EnvironmentOutlined /> },
+    { to: '/address', label: '客户地址管理', icon: <EnvironmentOutlined /> },
     { to: '/customer', label: '客户管理', icon: <TeamOutlined /> },
     { to: '/group-buy', label: '团购管理', icon: <GroupOutlined /> },
     { to: '/order', label: '订单管理', icon: <FileTextOutlined /> },

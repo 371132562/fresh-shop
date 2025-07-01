@@ -11,6 +11,7 @@ import { UPLOAD_DIR } from './utils/file-upload.utils'; // 导入上传目录常
 import { SupplierModule } from './supplier/supplier.module';
 import { ProductTypeModule } from './productType/productType.module';
 import { ProductModule } from './product/product.module';
+import { CustomerAddressModule } from './customerAddress/customerAddress.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ProductModule } from './product/product.module';
     SupplierModule,
     ProductTypeModule,
     ProductModule,
+    CustomerAddressModule,
   ],
   controllers: [],
   providers: [],

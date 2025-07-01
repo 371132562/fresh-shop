@@ -1,6 +1,11 @@
-import { Supplier, ProductType, Product } from '@prisma/client';
+import {
+  Supplier,
+  ProductType,
+  Product,
+  CustomerAddress,
+} from '@prisma/client';
 
-export { Supplier, ProductType, Product };
+export { Supplier, ProductType, Product, CustomerAddress };
 
 export type CommonPageParams = {
   page: number;
@@ -28,4 +33,8 @@ export type ProductTypePageParams = CommonPageParams & {
 export type ProductPageParams = CommonPageParams & {
   name: string;
   productTypeIds: ProductType['id'][];
+};
+
+export type CustomerAddressPageParams = CommonPageParams & {
+  name: string;
 };
