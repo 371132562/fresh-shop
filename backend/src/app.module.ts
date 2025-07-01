@@ -12,6 +12,7 @@ import { SupplierModule } from './supplier/supplier.module';
 import { ProductTypeModule } from './productType/productType.module';
 import { ProductModule } from './product/product.module';
 import { CustomerAddressModule } from './customerAddress/customerAddress.module';
+import { CustomerModule } from './customer/customer.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { CustomerAddressModule } from './customerAddress/customerAddress.module'
     ProductTypeModule,
     ProductModule,
     CustomerAddressModule,
+    CustomerModule,
   ],
   controllers: [],
   providers: [],

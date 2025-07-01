@@ -113,12 +113,6 @@ const Modify = (props: params) => {
             label="描述"
             name="description"
           >
-            <Input placeholder="选填，如供货商品类等" />
-          </Form.Item>
-          <Form.Item
-            label="评价"
-            name="rating"
-          >
             <Input placeholder="选填，如过往印象等" />
           </Form.Item>
           <ImagesUpload

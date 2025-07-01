@@ -1,8 +1,8 @@
 import { Button, Form, Input, message, Modal, Popconfirm, Select } from 'antd'
 import { useEffect } from 'react'
 
-import useProductStore from '@/stores/productStore.ts'
-import useProductTypeStore from '@/stores/productTypeStore.ts'
+import useCustomerAddressStore from '@/stores/customerAddressStore.ts'
+import useCustomerStore from '@/stores/customerStore.ts'
 
 interface params {
   visible: boolean
@@ -15,32 +15,34 @@ const Modify = (props: params) => {
   const { visible, setVisible, id, setCurrentId } = props
   const [form] = Form.useForm()
 
-  const createLoading = useProductStore(state => state.createLoading)
-  const createProduct = useProductStore(state => state.createProduct)
-  const updateProduct = useProductStore(state => state.updateProduct)
-  const product = useProductStore(state => state.product)
-  const getProduct = useProductStore(state => state.getProduct)
-  const setProduct = useProductStore(state => state.setProduct)
-  const deleteProduct = useProductStore(state => state.deleteProduct)
+  const createLoading = useCustomerStore(state => state.createLoading)
+  const createCustomer = useCustomerStore(state => state.createCustomer)
+  const updateCustomer = useCustomerStore(state => state.updateCustomer)
+  const customer = useCustomerStore(state => state.customer)
+  const getCustomer = useCustomerStore(state => state.getCustomer)
+  const setCustomer = useCustomerStore(state => state.setCustomer)
+  const deleteCustomer = useCustomerStore(state => state.deleteCustomer)
 
-  const allProductTypes = useProductTypeStore(state => state.allProductTypes)
-  const getAllProductTypesLoading = useProductTypeStore(state => state.getAllProductTypesLoading)
+  const allCustomerAddress = useCustomerAddressStore(state => state.allCustomerAddress)
+  const getAllCustomerAddressLoading = useCustomerAddressStore(
+    state => state.getAllCustomerAddressLoading
+  )
 
   useEffect(() => {
     if (id) {
-      getProduct({ id })
+      getCustomer({ id })
     }
   }, [])
 
   useEffect(() => {
-    form.setFieldsValue(product)
-  }, [product])
+    form.setFieldsValue(customer)
+  }, [customer])
 
   const handleOk = () => {
     form
       .validateFields()
       .then(async val => {
-        const res = id ? await updateProduct({ ...val, id }) : await createProduct(val)
+        const res = id ? await updateCustomer({ ...val, id }) : await createCustomer(val)
         if (res) {
           message.success(id ? '编辑成功' : '添加成功')
           setVisible(false)
@@ -53,12 +55,12 @@ const Modify = (props: params) => {
 
   const handleCancel = () => {
     setVisible(false)
-    setProduct(null)
+    setCustomer(null)
     setCurrentId(null)
   }
 
   const handleDelete = async () => {
-    const res = await deleteProduct({ id: id as string })
+    const res = await deleteCustomer({ id: id as string })
     if (res) {
       message.success('删除成功')
       setVisible(false)
@@ -72,6 +74,7 @@ const Modify = (props: params) => {
         onOk={handleOk}
         onCancel={handleCancel}
         loading={createLoading}
+        style={{ top: 20 }}
       >
         <Form
           form={form}
@@ -86,21 +89,20 @@ const Modify = (props: params) => {
           <Form.Item
             label="名称"
             name="name"
-            rules={[{ required: true, message: '请输入商品名称' }]}
+            rules={[{ required: true, message: '请输入客户名称' }]}
           >
             <Input placeholder="必填" />
           </Form.Item>
           <Form.Item
-            label="商品类型"
-            name="productTypeId"
-            rules={[{ required: true, message: '请选择商品类型' }]}
+            label="地址"
+            name="customerAddressId"
           >
             <Select
-              loading={getAllProductTypesLoading}
+              loading={getAllCustomerAddressLoading}
               showSearch
               allowClear
             >
-              {allProductTypes.map(item => {
+              {allCustomerAddress.map(item => {
                 return (
                   <Select.Option
                     key={item.id}
@@ -113,14 +115,26 @@ const Modify = (props: params) => {
             </Select>
           </Form.Item>
           <Form.Item
-            label="描述"
-            name="description"
+            label="手机号"
+            name="phone"
           >
             <Input placeholder="选填" />
           </Form.Item>
+          <Form.Item
+            label="微信号"
+            name="wechat"
+          >
+            <Input placeholder="选填" />
+          </Form.Item>
+          <Form.Item
+            label="描述"
+            name="description"
+          >
+            <Input placeholder="选填，如供货商品类等" />
+          </Form.Item>
           <Form.Item label="操作">
             <Popconfirm
-              title={<div className="text-lg">确定要删除这个商品吗？</div>}
+              title={<div className="text-lg">确定要删除这个客户吗？</div>}
               onConfirm={handleDelete}
               okText="是"
               cancelText="否"

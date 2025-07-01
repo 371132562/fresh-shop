@@ -59,7 +59,7 @@ model Product {
 model Customer {
   id                String          @id @default(uuid()) // 主键ID（UUID）
   name              String // 客户姓名（必填）
-  phone             Int? // 联系电话（可选）
+  phone             String? // 联系电话（可选）
   wechat            String? // 微信账号（可选）
   address           String? // 地址信息（可选）
   description       String? // 客户描述（可选）

@@ -3,9 +3,10 @@ import {
   ProductType,
   Product,
   CustomerAddress,
+  Customer,
 } from '@prisma/client';
 
-export { Supplier, ProductType, Product, CustomerAddress };
+export { Supplier, ProductType, Product, CustomerAddress, Customer };
 
 export type CommonPageParams = {
   page: number;
@@ -37,4 +38,11 @@ export type ProductPageParams = CommonPageParams & {
 
 export type CustomerAddressPageParams = CommonPageParams & {
   name: string;
+};
+
+export type CustomerPageParams = CommonPageParams & {
+  name: string;
+  phone: string;
+  wechat: string;
+  customerAddressIds: CustomerAddress['id'][];
 };
