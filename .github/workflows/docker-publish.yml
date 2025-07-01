@@ -3,7 +3,7 @@ name: Publish Docker image
 on:
   push:
     branches:
-      - main # 当推送到 main 分支时触发
+      - master # 当推送到 main 分支时触发
 
 env:
   DOCKER_IMAGE_NAME: linstar666/fresh-shop # 替换为你的 Docker Hub 用户名和镜像名
