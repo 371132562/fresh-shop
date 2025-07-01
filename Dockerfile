@@ -35,9 +35,6 @@ RUN pnpm install --frozen-lockfile
 # 注意：所有后续的 RUN 命令都在 /app 目录下执行，需要通过明确的路径引用
 WORKDIR /app/backend
 
-# 复制 Prisma schema 文件 (已经通过上面的 COPY backend . 复制过，但为了清晰再次强调其重要性)
-# COPY backend/prisma ./backend/prisma # 这行可以省略，因为整个backend目录已经复制
-
 # 生成 Prisma 客户端
 # 这将在 backend/node_modules/.prisma 目录下生成客户端
 RUN npx prisma generate
@@ -56,7 +53,7 @@ RUN pnpm build
 WORKDIR /app
 
 # 复制 Prisma migrate
-COPY --from=builder /app/backend/prisma/migrations ./migrations
+COPY backend/prisma/migrations ./migrations
 
 # 设置运行时环境变量
 # 确保运行时也有 DATABASE_URL，因为 Prisma migrate 和你的应用都需要它
