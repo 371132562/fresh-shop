@@ -21,3 +21,4 @@ services:
 
 volumes:
   database_data: # 定义一个命名卷用于数据库持久化
+  uploads_data: # 定义一个命名卷用于上传持久化
