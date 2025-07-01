@@ -3,7 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router'
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/dashboard" />
+    element: <Navigate to="/supplier" />
   },
   {
     lazy: () => import('./components/Layout'),
