@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
 import useSupplierStore from '@/stores/supplierStore.ts'
+import { validatePhoneNumber } from '@/utils'
 
 import Modify from './Modify.tsx'
 
@@ -164,6 +165,15 @@ export const Component = () => {
           <Form.Item
             label="按手机号搜索"
             name="phone"
+            rules={[
+              {
+                required: false,
+                message: '请输入手机号！'
+              },
+              {
+                validator: validatePhoneNumber
+              }
+            ]}
           >
             <Input />
           </Form.Item>

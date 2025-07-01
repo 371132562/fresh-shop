@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 
 import useCustomerAddressStore from '@/stores/customerAddressStore.ts'
 import useCustomerStore from '@/stores/customerStore.ts'
+import { validatePhoneNumber } from '@/utils'
 
 interface params {
   visible: boolean
@@ -117,6 +118,15 @@ const Modify = (props: params) => {
           <Form.Item
             label="手机号"
             name="phone"
+            rules={[
+              {
+                required: false,
+                message: '请输入手机号！'
+              },
+              {
+                validator: validatePhoneNumber
+              }
+            ]}
           >
             <Input placeholder="选填" />
           </Form.Item>

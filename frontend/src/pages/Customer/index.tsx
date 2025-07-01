@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 
 import useCustomerAddressStore from '@/stores/customerAddressStore.ts'
 import useCustomerStore from '@/stores/customerStore.ts'
+import { validatePhoneNumber } from '@/utils'
 
 import Modify from './Modify.tsx'
 
@@ -202,6 +203,15 @@ export const Component = () => {
           <Form.Item
             label="按手机号搜索"
             name="phone"
+            rules={[
+              {
+                required: false,
+                message: '请输入手机号！'
+              },
+              {
+                validator: validatePhoneNumber
+              }
+            ]}
           >
             <Input />
           </Form.Item>
