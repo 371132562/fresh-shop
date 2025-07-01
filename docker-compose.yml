@@ -12,6 +12,7 @@ services:
       # 注意：假设你的 SQLite 数据库文件在 backend/prisma/dev.db (或你配置的任何路径)
       # 这里我们映射整个 backend/prisma 目录，以便 dev.db 和 migrations 都能持久化
       - database_data:/app/backend/prisma
+      - uploads_data:/app/uploads/images # 将命名卷 uploads_data 映射到容器内部的 /app/uploads/images
     restart: unless-stopped # 保持 Docker 容器的运维状态，除非手动停止
     environment:
       DATABASE_URL: "file:./shop.db" # 这确保了运行时容器内的 DATABASE_URL 环境变量被设置

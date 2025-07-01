@@ -72,6 +72,7 @@ model GroupBuy {
   id          String            @id @default(uuid()) // 主键ID（UUID）
   name        String // 团购名称（必填）
   description String? // 团购描述（可选）
+  startTime   DateTime? // 团购发起时间（可选）
   variants    GroupBuyVariant[] // 关联的规格
   Order       Order[]
   images      String // 商品图片数组，以JSON字符串存储

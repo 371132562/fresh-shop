@@ -59,7 +59,6 @@ WORKDIR /app
 # 确保运行时也有 DATABASE_URL，因为 Prisma migrate 和你的应用都需要它
 # 如果你的应用在运行时也需要 DATABASE_URL，这一步非常关键。
 # 这里我们直接从构建阶段继承 DATABASE_URL_BUILD 的值
-ENV DATABASE_URL=${DATABASE_URL_BUILD}
 ENV NODE_ENV production
 
 # 暴露后端端口
