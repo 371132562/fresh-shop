@@ -53,13 +53,28 @@ WORKDIR /app/frontend
 # 确保在前端的 package.json 中配置了正确的构建命令，可能包含类型生成步骤
 RUN pnpm build
 
+# --- 最终运行阶段 ---
+FROM node:22-alpine AS runner
 WORKDIR /app
+
+# 从 builder 阶段复制必要的文件
+
+# 复制前端打包产物
+COPY --from=builder /app/frontend/dist ./frontend/dist
+
+# 复制后端全部内容
+# 确保复制了所有的生产环境依赖，特别是 Prisma 客户端相关的依赖
+COPY --from=builder /app/backend ./backend
+
+# 复制 Prisma migrate
+COPY --from=builder /app/backend/prisma/migrations ./migrations
 
 # 设置运行时环境变量
 # 确保运行时也有 DATABASE_URL，因为 Prisma migrate 和你的应用都需要它
 # 如果你的应用在运行时也需要 DATABASE_URL，这一步非常关键。
 # 这里我们直接从构建阶段继承 DATABASE_URL_BUILD 的值
 ENV NODE_ENV production
+ENV DATABASE_URL=${DATABASE_URL_BUILD}
 
 # 暴露后端端口
 EXPOSE 3000
