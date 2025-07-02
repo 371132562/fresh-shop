@@ -55,38 +55,37 @@ export const Component = () => {
         {/* 主要信息卡片 */}
         <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
           {/* 卡片标题及操作按钮：保持你原有的设计不变 */}
-          <h3 className="mb-4 flex justify-between border-b border-gray-100 pb-3 text-xl font-bold text-gray-800">
-            {groupBuy?.name || '加载中...'}
-            <div className="flex items-center">
-              <Flex
-                gap="small"
-                wrap
+          <h3 className="mb-4 flex flex-col justify-between border-b border-gray-100 pb-3 text-xl font-bold text-gray-800">
+            <div className="mb-3">{groupBuy?.name || '加载中...'}</div>
+            <Flex
+              gap="small"
+              wrap
+              justify="end"
+            >
+              <Button
+                color="primary"
+                variant="outlined"
+                onClick={() => setVisible(true)}
+              >
+                编辑
+              </Button>
+              <Popconfirm
+                title={<div className="text-lg">确定要删除这个供应商吗？</div>}
+                placement="left"
+                onConfirm={confirm}
+                okText="是"
+                cancelText="否"
+                okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
+                cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
               >
                 <Button
-                  color="primary"
-                  variant="outlined"
-                  onClick={() => setVisible(true)}
+                  color="danger"
+                  variant="solid"
                 >
-                  编辑
+                  删除
                 </Button>
-                <Popconfirm
-                  title={<div className="text-lg">确定要删除这个供应商吗？</div>}
-                  placement="left"
-                  onConfirm={confirm}
-                  okText="是"
-                  cancelText="否"
-                  okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
-                  cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
-                >
-                  <Button
-                    color="danger"
-                    variant="outlined"
-                  >
-                    删除
-                  </Button>
-                </Popconfirm>
-              </Flex>
-            </div>
+              </Popconfirm>
+            </Flex>
           </h3>
 
           {/* 团购基础信息：改回单列模式 */}
