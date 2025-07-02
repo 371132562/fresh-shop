@@ -64,11 +64,15 @@ CREATE TABLE "GroupBuy" (
     "name" TEXT NOT NULL,
     "description" TEXT,
     "groupBuyStartDate" DATETIME,
-    "variants" TEXT NOT NULL,
+    "supplierId" TEXT NOT NULL,
+    "productId" TEXT NOT NULL,
+    "units" TEXT NOT NULL,
     "images" TEXT NOT NULL,
     "delete" INTEGER NOT NULL DEFAULT 0,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "GroupBuy_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "Supplier" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "GroupBuy_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
