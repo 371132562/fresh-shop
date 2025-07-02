@@ -2,11 +2,14 @@ import { PlusOutlined } from '@ant-design/icons'
 import { type GetProp, Image, Upload, type UploadFile, type UploadProps } from 'antd'
 import { useState } from 'react'
 
+import { DeleteImageType } from '@/services/common'
+
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0]
 type params = {
   id: string
   fileList: UploadFile[]
   setFileList: (fileList: UploadFile[]) => void
+  type: DeleteImageType
 }
 
 import { ErrorCode } from 'fresh-shop-backend/types/response.ts'
@@ -14,7 +17,7 @@ import { ErrorCode } from 'fresh-shop-backend/types/response.ts'
 import { deleteImage } from '@/services/common.ts'
 
 const ImagesUpload = (props: params) => {
-  const { fileList, setFileList, id } = props
+  const { fileList, setFileList, id, type } = props
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewImage, setPreviewImage] = useState('')
 
@@ -51,7 +54,7 @@ const ImagesUpload = (props: params) => {
       return false
     }
 
-    const res = await deleteImage({ id, filename })
+    const res = await deleteImage({ id, filename, type })
     return res.code === ErrorCode.SUCCESS
   }
 

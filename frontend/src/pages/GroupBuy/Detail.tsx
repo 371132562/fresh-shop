@@ -21,7 +21,7 @@ export const Component = () => {
   const images: string[] = useMemo(() => {
     return groupBuy?.images
       ? JSON.parse(groupBuy.images).map((image: string) => {
-          return import.meta.env.VITE_SERVER_URL + import.meta.env.VITE_IMAGES_BASE_URL + image
+          return '//' + location.hostname + import.meta.env.VITE_IMAGES_BASE_URL + image
         })
       : []
   }, [groupBuy])

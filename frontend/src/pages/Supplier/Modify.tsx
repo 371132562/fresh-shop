@@ -32,7 +32,7 @@ const Modify = (props: params) => {
       if (imagesArr.length > 0) {
         setFileList(
           imagesArr.map((image: string) => ({
-            url: import.meta.env.VITE_SERVER_URL + import.meta.env.VITE_IMAGES_BASE_URL + image,
+            url: '//' + location.hostname + import.meta.env.VITE_IMAGES_BASE_URL + image,
             filename: image
           }))
         )
@@ -132,6 +132,7 @@ const Modify = (props: params) => {
             id={id || ''}
             fileList={fileList as UploadFile[]}
             setFileList={setFileList}
+            type="supplier"
           />
         </Form>
       </Modal>
