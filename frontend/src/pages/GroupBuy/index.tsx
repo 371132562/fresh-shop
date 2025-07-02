@@ -59,8 +59,8 @@ export const Component = () => {
           name,
           supplierIds,
           productIds,
-          startDate: groupBuySearchDate?.[0].toDate() ?? null,
-          endDate: groupBuySearchDate?.[1].toDate() ?? null
+          startDate: groupBuySearchDate?.[0]?.toDate() ?? null,
+          endDate: groupBuySearchDate?.[1]?.toDate() ?? null
         })
         setSearchVisible(false)
       })
@@ -89,11 +89,6 @@ export const Component = () => {
 
   const filterOption = (input: string, option: any) => {
     return (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
-  }
-
-  const onDatePickerChange = (date: any, dateString: any) => {
-    console.log(date[1].format('YYYY-MM-DD'))
-    console.log(dateString)
   }
 
   return (
@@ -133,7 +128,10 @@ export const Component = () => {
             <List.Item>
               <List.Item.Meta
                 title={
-                  <NavLink to={`/groupBuy/detail/${item.id}`}>
+                  <NavLink
+                    to={`/groupBuy/detail/${item.id}`}
+                    className="underline"
+                  >
                     <Button
                       type="link"
                       style={{ padding: 0 }}
@@ -142,7 +140,20 @@ export const Component = () => {
                     </Button>
                   </NavLink>
                 }
-                description={item.description || ''}
+                description={
+                  <div className="mt-1 text-sm text-gray-700">
+                    {item.product?.name && ( // 只有当 product.name 存在时才显示
+                      <div className="mb-1 font-medium text-gray-800">
+                        商品：<span className="text-blue-500">{item.product.name}</span>
+                      </div>
+                    )}
+                    {item.description && ( // 只有当 description 存在时才显示
+                      <div className="overflow-hidden text-ellipsis whitespace-nowrap text-gray-600">
+                        {item.description}
+                      </div>
+                    )}
+                  </div>
+                }
               />
             </List.Item>
           )}
@@ -200,7 +211,6 @@ export const Component = () => {
             name="groupBuySearchDate"
           >
             <RangePicker
-              onChange={onDatePickerChange}
               inputReadOnly
               style={{ width: '100%' }}
             />

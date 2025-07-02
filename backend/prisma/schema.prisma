@@ -107,23 +107,6 @@ model GroupBuy {
   @@index([name])
 }
 
-// 团购规格
-// model GroupBuyVariant {
-//   id         String   @id @default(uuid()) // 主键ID（UUID）
-//   name       String // 规格名称（如"1袋"、"2袋"）
-//   price      Decimal // 售价（必填）
-//   costPrice  Decimal // 成本价（必填）
-//   groupBuyId String
-//   groupBuy   GroupBuy @relation(fields: [groupBuyId], references: [id])
-//   Order      Order[]
-//   delete     Int      @default(0)
-//   createdAt  DateTime @default(now()) // 创建时间
-//   updatedAt  DateTime @updatedAt // 最后更新时间
-//
-//   @@index([name])
-//   @@index([groupBuyId])
-// }
-
 enum OrderStatus {
   COMPLETED // 已完成
   REFUNDED // 已退款

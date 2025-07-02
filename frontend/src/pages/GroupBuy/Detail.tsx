@@ -145,16 +145,16 @@ export const Component = () => {
                   {/* 为每项规格添加背景和内边距，形成独立区块 */}
                   <div className="mb-3 flex items-center">
                     {/* 规格名称单独一行，更醒目 */}
-                    <span className="flex-shrink-0 font-semibold text-gray-600">计量单位：</span>
-                    <span className="font-bold text-blue-700">{item.unit}</span>
+                    <span className="w-20 flex-shrink-0 text-gray-500">计量单位：</span>
+                    <span className="font-bold text-blue-500">{item.unit}</span>
                     {/* 规格值加粗并使用蓝色强调 */}
                   </div>
                   <div className="mb-3 flex items-center">
-                    <span className="w-12 flex-shrink-0 text-gray-500">售价：</span>
+                    <span className="w-20 flex-shrink-0 text-gray-500">售价：</span>
                     <span className="mr-2 font-medium text-blue-500">￥{item.price}</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="w-16 flex-shrink-0 text-gray-500">成本价：</span>
+                    <span className="w-20 flex-shrink-0 text-gray-500">成本价：</span>
                     <span className="font-medium text-blue-500">￥{item.costPrice}</span>
                   </div>
                 </div>
