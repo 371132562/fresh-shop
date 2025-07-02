@@ -12,16 +12,17 @@ datasource db {
 
 // 供货商
 model Supplier {
-  id          String   @id @default(uuid()) // 主键ID（UUID）
+  id          String     @id @default(uuid()) // 主键ID（UUID）
   name        String // 供货商名称（必填）
   phone       String? // 联系电话（可选）
   wechat      String? // 微信账号（可选）
   description String? // 供货商描述（可选）
   rating      String? // 供货商评价（可选）
   images      String // 供货商图片数组，以JSON字符串存储
-  delete      Int      @default(0)
-  createdAt   DateTime @default(now()) // 创建时间
-  updatedAt   DateTime @updatedAt // 最后更新时间
+  delete      Int        @default(0)
+  groupBuy    GroupBuy[]
+  createdAt   DateTime   @default(now()) // 创建时间
+  updatedAt   DateTime   @updatedAt // 最后更新时间
 
   @@index([id])
   @@index([name])
@@ -32,7 +33,7 @@ model ProductType {
   id          String    @id @default(uuid()) // 主键ID（UUID）
   name        String // 分类名称（必填）
   description String? // 分类描述（可选）
-  Product     Product[]
+  product     Product[]
   delete      Int       @default(0)
   createdAt   DateTime  @default(now()) // 创建时间
   updatedAt   DateTime  @updatedAt // 最后更新时间
@@ -48,6 +49,7 @@ model Product {
   productType   ProductType @relation(fields: [productTypeId], references: [id])
   productTypeId String
   delete        Int         @default(0)
+  groupBuy      GroupBuy[]
   createdAt     DateTime    @default(now()) // 创建时间
   updatedAt     DateTime    @updatedAt // 最后更新时间
 
@@ -78,7 +80,7 @@ model Customer {
 model CustomerAddress {
   id        String     @id @default(uuid())
   name      String
-  Customer  Customer[]
+  customer  Customer[]
   delete    Int        @default(0)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -86,16 +88,20 @@ model CustomerAddress {
 
 // 团购单
 model GroupBuy {
-  id          String    @id @default(uuid()) // 主键ID（UUID）
-  name        String // 团购名称（必填）
-  description String? // 团购描述（可选）
-  startTime   DateTime? // 团购发起时间（可选）
-  variants    String // 团购规格数组，以JSON字符串存储 包含规格,成本价,售价三个字段
-  Order       Order[]
-  images      String // 商品图片数组，以JSON字符串存储
-  delete      Int       @default(0)
-  createdAt   DateTime  @default(now()) // 创建时间
-  updatedAt   DateTime  @updatedAt // 最后更新时间
+  id                String    @id @default(uuid()) // 主键ID（UUID）
+  name              String // 团购名称（必填）
+  description       String? // 团购描述（可选）
+  groupBuyStartDate DateTime? // 团购发起时间（可选）
+  supplierId        String
+  supplier          Supplier  @relation(fields: [supplierId], references: [id])
+  productId         String
+  product           Product   @relation(fields: [productId], references: [id])
+  units             String // 团购规格数组，以JSON字符串存储 包含规格,成本价,售价三个字段
+  order             Order[]
+  images            String // 商品图片数组，以JSON字符串存储
+  delete            Int       @default(0)
+  createdAt         DateTime  @default(now()) // 创建时间
+  updatedAt         DateTime  @updatedAt // 最后更新时间
 
   @@index([id])
   @@index([name])

@@ -7,6 +7,7 @@ import {
   supplierCreateApi,
   supplierDeleteApi,
   supplierDetailApi,
+  supplierListAllApi,
   supplierListApi,
   supplierUpdateApi
 } from '@/services/apis.ts'
@@ -38,6 +39,11 @@ type SupplierStore = {
   supplier: Supplier | null
   getLoading: boolean
   getSupplier: (data: SupplierId) => Promise<void>
+  setSupplier: (data: Supplier | null) => void
+
+  getAllSuppliersLoading: boolean
+  getAllSuppliers: () => Promise<void>
+  allSupplierList: Supplier[]
 }
 
 const useSupplierStore = create<SupplierStore>((set, get) => ({
@@ -136,7 +142,24 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
     } finally {
       set({ getLoading: false })
     }
-  }
+  },
+  setSupplier: data => {
+    set({ supplier: data })
+  },
+
+  getAllSuppliersLoading: false,
+  getAllSuppliers: async () => {
+    try {
+      set({ getAllSuppliersLoading: true })
+      const res = await http.post(supplierListAllApi)
+      set({ allSupplierList: res.data })
+    } catch (err) {
+      console.error(err)
+    } finally {
+      set({ getAllSuppliersLoading: false })
+    }
+  },
+  allSupplierList: []
 }))
 
 export default useSupplierStore

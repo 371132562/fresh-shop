@@ -2,7 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { Customer } from '@prisma/client';
 
-import { CustomerPageParams } from '../../types/dto';
+import { CustomerPageParams } from '../../../types/dto';
 
 @Controller('customer')
 export class CustomerController {

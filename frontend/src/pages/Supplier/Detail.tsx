@@ -13,6 +13,7 @@ export const Component = () => {
 
   const supplier = useSupplierStore(state => state.supplier)
   const getSupplier = useSupplierStore(state => state.getSupplier)
+  const setSupplier = useSupplierStore(state => state.setSupplier)
   const getLoading = useSupplierStore(state => state.getLoading)
   const deleteSupplier = useSupplierStore(state => state.deleteSupplier)
 
@@ -27,6 +28,9 @@ export const Component = () => {
   useEffect(() => {
     if (id) {
       getSupplier({ id })
+    }
+    return () => {
+      setSupplier(null)
     }
   }, [])
 
@@ -101,9 +105,9 @@ export const Component = () => {
               </span>
             </div>
 
-            {/* 描述 */}
+            {/* 备注 */}
             <div className="flex items-start text-base">
-              <span className="w-20 flex-shrink-0 font-medium text-gray-500">描述：</span>
+              <span className="w-20 flex-shrink-0 font-medium text-gray-500">备注：</span>
               <span className="word-break-all flex-grow break-words text-gray-700">
                 {supplier?.description || <span className="italic text-gray-400">无</span>}
               </span>

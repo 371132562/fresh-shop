@@ -7,6 +7,7 @@ import {
   productCreateApi,
   productDeleteApi,
   productDetailApi,
+  productListAllApi,
   productListApi,
   productUpdateApi
 } from '@/services/apis.ts'
@@ -41,6 +42,10 @@ type ProductStore = {
   getLoading: boolean
   getProduct: (data: ProductId) => Promise<void>
   setProduct: (data: Product | null) => void
+
+  getAllProductsListLoading: boolean
+  getAllProducts: () => Promise<void>
+  allProductsList: ProductListItem[]
 }
 
 const useProductStore = create<ProductStore>((set, get) => ({
@@ -143,7 +148,21 @@ const useProductStore = create<ProductStore>((set, get) => ({
       product: data
     })
   },
-  getLoading: false
+  getLoading: false,
+
+  getAllProductsListLoading: false,
+  getAllProducts: async () => {
+    try {
+      set({ getAllProductsListLoading: true })
+      const res = await http.post(productListAllApi)
+      set({ allProductsList: res.data })
+    } catch (err) {
+      console.error(err)
+    } finally {
+      set({ getAllProductsListLoading: false })
+    }
+  },
+  allProductsList: []
 }))
 
 export default useProductStore

@@ -175,7 +175,7 @@ export const Component = () => {
               }
             ]}
           >
-            <Input />
+            <Input maxLength={11} />
           </Form.Item>
           <Form.Item
             label="按微信号搜索"

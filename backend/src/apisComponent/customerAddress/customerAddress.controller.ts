@@ -2,7 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { CustomerAddressService } from './customerAddress.service';
 import { CustomerAddress } from '@prisma/client';
 
-import { CustomerAddressPageParams } from '../../types/dto';
+import { CustomerAddressPageParams } from '../../../types/dto';
 
 @Controller('customerAddress')
 export class CustomerAddressController {

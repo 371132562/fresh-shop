@@ -2,7 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { SupplierService } from './supplier.service';
 import { Supplier } from '@prisma/client';
 
-import { SupplierPageParams } from '../../types/dto';
+import { SupplierPageParams } from '../../../types/dto';
 
 @Controller('supplier')
 export class SupplierController {
@@ -35,5 +35,10 @@ export class SupplierController {
   @Post('deleteImage')
   async deleteImage(@Body() data: { id: string; filename: string }) {
     return this.supplierService.deleteImage(data.id, data.filename);
+  }
+
+  @Post('listAll')
+  listAll() {
+    return this.supplierService.listAll();
   }
 }

@@ -1,25 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { ProductType } from '@prisma/client';
+import { PrismaService } from '../../../prisma/prisma.service';
+import { CustomerAddress } from '@prisma/client';
 
-import { ProductTypePageParams, ListByPage } from '../../types/dto';
+import { CustomerAddressPageParams, ListByPage } from '../../../types/dto';
 
 @Injectable()
-export class ProductTypeService {
+export class CustomerAddressService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: ProductType): Promise<ProductType> {
-    return this.prisma.productType.create({ data });
+  async create(data: CustomerAddress): Promise<CustomerAddress> {
+    return this.prisma.customerAddress.create({ data });
   }
 
-  async update(id: string, data: ProductType): Promise<ProductType> {
-    return this.prisma.productType.update({
+  async update(id: string, data: CustomerAddress): Promise<CustomerAddress> {
+    return this.prisma.customerAddress.update({
       where: { id },
       data,
     });
   }
 
-  async list(data: ProductTypePageParams): Promise<ListByPage<ProductType[]>> {
+  async list(
+    data: CustomerAddressPageParams,
+  ): Promise<ListByPage<CustomerAddress[]>> {
     const { page, pageSize, name } = data;
     const skip = (page - 1) * pageSize; // 计算要跳过的记录数
 
@@ -33,8 +35,8 @@ export class ProductTypeService {
       };
     }
 
-    const [productType, totalCount] = await this.prisma.$transaction([
-      this.prisma.productType.findMany({
+    const [customerAddress, totalCount] = await this.prisma.$transaction([
+      this.prisma.customerAddress.findMany({
         skip: skip,
         take: pageSize,
         orderBy: {
@@ -42,11 +44,11 @@ export class ProductTypeService {
         },
         where,
       }),
-      this.prisma.productType.count({ where }), // 获取总记录数
+      this.prisma.customerAddress.count({ where }), // 获取总记录数
     ]);
 
     return {
-      data: productType,
+      data: customerAddress,
       page: page,
       pageSize: pageSize,
       totalCount: totalCount,
@@ -55,7 +57,7 @@ export class ProductTypeService {
   }
 
   async listAll() {
-    return this.prisma.productType.findMany({
+    return this.prisma.customerAddress.findMany({
       where: {
         delete: 0,
       },
@@ -63,7 +65,7 @@ export class ProductTypeService {
   }
 
   async detail(id: string) {
-    return this.prisma.productType.findUnique({
+    return this.prisma.customerAddress.findUnique({
       where: {
         id,
       },
@@ -71,7 +73,7 @@ export class ProductTypeService {
   }
 
   async delete(id: string) {
-    return this.prisma.productType.update({
+    return this.prisma.customerAddress.update({
       where: {
         id,
       },

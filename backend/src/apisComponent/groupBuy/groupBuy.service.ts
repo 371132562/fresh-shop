@@ -1,0 +1,146 @@
+import { Injectable, InternalServerErrorException } from '@nestjs/common'; // 导入 InternalServerErrorException
+import { PrismaService } from '../../../prisma/prisma.service';
+import { GroupBuy } from '@prisma/client';
+
+import { GroupBuyPageParams, ListByPage } from '../../../types/dto';
+
+@Injectable()
+export class GroupBuyService {
+  constructor(private prisma: PrismaService) {}
+
+  async create(data: GroupBuy): Promise<GroupBuy> {
+    return this.prisma.groupBuy.create({ data });
+  }
+
+  async update(id: string, data: GroupBuy): Promise<GroupBuy> {
+    return this.prisma.groupBuy.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async list(data: GroupBuyPageParams): Promise<ListByPage<GroupBuy[]>> {
+    const {
+      page,
+      pageSize,
+      name,
+      startDate,
+      endDate,
+      supplierIds,
+      productIds,
+    } = data;
+    const skip = (page - 1) * pageSize; // 计算要跳过的记录数
+
+    const where: any = {
+      delete: 0, // 仅查询未删除的供货商
+    };
+
+    if (name) {
+      where.name = {
+        contains: name,
+      };
+    }
+
+    if (startDate && endDate) {
+      where.groupBuyStartDate = {
+        gte: startDate, // 大于或等于 startDate
+        lte: endDate, // 小于或等于 endDate
+      };
+    }
+
+    if (supplierIds && supplierIds.length > 0) {
+      where.supplierId = {
+        in: supplierIds,
+      };
+    }
+
+    if (productIds && productIds.length > 0) {
+      where.productId = {
+        in: productIds,
+      };
+    }
+
+    const [groupBuys, totalCount] = await this.prisma.$transaction([
+      this.prisma.groupBuy.findMany({
+        skip: skip,
+        take: pageSize,
+        orderBy: {
+          createdAt: 'desc', // 假设您的表中有一个名为 'createdAt' 的字段
+        },
+        where,
+        include: {
+          supplier: true, // 包含所有 supplier 字段
+          product: true, // 包含所有 product 字段
+        },
+      }),
+      this.prisma.groupBuy.count({ where }), // 获取总记录数
+    ]);
+
+    return {
+      data: groupBuys,
+      page: page,
+      pageSize: pageSize,
+      totalCount: totalCount,
+      totalPages: Math.ceil(totalCount / pageSize), // 计算总页数
+    };
+  }
+
+  async detail(id: string) {
+    return this.prisma.groupBuy.findUnique({
+      where: {
+        id,
+      },
+      // 使用 include 选项来包含关联的 supplier 和 product 信息
+      include: {
+        supplier: true, // 包含所有 supplier 字段
+        product: true, // 包含所有 product 字段
+      },
+    });
+  }
+
+  async delete(id: string) {
+    return this.prisma.groupBuy.update({
+      where: {
+        id,
+      },
+      data: {
+        delete: 1,
+      },
+    });
+  }
+
+  async deleteImage(id: string, filename: string): Promise<void> {
+    // 使用 Prisma 事务确保原子性操作
+    await this.prisma
+      .$transaction(async (tx) => {
+        // 获取团购单详情
+        const detail = await tx.groupBuy.findUnique({ where: { id } });
+
+        // 检查团购单是否存在
+        if (!detail) {
+          throw new InternalServerErrorException(`团购单 ${id} 不存在。`);
+        }
+
+        // 确保 images 字段是字符串且是有效的 JSON
+        const currentImages = JSON.parse(detail.images);
+
+        // 3. 从图片列表中移除指定文件名
+        const updatedImages = currentImages.filter(
+          (item: string) => item !== filename,
+        );
+
+        // 4. 更新团购单的图片列表
+        await tx.groupBuy.update({
+          where: { id },
+          data: {
+            images: JSON.stringify(updatedImages),
+          },
+        });
+      })
+      .catch((error) => {
+        // 捕获事务中的任何错误，并重新抛出，以便上层控制器可以处理
+        console.error('删除图片事务失败:', error);
+        throw error; // 将错误重新抛出
+      });
+  }
+}

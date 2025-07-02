@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 import { Product } from '@prisma/client';
 
-import { ProductPageParams, ListByPage } from '../../types/dto';
+import { ProductPageParams, ListByPage } from '../../../types/dto';
 
 @Injectable()
 export class ProductService {
@@ -88,6 +88,14 @@ export class ProductService {
       },
       data: {
         delete: 1,
+      },
+    });
+  }
+
+  async listAll() {
+    return this.prisma.product.findMany({
+      where: {
+        delete: 0,
       },
     });
   }

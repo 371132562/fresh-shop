@@ -37,8 +37,12 @@ const router = createBrowserRouter([
         lazy: () => import('./pages/ProductType')
       },
       {
-        path: '/group-buy',
+        path: '/groupBuy',
         lazy: () => import('./pages/GroupBuy')
+      },
+      {
+        path: '/groupBuy/detail/:id',
+        lazy: () => import('./pages/GroupBuy/Detail.tsx')
       },
       {
         path: '/order',

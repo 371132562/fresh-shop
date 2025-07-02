@@ -2,7 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { Product } from '@prisma/client';
 
-import { ProductPageParams } from '../../types/dto';
+import { ProductPageParams } from '../../../types/dto';
 
 @Controller('product')
 export class ProductController {
@@ -30,5 +30,10 @@ export class ProductController {
   @Post('delete')
   delete(@Body('id') id: string) {
     return this.productService.delete(id);
+  }
+
+  @Post('listAll')
+  listAll() {
+    return this.productService.listAll();
   }
 }

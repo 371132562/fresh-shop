@@ -8,12 +8,12 @@ import { UploadModule } from './upload/upload.module';
 import { UPLOAD_DIR } from './utils/file-upload.utils'; // 导入上传目录常量
 
 //业务模块
-import { SupplierModule } from './supplier/supplier.module';
-import { ProductTypeModule } from './productType/productType.module';
-import { ProductModule } from './product/product.module';
-import { CustomerAddressModule } from './customerAddress/customerAddress.module';
-import { CustomerModule } from './customer/customer.module';
-// import { GroupBuyModule } from './groupBuy/groupBuy.module';
+import { SupplierModule } from './apisComponent/supplier/supplier.module';
+import { ProductTypeModule } from './apisComponent/productType/productType.module';
+import { ProductModule } from './apisComponent/product/product.module';
+import { CustomerAddressModule } from './apisComponent/customerAddress/customerAddress.module';
+import { CustomerModule } from './apisComponent/customer/customer.module';
+import { GroupBuyModule } from './apisComponent/groupBuy/groupBuy.module';
 
 @Module({
   imports: [
@@ -40,7 +40,7 @@ import { CustomerModule } from './customer/customer.module';
     ProductModule,
     CustomerAddressModule,
     CustomerModule,
-    // GroupBuyModule,
+    GroupBuyModule,
   ],
   controllers: [],
   providers: [],

@@ -111,7 +111,10 @@ const Modify = (props: params) => {
               }
             ]}
           >
-            <Input placeholder="选填" />
+            <Input
+              placeholder="选填"
+              maxLength={11}
+            />
           </Form.Item>
           <Form.Item
             label="微信号"
@@ -120,7 +123,7 @@ const Modify = (props: params) => {
             <Input placeholder="选填" />
           </Form.Item>
           <Form.Item
-            label="描述"
+            label="备注"
             name="description"
           >
             <Input placeholder="选填，如过往印象等" />

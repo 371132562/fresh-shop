@@ -1,8 +1,8 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common'; // 导入 InternalServerErrorException
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 import { Supplier } from '@prisma/client';
 
-import { SupplierPageParams, ListByPage } from '../../types/dto';
+import { SupplierPageParams, ListByPage } from '../../../types/dto';
 
 @Injectable()
 export class SupplierService {
@@ -118,5 +118,13 @@ export class SupplierService {
         console.error('删除图片事务失败:', error);
         throw error; // 将错误重新抛出
       });
+  }
+
+  async listAll() {
+    return this.prisma.supplier.findMany({
+      where: {
+        delete: 0,
+      },
+    });
   }
 }

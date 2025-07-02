@@ -4,9 +4,10 @@ import {
   Product,
   CustomerAddress,
   Customer,
+  GroupBuy,
 } from '@prisma/client';
 
-export { Supplier, ProductType, Product, CustomerAddress, Customer };
+export { Supplier, ProductType, Product, CustomerAddress, Customer, GroupBuy };
 
 export type CommonPageParams = {
   page: number;
@@ -45,4 +46,17 @@ export type CustomerPageParams = CommonPageParams & {
   phone: string;
   wechat: string;
   customerAddressIds: CustomerAddress['id'][];
+};
+
+export type GroupBuyPageParams = CommonPageParams & {
+  name: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  supplierIds: Supplier['id'][];
+  productIds: Product['id'][];
+};
+
+export type GroupBuyDetail = GroupBuy & {
+  supplier: Supplier;
+  product: Product;
 };

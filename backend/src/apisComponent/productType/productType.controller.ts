@@ -2,7 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { ProductTypeService } from './productType.service';
 import { ProductType } from '@prisma/client';
 
-import { ProductTypePageParams } from '../../types/dto';
+import { ProductTypePageParams } from '../../../types/dto';
 
 @Controller('productType')
 export class ProductTypeController {

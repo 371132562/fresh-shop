@@ -87,7 +87,7 @@ const Modify = (props: params) => {
             <Input placeholder="必填" />
           </Form.Item>
           <Form.Item
-            label="描述"
+            label="备注"
             name="description"
           >
             <Input placeholder="选填" />
