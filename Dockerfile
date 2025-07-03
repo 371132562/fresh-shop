@@ -70,8 +70,6 @@ COPY --from=builder /app/backend ./backend
 # 复制 Prisma migrate
 COPY --from=builder /app/backend/prisma/migrations ./migrations
 
-WORKDIR /app
-
 # 设置运行时环境变量
 # 确保运行时也有 DATABASE_URL，因为 Prisma migrate 和你的应用都需要它
 # 如果你的应用在运行时也需要 DATABASE_URL，这一步非常关键。
