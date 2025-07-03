@@ -61,7 +61,9 @@ export const Component = () => {
   const resetSearch = () => {
     const resetValues = {
       name: '',
-      customerAddressIds: []
+      customerAddressIds: [],
+      wechat: '',
+      phone: ''
     }
     form.setFieldsValue(resetValues)
     setPageParams({

@@ -20,7 +20,7 @@ export class CustomerService {
   }
 
   async list(data: CustomerPageParams): Promise<ListByPage<Customer[]>> {
-    const { page, pageSize, name, customerAddressIds } = data; // 从 data 中解构 customerAddressIds
+    const { page, pageSize, name, customerAddressIds, phone, wechat } = data; // 从 data 中解构 customerAddressIds
     const skip = (page - 1) * pageSize; // 计算要跳过的记录数
 
     const where: any = {
@@ -36,6 +36,18 @@ export class CustomerService {
     if (customerAddressIds && customerAddressIds.length > 0) {
       where.customerAddressId = {
         in: customerAddressIds, // 使用 Prisma 的 in 操作符
+      };
+    }
+
+    if (phone) {
+      where.phone = {
+        contains: phone,
+      };
+    }
+
+    if (wechat) {
+      where.wechat = {
+        contains: wechat,
       };
     }
 

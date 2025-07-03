@@ -187,7 +187,7 @@ export const Component = () => {
         >
           <Form.Item
             label="按客户搜索(可多选)"
-            name="supplierIds"
+            name="customerIds"
           >
             <Select
               loading={getAllCustomerLoading}
@@ -211,7 +211,7 @@ export const Component = () => {
           </Form.Item>
           <Form.Item
             label="按团购单搜索(可多选)"
-            name="orderTypeIds"
+            name="groupBuyIds"
           >
             <Select
               loading={getAllGroupBuyLoading}

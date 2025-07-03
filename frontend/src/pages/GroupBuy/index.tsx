@@ -76,7 +76,8 @@ export const Component = () => {
   const resetSearch = () => {
     const resetValues = {
       name: '',
-      groupBuySearchDate: null,
+      startDate: null,
+      endDate: null,
       supplierIds: [],
       productIds: []
     }
@@ -241,7 +242,7 @@ export const Component = () => {
           </Form.Item>
           <Form.Item
             label="按商品搜索(可多选)"
-            name="productTypeIds"
+            name="productIds"
           >
             <Select
               loading={getAllProductsListLoading}
