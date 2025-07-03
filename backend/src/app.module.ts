@@ -30,6 +30,9 @@ import { OrderModule } from './apisComponent/order/order.module';
       {
         rootPath: join(process.cwd(), 'frontend', 'dist'), // 指向 monorepo 根目录下的 frontend/dist
         // serveRoot: '/', // 可以省略，默认就是 '/'
+        serveStaticOptions: {
+          preCompressed: true,
+        },
       },
     ),
     PrismaModule,
