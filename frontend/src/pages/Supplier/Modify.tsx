@@ -32,7 +32,12 @@ const Modify = (props: params) => {
       if (imagesArr.length > 0) {
         setFileList(
           imagesArr.map((image: string) => ({
-            url: '//' + location.hostname + import.meta.env.VITE_IMAGES_BASE_URL + image,
+            url:
+              '//' +
+              location.hostname +
+              (location.port ? import.meta.env.VITE_IMAGES_PORT : '') +
+              import.meta.env.VITE_IMAGES_BASE_URL +
+              image,
             filename: image
           }))
         )
