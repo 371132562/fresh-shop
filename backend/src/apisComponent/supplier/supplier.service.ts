@@ -1,8 +1,10 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common'; // 导入 InternalServerErrorException
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Supplier } from '@prisma/client';
 
 import { SupplierPageParams, ListByPage } from '../../../types/dto';
+import { BusinessException } from '../../exceptions/businessException';
+import { ErrorCode } from '../../../types/response';
 
 @Injectable()
 export class SupplierService {
@@ -94,7 +96,10 @@ export class SupplierService {
 
         // 检查供应商是否存在
         if (!detail) {
-          throw new InternalServerErrorException(`供应商 ${id} 不存在。`);
+          throw new BusinessException(
+            ErrorCode.RESOURCE_NOT_FOUND,
+            `供应商 ${id} 不存在。`,
+          );
         }
 
         // 确保 images 字段是字符串且是有效的 JSON

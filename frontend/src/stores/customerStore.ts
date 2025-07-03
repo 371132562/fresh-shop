@@ -7,6 +7,7 @@ import {
   customerCreateApi,
   customerDeleteApi,
   customerDetailApi,
+  customerListAllApi,
   customerListApi,
   customerUpdateApi
 } from '@/services/apis.ts'
@@ -41,6 +42,10 @@ type CustomerStore = {
   getLoading: boolean
   getCustomer: (data: CustomerId) => Promise<void>
   setCustomer: (data: Customer | null) => void
+
+  getAllCustomerLoading: boolean
+  getAllCustomer: () => Promise<void>
+  allCustomer: Customer[]
 }
 
 const useCustomerStore = create<CustomerStore>((set, get) => ({
@@ -148,7 +153,23 @@ const useCustomerStore = create<CustomerStore>((set, get) => ({
       customer: data
     })
   },
-  getLoading: false
+  getLoading: false,
+
+  getAllCustomerLoading: false,
+  getAllCustomer: async () => {
+    try {
+      set({ getAllCustomerLoading: true })
+      const res = await http.post(customerListAllApi)
+      set({
+        allCustomer: res.data || []
+      })
+    } catch (err) {
+      console.error(err)
+    } finally {
+      set({ getAllCustomerLoading: false })
+    }
+  },
+  allCustomer: []
 }))
 
 export default useCustomerStore

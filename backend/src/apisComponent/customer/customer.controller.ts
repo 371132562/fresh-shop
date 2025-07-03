@@ -31,4 +31,9 @@ export class CustomerController {
   delete(@Body('id') id: string) {
     return this.customerService.delete(id);
   }
+
+  @Post('listAll')
+  listAll() {
+    return this.customerService.listAll();
+  }
 }

@@ -14,6 +14,7 @@ import { ProductModule } from './apisComponent/product/product.module';
 import { CustomerAddressModule } from './apisComponent/customerAddress/customerAddress.module';
 import { CustomerModule } from './apisComponent/customer/customer.module';
 import { GroupBuyModule } from './apisComponent/groupBuy/groupBuy.module';
+import { OrderModule } from './apisComponent/order/order.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { GroupBuyModule } from './apisComponent/groupBuy/groupBuy.module';
     CustomerAddressModule,
     CustomerModule,
     GroupBuyModule,
+    OrderModule,
   ],
   controllers: [],
   providers: [],

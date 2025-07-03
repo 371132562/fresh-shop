@@ -26,7 +26,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       };
       code = exceptionResponse.code || ErrorCode.BUSINESS_FAILED;
       msg = exceptionResponse.message || '业务处理失败';
-      data = null;
+      data = (exception as Error).message || '业务处理失败';
     } else if (exception instanceof HttpException) {
       // 4xxxx 范围：NestJS 内置的 HttpException (例如 ValidationPipe, NotFoundException 等)
       const status = exception.getStatus();

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, OrderStatus } from '@prisma/client';
 import { faker } from '@faker-js/faker/locale/zh_CN'; // 使用中文 locale
 
 const prisma = new PrismaClient();
@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 const NUM_RECORDS = 35; // 每个模型生成的数据条数
 
 async function main() {
-  console.log('开始生成模拟数据...');
+  console.log('开始生成所有模型的模拟数据...');
 
-  // --- 1. 生成 CustomerAddress ---
+  // --- 1. 生成 CustomerAddress (无依赖) ---
   const customerAddresses = [];
   for (let i = 0; i < NUM_RECORDS; i++) {
     customerAddresses.push({
@@ -21,10 +21,11 @@ async function main() {
   }
   await prisma.customerAddress.createMany({
     data: customerAddresses,
+    
   });
-  console.log(`生成了 ${customerAddresses.length} 条 CustomerAddress 数据.`);
+  console.log(`✅ 生成了 ${customerAddresses.length} 条 CustomerAddress 数据.`);
 
-  // --- 2. 生成 Supplier ---
+  // --- 2. 生成 Supplier (无依赖) ---
   const suppliers = [];
   for (let i = 0; i < NUM_RECORDS; i++) {
     const images = Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () => faker.image.urlLoremFlickr({ category: 'business' }));
@@ -43,10 +44,11 @@ async function main() {
   }
   await prisma.supplier.createMany({
     data: suppliers,
+    
   });
-  console.log(`生成了 ${suppliers.length} 条 Supplier 数据.`);
+  console.log(`✅ 生成了 ${suppliers.length} 条 Supplier 数据.`);
 
-  // --- 3. 生成 ProductType ---
+  // --- 3. 生成 ProductType (无依赖) ---
   const productTypes = [];
   for (let i = 0; i < NUM_RECORDS; i++) {
     productTypes.push({
@@ -60,14 +62,15 @@ async function main() {
   }
   await prisma.productType.createMany({
     data: productTypes,
+    
   });
-  console.log(`生成了 ${productTypes.length} 条 ProductType 数据.`);
+  console.log(`✅ 生成了 ${productTypes.length} 条 ProductType 数据.`);
 
   // --- 4. 生成 Product (依赖 ProductType) ---
   const products = [];
   const existingProductTypes = await prisma.productType.findMany({ select: { id: true } });
   if (existingProductTypes.length === 0) {
-    console.error('错误：没有 ProductType 数据，无法生成 Product。');
+    console.error('❌ 错误：没有 ProductType 数据，无法生成 Product。');
     return;
   }
   const productTypeIds = existingProductTypes.map(pt => pt.id);
@@ -85,14 +88,15 @@ async function main() {
   }
   await prisma.product.createMany({
     data: products,
+    
   });
-  console.log(`生成了 ${products.length} 条 Product 数据.`);
+  console.log(`✅ 生成了 ${products.length} 条 Product 数据.`);
 
   // --- 5. 生成 Customer (依赖 CustomerAddress) ---
   const customers = [];
   const existingCustomerAddresses = await prisma.customerAddress.findMany({ select: { id: true } });
   if (existingCustomerAddresses.length === 0) {
-    console.error('错误：没有 CustomerAddress 数据，无法生成 Customer。');
+    console.error('❌ 错误：没有 CustomerAddress 数据，无法生成 Customer。');
     return;
   }
   const customerAddressIds = existingCustomerAddresses.map(ca => ca.id);
@@ -113,8 +117,9 @@ async function main() {
   }
   await prisma.customer.createMany({
     data: customers,
+    
   });
-  console.log(`生成了 ${customers.length} 条 Customer 数据.`);
+  console.log(`✅ 生成了 ${customers.length} 条 Customer 数据.`);
 
   // --- 6. 生成 GroupBuy (依赖 Supplier 和 Product) ---
   const groupBuys = [];
@@ -122,7 +127,7 @@ async function main() {
   const existingProducts = await prisma.product.findMany({ select: { id: true } });
 
   if (existingSuppliers.length === 0 || existingProducts.length === 0) {
-    console.error('错误：没有 Supplier 或 Product 数据，无法生成 GroupBuy。');
+    console.error('❌ 错误：没有 Supplier 或 Product 数据，无法生成 GroupBuy。');
     return;
   }
   const supplierIds = existingSuppliers.map(s => s.id);
@@ -130,7 +135,7 @@ async function main() {
 
   for (let i = 0; i < NUM_RECORDS; i++) {
     const units = Array.from({ length: faker.number.int({ min: 1, max: 4 }) }, () => ({
-      unit: faker.commerce.productAdjective() + faker.helpers.arrayElement(['袋', '盒', '个', '份']),
+      unit: faker.commerce.productAdjective() + faker.helpers.arrayElement(['袋', '盒', '个', '份', '箱', '瓶']),
       price: faker.number.float({ min: 10, max: 100, precision: 0.01 }),
       costPrice: faker.number.float({ min: 5, max: 80, precision: 0.01 }),
     }));
@@ -152,8 +157,40 @@ async function main() {
   }
   await prisma.groupBuy.createMany({
     data: groupBuys,
+    
   });
-  console.log(`生成了 ${groupBuys.length} 条 GroupBuy 数据.`);
+  console.log(`✅ 生成了 ${groupBuys.length} 条 GroupBuy 数据.`);
+
+  // --- 7. 生成 Order (依赖 Customer 和 GroupBuy) ---
+  const orders = [];
+  const existingCustomers = await prisma.customer.findMany({ select: { id: true } });
+  const existingGroupBuys = await prisma.groupBuy.findMany({ select: { id: true } });
+
+  if (existingCustomers.length === 0 || existingGroupBuys.length === 0) {
+    console.error('❌ 错误：没有 Customer 或 GroupBuy 数据，无法生成 Order。');
+    return;
+  }
+  const customerIds = existingCustomers.map(c => c.id);
+  const groupBuyIds = existingGroupBuys.map(gb => gb.id);
+  const orderStatuses = Object.values(OrderStatus); // 获取所有枚举值
+
+  for (let i = 0; i < NUM_RECORDS; i++) {
+    orders.push({
+      id: faker.string.uuid(),
+      customerId: faker.helpers.arrayElement(customerIds),
+      status: faker.helpers.arrayElement(orderStatuses), // 随机选择订单状态
+      groupBuyId: faker.helpers.arrayElement(groupBuyIds),
+      quantity: faker.number.int({ min: 1, max: 10 }), // 购买份数
+      delete: 0,
+      createdAt: faker.date.past(),
+      updatedAt: faker.date.recent(),
+    });
+  }
+  await prisma.order.createMany({
+    data: orders,
+    
+  });
+  console.log(`✅ 生成了 ${orders.length} 条 Order 数据.`);
 
 }
 
@@ -164,5 +201,5 @@ main()
 })
 .finally(async () => {
   await prisma.$disconnect();
-  console.log('数据生成完成，Prisma 连接已断开。');
+  console.log('✨ 所有数据生成完成，Prisma 连接已断开。');
 });

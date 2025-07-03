@@ -1,4 +1,6 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common'; // 导入 InternalServerErrorException
+import { Injectable } from '@nestjs/common';
+import { ErrorCode } from '../../../types/response';
+import { BusinessException } from '../../exceptions/businessException';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { GroupBuy } from '@prisma/client';
 
@@ -118,7 +120,10 @@ export class GroupBuyService {
 
         // 检查团购单是否存在
         if (!detail) {
-          throw new InternalServerErrorException(`团购单 ${id} 不存在。`);
+          throw new BusinessException(
+            ErrorCode.RESOURCE_NOT_FOUND,
+            `团购单 ${id} 不存在。`,
+          );
         }
 
         // 确保 images 字段是字符串且是有效的 JSON
@@ -142,5 +147,13 @@ export class GroupBuyService {
         console.error('删除图片事务失败:', error);
         throw error; // 将错误重新抛出
       });
+  }
+
+  async listAll() {
+    return this.prisma.groupBuy.findMany({
+      where: {
+        delete: 0, // 仅查询未删除的团购单
+      },
+    });
   }
 }

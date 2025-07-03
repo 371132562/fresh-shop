@@ -76,7 +76,7 @@ export const Component = () => {
                 编辑
               </Button>
               <Popconfirm
-                title={<div className="text-lg">确定要删除这个供应商吗？</div>}
+                title={<div className="text-lg">确定要删除这个团购单吗？</div>}
                 placement="left"
                 onConfirm={confirm}
                 okText="是"

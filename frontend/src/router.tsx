@@ -47,6 +47,10 @@ const router = createBrowserRouter([
       {
         path: '/order',
         lazy: () => import('./pages/Order')
+      },
+      {
+        path: '/order/detail/:id',
+        lazy: () => import('./pages/Order/Detail.tsx')
       }
     ]
   }

@@ -91,4 +91,12 @@ export class CustomerService {
       },
     });
   }
+
+  async listAll() {
+    return this.prisma.customer.findMany({
+      where: {
+        delete: 0,
+      },
+    });
+  }
 }
