@@ -39,7 +39,6 @@ const Modify = (props: params) => {
         const res = id ? await updateProductType({ ...val, id }) : await createProductType(val)
         if (res) {
           message.success(id ? '编辑成功' : '添加成功')
-          setVisible(false)
           handleCancel()
         }
       })

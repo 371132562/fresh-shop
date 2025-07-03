@@ -41,7 +41,6 @@ const Modify = (props: params) => {
           : await createCustomerAddress(val)
         if (res) {
           message.success(id ? '编辑成功' : '添加成功')
-          setVisible(false)
           handleCancel()
         }
       })

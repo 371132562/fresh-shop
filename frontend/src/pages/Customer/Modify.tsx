@@ -46,7 +46,6 @@ const Modify = (props: params) => {
         const res = id ? await updateCustomer({ ...val, id }) : await createCustomer(val)
         if (res) {
           message.success(id ? '编辑成功' : '添加成功')
-          setVisible(false)
           handleCancel()
         }
       })
