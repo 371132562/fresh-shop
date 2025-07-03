@@ -1,12 +1,15 @@
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { Button, FloatButton, Form, List, Modal, Select, Tag } from 'antd'
-import { OrderStatus, OrderStatusMap, OrderStatusOptions } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
 import useCustomerStore from '@/stores/customerStore.ts'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
-import useOrderStore from '@/stores/orderStore.ts'
+import useOrderStore, {
+  OrderStatus,
+  OrderStatusMap,
+  OrderStatusOptions
+} from '@/stores/orderStore.ts'
 
 import Modify from './Modify.tsx'
 

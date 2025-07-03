@@ -1,5 +1,4 @@
-import { Order, OrderDetail } from 'fresh-shop-backend/types/dto.ts'
-import { ListByPage, OrderPageParams } from 'fresh-shop-backend/types/dto.ts'
+import { ListByPage, Order, OrderDetail, OrderPageParams } from 'fresh-shop-backend/types/dto.ts'
 import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
 
@@ -13,6 +12,22 @@ import {
   orderUpdateApi
 } from '@/services/apis.ts'
 import http from '@/services/base.ts'
+
+export enum OrderStatus {
+  COMPLETED = 'COMPLETED',
+  REFUNDED = 'REFUNDED'
+}
+
+export const OrderStatusMap: Record<OrderStatus, string> = {
+  [OrderStatus.COMPLETED]: '正常',
+  [OrderStatus.REFUNDED]: '已退款'
+}
+
+// 你也可以导出一个数组，更方便用于 select options
+export const OrderStatusOptions = Object.entries(OrderStatusMap).map(([value, label]) => ({
+  value: value as OrderStatus, // 类型断言确保 value 是 OrderStatus 类型
+  label: label
+}))
 
 type OrderCreate = Omit<Order, 'id' | 'delete' | 'createdAt' | 'updatedAt'>
 

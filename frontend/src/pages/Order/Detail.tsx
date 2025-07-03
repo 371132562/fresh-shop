@@ -1,11 +1,10 @@
 import { PopconfirmProps, Tag } from 'antd'
 import { Button, Flex, message, Popconfirm, Spin } from 'antd'
-import { OrderStatus, OrderStatusMap } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import Modify from '@/pages/Order/Modify.tsx'
-import useOrderStore from '@/stores/orderStore.ts'
+import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
 
 export const Component = () => {
   const { id } = useParams()
