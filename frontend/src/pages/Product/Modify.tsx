@@ -44,6 +44,7 @@ const Modify = (props: params) => {
         if (res) {
           message.success(id ? '编辑成功' : '添加成功')
           setVisible(false)
+          handleCancel()
         }
       })
       .catch(err => {
