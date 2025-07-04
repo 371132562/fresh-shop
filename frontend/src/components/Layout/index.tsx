@@ -35,7 +35,15 @@ export const Component: FC = () => {
   return (
     <>
       {/*外层容器：居中，全高宽，最大宽度，浅灰色背景*/}
-      <div className="mx-auto flex h-dvh w-dvw max-w-3xl flex-col bg-gray-50 font-sans antialiased">
+      <div
+        className="mx-auto flex h-dvh w-dvw max-w-3xl flex-col font-sans antialiased"
+        style={{
+          backgroundImage: 'url(/src/images/background.svg)',
+          backgroundSize: 'cover',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center'
+        }}
+      >
         {/* 头部：固定顶部，深色背景，居中，有阴影，顶部圆角 */}
         <header className="sticky top-0 z-10 rounded-b-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-1 shadow-md">
           <div className="flex items-center justify-between">
@@ -65,7 +73,7 @@ export const Component: FC = () => {
         </header>
 
         {/* 主内容区域：带内边距，圆角，白色背景，大阴影，有滚动条 */}
-        <div className="mx-4 my-4 flex-grow overflow-y-auto rounded-xl bg-white p-4 shadow-lg">
+        <div className="mx-4 my-4 flex-grow overflow-y-auto rounded-xl bg-[rgba(255,255,255,0.85)] p-4 shadow-lg">
           {/* 内容容器：居中，flex布局，允许内容滚动 */}
           <div className="flex w-full flex-col items-center">{outlet}</div>
         </div>
