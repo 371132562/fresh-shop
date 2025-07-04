@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import Modify from '@/pages/Order/Modify.tsx'
+import { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
 import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
 
 export const Component = () => {
@@ -21,7 +22,11 @@ export const Component = () => {
   const refundLoading = useOrderStore(state => state.refundLoading)
 
   const unit = useMemo(() => {
-    return order?.groupBuy?.units?.find(unit => unit.id === order.unitId) || null
+    if (order) {
+      return (
+        (order?.groupBuy?.units as GroupBuyUnit[])?.find(unit => unit.id === order.unitId) || null
+      )
+    } else return null
   }, [order])
 
   useEffect(() => {
@@ -143,7 +148,7 @@ export const Component = () => {
             {/* 数量 */}
             <div className="flex items-start text-base">
               <span className="w-20 flex-shrink-0 font-medium text-gray-500">购买数量：</span>
-              <span className="word-break-all flex-grow break-words text-gray-700">
+              <span className="word-break-all flex-grow break-words font-bold text-blue-500">
                 {order?.quantity || <span className="italic text-gray-400">无</span>}
               </span>
             </div>
@@ -161,7 +166,7 @@ export const Component = () => {
         {/* 规格信息卡片 - 优化显示方式 */}
         <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
           <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
-            所选商品规格
+            所选规格
           </h3>
           <div className="space-y-4">
             {/* 增加每项规格之间的垂直间距 */}

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import Modify from '@/pages/GroupBuy/Modify.tsx'
-import useGroupBuyStore from '@/stores/groupBuyStore.ts'
+import useGroupBuyStore, { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
 import { formatDate } from '@/utils'
 
 export const Component = () => {
@@ -19,16 +19,17 @@ export const Component = () => {
   const setGroupBuy = useGroupBuyStore(state => state.setGroupBuy)
 
   const images: string[] = useMemo(() => {
-    return groupBuy?.images
-      ? groupBuy.images.map((image: string) => {
-          return (
-            '//' +
-            location.hostname +
-            (location.port ? import.meta.env.VITE_IMAGES_PORT : '') +
-            import.meta.env.VITE_IMAGES_BASE_URL +
-            image
+    return Array.isArray(groupBuy?.images)
+      ? groupBuy.images
+          .filter((image): image is string => typeof image === 'string')
+          .map(
+            image =>
+              '//' +
+              location.hostname +
+              (location.port ? import.meta.env.VITE_IMAGES_PORT : '') +
+              import.meta.env.VITE_IMAGES_BASE_URL +
+              image
           )
-        })
       : []
   }, [groupBuy])
 
@@ -141,8 +142,8 @@ export const Component = () => {
           </h3>
           <div className="space-y-4">
             {/* 增加每项规格之间的垂直间距 */}
-            {groupBuy?.units ? (
-              groupBuy.units.map((item: any, index: number) => (
+            {groupBuy && Array.isArray(groupBuy?.units) ? (
+              (groupBuy.units as GroupBuyUnit[]).map((item, index: number) => (
                 <div
                   key={index}
                   className="rounded-md bg-gray-50 p-3"

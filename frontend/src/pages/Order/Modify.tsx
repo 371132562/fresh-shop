@@ -2,7 +2,7 @@ import { Form, Input, InputNumber, message, Modal, Select } from 'antd'
 import { useEffect, useState } from 'react'
 
 import useCustomerStore from '@/stores/customerStore.ts'
-import useGroupBuyStore from '@/stores/groupBuyStore.ts'
+import useGroupBuyStore, { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
 import useOrderStore from '@/stores/orderStore.ts'
 
 interface params {
@@ -15,7 +15,7 @@ const Modify = (props: params) => {
   const { visible, setVisible, id } = props
   const [form] = Form.useForm()
 
-  const [units, setUnits] = useState([])
+  const [units, setUnits] = useState<GroupBuyUnit[]>([])
 
   const createLoading = useOrderStore(state => state.createLoading)
   const createOrder = useOrderStore(state => state.createOrder)
@@ -65,9 +65,9 @@ const Modify = (props: params) => {
     return (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
   }
 
-  const groupBuyChange = val => {
+  const groupBuyChange = (val: string) => {
     const groupBuy = allGroupBuy.find(item => item.id === val)
-    setUnits(groupBuy.units)
+    setUnits((groupBuy?.units as GroupBuyUnit[]) || [])
   }
 
   return (
@@ -139,7 +139,7 @@ const Modify = (props: params) => {
             </Select>
           </Form.Item>
           <Form.Item
-            label="规格"
+            label="选择规格"
             name="unitId"
             rules={[{ required: true, message: '请选择规格' }]}
           >

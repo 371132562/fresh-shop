@@ -18,16 +18,17 @@ export const Component = () => {
   const deleteSupplier = useSupplierStore(state => state.deleteSupplier)
 
   const images: string[] = useMemo(() => {
-    return supplier?.images
-      ? supplier.images.map((image: string) => {
-          return (
-            '//' +
-            location.hostname +
-            (location.port ? import.meta.env.VITE_IMAGES_PORT : '') +
-            import.meta.env.VITE_IMAGES_BASE_URL +
-            image
+    return Array.isArray(supplier?.images)
+      ? supplier.images
+          .filter((image): image is string => typeof image === 'string')
+          .map(
+            image =>
+              '//' +
+              location.hostname +
+              (location.port ? import.meta.env.VITE_IMAGES_PORT : '') +
+              import.meta.env.VITE_IMAGES_BASE_URL +
+              image
           )
-        })
       : []
   }, [supplier])
 

@@ -13,6 +13,13 @@ import {
 } from '@/services/apis.ts'
 import http from '@/services/base.ts'
 
+export type GroupBuyUnit = {
+  id: string
+  unit: string
+  price: number
+  costPrice: number
+}
+
 type GroupBuyCreate = Omit<GroupBuy, 'id' | 'delete' | 'createdAt' | 'updatedAt'>
 
 type GroupBuyId = Pick<GroupBuy, 'id'>

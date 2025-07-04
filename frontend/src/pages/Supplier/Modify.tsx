@@ -29,17 +29,19 @@ const Modify = (props: params) => {
       form.setFieldsValue(supplier)
       const { images } = supplier as Supplier
       const imagesArr = images
-      if (imagesArr.length > 0) {
+      if (Array.isArray(imagesArr) && imagesArr.length > 0) {
         setFileList(
-          imagesArr.map((image: string) => ({
-            url:
-              '//' +
-              location.hostname +
-              (location.port ? import.meta.env.VITE_IMAGES_PORT : '') +
-              import.meta.env.VITE_IMAGES_BASE_URL +
-              image,
-            filename: image
-          }))
+          imagesArr
+            .filter((image): image is string => typeof image === 'string')
+            .map(image => ({
+              url:
+                '//' +
+                location.hostname +
+                (location.port ? import.meta.env.VITE_IMAGES_PORT : '') +
+                import.meta.env.VITE_IMAGES_BASE_URL +
+                image,
+              filename: image
+            }))
         )
       }
     }
