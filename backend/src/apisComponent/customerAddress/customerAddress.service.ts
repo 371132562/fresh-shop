@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { CustomerAddress } from '@prisma/client';
+import { CustomerAddress, Prisma } from '@prisma/client';
 
 import { CustomerAddressPageParams, ListByPage } from '../../../types/dto';
 
@@ -8,11 +8,16 @@ import { CustomerAddressPageParams, ListByPage } from '../../../types/dto';
 export class CustomerAddressService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CustomerAddress): Promise<CustomerAddress> {
+  async create(
+    data: Prisma.CustomerAddressCreateInput,
+  ): Promise<CustomerAddress> {
     return this.prisma.customerAddress.create({ data });
   }
 
-  async update(id: string, data: CustomerAddress): Promise<CustomerAddress> {
+  async update(
+    id: string,
+    data: Prisma.CustomerAddressUpdateInput,
+  ): Promise<CustomerAddress> {
     return this.prisma.customerAddress.update({
       where: { id },
       data,

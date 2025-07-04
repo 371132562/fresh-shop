@@ -6,7 +6,7 @@ CREATE TABLE "Supplier" (
     "wechat" TEXT,
     "description" TEXT,
     "rating" TEXT,
-    "images" TEXT NOT NULL,
+    "images" JSONB NOT NULL DEFAULT [],
     "delete" INTEGER NOT NULL DEFAULT 0,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
@@ -66,8 +66,8 @@ CREATE TABLE "GroupBuy" (
     "groupBuyStartDate" DATETIME,
     "supplierId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
-    "units" TEXT NOT NULL,
-    "images" TEXT NOT NULL,
+    "units" JSONB NOT NULL DEFAULT [],
+    "images" JSONB NOT NULL DEFAULT [],
     "delete" INTEGER NOT NULL DEFAULT 0,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
@@ -79,14 +79,25 @@ CREATE TABLE "GroupBuy" (
 CREATE TABLE "Order" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "customerId" TEXT NOT NULL,
-    "status" TEXT NOT NULL,
     "groupBuyId" TEXT NOT NULL,
+    "unitId" TEXT,
     "quantity" INTEGER NOT NULL,
+    "description" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'COMPLETED',
     "delete" INTEGER NOT NULL DEFAULT 0,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "Order_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Order_groupBuyId_fkey" FOREIGN KEY ("groupBuyId") REFERENCES "GroupBuy" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "GlobalSetting" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "key" TEXT NOT NULL,
+    "value" JSONB NOT NULL,
+    "updatedAt" DATETIME NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateIndex
@@ -124,3 +135,6 @@ CREATE INDEX "Order_customerId_idx" ON "Order"("customerId");
 
 -- CreateIndex
 CREATE INDEX "Order_groupBuyId_idx" ON "Order"("groupBuyId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "GlobalSetting_key_key" ON "GlobalSetting"("key");

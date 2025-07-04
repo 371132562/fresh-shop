@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { ProductType } from '@prisma/client';
+import { ProductType, Prisma } from '@prisma/client';
 
 import { ProductTypePageParams, ListByPage } from '../../../types/dto';
 
@@ -8,11 +8,14 @@ import { ProductTypePageParams, ListByPage } from '../../../types/dto';
 export class ProductTypeService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: ProductType): Promise<ProductType> {
+  async create(data: Prisma.ProductTypeCreateInput): Promise<ProductType> {
     return this.prisma.productType.create({ data });
   }
 
-  async update(id: string, data: ProductType): Promise<ProductType> {
+  async update(
+    id: string,
+    data: Prisma.ProductTypeUpdateInput,
+  ): Promise<ProductType> {
     return this.prisma.productType.update({
       where: { id },
       data,

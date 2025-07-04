@@ -19,7 +19,7 @@ export const Component = () => {
 
   const images: string[] = useMemo(() => {
     return supplier?.images
-      ? JSON.parse(supplier.images).map((image: string) => {
+      ? supplier.images.map((image: string) => {
           return (
             '//' +
             location.hostname +

@@ -39,12 +39,12 @@ const Modify = (props: params) => {
     if (id && groupBuy) {
       const formVal = {
         ...groupBuy,
-        units: JSON.parse(groupBuy.units),
+        units: groupBuy.units,
         groupBuyStartDate: dayjs(groupBuy.groupBuyStartDate)
       }
       form.setFieldsValue(formVal)
       const { images } = groupBuy as GroupBuy
-      const imagesArr = JSON.parse(images)
+      const imagesArr = images
       if (imagesArr.length > 0) {
         setFileList(
           imagesArr.map((image: string) => ({
@@ -67,17 +67,15 @@ const Modify = (props: params) => {
       .then(async val => {
         const params = {
           ...val,
-          units: JSON.stringify(val.units),
-          images: JSON.stringify(
-            fileList.map(item => {
-              if ('response' in item) {
-                // 检查 item 是否包含 'response' 属性
-                return (item as UploadFile).response.data.url
-              } else {
-                return (item as { filename: string }).filename
-              }
-            })
-          )
+          units: val.units,
+          images: fileList.map(item => {
+            if ('response' in item) {
+              // 检查 item 是否包含 'response' 属性
+              return (item as UploadFile).response.data.url
+            } else {
+              return (item as { filename: string }).filename
+            }
+          })
         }
         const res = id ? await updateGroupBuy({ ...params, id }) : await createGroupBuy(params)
         if (res) {

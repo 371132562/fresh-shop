@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Supplier } from '@prisma/client';
+import { Supplier, Prisma } from '@prisma/client';
 
 import { SupplierPageParams, ListByPage } from '../../../types/dto';
 import { BusinessException } from '../../exceptions/businessException';
@@ -10,11 +10,14 @@ import { ErrorCode } from '../../../types/response';
 export class SupplierService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: Supplier): Promise<Supplier> {
+  async create(data: Prisma.SupplierCreateInput): Promise<Supplier> {
     return this.prisma.supplier.create({ data });
   }
 
-  async update(id: string, data: Supplier): Promise<Supplier> {
+  async update(
+    id: string,
+    data: Prisma.SupplierUpdateInput,
+  ): Promise<Supplier> {
     return this.prisma.supplier.update({
       where: { id },
       data,
@@ -102,11 +105,8 @@ export class SupplierService {
           );
         }
 
-        // 确保 images 字段是字符串且是有效的 JSON
-        const currentImages = JSON.parse(detail.images);
-
         // 3. 从图片列表中移除指定文件名
-        const updatedImages = currentImages.filter(
+        const updatedImages = (detail.images as Prisma.JsonArray).filter(
           (item: string) => item !== filename,
         );
 
@@ -114,7 +114,7 @@ export class SupplierService {
         await tx.supplier.update({
           where: { id },
           data: {
-            images: JSON.stringify(updatedImages),
+            images: updatedImages,
           },
         });
       })

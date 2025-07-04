@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { CustomerAddressService } from './customerAddress.service';
-import { CustomerAddress } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 import { CustomerAddressPageParams } from '../../../types/dto';
 
@@ -10,13 +10,14 @@ export class CustomerAddressController {
     private readonly customerAddressService: CustomerAddressService,
   ) {}
   @Post('create')
-  create(@Body() data: CustomerAddress) {
+  create(@Body() data: Prisma.CustomerAddressCreateInput) {
     return this.customerAddressService.create(data);
   }
 
   @Post('update')
-  update(@Body() data: CustomerAddress) {
-    return this.customerAddressService.update(data.id, data);
+  update(@Body() data: { id: string } & Prisma.CustomerAddressUpdateInput) {
+    const { id, ...updateData } = data;
+    return this.customerAddressService.update(id, updateData);
   }
 
   @Post('list')

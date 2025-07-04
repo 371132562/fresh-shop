@@ -28,7 +28,7 @@ const Modify = (props: params) => {
     if (id) {
       form.setFieldsValue(supplier)
       const { images } = supplier as Supplier
-      const imagesArr = JSON.parse(images)
+      const imagesArr = images
       if (imagesArr.length > 0) {
         setFileList(
           imagesArr.map((image: string) => ({
@@ -51,16 +51,14 @@ const Modify = (props: params) => {
       .then(async val => {
         const params = {
           ...val,
-          images: JSON.stringify(
-            fileList.map(item => {
-              if ('response' in item) {
-                // 检查 item 是否包含 'response' 属性
-                return (item as UploadFile).response.data.url
-              } else {
-                return (item as { filename: string }).filename
-              }
-            })
-          )
+          images: fileList.map(item => {
+            if ('response' in item) {
+              // 检查 item 是否包含 'response' 属性
+              return (item as UploadFile).response.data.url
+            } else {
+              return (item as { filename: string }).filename
+            }
+          })
         }
         const res = id ? await updateSupplier({ ...params, id }) : await createSupplier(params)
         if (res) {
@@ -130,6 +128,12 @@ const Modify = (props: params) => {
           <Form.Item
             label="备注"
             name="description"
+          >
+            <Input placeholder="选填" />
+          </Form.Item>
+          <Form.Item
+            label="评价"
+            name="rating"
           >
             <Input placeholder="选填，如过往印象等" />
           </Form.Item>

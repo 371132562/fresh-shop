@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { SupplierService } from './supplier.service';
-import { Supplier } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 import { SupplierPageParams } from '../../../types/dto';
 
@@ -8,13 +8,14 @@ import { SupplierPageParams } from '../../../types/dto';
 export class SupplierController {
   constructor(private readonly supplierService: SupplierService) {}
   @Post('create')
-  create(@Body() data: Supplier) {
+  create(@Body() data: Prisma.SupplierCreateInput) {
     return this.supplierService.create(data);
   }
 
   @Post('update')
-  update(@Body() data: Supplier) {
-    return this.supplierService.update(data.id, data);
+  update(@Body() data: { id: string } & Prisma.SupplierUpdateInput) {
+    const { id, ...updateData } = data;
+    return this.supplierService.update(id, updateData);
   }
 
   @Post('list')

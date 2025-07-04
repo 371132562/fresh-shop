@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { ProductTypeService } from './productType.service';
-import { ProductType } from '@prisma/client';
+import { Prisma, ProductType } from '@prisma/client';
 
 import { ProductTypePageParams } from '../../../types/dto';
 
@@ -8,13 +8,14 @@ import { ProductTypePageParams } from '../../../types/dto';
 export class ProductTypeController {
   constructor(private readonly productTypeService: ProductTypeService) {}
   @Post('create')
-  create(@Body() data: ProductType) {
+  create(@Body() data: Prisma.ProductTypeCreateInput) {
     return this.productTypeService.create(data);
   }
 
   @Post('update')
-  update(@Body() data: ProductType) {
-    return this.productTypeService.update(data.id, data);
+  update(@Body() data: { id: string } & Prisma.ProductTypeUpdateInput) {
+    const { id, ...updateData } = data;
+    return this.productTypeService.update(data.id, updateData);
   }
 
   @Post('list')

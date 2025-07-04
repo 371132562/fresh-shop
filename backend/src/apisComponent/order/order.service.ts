@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Order, OrderStatus } from '@prisma/client';
+import { Order, OrderStatus, Prisma } from '@prisma/client';
 
 import { OrderPageParams, ListByPage } from '../../../types/dto';
 
@@ -8,11 +8,11 @@ import { OrderPageParams, ListByPage } from '../../../types/dto';
 export class OrderService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: Order): Promise<Order> {
+  async create(data: Prisma.OrderCreateInput): Promise<Order> {
     return this.prisma.order.create({ data });
   }
 
-  async update(id: string, data: Order): Promise<Order> {
+  async update(id: string, data: Prisma.OrderUpdateInput): Promise<Order> {
     return this.prisma.order.update({
       where: { id },
       data,

@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { GroupBuyService } from './groupBuy.service';
-import { GroupBuy } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 import { GroupBuyPageParams } from '../../../types/dto';
 
@@ -8,13 +8,14 @@ import { GroupBuyPageParams } from '../../../types/dto';
 export class GroupBuyController {
   constructor(private readonly groupBuyService: GroupBuyService) {}
   @Post('create')
-  create(@Body() data: GroupBuy) {
+  create(@Body() data: Prisma.GroupBuyCreateInput) {
     return this.groupBuyService.create(data);
   }
 
   @Post('update')
-  update(@Body() data: GroupBuy) {
-    return this.groupBuyService.update(data.id, data);
+  update(@Body() data: { id: string } & Prisma.GroupBuyUpdateInput) {
+    const { id, ...updateData } = data;
+    return this.groupBuyService.update(id, updateData);
   }
 
   @Post('list')

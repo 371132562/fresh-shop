@@ -1,5 +1,5 @@
 import { Form, Input, InputNumber, message, Modal, Select } from 'antd'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import useCustomerStore from '@/stores/customerStore.ts'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
@@ -14,6 +14,8 @@ interface params {
 const Modify = (props: params) => {
   const { visible, setVisible, id } = props
   const [form] = Form.useForm()
+
+  const [units, setUnits] = useState([])
 
   const createLoading = useOrderStore(state => state.createLoading)
   const createOrder = useOrderStore(state => state.createOrder)
@@ -33,6 +35,12 @@ const Modify = (props: params) => {
       form.setFieldsValue(order)
     }
   }, [])
+
+  useEffect(() => {
+    if (id && order) {
+      groupBuyChange(order.groupBuyId)
+    }
+  }, [allGroupBuy])
 
   const handleOk = () => {
     form
@@ -55,6 +63,11 @@ const Modify = (props: params) => {
 
   const filterOption = (input: string, option: any) => {
     return (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+  }
+
+  const groupBuyChange = val => {
+    const groupBuy = allGroupBuy.find(item => item.id === val)
+    setUnits(groupBuy.units)
   }
 
   return (
@@ -111,6 +124,7 @@ const Modify = (props: params) => {
               allowClear
               placeholder="请选择团购单"
               filterOption={filterOption}
+              onChange={groupBuyChange}
             >
               {allGroupBuy.map(item => {
                 return (
@@ -125,7 +139,33 @@ const Modify = (props: params) => {
             </Select>
           </Form.Item>
           <Form.Item
-            label="数量"
+            label="规格"
+            name="unitId"
+            rules={[{ required: true, message: '请选择规格' }]}
+          >
+            <Select
+              loading={getAllGroupBuyLoading}
+              showSearch
+              allowClear
+              placeholder="请选择团购单后选择一个规格"
+              filterOption={filterOption}
+            >
+              {units.map(item => {
+                return (
+                  <Select.Option
+                    key={item.id}
+                    value={item.id}
+                  >
+                    <span>
+                      计量单位：{item.unit} 售价：{item.price} 成本价: {item.costPrice}
+                    </span>
+                  </Select.Option>
+                )
+              })}
+            </Select>
+          </Form.Item>
+          <Form.Item
+            label="购买数量"
             name="quantity"
             rules={[{ required: true, message: '请输入数量' }]}
           >

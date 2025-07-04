@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { Order } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 import { OrderPageParams } from '../../../types/dto';
 
@@ -8,13 +8,14 @@ import { OrderPageParams } from '../../../types/dto';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
   @Post('create')
-  create(@Body() data: Order) {
+  create(@Body() data: Prisma.OrderCreateInput) {
     return this.orderService.create(data);
   }
 
   @Post('update')
-  update(@Body() data: Order) {
-    return this.orderService.update(data.id, data);
+  update(@Body() data: { id: string } & Prisma.OrderUpdateInput) {
+    const { id, ...updateData } = data;
+    return this.orderService.update(id, updateData);
   }
 
   @Post('list')

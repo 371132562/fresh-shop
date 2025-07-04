@@ -20,7 +20,7 @@ export const Component = () => {
 
   const images: string[] = useMemo(() => {
     return groupBuy?.images
-      ? JSON.parse(groupBuy.images).map((image: string) => {
+      ? groupBuy.images.map((image: string) => {
           return (
             '//' +
             location.hostname +
@@ -142,7 +142,7 @@ export const Component = () => {
           <div className="space-y-4">
             {/* 增加每项规格之间的垂直间距 */}
             {groupBuy?.units ? (
-              JSON.parse(groupBuy.units).map((item: any, index: number) => (
+              groupBuy.units.map((item: any, index: number) => (
                 <div
                   key={index}
                   className="rounded-md bg-gray-50 p-3"

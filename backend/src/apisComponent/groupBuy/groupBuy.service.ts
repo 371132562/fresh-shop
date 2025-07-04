@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ErrorCode } from '../../../types/response';
 import { BusinessException } from '../../exceptions/businessException';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { GroupBuy } from '@prisma/client';
+import { GroupBuy, Prisma } from '@prisma/client';
 
 import { GroupBuyPageParams, ListByPage } from '../../../types/dto';
 
@@ -10,11 +10,14 @@ import { GroupBuyPageParams, ListByPage } from '../../../types/dto';
 export class GroupBuyService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: GroupBuy): Promise<GroupBuy> {
+  async create(data: Prisma.GroupBuyCreateInput): Promise<GroupBuy> {
     return this.prisma.groupBuy.create({ data });
   }
 
-  async update(id: string, data: GroupBuy): Promise<GroupBuy> {
+  async update(
+    id: string,
+    data: Prisma.GroupBuyUpdateInput,
+  ): Promise<GroupBuy> {
     return this.prisma.groupBuy.update({
       where: { id },
       data,
@@ -126,11 +129,8 @@ export class GroupBuyService {
           );
         }
 
-        // 确保 images 字段是字符串且是有效的 JSON
-        const currentImages = JSON.parse(detail.images);
-
         // 3. 从图片列表中移除指定文件名
-        const updatedImages = currentImages.filter(
+        const updatedImages = (detail.images as Prisma.JsonArray).filter(
           (item: string) => item !== filename,
         );
 
@@ -138,7 +138,7 @@ export class GroupBuyService {
         await tx.groupBuy.update({
           where: { id },
           data: {
-            images: JSON.stringify(updatedImages),
+            images: updatedImages,
           },
         });
       })
