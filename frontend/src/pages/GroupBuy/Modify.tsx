@@ -4,6 +4,7 @@ import { Button, DatePicker, Form, Input, InputNumber, message, Modal, Select, S
 import dayjs from 'dayjs'
 import { GroupBuy } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
+import { v4 as uuidv4 } from 'uuid' // 用于生成单位ID
 
 import ImagesUpload from '@/components/ImagesUpload'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
@@ -39,7 +40,6 @@ const Modify = (props: params) => {
     if (id && groupBuy) {
       const formVal = {
         ...groupBuy,
-        units: groupBuy.units,
         groupBuyStartDate: dayjs(groupBuy.groupBuyStartDate)
       }
       form.setFieldsValue(formVal)
@@ -69,7 +69,15 @@ const Modify = (props: params) => {
       .then(async val => {
         const params = {
           ...val,
-          units: val.units,
+          units: val.units.map((item: any) => {
+            if (!item.id) {
+              return {
+                id: uuidv4(),
+                ...item
+              }
+            }
+            return item
+          }),
           images: fileList.map(item => {
             if ('response' in item) {
               // 检查 item 是否包含 'response' 属性

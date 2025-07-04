@@ -39,6 +39,7 @@ const Modify = (props: params) => {
   useEffect(() => {
     if (id && order) {
       groupBuyChange(order.groupBuyId)
+      form.setFieldsValue({ unitId: order.unitId })
     }
   }, [allGroupBuy])
 
@@ -68,6 +69,7 @@ const Modify = (props: params) => {
   const groupBuyChange = (val: string) => {
     const groupBuy = allGroupBuy.find(item => item.id === val)
     setUnits((groupBuy?.units as GroupBuyUnit[]) || [])
+    form.setFieldsValue({ unitId: undefined })
   }
 
   return (
