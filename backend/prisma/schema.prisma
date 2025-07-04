@@ -133,10 +133,11 @@ model Order {
 }
 
 model GlobalSetting {
-  id    String @id @default(uuid())
-  key   String @unique // 如果用固定ID，这个字段可以省略或者作为额外索引
-  value Json // 存储 JSON 字符串
-
+  id        String   @id @default(uuid())
+  key       String   @unique // 如果用固定ID，这个字段可以省略或者作为额外索引
+  value     Json // 存储 JSON 字符串
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
+
+  @@index([key])
 }

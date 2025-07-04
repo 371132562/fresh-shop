@@ -15,6 +15,7 @@ import { CustomerAddressModule } from './apisComponent/customerAddress/customerA
 import { CustomerModule } from './apisComponent/customer/customer.module';
 import { GroupBuyModule } from './apisComponent/groupBuy/groupBuy.module';
 import { OrderModule } from './apisComponent/order/order.module';
+import { GlobalSettingModule } from './apisComponent/globalSetting/globalSetting.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { OrderModule } from './apisComponent/order/order.module';
     CustomerModule,
     GroupBuyModule,
     OrderModule,
+    GlobalSettingModule,
   ],
   controllers: [],
   providers: [],

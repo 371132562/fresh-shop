@@ -1,6 +1,5 @@
 import { Customer } from 'fresh-shop-backend/types/dto.ts'
 import { CustomerPageParams, ListByPage } from 'fresh-shop-backend/types/dto.ts'
-import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
 
 import {
@@ -65,10 +64,7 @@ const useCustomerStore = create<CustomerStore>((set, get) => ({
   getCustomerList: async (data = get().pageParams) => {
     try {
       set({ listLoading: true })
-      const res: ResponseBody<ListByPage<CustomerListItem[]>> = await http.post(
-        customerListApi,
-        data
-      )
+      const res = await http.post<ListByPage<CustomerListItem[]>>(customerListApi, data)
       if (res.data.page > res.data.totalPages && res.data.totalPages) {
         get().setPageParams({ page: res.data.totalPages || 1 })
         return
@@ -142,7 +138,7 @@ const useCustomerStore = create<CustomerStore>((set, get) => ({
   getCustomer: async data => {
     try {
       set({ getLoading: true })
-      const res = await http.post(customerDetailApi, data)
+      const res = await http.post<Customer>(customerDetailApi, data)
       set({ customer: res.data })
     } catch (err) {
       console.error(err)
@@ -159,7 +155,7 @@ const useCustomerStore = create<CustomerStore>((set, get) => ({
   getAllCustomer: async () => {
     try {
       set({ getAllCustomerLoading: true })
-      const res = await http.post(customerListAllApi)
+      const res = await http.post<Customer[]>(customerListAllApi)
       set({
         allCustomer: res.data || []
       })

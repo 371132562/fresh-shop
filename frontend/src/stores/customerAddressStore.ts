@@ -1,6 +1,5 @@
 import { CustomerAddress } from 'fresh-shop-backend/types/dto.ts'
 import { CustomerAddressPageParams, ListByPage } from 'fresh-shop-backend/types/dto.ts'
-import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
 
 import {
@@ -60,10 +59,7 @@ const useCustomerAddressStore = create<CustomerAddressStore>((set, get) => ({
   getCustomerAddressList: async (data = get().pageParams) => {
     try {
       set({ listLoading: true })
-      const res: ResponseBody<ListByPage<CustomerAddress[]>> = await http.post(
-        customerAddressListApi,
-        data
-      )
+      const res = await http.post<ListByPage<CustomerAddress[]>>(customerAddressListApi, data)
       if (res.data.page > res.data.totalPages && res.data.totalPages) {
         get().setPageParams({ page: res.data.totalPages || 1 })
         return
@@ -138,7 +134,7 @@ const useCustomerAddressStore = create<CustomerAddressStore>((set, get) => ({
   getCustomerAddress: async data => {
     try {
       set({ getLoading: true })
-      const res = await http.post(customerAddressDetailApi, data)
+      const res = await http.post<CustomerAddress>(customerAddressDetailApi, data)
       set({ customerAddress: res.data })
     } catch (err) {
       console.error(err)
@@ -155,7 +151,7 @@ const useCustomerAddressStore = create<CustomerAddressStore>((set, get) => ({
   getAllCustomerAddress: async () => {
     try {
       set({ getAllCustomerAddressLoading: true })
-      const res = await http.post(customerAddressListAllApi)
+      const res = await http.post<CustomerAddress[]>(customerAddressListAllApi)
       set({
         allCustomerAddress: res.data || []
       })

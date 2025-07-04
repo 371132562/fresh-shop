@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import Modify from '@/pages/Order/Modify.tsx'
+import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
 import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
 
@@ -20,6 +21,7 @@ export const Component = () => {
   const setOrder = useOrderStore(state => state.setOrder)
   const refundOrder = useOrderStore(state => state.refundOrder)
   const refundLoading = useOrderStore(state => state.refundLoading)
+  const globalSetting = useGlobalSettingStore(state => state.globalSetting)
 
   const unit = useMemo(() => {
     if (order) {
@@ -183,10 +185,12 @@ export const Component = () => {
                   <span className="w-20 flex-shrink-0 text-gray-500">售价：</span>
                   <span className="mr-2 font-medium text-blue-500">￥{unit.price}</span>
                 </div>
-                <div className="flex items-center">
-                  <span className="w-20 flex-shrink-0 text-gray-500">成本价：</span>
-                  <span className="font-medium text-blue-500">￥{unit.costPrice}</span>
-                </div>
+                {!globalSetting?.value?.sensitive && (
+                  <div className="flex items-center">
+                    <span className="w-20 flex-shrink-0 text-gray-500">成本价：</span>
+                    <span className="font-medium text-blue-500">￥{unit.costPrice}</span>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="py-2 text-base text-gray-700">

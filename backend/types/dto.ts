@@ -7,6 +7,7 @@ import {
   GroupBuy,
   OrderStatus,
   Order,
+  GlobalSetting,
 } from '@prisma/client';
 
 export {
@@ -18,6 +19,7 @@ export {
   GroupBuy,
   OrderStatus,
   Order,
+  GlobalSetting,
 };
 
 export type CommonPageParams = {

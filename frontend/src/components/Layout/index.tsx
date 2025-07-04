@@ -11,9 +11,11 @@ import {
   UserOutlined
 } from '@ant-design/icons' // 导入更多图标
 import { Drawer, Form, Switch } from 'antd'
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { useOutlet } from 'react-router'
 import { NavLink } from 'react-router'
+
+import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 
 import style from './index.module.less'
 
@@ -22,6 +24,17 @@ export const Component: FC = () => {
   const [open, setOpen] = useState(false)
   const [settingOpen, setSettingOpen] = useState(false)
 
+  const globalSetting = useGlobalSettingStore(state => state.globalSetting)
+  const getGlobalSettingLoading = useGlobalSettingStore(state => state.getGlobalSettingLoading)
+  const getGlobalSetting = useGlobalSettingStore(state => state.getGlobalSetting)
+  const upsertGlobalSettingLoading = useGlobalSettingStore(
+    state => state.upsertGlobalSettingLoading
+  )
+  const upsertGlobalSetting = useGlobalSettingStore(state => state.upsertGlobalSetting)
+
+  useEffect(() => {
+    getGlobalSetting({ key: 'setting' })
+  }, [])
   // 定义导航菜单项
   const navItems = [
     { to: '/supplier', label: '供货商管理', icon: <UserOutlined /> },
@@ -33,6 +46,15 @@ export const Component: FC = () => {
     { to: '/order', label: '订单管理', icon: <FileTextOutlined /> },
     { to: '/dashboard', label: '统计看板', icon: <DashboardOutlined /> }
   ]
+
+  const onSensitiveChange = (checked: boolean) => {
+    upsertGlobalSetting({
+      key: 'setting',
+      value: globalSetting?.value
+        ? { ...globalSetting.value, sensitive: checked }
+        : { sensitive: checked }
+    })
+  }
 
   return (
     <>
@@ -137,8 +159,8 @@ export const Component: FC = () => {
           <Form
             name="global_settings" // 为表单添加名称
             layout="horizontal" // 水平布局更适合设置项
-            labelCol={{ span: 16 }} // 调整标签和控件的比例
-            wrapperCol={{ span: 8 }}
+            labelCol={{ span: 10 }} // 调整标签和控件的比例
+            wrapperCol={{ span: 12 }}
             autoComplete="off"
           >
             <Form.Item
@@ -147,8 +169,11 @@ export const Component: FC = () => {
               valuePropName="checked"
             >
               <Switch
+                loading={getGlobalSettingLoading || upsertGlobalSettingLoading}
+                checked={globalSetting?.value?.sensitive}
                 checkedChildren="是"
                 unCheckedChildren="否"
+                onChange={onSensitiveChange}
               />
             </Form.Item>
           </Form>

@@ -32,7 +32,6 @@ http.interceptors.response.use(
     // 处理响应数据
     const { status, data } = response
     const { code, msg } = data // 解构后端返回的 code, msg, data
-
     // 统一处理后端返回的成功状态（HTTP Status 200）
     if (status === 200) {
       if (code === ErrorCode.SUCCESS) {

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import Modify from '@/pages/GroupBuy/Modify.tsx'
+import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import useGroupBuyStore, { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
 import { formatDate } from '@/utils'
 
@@ -17,6 +18,7 @@ export const Component = () => {
   const getLoading = useGroupBuyStore(state => state.getLoading)
   const deleteGroupBuy = useGroupBuyStore(state => state.deleteGroupBuy)
   const setGroupBuy = useGroupBuyStore(state => state.setGroupBuy)
+  const globalSetting = useGlobalSettingStore(state => state.globalSetting)
 
   const images: string[] = useMemo(() => {
     return Array.isArray(groupBuy?.images)
@@ -159,10 +161,12 @@ export const Component = () => {
                     <span className="w-20 flex-shrink-0 text-gray-500">售价：</span>
                     <span className="mr-2 font-medium text-blue-500">￥{item.price}</span>
                   </div>
-                  <div className="flex items-center">
-                    <span className="w-20 flex-shrink-0 text-gray-500">成本价：</span>
-                    <span className="font-medium text-blue-500">￥{item.costPrice}</span>
-                  </div>
+                  {!globalSetting?.value?.sensitive && (
+                    <div className="flex items-center">
+                      <span className="w-20 flex-shrink-0 text-gray-500">成本价：</span>
+                      <span className="font-medium text-blue-500">￥{item.costPrice}</span>
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
