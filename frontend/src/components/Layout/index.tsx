@@ -15,6 +15,8 @@ import { FC, useState } from 'react'
 import { useOutlet } from 'react-router'
 import { NavLink } from 'react-router'
 
+import style from './index.module.less'
+
 export const Component: FC = () => {
   const outlet = useOutlet()
   const [open, setOpen] = useState(false)
@@ -36,13 +38,7 @@ export const Component: FC = () => {
     <>
       {/*外层容器：居中，全高宽，最大宽度，浅灰色背景*/}
       <div
-        className="mx-auto flex h-dvh w-dvw max-w-3xl flex-col font-sans antialiased"
-        style={{
-          backgroundImage: 'url(/src/images/background.svg)',
-          backgroundSize: 'cover',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center'
-        }}
+        className={`mx-auto flex h-dvh w-dvw max-w-3xl flex-col font-sans antialiased ${style.layout}`}
       >
         {/* 头部：固定顶部，深色背景，居中，有阴影，顶部圆角 */}
         <header className="sticky top-0 z-10 rounded-b-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-1 shadow-md">
