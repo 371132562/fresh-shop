@@ -109,6 +109,19 @@ export class GroupBuyService {
   }
 
   async delete(id: string) {
+    const orderCount = await this.prisma.order.count({
+      where: {
+        groupBuyId: id,
+        delete: 0,
+      },
+    });
+
+    if (orderCount > 0) {
+      throw new BusinessException(
+        ErrorCode.DATA_STILL_REFERENCED,
+        '该团购单下存在关联的订单，无法删除。',
+      );
+    }
     return this.prisma.groupBuy.update({
       where: {
         id,

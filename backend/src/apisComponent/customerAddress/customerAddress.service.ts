@@ -3,6 +3,8 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { CustomerAddress, Prisma } from '@prisma/client';
 
 import { CustomerAddressPageParams, ListByPage } from '../../../types/dto';
+import { BusinessException } from '../../exceptions/businessException';
+import { ErrorCode } from '../../../types/response';
 
 @Injectable()
 export class CustomerAddressService {
@@ -78,6 +80,19 @@ export class CustomerAddressService {
   }
 
   async delete(id: string) {
+    const customerCount = await this.prisma.customer.count({
+      where: {
+        customerAddressId: id,
+        delete: 0,
+      },
+    });
+
+    if (customerCount > 0) {
+      throw new BusinessException(
+        ErrorCode.DATA_STILL_REFERENCED,
+        '该客户地址下存在关联的客户，无法删除。',
+      );
+    }
     return this.prisma.customerAddress.update({
       where: {
         id,

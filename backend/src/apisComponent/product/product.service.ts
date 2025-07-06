@@ -3,6 +3,8 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { Product, Prisma } from '@prisma/client';
 
 import { ProductPageParams, ListByPage } from '../../../types/dto';
+import { BusinessException } from '../../exceptions/businessException';
+import { ErrorCode } from '../../../types/response';
 
 @Injectable()
 export class ProductService {
@@ -82,6 +84,19 @@ export class ProductService {
   }
 
   async delete(id: string) {
+    const groupBuyCount = await this.prisma.groupBuy.count({
+      where: {
+        productId: id,
+        delete: 0,
+      },
+    });
+
+    if (groupBuyCount > 0) {
+      throw new BusinessException(
+        ErrorCode.DATA_STILL_REFERENCED,
+        '该商品下存在关联的团购单，无法删除。',
+      );
+    }
     return this.prisma.product.update({
       where: {
         id,

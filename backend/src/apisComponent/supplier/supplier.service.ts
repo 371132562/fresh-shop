@@ -80,6 +80,19 @@ export class SupplierService {
   }
 
   async delete(id: string) {
+    const groupBuyCount = await this.prisma.groupBuy.count({
+      where: {
+        supplierId: id,
+        delete: 0, // 只检查未删除的团购单
+      },
+    });
+
+    if (groupBuyCount > 0) {
+      throw new BusinessException(
+        ErrorCode.DATA_STILL_REFERENCED,
+        '该供货商下存在关联的团购单，无法删除。',
+      );
+    }
     return this.prisma.supplier.update({
       where: {
         id,

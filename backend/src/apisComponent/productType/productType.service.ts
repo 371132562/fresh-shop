@@ -3,6 +3,8 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { ProductType, Prisma } from '@prisma/client';
 
 import { ProductTypePageParams, ListByPage } from '../../../types/dto';
+import { BusinessException } from '../../exceptions/businessException';
+import { ErrorCode } from '../../../types/response';
 
 @Injectable()
 export class ProductTypeService {
@@ -74,6 +76,19 @@ export class ProductTypeService {
   }
 
   async delete(id: string) {
+    const productCount = await this.prisma.product.count({
+      where: {
+        productTypeId: id,
+        delete: 0,
+      },
+    });
+
+    if (productCount > 0) {
+      throw new BusinessException(
+        ErrorCode.DATA_STILL_REFERENCED,
+        '该商品类型下存在关联的商品，无法删除。',
+      );
+    }
     return this.prisma.productType.update({
       where: {
         id,

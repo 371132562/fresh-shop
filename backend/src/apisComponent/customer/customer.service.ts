@@ -3,6 +3,8 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { Customer, Prisma } from '@prisma/client';
 
 import { CustomerPageParams, ListByPage } from '../../../types/dto';
+import { BusinessException } from '../../exceptions/businessException';
+import { ErrorCode } from '../../../types/response';
 
 @Injectable()
 export class CustomerService {
@@ -97,6 +99,19 @@ export class CustomerService {
   }
 
   async delete(id: string) {
+    const orderCount = await this.prisma.order.count({
+      where: {
+        customerId: id,
+        delete: 0,
+      },
+    });
+
+    if (orderCount > 0) {
+      throw new BusinessException(
+        ErrorCode.DATA_STILL_REFERENCED,
+        '该客户下存在关联的订单，无法删除。',
+      );
+    }
     return this.prisma.customer.update({
       where: {
         id,
