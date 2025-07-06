@@ -43,6 +43,7 @@ const Modify = (props: params) => {
         }
       })
       .catch(err => {
+        message.warning('表单未填写完整')
         console.log(err)
       })
   }

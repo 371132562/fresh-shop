@@ -72,6 +72,9 @@ export type GroupBuyPageParams = CommonPageParams & {
 export type GroupBuyDetail = GroupBuy & {
   supplier: Supplier;
   product: Product;
+  _count: {
+    order: number;
+  };
 };
 
 export type OrderPageParams = CommonPageParams & {

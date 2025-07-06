@@ -15,10 +15,11 @@ interface params {
   visible: boolean
   setVisible: (value: boolean) => void
   id?: string //编辑时会提供此id
+  againGroupBuy?: GroupBuy | null
 }
 
 const Modify = (props: params) => {
-  const { visible, setVisible, id } = props
+  const { visible, setVisible, id, againGroupBuy } = props
   const [form] = Form.useForm()
 
   const [fileList, setFileList] = useState<UploadFile[] | Array<{ filename: string }>>([])
@@ -41,6 +42,30 @@ const Modify = (props: params) => {
       const formVal = {
         ...groupBuy,
         groupBuyStartDate: dayjs(groupBuy.groupBuyStartDate)
+      }
+      form.setFieldsValue(formVal)
+      const { images } = groupBuy as GroupBuy
+      const imagesArr = images
+      if (Array.isArray(imagesArr) && imagesArr.length > 0) {
+        setFileList(
+          imagesArr
+            .filter((image): image is string => typeof image === 'string')
+            .map(image => ({
+              url:
+                '//' +
+                location.hostname +
+                (location.port ? import.meta.env.VITE_IMAGES_PORT : '') +
+                import.meta.env.VITE_IMAGES_BASE_URL +
+                image,
+              filename: image
+            }))
+        )
+      }
+    }
+    if (againGroupBuy) {
+      const formVal = {
+        ...groupBuy,
+        groupBuyStartDate: null
       }
       form.setFieldsValue(formVal)
       const { images } = groupBuy as GroupBuy
@@ -90,10 +115,11 @@ const Modify = (props: params) => {
         const res = id ? await updateGroupBuy({ ...params, id }) : await createGroupBuy(params)
         if (res) {
           message.success(id ? '编辑成功' : '添加成功')
-          setVisible(false)
+          handleCancel()
         }
       })
       .catch(err => {
+        message.warning('表单未填写完整')
         console.log(err)
       })
   }

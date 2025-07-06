@@ -1,5 +1,6 @@
 import type { PopconfirmProps } from 'antd'
 import { Button, Flex, Image, message, Popconfirm, Spin } from 'antd'
+import { GroupBuy } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
@@ -12,6 +13,8 @@ export const Component = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const [visible, setVisible] = useState(false)
+  const [againVisible, setAgainVisible] = useState(false)
+  const [againGroupBuy, setAgainGroupBuy] = useState<GroupBuy | null>(null)
 
   const groupBuy = useGroupBuyStore(state => state.groupBuy)
   const getGroupBuy = useGroupBuyStore(state => state.getGroupBuy)
@@ -71,6 +74,16 @@ export const Component = () => {
               wrap
               justify="end"
             >
+              <Button
+                color="primary"
+                variant="solid"
+                onClick={() => {
+                  setAgainVisible(true)
+                  setAgainGroupBuy(groupBuy)
+                }}
+              >
+                再次发起
+              </Button>
               <Button
                 color="primary"
                 variant="outlined"
@@ -224,6 +237,13 @@ export const Component = () => {
           id={id}
           visible={visible}
           setVisible={setVisible}
+        />
+      )}
+      {againVisible && (
+        <Modify
+          visible={againVisible}
+          setVisible={setAgainVisible}
+          againGroupBuy={againGroupBuy}
         />
       )}
     </div>

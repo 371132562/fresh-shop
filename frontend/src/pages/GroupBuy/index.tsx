@@ -1,6 +1,7 @@
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { Button, DatePicker, FloatButton, Form, Input, List, Modal, Select } from 'antd'
 import dayjs from 'dayjs'
+import { GroupBuyDetail } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
@@ -125,7 +126,7 @@ export const Component = () => {
             }
           }}
           dataSource={groupBuysList}
-          renderItem={item => (
+          renderItem={(item: GroupBuyDetail) => (
             <List.Item>
               <List.Item.Meta
                 title={
@@ -148,6 +149,9 @@ export const Component = () => {
                         商品：<span className="text-blue-500">{item.product.name}</span>
                       </div>
                     )}
+                    <div className="mt-1 font-medium text-gray-800">
+                      订单数量：<span className="text-blue-500">{item._count.order}</span>
+                    </div>
                     {item.description && ( // 只有当 description 存在时才显示
                       <div className="overflow-hidden text-ellipsis whitespace-nowrap text-gray-600">
                         {item.description}

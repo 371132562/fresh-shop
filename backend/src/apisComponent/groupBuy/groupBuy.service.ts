@@ -76,6 +76,11 @@ export class GroupBuyService {
         include: {
           supplier: true, // 包含所有 supplier 字段
           product: true, // 包含所有 product 字段
+          _count: {
+            select: {
+              order: true, // 查询关联的订单数量
+            },
+          },
         },
       }),
       this.prisma.groupBuy.count({ where }), // 获取总记录数
