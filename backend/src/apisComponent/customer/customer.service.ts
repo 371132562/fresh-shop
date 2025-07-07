@@ -28,7 +28,7 @@ export class CustomerService {
     const { page, pageSize, name, customerAddressIds, phone, wechat } = data; // 从 data 中解构 customerAddressIds
     const skip = (page - 1) * pageSize; // 计算要跳过的记录数
 
-    const where: any = {
+    const where: Prisma.CustomerWhereInput = {
       delete: 0, // 仅查询未删除的供货商
     };
 

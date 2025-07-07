@@ -63,7 +63,7 @@ CREATE TABLE "GroupBuy" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "groupBuyStartDate" DATETIME,
+    "groupBuyStartDate" DATETIME NOT NULL,
     "supplierId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
     "units" JSONB NOT NULL DEFAULT [],
@@ -80,7 +80,7 @@ CREATE TABLE "Order" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "customerId" TEXT NOT NULL,
     "groupBuyId" TEXT NOT NULL,
-    "unitId" TEXT,
+    "unitId" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL,
     "description" TEXT,
     "status" TEXT NOT NULL DEFAULT 'COMPLETED',
@@ -138,3 +138,6 @@ CREATE INDEX "Order_groupBuyId_idx" ON "Order"("groupBuyId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "GlobalSetting_key_key" ON "GlobalSetting"("key");
+
+-- CreateIndex
+CREATE INDEX "GlobalSetting_key_idx" ON "GlobalSetting"("key");

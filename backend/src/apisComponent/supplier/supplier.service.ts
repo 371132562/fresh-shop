@@ -28,7 +28,7 @@ export class SupplierService {
     const { page, pageSize, name, phone, wechat } = data;
     const skip = (page - 1) * pageSize; // 计算要跳过的记录数
 
-    const where: any = {
+    const where: Prisma.SupplierWhereInput = {
       delete: 0, // 仅查询未删除的供货商
     };
 

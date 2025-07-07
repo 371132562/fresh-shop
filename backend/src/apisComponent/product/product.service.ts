@@ -25,8 +25,8 @@ export class ProductService {
     const { page, pageSize, name, productTypeIds } = data; // 从 data 中解构 productTypeIds
     const skip = (page - 1) * pageSize; // 计算要跳过的记录数
 
-    const where: any = {
-      delete: 0, // 仅查询未删除的供货商
+    const where: Prisma.ProductWhereInput = {
+      delete: 0, // 仅查询未删除的商品
     };
 
     if (name) {

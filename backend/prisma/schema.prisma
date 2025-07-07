@@ -88,20 +88,20 @@ model CustomerAddress {
 
 // 团购单
 model GroupBuy {
-  id                String    @id @default(uuid()) // 主键ID（UUID）
+  id                String   @id @default(uuid()) // 主键ID（UUID）
   name              String // 团购名称（必填）
   description       String? // 团购描述（可选）
-  groupBuyStartDate DateTime? // 团购发起时间（可选）
+  groupBuyStartDate DateTime // 团购发起时间
   supplierId        String
-  supplier          Supplier  @relation(fields: [supplierId], references: [id])
+  supplier          Supplier @relation(fields: [supplierId], references: [id])
   productId         String
-  product           Product   @relation(fields: [productId], references: [id])
-  units             Json      @default("[]") // 团购规格数组，以JSON存储 包含id,规格unit,售价price,成本价costPrice四个字段
+  product           Product  @relation(fields: [productId], references: [id])
+  units             Json     @default("[]") // 团购规格数组，以JSON存储 包含id,规格unit,售价price,成本价costPrice四个字段
   order             Order[]
-  images            Json      @default("[]") // 商品图片数组，以JSON存储
-  delete            Int       @default(0)
-  createdAt         DateTime  @default(now()) // 创建时间
-  updatedAt         DateTime  @updatedAt // 最后更新时间
+  images            Json     @default("[]") // 商品图片数组，以JSON存储
+  delete            Int      @default(0)
+  createdAt         DateTime @default(now()) // 创建时间
+  updatedAt         DateTime @updatedAt // 最后更新时间
 
   @@index([id])
   @@index([name])
@@ -119,7 +119,7 @@ model Order {
   customer    Customer    @relation(fields: [customerId], references: [id])
   groupBuyId  String
   groupBuy    GroupBuy    @relation(fields: [groupBuyId], references: [id])
-  unitId      String?
+  unitId      String
   quantity    Int // 购买份数
   description String? //备注
   status      OrderStatus @default(COMPLETED) // 订单状态（是否退款）
