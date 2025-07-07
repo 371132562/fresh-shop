@@ -109,7 +109,7 @@ export class CustomerService {
     if (orderCount > 0) {
       throw new BusinessException(
         ErrorCode.DATA_STILL_REFERENCED,
-        '该客户下存在关联的订单，无法删除。',
+        `该客户下存在关联的订单（${orderCount}条），无法删除。`,
       );
     }
     return this.prisma.customer.update({

@@ -86,7 +86,7 @@ export class ProductTypeService {
     if (productCount > 0) {
       throw new BusinessException(
         ErrorCode.DATA_STILL_REFERENCED,
-        '该商品类型下存在关联的商品，无法删除。',
+        `该商品类型下存在关联的商品（${productCount}条），无法删除。`,
       );
     }
     return this.prisma.productType.update({

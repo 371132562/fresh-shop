@@ -119,7 +119,7 @@ export class GroupBuyService {
     if (orderCount > 0) {
       throw new BusinessException(
         ErrorCode.DATA_STILL_REFERENCED,
-        '该团购单下存在关联的订单，无法删除。',
+        `该团购单下存在关联的订单（${orderCount}条），无法删除。`,
       );
     }
     return this.prisma.groupBuy.update({

@@ -74,7 +74,7 @@ const ImagesUpload = (props: params) => {
         action="/fresh/upload"
         accept="image/*"
         multiple={true}
-        listType="picture-circle"
+        listType="picture-card"
         fileList={fileList}
         onPreview={handlePreview}
         onChange={handleChange}

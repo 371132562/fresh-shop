@@ -90,7 +90,7 @@ export class CustomerAddressService {
     if (customerCount > 0) {
       throw new BusinessException(
         ErrorCode.DATA_STILL_REFERENCED,
-        '该客户地址下存在关联的客户，无法删除。',
+        `该客户地址下存在关联的客户（${customerCount}条），无法删除。`,
       );
     }
     return this.prisma.customerAddress.update({
