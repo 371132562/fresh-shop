@@ -1,12 +1,13 @@
-import type { PopconfirmProps } from 'antd'
-import { Button, Flex, Image, message, Popconfirm, Spin } from 'antd'
-import { GroupBuy } from 'fresh-shop-backend/types/dto.ts'
+import type { PopconfirmProps, TableProps } from 'antd'
+import { Button, Flex, Image, message, Popconfirm, Spin, Table, Tag } from 'antd'
+import { GroupBuy, Order } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import Modify from '@/pages/GroupBuy/Modify.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import useGroupBuyStore, { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
+import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
 import { formatDate } from '@/utils'
 
 export const Component = () => {
@@ -22,6 +23,7 @@ export const Component = () => {
   const deleteGroupBuy = useGroupBuyStore(state => state.deleteGroupBuy)
   const setGroupBuy = useGroupBuyStore(state => state.setGroupBuy)
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
+  const updateOrder = useOrderStore(state => state.updateOrder)
 
   const images: string[] = useMemo(() => {
     return Array.isArray(groupBuy?.images)
@@ -55,6 +57,103 @@ export const Component = () => {
       navigate('/groupBuy')
     }
   }
+
+  const handleUpdateOrderStatus = async (order: Order) => {
+    if (!order.id) return
+    // 统一使用前端 OrderStatus 类型，避免类型不兼容
+    const orderStatusValues = Object.values(OrderStatus) as OrderStatus[]
+    const currentIndex = orderStatusValues.findIndex(status => status === order.status)
+    if (currentIndex < orderStatusValues.length - 1) {
+      const nextStatus = orderStatusValues[currentIndex + 1]
+      // 只传递需要更新的字段，补全 OrderCreate 所需字段，防止类型报错
+      const res = await updateOrder({
+        ...order,
+        status: nextStatus
+      })
+      if (res) {
+        message.success(`订单状态已更新为：${OrderStatusMap[nextStatus].label}`)
+        if (id) {
+          getGroupBuy({ id })
+        }
+      } else {
+        message.error('更新订单状态失败')
+      }
+    } else {
+      message.info('订单已是最终状态，无法继续修改')
+    }
+  }
+
+  const columns: TableProps<Order>['columns'] = useMemo(() => {
+    return [
+      {
+        title: '客户名称',
+        dataIndex: 'customer',
+        key: 'customer',
+        render: customer => customer.name || '无'
+      },
+      {
+        title: '所选规格',
+        dataIndex: 'unitId',
+        key: 'unitId',
+        render: unitId => {
+          const unit = (groupBuy?.units as GroupBuyUnit[])?.find(item => item.id === unitId)
+          return unit ? unit.unit : '无'
+        }
+      },
+      {
+        title: '购买份数',
+        dataIndex: 'quantity',
+        key: 'quantity'
+      },
+      {
+        title: '订单状态',
+        dataIndex: 'status',
+        key: 'status',
+        render: (status: OrderStatus) => {
+          return <Tag color={OrderStatusMap[status].color}>{OrderStatusMap[status].label}</Tag>
+        }
+      },
+      {
+        title: '操作',
+        key: 'action',
+        render: (_: any, record: Order) => {
+          // 解决类型不兼容问题，确保 record.status 与 OrderStatus 类型一致
+          const orderStatusValues = Object.values(OrderStatus) as OrderStatus[]
+          const currentIndex = orderStatusValues.findIndex(status => status === record.status)
+          const nextStatusLabel =
+            currentIndex < orderStatusValues.length - 1
+              ? OrderStatusMap[orderStatusValues[currentIndex + 1]].label
+              : '无'
+
+          return (
+            <Popconfirm
+              title={
+                <div className="text-lg">
+                  确定要将订单状态变更为 <span className="text-blue-500">{nextStatusLabel}</span>{' '}
+                  吗？
+                </div>
+              }
+              placement="left"
+              onConfirm={() => handleUpdateOrderStatus(record)}
+              okText="确定"
+              cancelText="取消"
+              disabled={currentIndex === orderStatusValues.length - 1}
+              okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
+              cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
+            >
+              <Button
+                type="primary"
+                size="small"
+                disabled={currentIndex === orderStatusValues.length - 1}
+              >
+                修改状态
+              </Button>
+            </Popconfirm>
+          )
+        }
+      }
+    ]
+  }, [groupBuy])
 
   return (
     <div className="w-full">
@@ -148,6 +247,25 @@ export const Component = () => {
               </span>
             </div>
           </div>
+        </div>
+
+        {/* 订单信息卡片 */}
+        <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
+          <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
+            订单信息 共 {groupBuy?.order?.length || 0} 条
+          </h3>
+          <Table
+            dataSource={groupBuy?.order}
+            columns={columns}
+            rowKey="id"
+            pagination={false}
+            scroll={{ x: 'max-content' }} // 适配移动端，允许内容滚动
+          />
+          {!groupBuy?.order?.length && (
+            <div className="py-2 text-base text-gray-700">
+              <span className="italic text-gray-400">无订单信息</span>
+            </div>
+          )}
         </div>
 
         {/* 规格信息卡片 - 优化显示方式 */}

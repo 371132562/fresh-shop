@@ -108,6 +108,7 @@ model GroupBuy {
 }
 
 enum OrderStatus {
+  NOTPAID // 未付款
   COMPLETED // 已完成
   REFUNDED // 已退款
 }
@@ -122,7 +123,7 @@ model Order {
   unitId      String
   quantity    Int // 购买份数
   description String? //备注
-  status      OrderStatus @default(COMPLETED) // 订单状态（是否退款）
+  status      OrderStatus @default(NOTPAID) // 订单状态
   delete      Int         @default(0)
   createdAt   DateTime    @default(now()) // 创建时间
   updatedAt   DateTime    @updatedAt // 最后更新时间

@@ -104,6 +104,15 @@ export class GroupBuyService {
       include: {
         supplier: true, // 包含所有 supplier 字段
         product: true, // 包含所有 product 字段
+        order: {
+          include: {
+            customer: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        }, // 包含所有 order 字段
       },
     });
   }

@@ -79,12 +79,18 @@ export type GroupBuyPageParams = CommonPageParams & {
   productIds: Product['id'][];
 };
 
-export type GroupBuyDetail = GroupBuy & {
+export type GroupBuyListItem = GroupBuy & {
   supplier: Supplier;
   product: Product;
   _count: {
     order: number;
   };
+};
+
+export type GroupBuyDetail = GroupBuy & {
+  supplier: Supplier;
+  product: Product;
+  order: Order[];
 };
 
 export type GroupBuyUnit = {

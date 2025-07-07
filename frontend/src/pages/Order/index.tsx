@@ -5,11 +5,7 @@ import { NavLink } from 'react-router'
 
 import useCustomerStore from '@/stores/customerStore.ts'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
-import useOrderStore, {
-  OrderStatus,
-  OrderStatusMap,
-  OrderStatusOptions
-} from '@/stores/orderStore.ts'
+import useOrderStore, { OrderStatusMap, OrderStatusOptions } from '@/stores/orderStore.ts'
 
 import Modify from './Modify.tsx'
 
@@ -121,8 +117,8 @@ export const Component = () => {
                       style={{ padding: 0 }}
                     >
                       <span className="text-lg">{item.customer.name}</span>
-                      <Tag color={item.status === OrderStatus.COMPLETED ? '#87d068' : '#f50'}>
-                        {OrderStatusMap[item.status]}
+                      <Tag color={OrderStatusMap[item.status].color}>
+                        {OrderStatusMap[item.status].label}
                       </Tag>
                     </Button>
                   </NavLink>

@@ -1,7 +1,7 @@
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { Button, DatePicker, FloatButton, Form, Input, List, Modal, Select } from 'antd'
 import dayjs from 'dayjs'
-import { GroupBuyDetail } from 'fresh-shop-backend/types/dto.ts'
+import { GroupBuyListItem } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
@@ -126,7 +126,7 @@ export const Component = () => {
             }
           }}
           dataSource={groupBuysList}
-          renderItem={(item: GroupBuyDetail) => (
+          renderItem={(item: GroupBuyListItem) => (
             <List.Item>
               <List.Item.Meta
                 title={

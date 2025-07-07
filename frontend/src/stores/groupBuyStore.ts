@@ -1,4 +1,4 @@
-import { GroupBuy, GroupBuyDetail } from 'fresh-shop-backend/types/dto.ts'
+import { GroupBuy, GroupBuyDetail, GroupBuyListItem } from 'fresh-shop-backend/types/dto.ts'
 import { GroupBuyPageParams, ListByPage } from 'fresh-shop-backend/types/dto.ts'
 import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
@@ -25,7 +25,7 @@ type GroupBuyCreate = Omit<GroupBuy, 'id' | 'delete' | 'createdAt' | 'updatedAt'
 type GroupBuyId = Pick<GroupBuy, 'id'>
 
 type GroupBuyStore = {
-  groupBuyList: GroupBuyDetail[]
+  groupBuyList: GroupBuyListItem[]
   listCount: {
     totalCount: number
     totalPages: number
@@ -71,7 +71,10 @@ const useGroupBuyStore = create<GroupBuyStore>((set, get) => ({
   getGroupBuyList: async (data = get().pageParams) => {
     try {
       set({ listLoading: true })
-      const res: ResponseBody<ListByPage<GroupBuyDetail[]>> = await http.post(groupBuyListApi, data)
+      const res: ResponseBody<ListByPage<GroupBuyListItem[]>> = await http.post(
+        groupBuyListApi,
+        data
+      )
       if (res.data.page > res.data.totalPages && res.data.totalPages) {
         get().setPageParams({ page: res.data.totalPages || 1 })
         return

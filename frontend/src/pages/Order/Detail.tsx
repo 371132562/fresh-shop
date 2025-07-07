@@ -72,8 +72,8 @@ export const Component = () => {
               {order?.status ? (
                 <div className="flex items-center">
                   <span className="mr-2">订单状态</span>
-                  <Tag color={order.status === OrderStatus.COMPLETED ? '#87d068' : '#f50'}>
-                    {OrderStatusMap[order.status]}
+                  <Tag color={OrderStatusMap[order.status].color}>
+                    {OrderStatusMap[order.status].label}
                   </Tag>
                 </div>
               ) : (

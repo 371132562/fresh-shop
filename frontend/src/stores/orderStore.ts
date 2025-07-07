@@ -14,19 +14,22 @@ import {
 import http from '@/services/base.ts'
 
 export enum OrderStatus {
+  NOTPAID = 'NOTPAID',
   COMPLETED = 'COMPLETED',
   REFUNDED = 'REFUNDED'
 }
 
-export const OrderStatusMap: Record<OrderStatus, string> = {
-  [OrderStatus.COMPLETED]: '正常',
-  [OrderStatus.REFUNDED]: '已退款'
+export const OrderStatusMap: Record<OrderStatus, { label: string; color: string }> = {
+  [OrderStatus.NOTPAID]: { label: '未付款', color: '#2db7f5' },
+  [OrderStatus.COMPLETED]: { label: '已完成', color: '#87d068' },
+  [OrderStatus.REFUNDED]: { label: '已退款', color: '#f50' }
 }
 
 // 你也可以导出一个数组，更方便用于 select options
-export const OrderStatusOptions = Object.entries(OrderStatusMap).map(([value, label]) => ({
+export const OrderStatusOptions = Object.entries(OrderStatusMap).map(([value, content]) => ({
   value: value as OrderStatus, // 类型断言确保 value 是 OrderStatus 类型
-  label: label
+  label: content.label,
+  color: content.color
 }))
 
 type OrderCreate = Omit<Order, 'id' | 'delete' | 'createdAt' | 'updatedAt'>
