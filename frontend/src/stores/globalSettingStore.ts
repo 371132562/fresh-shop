@@ -1,4 +1,4 @@
-import { GlobalSetting } from 'fresh-shop-backend/types/dto.ts'
+import { GlobalSetting, GlobalSettingWithTypedValue } from 'fresh-shop-backend/types/dto.ts'
 import { create } from 'zustand'
 
 import { globalSettingDetailApi, globalSettingUpsertApi } from '@/services/apis.ts'
@@ -8,7 +8,7 @@ type GlobalSettingCreate = Omit<GlobalSetting, 'id' | 'delete' | 'createdAt' | '
 type GlobalSettingDetailParam = Pick<GlobalSetting, 'key'>
 
 type GlobalSettingStore = {
-  globalSetting: GlobalSetting | null
+  globalSetting: GlobalSettingWithTypedValue | null
   getGlobalSettingLoading: boolean
   getGlobalSetting: (data: GlobalSettingDetailParam) => Promise<void>
   upsertGlobalSettingLoading: boolean
@@ -22,7 +22,7 @@ const useGlobalSettingStore = create<GlobalSettingStore>(set => ({
     try {
       set({ getGlobalSettingLoading: true })
       const res = await http.post<GlobalSetting>(globalSettingDetailApi, data)
-      set({ globalSetting: res.data, getGlobalSettingLoading: false })
+      set({ globalSetting: res.data as GlobalSettingWithTypedValue, getGlobalSettingLoading: false })
     } finally {
       set({ getGlobalSettingLoading: false })
     }
@@ -32,7 +32,7 @@ const useGlobalSettingStore = create<GlobalSettingStore>(set => ({
     try {
       set({ upsertGlobalSettingLoading: true })
       const res = await http.post<GlobalSetting>(globalSettingUpsertApi, data)
-      set({ globalSetting: res.data, upsertGlobalSettingLoading: false })
+      set({ globalSetting: res.data as GlobalSettingWithTypedValue, upsertGlobalSettingLoading: false })
     } finally {
       set({ upsertGlobalSettingLoading: false })
     }

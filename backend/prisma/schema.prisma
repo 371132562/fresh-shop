@@ -96,7 +96,7 @@ model GroupBuy {
   supplier          Supplier  @relation(fields: [supplierId], references: [id])
   productId         String
   product           Product   @relation(fields: [productId], references: [id])
-  units             Json      @default("[]") // 团购规格数组，以JSON存储 包含id,规格,成本价,售价四个字段
+  units             Json      @default("[]") // 团购规格数组，以JSON存储 包含id,规格unit,售价price,成本价costPrice四个字段
   order             Order[]
   images            Json      @default("[]") // 商品图片数组，以JSON存储
   delete            Int       @default(0)

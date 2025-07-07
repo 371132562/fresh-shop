@@ -44,7 +44,7 @@ export const Component: FC = () => {
     { to: '/customer', label: '客户管理', icon: <TeamOutlined /> },
     { to: '/groupBuy', label: '团购管理', icon: <GroupOutlined /> },
     { to: '/order', label: '订单管理', icon: <FileTextOutlined /> },
-    { to: '/dashboard', label: '统计看板', icon: <DashboardOutlined /> }
+    { to: '/analysis', label: '统计看板', icon: <DashboardOutlined /> }
   ]
 
   const onSensitiveChange = (checked: boolean) => {

@@ -15,6 +15,7 @@ import { CustomerAddressModule } from './apisComponent/customerAddress/customerA
 import { CustomerModule } from './apisComponent/customer/customer.module';
 import { GroupBuyModule } from './apisComponent/groupBuy/groupBuy.module';
 import { OrderModule } from './apisComponent/order/order.module';
+import { AnalysisModule } from './apisComponent/analysis/analysis.module';
 import { GlobalSettingModule } from './apisComponent/globalSetting/globalSetting.module';
 
 @Module({
@@ -26,7 +27,7 @@ import { GlobalSettingModule } from './apisComponent/globalSetting/globalSetting
         rootPath: join(process.cwd(), UPLOAD_DIR), // 静态文件在服务器上的物理路径
         serveRoot: `/${UPLOAD_DIR.replace('./', '')}`, // URL 前缀，例如 /uploads/images
         // serveRoot: '/', // 可以省略，默认就是 '/'
-        // exclude: ['/api*'], // 可选：排除不需要提供静态服务的路由
+        exclude: ['/'], // 可选：排除不需要提供静态服务的路由
       },
       {
         rootPath: join(process.cwd(), 'frontend', 'dist'), // 指向 monorepo 根目录下的 frontend/dist
@@ -47,6 +48,7 @@ import { GlobalSettingModule } from './apisComponent/globalSetting/globalSetting
     CustomerModule,
     GroupBuyModule,
     OrderModule,
+    AnalysisModule,
     GlobalSettingModule,
   ],
   controllers: [],

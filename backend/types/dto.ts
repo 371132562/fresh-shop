@@ -22,6 +22,16 @@ export {
   GlobalSetting,
 };
 
+// 为 GlobalSetting 的 value 字段定义类型
+export type GlobalSettingValue = {
+  sensitive: boolean;
+};
+
+// 扩展 GlobalSetting 类型，明确 value 的类型
+export type GlobalSettingWithTypedValue = Omit<GlobalSetting, 'value'> & {
+  value: GlobalSettingValue;
+};
+
 export type CommonPageParams = {
   page: number;
   pageSize: number;
@@ -77,6 +87,13 @@ export type GroupBuyDetail = GroupBuy & {
   };
 };
 
+export type GroupBuyUnit = {
+  id: string;
+  unit: string;
+  price: number;
+  costPrice: number;
+};
+
 export type OrderPageParams = CommonPageParams & {
   customerIds: Customer['id'][];
   groupBuyIds: GroupBuy['id'][];
@@ -86,4 +103,16 @@ export type OrderPageParams = CommonPageParams & {
 export type OrderDetail = Order & {
   customer: Customer;
   groupBuy: GroupBuy;
+};
+
+export type AnalysisCountParams = {
+  startDate: Date;
+  endDate: Date;
+};
+
+export type AnalysisCountResult = {
+  groupBuyCount: number; // 发起的团购数
+  orderCount: number; // 发起的订单数
+  totalPrice: number; // 总销售额
+  totalProfit: number; // 总利润
 };

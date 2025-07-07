@@ -9,8 +9,8 @@ const router = createBrowserRouter([
     lazy: () => import('./components/Layout'),
     children: [
       {
-        path: '/dashboard',
-        lazy: () => import('./pages/Dashboard')
+        path: '/analysis',
+        lazy: () => import('./pages/Analysis')
       },
       {
         path: '/supplier',

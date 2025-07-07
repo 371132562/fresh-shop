@@ -50,3 +50,5 @@ export const orderRefundApi = '/order/refund'
 
 export const globalSettingUpsertApi = '/globalSetting/upsert'
 export const globalSettingDetailApi = '/globalSetting/detail'
+
+export const analysisCountApi = '/analysis/count'
