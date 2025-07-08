@@ -51,6 +51,10 @@ export type SupplierPageParams = CommonPageParams & {
   wechat: string;
 };
 
+export type SupplierListItem = Supplier & {
+  groupBuyCount: number;
+};
+
 export type ProductTypePageParams = CommonPageParams & {
   name: string;
 };
@@ -62,6 +66,11 @@ export type ProductPageParams = CommonPageParams & {
 
 export type CustomerAddressPageParams = CommonPageParams & {
   name: string;
+};
+
+export type CustomerListItem = Customer & {
+  orderCount: number;
+  customerAddressName: string;
 };
 
 export type CustomerPageParams = CommonPageParams & {

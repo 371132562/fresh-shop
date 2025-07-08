@@ -1,5 +1,6 @@
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { Button, FloatButton, Form, Input, List, Modal } from 'antd'
+import type { SupplierListItem } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
@@ -96,7 +97,7 @@ export const Component = () => {
             }
           }}
           dataSource={suppliersList}
-          renderItem={item => (
+          renderItem={(item: SupplierListItem) => (
             <List.Item>
               <List.Item.Meta
                 title={
@@ -109,7 +110,17 @@ export const Component = () => {
                     </Button>
                   </NavLink>
                 }
-                description={item.description || ''}
+                description={
+                  <>
+                    {item.groupBuyCount !== undefined && (
+                      <div>
+                        团购单数量：
+                        <span className="text-blue-500">{item.groupBuyCount}</span> 条
+                      </div>
+                    )}
+                    <span>{item.description || ''}</span>
+                  </>
+                }
               />
             </List.Item>
           )}

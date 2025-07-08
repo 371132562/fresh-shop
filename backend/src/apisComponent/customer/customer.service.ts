@@ -25,22 +25,16 @@ export class CustomerService {
   }
 
   async list(data: CustomerPageParams): Promise<ListByPage<Customer[]>> {
-    const { page, pageSize, name, customerAddressIds, phone, wechat } = data; // 从 data 中解构 customerAddressIds
-    const skip = (page - 1) * pageSize; // 计算要跳过的记录数
+    const { page, pageSize, name, phone, wechat, customerAddressIds } = data;
+    const skip = (page - 1) * pageSize;
 
     const where: Prisma.CustomerWhereInput = {
-      delete: 0, // 仅查询未删除的供货商
+      delete: 0,
     };
 
     if (name) {
       where.name = {
         contains: name,
-      };
-    }
-
-    if (customerAddressIds && customerAddressIds.length > 0) {
-      where.customerAddressId = {
-        in: customerAddressIds, // 使用 Prisma 的 in 操作符
       };
     }
 
@@ -56,12 +50,18 @@ export class CustomerService {
       };
     }
 
-    const [customer, totalCount] = await this.prisma.$transaction([
+    if (customerAddressIds && customerAddressIds.length > 0) {
+      where.customerAddressId = {
+        in: customerAddressIds,
+      };
+    }
+
+    const [customers, totalCount] = await this.prisma.$transaction([
       this.prisma.customer.findMany({
         skip: skip,
         take: pageSize,
         orderBy: {
-          createdAt: 'desc', // 假设您的表中有一个名为 'createdAt' 的字段
+          createdAt: 'desc',
         },
         where,
         include: {
@@ -71,17 +71,27 @@ export class CustomerService {
               name: true, // 只选择 customerAddress 的 name 字段
             },
           },
+          _count: {
+            select: {
+              orders: {
+                where: {
+                  delete: 0,
+                },
+              },
+            },
+          },
         },
       }),
       this.prisma.customer.count({ where }), // 获取总记录数
     ]);
 
     return {
-      data: customer.map((customer) => ({
+      data: customers.map((customer) => ({
         // 映射结果，将 customerAddress.name 添加到每个产品对象中
         ...customer,
         customerAddressName: customer.customerAddress?.name, // 添加 customerAddressName
         customerAddress: undefined, // 移除原始的 customerAddress 对象，如果不需要
+        orderCount: customer._count.orders,
       })),
       page: page,
       pageSize: pageSize,
@@ -90,11 +100,9 @@ export class CustomerService {
     };
   }
 
-  async detail(id: string) {
+  async detail(id: string): Promise<Customer | null> {
     return this.prisma.customer.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
   }
 
@@ -122,7 +130,7 @@ export class CustomerService {
     });
   }
 
-  async listAll() {
+  async listAll(): Promise<Customer[]> {
     return this.prisma.customer.findMany({
       where: {
         delete: 0,

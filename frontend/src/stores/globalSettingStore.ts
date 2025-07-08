@@ -22,7 +22,10 @@ const useGlobalSettingStore = create<GlobalSettingStore>(set => ({
     try {
       set({ getGlobalSettingLoading: true })
       const res = await http.post<GlobalSetting>(globalSettingDetailApi, data)
-      set({ globalSetting: res.data as GlobalSettingWithTypedValue, getGlobalSettingLoading: false })
+      set({
+        globalSetting: res.data as GlobalSettingWithTypedValue,
+        getGlobalSettingLoading: false
+      })
     } finally {
       set({ getGlobalSettingLoading: false })
     }
@@ -32,7 +35,10 @@ const useGlobalSettingStore = create<GlobalSettingStore>(set => ({
     try {
       set({ upsertGlobalSettingLoading: true })
       const res = await http.post<GlobalSetting>(globalSettingUpsertApi, data)
-      set({ globalSetting: res.data as GlobalSettingWithTypedValue, upsertGlobalSettingLoading: false })
+      set({
+        globalSetting: res.data as GlobalSettingWithTypedValue,
+        upsertGlobalSettingLoading: false
+      })
     } finally {
       set({ upsertGlobalSettingLoading: false })
     }

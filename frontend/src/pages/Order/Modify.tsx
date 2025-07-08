@@ -136,9 +136,11 @@ const Modify = (props: params) => {
                     key={item.id}
                     value={item.id}
                   >
-                    <div>{item.name}</div>
-                    <div style={{ fontSize: 12, color: '#999' }}>
-                      发起日期：{formatDate(item.groupBuyStartDate)}
+                    <div>
+                      {item.name}
+                      <span className="text-gray-500">
+                        （发起日期：{formatDate(item.groupBuyStartDate)}）
+                      </span>
                     </div>
                   </Select.Option>
                 )

@@ -125,7 +125,17 @@ export const Component = () => {
                     <Tag color="#55acee">{item.customerAddressName}</Tag>
                   </Button>
                 }
-                description={item.description || ''}
+                description={
+                  <>
+                    {item.orderCount !== undefined && (
+                      <div>
+                        订单数量：
+                        <span className="text-blue-500">{item.orderCount}</span> 条
+                      </div>
+                    )}
+                    <span>{item.description || ''}</span>
+                  </>
+                }
               />
             </List.Item>
           )}

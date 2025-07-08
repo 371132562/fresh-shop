@@ -1,5 +1,5 @@
 import { Customer } from 'fresh-shop-backend/types/dto.ts'
-import { CustomerPageParams, ListByPage } from 'fresh-shop-backend/types/dto.ts'
+import { CustomerListItem, CustomerPageParams, ListByPage } from 'fresh-shop-backend/types/dto.ts'
 import { create } from 'zustand'
 
 import {
@@ -15,8 +15,6 @@ import http from '@/services/base.ts'
 type CustomerId = Pick<Customer, 'id'>
 
 type CustomerCreate = Omit<Customer, 'id' | 'delete' | 'createdAt' | 'updatedAt'>
-
-type CustomerListItem = Customer & { customerAddressName: string }
 
 type CustomerStore = {
   customersList: CustomerListItem[]

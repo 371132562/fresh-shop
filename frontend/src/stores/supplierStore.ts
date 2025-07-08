@@ -1,6 +1,5 @@
 import { Supplier } from 'fresh-shop-backend/types/dto.ts'
-import { ListByPage, SupplierPageParams } from 'fresh-shop-backend/types/dto.ts'
-import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
+import { ListByPage, SupplierListItem, SupplierPageParams } from 'fresh-shop-backend/types/dto.ts'
 import { create } from 'zustand'
 
 import {
@@ -18,7 +17,7 @@ type SupplierCreate = Omit<Supplier, 'id' | 'delete' | 'createdAt' | 'updatedAt'
 type SupplierId = Pick<Supplier, 'id'>
 
 type SupplierStore = {
-  suppliersList: Supplier[]
+  suppliersList: SupplierListItem[]
   listCount: {
     totalCount: number
     totalPages: number
@@ -62,7 +61,7 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
   getSuppliersList: async (data = get().pageParams) => {
     try {
       set({ listLoading: true })
-      const res: ResponseBody<ListByPage<Supplier[]>> = await http.post(supplierListApi, data)
+      const res = await http.post<ListByPage<SupplierListItem[]>>(supplierListApi, data)
       if (res.data.page > res.data.totalPages && res.data.totalPages) {
         get().setPageParams({ page: res.data.totalPages || 1 })
         return

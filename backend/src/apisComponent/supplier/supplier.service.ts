@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Supplier, Prisma } from '@prisma/client';
+import { Prisma, Supplier } from '@prisma/client';
 
-import { SupplierPageParams, ListByPage } from '../../../types/dto';
+import {
+  SupplierPageParams,
+  ListByPage,
+  SupplierListItem,
+} from '../../../types/dto';
 import { BusinessException } from '../../exceptions/businessException';
 import { ErrorCode } from '../../../types/response';
 
@@ -24,7 +28,9 @@ export class SupplierService {
     });
   }
 
-  async list(data: SupplierPageParams): Promise<ListByPage<Supplier[]>> {
+  async list(
+    data: SupplierPageParams,
+  ): Promise<ListByPage<SupplierListItem[]>> {
     const { page, pageSize, name, phone, wechat } = data;
     const skip = (page - 1) * pageSize; // 计算要跳过的记录数
 
@@ -58,12 +64,26 @@ export class SupplierService {
           createdAt: 'desc', // 假设您的表中有一个名为 'createdAt' 的字段
         },
         where,
+        include: {
+          _count: {
+            select: {
+              groupBuy: {
+                where: {
+                  delete: 0,
+                },
+              },
+            },
+          },
+        },
       }),
       this.prisma.supplier.count({ where }), // 获取总记录数
     ]);
 
     return {
-      data: suppliers,
+      data: suppliers.map((supplier) => ({
+        ...supplier,
+        groupBuyCount: supplier._count.groupBuy,
+      })),
       page: page,
       pageSize: pageSize,
       totalCount: totalCount,
@@ -71,15 +91,13 @@ export class SupplierService {
     };
   }
 
-  async detail(id: string) {
+  async detail(id: string): Promise<Supplier | null> {
     return this.prisma.supplier.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
   }
 
-  async delete(id: string) {
+  async delete(id: string): Promise<Supplier> {
     const groupBuyCount = await this.prisma.groupBuy.count({
       where: {
         supplierId: id,
@@ -94,12 +112,8 @@ export class SupplierService {
       );
     }
     return this.prisma.supplier.update({
-      where: {
-        id,
-      },
-      data: {
-        delete: 1,
-      },
+      where: { id },
+      data: { delete: 1 },
     });
   }
 
@@ -138,7 +152,7 @@ export class SupplierService {
       });
   }
 
-  async listAll() {
+  async listAll(): Promise<Supplier[]> {
     return this.prisma.supplier.findMany({
       where: {
         delete: 0,

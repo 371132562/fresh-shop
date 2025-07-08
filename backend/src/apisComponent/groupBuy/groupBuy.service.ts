@@ -185,6 +185,7 @@ export class GroupBuyService {
         id: true,
         name: true,
         groupBuyStartDate: true,
+        units: true,
       },
     });
   }
