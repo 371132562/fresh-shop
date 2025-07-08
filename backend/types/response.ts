@@ -6,10 +6,8 @@ export enum ErrorCode {
   BUSINESS_FAILED = 20000, // 通用业务失败
   INVALID_INPUT = 20001, // 无效的输入/参数不合法
   RESOURCE_NOT_FOUND = 20002, // 业务资源未找到 (例如，请求了一个不存在的订单ID)
-  /**
-   * 数据被引用，无法删除
-   */
-  DATA_STILL_REFERENCED = 20003,
+  DATA_STILL_REFERENCED = 20003, //数据被引用，无法删除
+  DATA_EXIST = 20004, //数据已存在
 
   // 认证与权限错误 (3xxxx)
   UNAUTHORIZED = 30000, // 未认证 (例如，缺少token或token无效)

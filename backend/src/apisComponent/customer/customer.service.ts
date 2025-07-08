@@ -11,6 +11,25 @@ export class CustomerService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: Prisma.CustomerCreateInput): Promise<Customer> {
+    const { name, phone, wechat } = data;
+    const existingCustomer = await this.prisma.customer.findFirst({
+      where: {
+        delete: 0,
+        OR: [{ name: name }, { phone: phone }, { wechat: wechat }],
+      },
+    });
+
+    if (existingCustomer) {
+      if (existingCustomer.name === name) {
+        throw new BusinessException(ErrorCode.DATA_EXIST, '客户名称已存在');
+      }
+      if (existingCustomer.phone === phone) {
+        throw new BusinessException(ErrorCode.DATA_EXIST, '客户电话已存在');
+      }
+      if (existingCustomer.wechat === wechat) {
+        throw new BusinessException(ErrorCode.DATA_EXIST, '客户微信已存在');
+      }
+    }
     return this.prisma.customer.create({ data });
   }
 
