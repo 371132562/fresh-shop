@@ -41,7 +41,9 @@ export class AnalysisService {
         order: {
           // 包含团购单下的订单
           where: {
-            status: 'COMPLETED', // 只统计已完成的订单
+            status: {
+              in: ['PAID', 'COMPLETED'], // 只统计已付款和已完成的订单
+            },
             delete: 0, // 确保订单未被删除
           },
           select: {
