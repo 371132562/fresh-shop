@@ -144,7 +144,7 @@ const Modify = (props: params) => {
             label="备注"
             name="description"
           >
-            <Input placeholder="选填，如供货商品类等" />
+            <Input placeholder="选填，如客户偏好等" />
           </Form.Item>
           <Form.Item label="操作">
             <Popconfirm

@@ -154,7 +154,7 @@ const Modify = (props: params) => {
           <Form.Item
             label="名称"
             name="name"
-            rules={[{ required: true, message: '请输入供货商名称' }]}
+            rules={[{ required: true, message: '请输入团购名称' }]}
           >
             <Input placeholder="必填" />
           </Form.Item>
