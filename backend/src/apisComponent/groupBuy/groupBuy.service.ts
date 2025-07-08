@@ -181,6 +181,11 @@ export class GroupBuyService {
       where: {
         delete: 0, // 仅查询未删除的团购单
       },
+      select: {
+        id: true,
+        name: true,
+        groupBuyStartDate: true,
+      },
     });
   }
 }

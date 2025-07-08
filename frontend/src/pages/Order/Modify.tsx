@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import useCustomerStore from '@/stores/customerStore.ts'
 import useGroupBuyStore, { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
 import useOrderStore from '@/stores/orderStore.ts'
+import { formatDate } from '@/utils'
 
 interface params {
   visible: boolean
@@ -135,7 +136,10 @@ const Modify = (props: params) => {
                     key={item.id}
                     value={item.id}
                   >
-                    {item.name}
+                    <div>{item.name}</div>
+                    <div style={{ fontSize: 12, color: '#999' }}>
+                      发起日期：{formatDate(item.groupBuyStartDate)}
+                    </div>
                   </Select.Option>
                 )
               })}

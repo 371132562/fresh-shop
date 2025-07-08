@@ -85,14 +85,14 @@ export const Component = () => {
   const columns: TableProps<Order>['columns'] = useMemo(() => {
     return [
       {
-        title: '客户名称',
+        title: '客户',
         dataIndex: 'customer',
         key: 'customer',
         render: customer => customer.name || '无',
         fixed: 'left'
       },
       {
-        title: '所选规格',
+        title: '规格',
         dataIndex: 'unitId',
         key: 'unitId',
         render: unitId => {
@@ -101,14 +101,16 @@ export const Component = () => {
         }
       },
       {
-        title: '购买份数',
+        title: '份数',
         dataIndex: 'quantity',
-        key: 'quantity'
+        key: 'quantity',
+        width: 70
       },
       {
-        title: '订单状态',
+        title: '状态',
         dataIndex: 'status',
         key: 'status',
+        width: 90,
         render: (status: OrderStatus) => {
           return <Tag color={OrderStatusMap[status].color}>{OrderStatusMap[status].label}</Tag>
         }
@@ -116,6 +118,7 @@ export const Component = () => {
       {
         title: '操作',
         key: 'action',
+        width: 70,
         render: (_: any, record: Order) => {
           // 解决类型不兼容问题，确保 record.status 与 OrderStatus 类型一致
           const orderStatusValues = Object.values(OrderStatus) as OrderStatus[]
@@ -143,10 +146,9 @@ export const Component = () => {
             >
               <Button
                 type="primary"
-                size="small"
                 disabled={currentIndex === orderStatusValues.length - 1}
               >
-                修改状态
+                更新
               </Button>
             </Popconfirm>
           )
