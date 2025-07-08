@@ -33,7 +33,7 @@ type ProductStore = {
   createLoading: boolean
   createProduct: (data: ProductCreate) => Promise<boolean>
 
-  updateProduct: (data: ProductId & ProductCreate) => Promise<boolean>
+  updateProduct: (data: ProductId & Partial<ProductCreate>) => Promise<boolean>
 
   deleteProduct: (data: ProductId) => Promise<boolean>
   deleteLoading: boolean

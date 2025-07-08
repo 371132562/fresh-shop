@@ -24,14 +24,14 @@ type ProductTypeStore = {
     totalPages: number
   }
   pageParams: ProductTypePageParams
-  getProductTypeList: (data: ProductTypePageParams) => Promise<void>
+  getProductTypeList: (data: Partial<ProductTypePageParams>) => Promise<void>
   setPageParams: (data: Partial<ProductTypePageParams>) => void
   listLoading: boolean
 
   createLoading: boolean
   createProductType: (data: ProductTypeCreate) => Promise<boolean>
 
-  updateProductType: (data: ProductTypeId & ProductTypeCreate) => Promise<boolean>
+  updateProductType: (data: ProductTypeId & Partial<ProductTypeCreate>) => Promise<boolean>
 
   deleteProductType: (data: ProductTypeId) => Promise<boolean>
   deleteLoading: boolean

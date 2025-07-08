@@ -38,7 +38,7 @@ type GroupBuyStore = {
   createLoading: boolean
   createGroupBuy: (data: GroupBuyCreate) => Promise<boolean>
 
-  updateGroupBuy: (data: GroupBuyId & GroupBuyCreate) => Promise<boolean>
+  updateGroupBuy: (data: GroupBuyId & Partial<GroupBuyCreate>) => Promise<boolean>
 
   deleteGroupBuy: (data: GroupBuyId) => Promise<boolean>
   deleteLoading: boolean

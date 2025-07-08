@@ -65,9 +65,8 @@ export const Component = () => {
     const currentIndex = orderStatusValues.findIndex(status => status === order.status)
     if (currentIndex < orderStatusValues.length - 1) {
       const nextStatus = orderStatusValues[currentIndex + 1]
-      // 只传递需要更新的字段，补全 OrderCreate 所需字段，防止类型报错
       const res = await updateOrder({
-        ...order,
+        id: order.id,
         status: nextStatus
       })
       if (res) {
@@ -89,7 +88,8 @@ export const Component = () => {
         title: '客户名称',
         dataIndex: 'customer',
         key: 'customer',
-        render: customer => customer.name || '无'
+        render: customer => customer.name || '无',
+        fixed: 'left'
       },
       {
         title: '所选规格',
@@ -150,7 +150,8 @@ export const Component = () => {
               </Button>
             </Popconfirm>
           )
-        }
+        },
+        fixed: 'right'
       }
     ]
   }, [groupBuy])

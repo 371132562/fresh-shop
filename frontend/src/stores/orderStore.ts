@@ -50,7 +50,7 @@ type OrderStore = {
   createLoading: boolean
   createOrder: (data: OrderCreate) => Promise<boolean>
 
-  updateOrder: (data: OrderId & OrderCreate) => Promise<boolean>
+  updateOrder: (data: OrderId & Partial<OrderCreate>) => Promise<boolean>
 
   deleteOrder: (data: OrderId) => Promise<boolean>
   deleteLoading: boolean

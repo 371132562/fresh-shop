@@ -32,7 +32,7 @@ type CustomerStore = {
   createLoading: boolean
   createCustomer: (data: CustomerCreate) => Promise<boolean>
 
-  updateCustomer: (data: CustomerId & CustomerCreate) => Promise<boolean>
+  updateCustomer: (data: CustomerId & Partial<CustomerCreate>) => Promise<boolean>
 
   deleteCustomer: (data: CustomerId) => Promise<boolean>
   deleteLoading: boolean

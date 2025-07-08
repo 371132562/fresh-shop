@@ -31,7 +31,7 @@ type SupplierStore = {
   createLoading: boolean
   createSupplier: (data: SupplierCreate) => Promise<boolean>
 
-  updateSupplier: (data: SupplierId & SupplierCreate) => Promise<boolean>
+  updateSupplier: (data: SupplierId & Partial<SupplierCreate>) => Promise<boolean>
 
   deleteSupplier: (data: SupplierId) => Promise<boolean>
   deleteLoading: boolean
