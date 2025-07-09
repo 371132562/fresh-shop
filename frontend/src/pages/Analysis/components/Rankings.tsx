@@ -38,12 +38,14 @@ export const Rankings = () => {
               <List.Item>
                 <List.Item.Meta
                   title={
-                    <span className="text-gray-800">
-                      <span className="font-bold">{index + 1}.</span> {item.name}{' '}
-                      <span className="text-gray-400">
-                        (发起日期：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')})
-                      </span>
-                    </span>
+                    <div className="text-gray-800">
+                      <div className="mb-1 font-bold">
+                        {index + 1}.{item.name}
+                      </div>
+                      <div className="text-gray-400">
+                        发起日期：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')}
+                      </div>
+                    </div>
                   }
                   description={
                     <div>
@@ -68,12 +70,14 @@ export const Rankings = () => {
               <List.Item>
                 <List.Item.Meta
                   title={
-                    <span className="text-gray-800">
-                      <span className="font-bold">{index + 1}.</span> {item.name}{' '}
-                      <span className="text-gray-400">
-                        (发起日期：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')})
-                      </span>
-                    </span>
+                    <div className="text-gray-800">
+                      <div className="mb-1 font-bold">
+                        {index + 1}.{item.name}
+                      </div>
+                      <div className="text-gray-400">
+                        发起日期：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')}
+                      </div>
+                    </div>
                   }
                   description={
                     <div>
@@ -98,12 +102,14 @@ export const Rankings = () => {
               <List.Item>
                 <List.Item.Meta
                   title={
-                    <span className="text-gray-800">
-                      <span className="font-bold">{index + 1}.</span> {item.name}{' '}
-                      <span className="text-gray-400">
-                        (发起日期：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')})
-                      </span>
-                    </span>
+                    <div className="text-gray-800">
+                      <div className="mb-1 font-bold">
+                        {index + 1}.{item.name}
+                      </div>
+                      <div className="text-gray-400">
+                        发起日期：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')}
+                      </div>
+                    </div>
                   }
                   description={
                     <div>
