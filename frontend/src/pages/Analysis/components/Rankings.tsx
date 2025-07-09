@@ -1,4 +1,5 @@
 import { Card, Col, List, Row } from 'antd'
+import dayjs from 'dayjs'
 import type {
   GroupBuyRankByOrderCountItem,
   GroupBuyRankByTotalProfitItem,
@@ -38,7 +39,10 @@ export const Rankings = () => {
                 <List.Item.Meta
                   title={
                     <span className="text-gray-800">
-                      <span className="font-bold">{index + 1}.</span> {item.name}
+                      <span className="font-bold">{index + 1}.</span> {item.name}{' '}
+                      <span className="text-gray-400">
+                        (发起日期：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')})
+                      </span>
                     </span>
                   }
                   description={
@@ -65,7 +69,10 @@ export const Rankings = () => {
                 <List.Item.Meta
                   title={
                     <span className="text-gray-800">
-                      <span className="font-bold">{index + 1}.</span> {item.name}
+                      <span className="font-bold">{index + 1}.</span> {item.name}{' '}
+                      <span className="text-gray-400">
+                        (发起日期：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')})
+                      </span>
                     </span>
                   }
                   description={
@@ -92,7 +99,10 @@ export const Rankings = () => {
                 <List.Item.Meta
                   title={
                     <span className="text-gray-800">
-                      <span className="font-bold">{index + 1}.</span> {item.name}
+                      <span className="font-bold">{index + 1}.</span> {item.name}{' '}
+                      <span className="text-gray-400">
+                        (发起日期：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')})
+                      </span>
                     </span>
                   }
                   description={

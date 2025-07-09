@@ -212,6 +212,7 @@ export class AnalysisService {
         id: gb.id,
         name: gb.name,
         orderCount: gb.order.length,
+        groupBuyStartDate: gb.groupBuyStartDate,
       }))
       .sort((a, b) => b.orderCount - a.orderCount)
       .slice(0, 10);
@@ -237,6 +238,7 @@ export class AnalysisService {
         name: gb.name,
         totalSales,
         totalProfit,
+        groupBuyStartDate: gb.groupBuyStartDate,
       };
     });
 
@@ -247,6 +249,7 @@ export class AnalysisService {
         id: item.id,
         name: item.name,
         totalSales: item.totalSales,
+        groupBuyStartDate: item.groupBuyStartDate,
       }));
 
     const groupBuyRankByTotalProfit = [...groupBuysWithStats]
@@ -256,6 +259,7 @@ export class AnalysisService {
         id: item.id,
         name: item.name,
         totalProfit: item.totalProfit,
+        groupBuyStartDate: item.groupBuyStartDate,
       }));
 
     // 4. 以供货商关联的团购单数量进行排名

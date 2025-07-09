@@ -161,18 +161,21 @@ export type GroupBuyRankByOrderCountItem = {
   id: string;
   name: string;
   orderCount: number;
+  groupBuyStartDate: Date;
 };
 
 export type GroupBuyRankByTotalSalesItem = {
   id: string;
   name: string;
   totalSales: number;
+  groupBuyStartDate: Date;
 };
 
 export type GroupBuyRankByTotalProfitItem = {
   id: string;
   name: string;
   totalProfit: number;
+  groupBuyStartDate: Date;
 };
 
 export type SupplierRankByGroupBuyCountItem = {
