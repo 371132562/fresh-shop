@@ -1,16 +1,12 @@
 import { CalendarOutlined } from '@ant-design/icons'
-import type { StatisticProps } from 'antd'
-import { Button, Card, Col, Row, Statistic, Tabs } from 'antd'
+import { Button, Col, Row, Tabs } from 'antd'
 import { CalendarPicker } from 'antd-mobile'
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
-import CountUp from 'react-countup'
 
 import useAnalysisStore from '@/stores/analysisStore.ts'
-import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 
-import { GroupBuyOrderTrendChart } from './components/GroupBuyOrderTrendChart' // 导入第一个图表组件
-import { PriceProfitTrendChart } from './components/PriceProfitTrendChart' // 导入第二个图表组件
+import { Overview } from './components/Overview'
 
 export const Component = () => {
   const [calendarValue, setCalendarValue] = useState<[Date, Date]>([
@@ -32,7 +28,6 @@ export const Component = () => {
   } = useAnalysisStore(state => state.count)
   const getCountLoading = useAnalysisStore(state => state.getCountLoading)
   const getCount = useAnalysisStore(state => state.getCount)
-  const globalSetting = useGlobalSettingStore(state => state.globalSetting)
 
   const changeDateRange = (days: number) => {
     setCalendarValue([dayjs().subtract(days, 'day').toDate(), dayjs().toDate()])
@@ -44,13 +39,6 @@ export const Component = () => {
       endDate: calendarValue[1]
     })
   }, [calendarValue])
-
-  const formatter: StatisticProps['formatter'] = value => (
-    <CountUp
-      end={value as number}
-      separator=","
-    />
-  )
 
   return (
     <>
@@ -147,69 +135,17 @@ export const Component = () => {
             key: 'overview',
             label: '概况',
             children: (
-              <Row
-                className="w-full"
-                gutter={[8, 8]}
-              >
-                <Col span={12}>
-                  <Card loading={getCountLoading}>
-                    <Statistic
-                      title="团购单量"
-                      value={groupBuyCount}
-                      formatter={formatter}
-                    />
-                  </Card>
-                </Col>
-                <Col span={12}>
-                  <Card loading={getCountLoading}>
-                    <Statistic
-                      title="订单量"
-                      value={orderCount}
-                      formatter={formatter}
-                    />
-                  </Card>
-                </Col>
-                <Col span={12}>
-                  <Card loading={getCountLoading}>
-                    <Statistic
-                      title="总销售额"
-                      value={totalPrice}
-                      precision={2}
-                      prefix="¥"
-                      formatter={formatter}
-                    />
-                  </Card>
-                </Col>
-                {!globalSetting?.value?.sensitive && (
-                  <Col span={12}>
-                    <Card loading={getCountLoading}>
-                      <Statistic
-                        title="总利润"
-                        value={totalProfit}
-                        precision={2}
-                        prefix="¥"
-                        formatter={formatter}
-                      />
-                    </Card>
-                  </Col>
-                )}
-                <Col span={24}>
-                  <GroupBuyOrderTrendChart
-                    groupBuyTrend={groupBuyTrend}
-                    orderTrend={orderTrend}
-                    loading={getCountLoading}
-                  />
-                </Col>
-                {!globalSetting?.value?.sensitive && (
-                  <Col span={24}>
-                    <PriceProfitTrendChart
-                      priceTrend={priceTrend}
-                      profitTrend={profitTrend}
-                      loading={getCountLoading}
-                    />
-                  </Col>
-                )}
-              </Row>
+              <Overview
+                getCountLoading={getCountLoading}
+                groupBuyCount={groupBuyCount}
+                orderCount={orderCount}
+                totalPrice={totalPrice}
+                totalProfit={totalProfit}
+                groupBuyTrend={groupBuyTrend}
+                orderTrend={orderTrend}
+                priceTrend={priceTrend}
+                profitTrend={profitTrend}
+              />
             )
           }
         ]}
