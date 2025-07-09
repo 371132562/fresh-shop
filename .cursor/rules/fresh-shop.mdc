@@ -8,6 +8,7 @@ rules:
   - title: 全局ai生成规则
     body: |
       - 每次单步生成尽量避免大范围的修改不同模块的组件,尽量修改相关性较强的模块和文件,处理完毕accept之后再进行相关性较弱的修改
+      - 此项目是monorepo项目,包含frontend和backend两个子项目,部份依赖会安装在根目录下的package中,请不要重复安装
   - title: 全栈开发职责
     body: |
       - 熟悉前端 React, TypeScript, Zustand, Ant Design 的开发。

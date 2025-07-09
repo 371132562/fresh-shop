@@ -139,4 +139,20 @@ export type AnalysisCountResult = {
   orderCount: number; // 发起的订单数
   totalPrice: number; // 总销售额
   totalProfit: number; // 总利润
+  groupBuyTrend: {
+    date: Date;
+    count: number;
+  }[];
+  orderTrend: {
+    date: Date;
+    count: number;
+  }[];
+  priceTrend: {
+    date: Date;
+    count: number;
+  }[];
+  profitTrend: {
+    date: Date;
+    count: number;
+  }[];
 };

@@ -11,7 +11,16 @@ type AnalysisStore = {
 }
 
 const useAnalysisStore = create<AnalysisStore>(set => ({
-  count: { groupBuyCount: 0, orderCount: 0, totalPrice: 0, totalProfit: 0 },
+  count: {
+    groupBuyCount: 0,
+    orderCount: 0,
+    totalPrice: 0,
+    totalProfit: 0,
+    groupBuyTrend: [],
+    orderTrend: [],
+    priceTrend: [],
+    profitTrend: []
+  },
   getCount: async data => {
     try {
       set({ getCountLoading: true })
