@@ -68,6 +68,9 @@ export class CustomerAddressService {
       where: {
         delete: 0,
       },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
   }
 

@@ -112,6 +112,9 @@ export class ProductService {
       where: {
         delete: 0,
       },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
   }
 }

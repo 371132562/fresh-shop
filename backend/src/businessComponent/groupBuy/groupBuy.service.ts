@@ -189,6 +189,9 @@ export class GroupBuyService {
         groupBuyStartDate: true,
         units: true,
       },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
   }
 }

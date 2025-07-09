@@ -130,10 +130,7 @@ export const Component = () => {
             <List.Item>
               <List.Item.Meta
                 title={
-                  <NavLink
-                    to={`/groupBuy/detail/${item.id}`}
-                    className="underline"
-                  >
+                  <NavLink to={`/groupBuy/detail/${item.id}`}>
                     <Button
                       type="link"
                       style={{ padding: 0 }}

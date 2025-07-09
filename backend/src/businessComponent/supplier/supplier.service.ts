@@ -157,6 +157,9 @@ export class SupplierService {
       where: {
         delete: 0,
       },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
   }
 }

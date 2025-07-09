@@ -154,6 +154,9 @@ export class CustomerService {
       where: {
         delete: 0,
       },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
   }
 }

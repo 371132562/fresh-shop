@@ -108,10 +108,7 @@ export const Component = () => {
             <List.Item>
               <List.Item.Meta
                 title={
-                  <NavLink
-                    to={`/order/detail/${item.id}`}
-                    className="underline"
-                  >
+                  <NavLink to={`/order/detail/${item.id}`}>
                     <Button
                       type="link"
                       style={{ padding: 0 }}
@@ -126,9 +123,11 @@ export const Component = () => {
                 description={
                   <>
                     {item.groupBuy?.name && (
-                      <div className="mb-1 font-medium text-gray-800">
-                        团购单：<span className="text-blue-500">{item.groupBuy.name}</span>
-                      </div>
+                      <NavLink to={`/groupBuy/detail/${item.groupBuy.id}`}>
+                        <div className="mb-1 font-medium text-gray-800">
+                          团购单：<span className="text-blue-500">{item.groupBuy.name}</span>
+                        </div>
+                      </NavLink>
                     )}
                     {item.quantity && (
                       <div className="mt-1 font-medium text-gray-800">

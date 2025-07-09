@@ -64,6 +64,9 @@ export class ProductTypeService {
       where: {
         delete: 0,
       },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
   }
 

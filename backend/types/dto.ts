@@ -126,7 +126,10 @@ export type OrderPageParams = CommonPageParams & {
 
 export type OrderDetail = Order & {
   customer: Customer;
-  groupBuy: GroupBuy;
+  groupBuy: {
+    id: string;
+    name: string;
+  };
 };
 
 export type AnalysisCountParams = {

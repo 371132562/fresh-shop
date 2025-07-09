@@ -53,7 +53,12 @@ export class OrderService {
         where,
         include: {
           customer: true,
-          groupBuy: true,
+          groupBuy: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       }),
       this.prisma.order.count({ where }), // 获取总记录数
@@ -95,6 +100,9 @@ export class OrderService {
     return this.prisma.order.findMany({
       where: {
         delete: 0, // 仅查询未删除的团购单
+      },
+      orderBy: {
+        createdAt: 'asc',
       },
     });
   }
