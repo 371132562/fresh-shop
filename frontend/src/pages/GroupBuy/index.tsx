@@ -143,8 +143,8 @@ export const Component = () => {
                   </NavLink>
                 }
                 description={
-                  <div className="mt-1 text-sm text-gray-700">
-                    {item.product?.name && ( // 只有当 product.name 存在时才显示
+                  <>
+                    {item.product?.name && (
                       <div className="mb-1 font-medium text-gray-800">
                         商品：<span className="text-blue-500">{item.product.name}</span>
                       </div>
@@ -152,12 +152,8 @@ export const Component = () => {
                     <div className="mt-1 font-medium text-gray-800">
                       订单数量：<span className="text-blue-500">{item._count.order}</span>
                     </div>
-                    {item.description && ( // 只有当 description 存在时才显示
-                      <div className="overflow-hidden text-ellipsis whitespace-nowrap text-gray-600">
-                        {item.description}
-                      </div>
-                    )}
-                  </div>
+                    {item.description && <div className="text-gray-600">{item.description}</div>}
+                  </>
                 }
               />
             </List.Item>

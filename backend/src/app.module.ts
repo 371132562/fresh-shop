@@ -8,15 +8,15 @@ import { UploadModule } from './upload/upload.module';
 import { UPLOAD_DIR } from './utils/file-upload.utils'; // 导入上传目录常量
 
 //业务模块
-import { SupplierModule } from './apisComponent/supplier/supplier.module';
-import { ProductTypeModule } from './apisComponent/productType/productType.module';
-import { ProductModule } from './apisComponent/product/product.module';
-import { CustomerAddressModule } from './apisComponent/customerAddress/customerAddress.module';
-import { CustomerModule } from './apisComponent/customer/customer.module';
-import { GroupBuyModule } from './apisComponent/groupBuy/groupBuy.module';
-import { OrderModule } from './apisComponent/order/order.module';
-import { AnalysisModule } from './apisComponent/analysis/analysis.module';
-import { GlobalSettingModule } from './apisComponent/globalSetting/globalSetting.module';
+import { SupplierModule } from './businessComponent/supplier/supplier.module';
+import { ProductTypeModule } from './businessComponent/productType/productType.module';
+import { ProductModule } from './businessComponent/product/product.module';
+import { CustomerAddressModule } from './businessComponent/customerAddress/customerAddress.module';
+import { CustomerModule } from './businessComponent/customer/customer.module';
+import { GroupBuyModule } from './businessComponent/groupBuy/groupBuy.module';
+import { OrderModule } from './businessComponent/order/order.module';
+import { AnalysisModule } from './businessComponent/analysis/analysis.module';
+import { GlobalSettingModule } from './businessComponent/globalSetting/globalSetting.module';
 
 @Module({
   imports: [

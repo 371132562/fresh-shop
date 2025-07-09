@@ -120,7 +120,9 @@ export const Component = () => {
                     <Tag color="#55acee">{item.productTypeName}</Tag>
                   </Button>
                 }
-                description={item.description || ''}
+                description={
+                  item.description && <div className="text-gray-600">{item.description}</div>
+                }
               />
             </List.Item>
           )}

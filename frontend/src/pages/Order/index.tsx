@@ -124,19 +124,19 @@ export const Component = () => {
                   </NavLink>
                 }
                 description={
-                  <div className="mt-1 text-sm text-gray-700">
+                  <>
                     {item.groupBuy?.name && (
-                      <div className="mb-1 font-medium text-gray-700">
-                        团购单：
-                        <span className="font-medium text-gray-900">{item.groupBuy.name}</span>
+                      <div className="mb-1 font-medium text-gray-800">
+                        团购单：<span className="text-blue-500">{item.groupBuy.name}</span>
                       </div>
                     )}
                     {item.quantity && (
-                      <div className="overflow-hidden text-ellipsis whitespace-nowrap text-gray-600">
-                        {item.quantity} 份
+                      <div className="mt-1 font-medium text-gray-800">
+                        订单数量：<span className="text-blue-500">{item.quantity}</span>
                       </div>
                     )}
-                  </div>
+                    {item.description && <div className="text-gray-600">{item.description}</div>}
+                  </>
                 }
               />
             </List.Item>

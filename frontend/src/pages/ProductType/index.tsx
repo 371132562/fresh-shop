@@ -112,7 +112,9 @@ export const Component = () => {
                     <span className="text-lg">{item.name}</span>
                   </Button>
                 }
-                description={item.description || ''}
+                description={
+                  item.description && <div className="text-gray-600">{item.description}</div>
+                }
               />
             </List.Item>
           )}

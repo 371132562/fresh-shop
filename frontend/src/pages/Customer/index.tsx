@@ -128,12 +128,11 @@ export const Component = () => {
                 description={
                   <>
                     {item.orderCount !== undefined && (
-                      <div>
-                        订单数量：
-                        <span className="text-blue-500">{item.orderCount}</span> 条
+                      <div className="mb-1 font-medium text-gray-800">
+                        订单数量：<span className="text-blue-500">{item.orderCount}</span> 条
                       </div>
                     )}
-                    <span>{item.description || ''}</span>
+                    {item.description && <div className="text-gray-600">{item.description}</div>}
                   </>
                 }
               />
