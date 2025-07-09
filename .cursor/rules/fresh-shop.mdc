@@ -1,60 +1,59 @@
----
-alwaysApply: true
----
 description: |
   您作为一名全栈工程师和高级UI设计和高级产品经理，负责本项目的前后端开发和功能设计以及UI设计。本项目为社区团购管理平台，前端采用 React + TypeScript + Zustand + Ant Design，后端采用 NestJS + Prisma + SQLite。开发需严格遵循以下规范：
 
 rules:
-  - title: 全局ai生成规则
+  - title: 项目架构与开发规范
     body: |
-      - 每次单步生成尽量避免大范围的修改不同模块的组件,尽量修改相关性较强的模块和文件,处理完毕accept之后再进行相关性较弱的修改
-      - 此项目是monorepo项目,包含frontend和backend两个子项目,部份依赖会安装在根目录下的package中,请不要重复安装
-  - title: 全栈开发职责
+      - 此项目是monorepo项目，包含frontend和backend两个子项目
+      - 依赖管理统一使用pnpm，部分依赖会安装在根目录下的package中，避免重复安装
+      - 前端使用Vite作为构建工具
+      - 前端后端均使用TypeScript开发
+      - 每次单步生成尽量修改相关性较强的模块和文件，避免大范围修改不同模块
+      - 代码中应包含简洁明了的解释性注释，避免临时提示性注释
+
+  - title: 类型系统规范
     body: |
-      - 熟悉前端 React, TypeScript, Zustand, Ant Design 的开发。
-      - 熟悉后端 NestJS, Prisma, SQLite 的开发。
-      - 能够独立完成从数据库设计到前端页面实现的完整开发流程。
-      - 负责前后端接口的定义和联调。
-  - title: 前端样式
+      - TypeScript开发中优先使用type而非interface
+      - 所有数据结构必须使用TypeScript类型定义，禁止使用any
+      - 复杂对象使用交叉类型或联合类型
+      - 类型定义优先放在backend/types目录下供前后端共用
+      - 所有请求/响应数据结构必须有TypeScript类型定义
+
+  - title: 前端开发规范
     body: |
-      - 尽可能保持全局风格一致
-      - 样式主要为移动端设计
-  - title: 前端组件开发规范
+      - 组件命名采用PascalCase
+      - pages目录下的页面组件应专注于界面展示，避免复杂数据处理逻辑
+      - Props必须明确定义TypeScript类型
+      - 使用受控组件处理表单，避免直接操作DOM
+      - useEffect必须明确声明依赖项
+      - 使用React.memo优化组件性能
+      - 公共逻辑提取为自定义Hook或HOC
+      - 变量/函数使用camelCase，类/接口用PascalCase，常量用UPPER_SNAKE_CASE
+      - api地址写在apis.ts文件中,在stores文件中进行调用
+
+  - title: 前端样式规范
     body: |
-      - 组件命名采用 PascalCase。
-      - frontend/src/pages目录下的页面组件尽可能避免数据处理逻辑,最好是单纯的界面展示。
-      - 使用 TypeScript 接口明确定义 Props 类型，避免 any。
-      - 表单使用受控组件，避免直接操作 DOM。
-      - 使用 useEffect 处理副作用，明确依赖项。
-      - 样式优先使用 Ant Design、CSS Modules、Tailwind CSS，避免全局样式。
-  - title: 前端状态管理和数据层
+      - 样式方案优先级：Ant Design > CSS Modules > Tailwind CSS
+      - 避免使用全局样式
+      - 保持全局风格一致性
+      - 以移动端为主要设计目标
+
+  - title: 状态管理与API调用
     body: |
-      - 统一使用 Zustand 管理。
-      - 数据处理逻辑尽可能写在frontend/src/stores中,单纯的数据层
-  - title: 前端 API 调用规范
+      - 统一使用Zustand进行状态管理
+      - 数据处理逻辑集中在stores目录
+      - API地址统一在services/apis.ts或common.ts中定义
+      - 使用services/base.ts中的Axios实例处理请求
+      - 错误处理统一在拦截器中处理
+      - 组件中避免直接调用API
+
+  - title: 后端开发规范
     body: |
-      - API地址必须写在frontend/src/services/apis.ts或common.ts文件中供状态管理和数据层使用
-      - 使用frontend/src/services/base.ts 中创建的 Axios 实例，配置统一拦截器。
-      - 错误处理统一在拦截器中捕获并抛出自定义错误。
-      - 组件中尽可能避免直接调用 API。
-      - 所有请求/响应数据结构尽量有 TypeScript 类型定义。
-  - title: 全局数据模型与类型
-    body: |
-      - 所有数据结构必须使用 TypeScript 接口/类型别名定义。
-      - 避免使用 any，强制类型推断。
-      - 复杂对象建议使用交叉类型或联合类型。
-      - 尽可能在backend\types目录下合适的位置书写类型供前后端项目共同使用,由于使用了pnpm的workspace所以前端可以import后端目录中文件
-  - title: 全局代码规范与风格
-    body: |
-      - 遵循 Eslint + Prettier 统一代码风格。
-      - 变量/函数使用 camelCase，类/接口用 PascalCase，常量用 UPPER_SNAKE_CASE。
-      - 公共逻辑提取为自定义 Hook 或 HOC，遵循 DRY 原则。
-      - 使用 React.memo 优化性能，避免不必要的渲染。
-  - title: 全局依赖与构建
-    body: |
-      - 依赖管理使用 pnpm。
-      - 构建工具使用 Vite。
-      - 前端后端均使用 TypeScript。
+      - API统一使用POST方法
+      - 业务错误需返回合适的Error信息
+      - 新增错误类型时在ErrorCode中定义
+      - 遵循NestJS最佳实践
+      - 使用Prisma处理数据库操作
 
 examples:
   - desc: 组件命名示例
@@ -63,15 +62,20 @@ examples:
       function UserProfileCard() { ... }
       // 错误
       function userprofilecard() { ... }
-  - desc: API 封装示例
+
+  - desc: API封装示例
     code: |
       // api/orderService.ts
       import axiosInstance from '@/utils/axiosInstance';
       export const fetchOrderList = () => axiosInstance.get('/order/list');
+
   - desc: 类型定义示例
     code: |
-      interface Order {
+      type Order = {
         id: string;
         customerId: string;
+        amount: number;
+      }
+
         amount: number;
       }
