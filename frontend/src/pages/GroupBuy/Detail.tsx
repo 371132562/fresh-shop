@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import Modify from '@/pages/GroupBuy/Modify.tsx'
+import OrderModify from '@/pages/Order/Modify.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import useGroupBuyStore, { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
 import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
@@ -16,6 +17,7 @@ export const Component = () => {
   const [visible, setVisible] = useState(false)
   const [againVisible, setAgainVisible] = useState(false)
   const [againGroupBuy, setAgainGroupBuy] = useState<GroupBuy | null>(null)
+  const [orderModifyVisible, setOrderModifyVisible] = useState(false)
 
   const groupBuy = useGroupBuyStore(state => state.groupBuy)
   const getGroupBuy = useGroupBuyStore(state => state.getGroupBuy)
@@ -49,6 +51,12 @@ export const Component = () => {
       setGroupBuy(null)
     }
   }, [id])
+
+  useEffect(() => {
+    if (id) {
+      getGroupBuy({ id })
+    }
+  }, [orderModifyVisible])
 
   const confirm: PopconfirmProps['onConfirm'] = async () => {
     const res = await deleteGroupBuy({ id: id as string })
@@ -100,6 +108,12 @@ export const Component = () => {
               wrap
               justify="end"
             >
+              <Button
+                type="primary"
+                onClick={() => setOrderModifyVisible(true)}
+              >
+                添加订单
+              </Button>
               <Button
                 color="primary"
                 variant="solid"
@@ -359,6 +373,13 @@ export const Component = () => {
           visible={againVisible}
           setVisible={setAgainVisible}
           againGroupBuy={againGroupBuy}
+        />
+      )}
+      {orderModifyVisible && (
+        <OrderModify
+          visible={orderModifyVisible}
+          setVisible={setOrderModifyVisible}
+          groupBuyId={id}
         />
       )}
     </div>

@@ -10,10 +10,11 @@ interface params {
   visible: boolean
   setVisible: (value: boolean) => void
   id?: string //编辑时会提供此id
+  groupBuyId?: string
 }
 
 const Modify = (props: params) => {
-  const { visible, setVisible, id } = props
+  const { visible, setVisible, id, groupBuyId } = props
   const [form] = Form.useForm()
 
   const [units, setUnits] = useState<GroupBuyUnit[]>([])
@@ -41,8 +42,11 @@ const Modify = (props: params) => {
     if (id && order) {
       groupBuyChange(order.groupBuyId)
       form.setFieldsValue({ unitId: order.unitId })
+    } else if (groupBuyId) {
+      form.setFieldsValue({ groupBuyId })
+      groupBuyChange(groupBuyId)
     }
-  }, [allGroupBuy])
+  }, [allGroupBuy, groupBuyId])
 
   const handleOk = () => {
     form
@@ -62,6 +66,8 @@ const Modify = (props: params) => {
 
   const handleCancel = () => {
     setVisible(false)
+    form.resetFields()
+    setUnits([])
   }
 
   const filterOption = (input: string, option: any) => {
@@ -80,7 +86,7 @@ const Modify = (props: params) => {
         open={visible}
         onOk={handleOk}
         onCancel={handleCancel}
-        loading={createLoading}
+        confirmLoading={createLoading}
         style={{ top: 20 }}
       >
         <Form
@@ -129,6 +135,7 @@ const Modify = (props: params) => {
               placeholder="请选择团购单"
               filterOption={filterOption}
               onChange={groupBuyChange}
+              disabled={!!groupBuyId}
             >
               {allGroupBuy.map(item => {
                 return (

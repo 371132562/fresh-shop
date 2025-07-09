@@ -160,7 +160,6 @@ export const Component = () => {
         open={searchVisible}
         onOk={handleOk}
         onCancel={handleCancel}
-        loading={listLoading}
         footer={[
           <Button onClick={resetSearch}>清空</Button>,
           <Button onClick={handleCancel}>取消</Button>,

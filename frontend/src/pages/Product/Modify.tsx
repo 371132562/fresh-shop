@@ -72,7 +72,7 @@ const Modify = (props: params) => {
         open={visible}
         onOk={handleOk}
         onCancel={handleCancel}
-        loading={createLoading}
+        confirmLoading={createLoading}
       >
         <Form
           form={form}

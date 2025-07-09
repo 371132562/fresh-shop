@@ -138,7 +138,7 @@ const Modify = (props: params) => {
         open={visible}
         onOk={handleOk}
         onCancel={handleCancel}
-        loading={createLoading}
+        confirmLoading={createLoading}
         style={{ top: 20 }}
       >
         <Form
