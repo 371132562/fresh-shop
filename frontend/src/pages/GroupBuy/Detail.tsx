@@ -1,5 +1,5 @@
-import type { PopconfirmProps, TableProps } from 'antd'
-import { Button, Flex, Image, message, Popconfirm, Spin, Table, Tag } from 'antd'
+import type { PopconfirmProps } from 'antd'
+import { Button, Flex, Image, List, message, Popconfirm, Spin, Tag } from 'antd'
 import { GroupBuy, Order } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
@@ -81,82 +81,6 @@ export const Component = () => {
       message.info('订单已是最终状态，无法继续修改')
     }
   }
-
-  const columns: TableProps<Order>['columns'] = useMemo(() => {
-    return [
-      {
-        title: '客户',
-        dataIndex: 'customer',
-        key: 'customer',
-        render: customer => customer.name || '无',
-        fixed: 'left'
-      },
-      {
-        title: '规格',
-        dataIndex: 'unitId',
-        key: 'unitId',
-        render: unitId => {
-          const unit = (groupBuy?.units as GroupBuyUnit[])?.find(item => item.id === unitId)
-          return unit ? unit.unit : '无'
-        }
-      },
-      {
-        title: '份数',
-        dataIndex: 'quantity',
-        key: 'quantity',
-        width: 70
-      },
-      {
-        title: '状态',
-        dataIndex: 'status',
-        key: 'status',
-        width: 90,
-        render: (status: OrderStatus) => {
-          return <Tag color={OrderStatusMap[status].color}>{OrderStatusMap[status].label}</Tag>
-        }
-      },
-      {
-        title: '操作',
-        key: 'action',
-        width: 70,
-        render: (_: any, record: Order) => {
-          // 解决类型不兼容问题，确保 record.status 与 OrderStatus 类型一致
-          const orderStatusValues = Object.values(OrderStatus) as OrderStatus[]
-          const currentIndex = orderStatusValues.findIndex(status => status === record.status)
-          const nextStatusLabel =
-            currentIndex < orderStatusValues.length - 1
-              ? OrderStatusMap[orderStatusValues[currentIndex + 1]].label
-              : '无'
-
-          return (
-            <Popconfirm
-              title={
-                <div className="text-lg">
-                  确定要将订单状态变更为 <span className="text-blue-500">{nextStatusLabel}</span>{' '}
-                  吗？
-                </div>
-              }
-              placement="left"
-              onConfirm={() => handleUpdateOrderStatus(record)}
-              okText="确定"
-              cancelText="取消"
-              disabled={currentIndex === orderStatusValues.length - 1}
-              okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
-              cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
-            >
-              <Button
-                type="primary"
-                disabled={currentIndex === orderStatusValues.length - 1}
-              >
-                更新
-              </Button>
-            </Popconfirm>
-          )
-        },
-        fixed: 'right'
-      }
-    ]
-  }, [groupBuy])
 
   return (
     <div className="w-full">
@@ -257,12 +181,82 @@ export const Component = () => {
           <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
             订单信息 共 {groupBuy?.order?.length || 0} 条
           </h3>
-          <Table
+          <List
+            itemLayout="horizontal"
             dataSource={groupBuy?.order}
-            columns={columns}
-            rowKey="id"
-            pagination={false}
-            scroll={{ x: 'max-content' }} // 适配移动端，允许内容滚动
+            renderItem={order => {
+              const unit = (groupBuy?.units as GroupBuyUnit[])?.find(
+                item => item.id === order.unitId
+              )
+              const orderStatusValues = Object.values(OrderStatus) as OrderStatus[]
+              const currentIndex = orderStatusValues.findIndex(status => status === order.status)
+              const nextStatusLabel =
+                currentIndex < orderStatusValues.length - 1
+                  ? OrderStatusMap[orderStatusValues[currentIndex + 1]].label
+                  : '无'
+
+              return (
+                <List.Item
+                  actions={[
+                    <Popconfirm
+                      key="update-status"
+                      title={
+                        <div className="text-lg">
+                          确定要将订单状态变更为{' '}
+                          <span className="text-blue-500">{nextStatusLabel}</span> 吗？
+                        </div>
+                      }
+                      placement="left"
+                      onConfirm={() => handleUpdateOrderStatus(order)}
+                      okText="确定"
+                      cancelText="取消"
+                      disabled={currentIndex === orderStatusValues.length - 1}
+                      okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
+                      cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
+                    >
+                      <Button
+                        type="primary"
+                        disabled={currentIndex === orderStatusValues.length - 1}
+                      >
+                        更新状态
+                      </Button>
+                    </Popconfirm>
+                  ]}
+                >
+                  <List.Item.Meta
+                    title={
+                      <span className="text-base font-medium text-gray-800">
+                        {order?.customer?.name || '无客户信息'}
+                      </span>
+                    }
+                    description={
+                      <div className="space-y-2 py-2 text-sm text-gray-600">
+                        <p className="flex items-center">
+                          <span className="w-20 flex-shrink-0">手机号:</span>
+                          <span className="flex-grow">{order?.customer?.phone || '无'}</span>
+                        </p>
+                        <p className="flex items-center">
+                          <span className="w-20 flex-shrink-0">所选规格:</span>
+                          <span className="flex-grow">{unit ? unit.unit : '无'}</span>
+                        </p>
+                        <p className="flex items-center">
+                          <span className="w-20 flex-shrink-0">份数:</span>
+                          <span className="flex-grow">{order.quantity}</span>
+                        </p>
+                        <p className="flex items-center">
+                          <span className="w-20 flex-shrink-0">订单状态:</span>
+                          <span className="flex-grow">
+                            <Tag color={OrderStatusMap[order.status].color}>
+                              {OrderStatusMap[order.status].label}
+                            </Tag>
+                          </span>
+                        </p>
+                      </div>
+                    }
+                  />
+                </List.Item>
+              )
+            }}
           />
           {!groupBuy?.order?.length && (
             <div className="py-2 text-base text-gray-700">

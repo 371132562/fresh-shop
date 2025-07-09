@@ -1,4 +1,9 @@
-import { GroupBuy, GroupBuyDetail, GroupBuyListItem } from 'fresh-shop-backend/types/dto.ts'
+import {
+  AllGroupBuyItem,
+  GroupBuy,
+  GroupBuyDetail,
+  GroupBuyListItem
+} from 'fresh-shop-backend/types/dto.ts'
 import { GroupBuyPageParams, ListByPage } from 'fresh-shop-backend/types/dto.ts'
 import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
@@ -50,7 +55,7 @@ type GroupBuyStore = {
 
   getAllGroupBuyLoading: boolean
   getAllGroupBuy: () => Promise<void>
-  allGroupBuy: GroupBuyDetail[]
+  allGroupBuy: AllGroupBuyItem[]
 }
 
 const useGroupBuyStore = create<GroupBuyStore>((set, get) => ({

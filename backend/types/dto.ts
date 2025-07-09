@@ -99,7 +99,9 @@ export type GroupBuyListItem = GroupBuy & {
 export type GroupBuyDetail = GroupBuy & {
   supplier: Supplier;
   product: Product;
-  order: Order[];
+  order: (Order & {
+    customer: { name: string; phone: string; wechat: string };
+  })[];
 };
 
 export type GroupBuyUnit = {
@@ -107,6 +109,13 @@ export type GroupBuyUnit = {
   unit: string;
   price: number;
   costPrice: number;
+};
+
+export type AllGroupBuyItem = {
+  id: string;
+  name: string;
+  groupBuyStartDate: Date;
+  units: GroupBuyUnit[];
 };
 
 export type OrderPageParams = CommonPageParams & {

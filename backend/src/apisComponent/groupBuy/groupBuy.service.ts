@@ -109,6 +109,8 @@ export class GroupBuyService {
             customer: {
               select: {
                 name: true,
+                phone: true,
+                wechat: true,
               },
             },
           },
