@@ -94,15 +94,14 @@ export const Overview = (props: IOverviewProps) => {
           loading={getCountLoading}
         />
       </Col>
-      {!globalSetting?.value?.sensitive && (
-        <Col span={24}>
-          <PriceProfitTrendChart
-            priceTrend={priceTrend}
-            profitTrend={profitTrend}
-            loading={getCountLoading}
-          />
-        </Col>
-      )}
+      <Col span={24}>
+        <PriceProfitTrendChart
+          priceTrend={priceTrend}
+          profitTrend={profitTrend}
+          loading={getCountLoading}
+          sensitive={globalSetting?.value?.sensitive}
+        />
+      </Col>
     </Row>
   )
 }

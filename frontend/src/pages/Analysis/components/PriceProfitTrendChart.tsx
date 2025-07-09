@@ -8,12 +8,14 @@ interface PriceProfitTrendChartProps {
   priceTrend: AnalysisCountResult['priceTrend']
   profitTrend: AnalysisCountResult['profitTrend']
   loading: boolean
+  sensitive?: boolean
 }
 
 export const PriceProfitTrendChart = ({
   priceTrend,
   profitTrend,
-  loading
+  loading,
+  sensitive
 }: PriceProfitTrendChartProps) => {
   const priceProfitChartRef = useRef<HTMLDivElement>(null)
 
@@ -34,6 +36,25 @@ export const PriceProfitTrendChart = ({
         (item: AnalysisCountResult['profitTrend'][number]) => item.count
       )
 
+      const series = [
+        {
+          name: '销售额',
+          type: 'line',
+          data: priceCounts,
+          smooth: true,
+          itemStyle: { color: '#0fb82c' }
+        }
+      ]
+      if (!sensitive) {
+        series.push({
+          name: '利润',
+          type: 'line',
+          data: profitCounts,
+          smooth: true,
+          itemStyle: { color: '#EE6666' }
+        })
+      }
+
       const option = {
         tooltip: {
           trigger: 'axis',
@@ -46,7 +67,7 @@ export const PriceProfitTrendChart = ({
           }
         },
         legend: {
-          data: ['销售额', '利润']
+          data: ['销售额', sensitive ? '' : '利润']
         },
         grid: {
           left: '3%',
@@ -62,22 +83,7 @@ export const PriceProfitTrendChart = ({
         yAxis: {
           type: 'value'
         },
-        series: [
-          {
-            name: '销售额',
-            type: 'line',
-            data: priceCounts,
-            smooth: true,
-            itemStyle: { color: '#0fb82c' }
-          },
-          {
-            name: '利润',
-            type: 'line',
-            data: profitCounts,
-            smooth: true,
-            itemStyle: { color: '#EE6666' }
-          }
-        ]
+        series
       }
 
       chartInstance.setOption(option)
@@ -92,7 +98,7 @@ export const PriceProfitTrendChart = ({
         resizeObserver.disconnect()
       }
     }
-  }, [priceTrend, profitTrend])
+  }, [priceTrend, profitTrend, sensitive])
 
   return (
     <Card
