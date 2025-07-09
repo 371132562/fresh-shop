@@ -176,6 +176,79 @@ export const Component = () => {
           </div>
         </div>
 
+        {/* 规格信息卡片 - 优化显示方式 */}
+        <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
+          <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
+            商品规格
+          </h3>
+          <div className="space-y-4">
+            {/* 增加每项规格之间的垂直间距 */}
+            {groupBuy && Array.isArray(groupBuy?.units) ? (
+              (groupBuy.units as GroupBuyUnit[]).map((item, index: number) => (
+                <div
+                  key={index}
+                  className="rounded-md bg-gray-50 p-3"
+                >
+                  {/* 为每项规格添加背景和内边距，形成独立区块 */}
+                  <div className="mb-3 flex items-center">
+                    {/* 规格名称单独一行，更醒目 */}
+                    <span className="w-20 flex-shrink-0 text-gray-500">计量单位：</span>
+                    <span className="font-bold text-blue-500">{item.unit}</span>
+                    {/* 规格值加粗并使用蓝色强调 */}
+                  </div>
+                  <div className="mb-3 flex items-center">
+                    <span className="w-20 flex-shrink-0 text-gray-500">售价：</span>
+                    <span className="mr-2 font-medium text-blue-500">￥{item.price}</span>
+                  </div>
+                  {!globalSetting?.value?.sensitive && (
+                    <div className="flex items-center">
+                      <span className="w-20 flex-shrink-0 text-gray-500">成本价：</span>
+                      <span className="font-medium text-blue-500">￥{item.costPrice}</span>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="py-2 text-base text-gray-700">
+                <span className="italic text-gray-400">无规格信息</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 图片展示区卡片 */}
+        {images.length > 0 && (
+          <div className="rounded-lg bg-white p-4 shadow-sm">
+            {/* 保持 p-4 */}
+            <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
+              相关图片
+            </h3>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {/* 保持原有的图片网格布局 */}
+              <Image.PreviewGroup>
+                {images.map((image, index) => (
+                  <div
+                    key={index}
+                    className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-gray-100" // 保持圆角 md
+                  >
+                    <Image
+                      src={image}
+                      alt={`商品图片 ${index + 1}`}
+                      className="h-full w-full object-cover"
+                      fallback="/placeholder.svg"
+                      placeholder={
+                        <div className="flex h-full w-full items-center justify-center bg-gray-200">
+                          <Spin size="small" />
+                        </div>
+                      }
+                    />
+                  </div>
+                ))}
+              </Image.PreviewGroup>
+            </div>
+          </div>
+        )}
+
         {/* 订单信息卡片 */}
         <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
           <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
@@ -264,79 +337,6 @@ export const Component = () => {
             </div>
           )}
         </div>
-
-        {/* 规格信息卡片 - 优化显示方式 */}
-        <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
-          <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
-            商品规格
-          </h3>
-          <div className="space-y-4">
-            {/* 增加每项规格之间的垂直间距 */}
-            {groupBuy && Array.isArray(groupBuy?.units) ? (
-              (groupBuy.units as GroupBuyUnit[]).map((item, index: number) => (
-                <div
-                  key={index}
-                  className="rounded-md bg-gray-50 p-3"
-                >
-                  {/* 为每项规格添加背景和内边距，形成独立区块 */}
-                  <div className="mb-3 flex items-center">
-                    {/* 规格名称单独一行，更醒目 */}
-                    <span className="w-20 flex-shrink-0 text-gray-500">计量单位：</span>
-                    <span className="font-bold text-blue-500">{item.unit}</span>
-                    {/* 规格值加粗并使用蓝色强调 */}
-                  </div>
-                  <div className="mb-3 flex items-center">
-                    <span className="w-20 flex-shrink-0 text-gray-500">售价：</span>
-                    <span className="mr-2 font-medium text-blue-500">￥{item.price}</span>
-                  </div>
-                  {!globalSetting?.value?.sensitive && (
-                    <div className="flex items-center">
-                      <span className="w-20 flex-shrink-0 text-gray-500">成本价：</span>
-                      <span className="font-medium text-blue-500">￥{item.costPrice}</span>
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="py-2 text-base text-gray-700">
-                <span className="italic text-gray-400">无规格信息</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* 图片展示区卡片 */}
-        {images.length > 0 && (
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            {/* 保持 p-4 */}
-            <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
-              相关图片
-            </h3>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-              {/* 保持原有的图片网格布局 */}
-              <Image.PreviewGroup>
-                {images.map((image, index) => (
-                  <div
-                    key={index}
-                    className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-gray-100" // 保持圆角 md
-                  >
-                    <Image
-                      src={image}
-                      alt={`商品图片 ${index + 1}`}
-                      className="h-full w-full object-cover"
-                      fallback="/placeholder.svg"
-                      placeholder={
-                        <div className="flex h-full w-full items-center justify-center bg-gray-200">
-                          <Spin size="small" />
-                        </div>
-                      }
-                    />
-                  </div>
-                ))}
-              </Image.PreviewGroup>
-            </div>
-          </div>
-        )}
 
         {/* 如果没有数据，显示提示 */}
         {!getLoading && !groupBuy?.id && (

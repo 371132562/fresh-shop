@@ -1,6 +1,6 @@
 import { CalendarOutlined } from '@ant-design/icons'
 import type { StatisticProps } from 'antd'
-import { Button, Card, Col, Row, Statistic } from 'antd'
+import { Button, Card, Col, Row, Statistic, Tabs } from 'antd'
 import { CalendarPicker } from 'antd-mobile'
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
@@ -15,6 +15,7 @@ export const Component = () => {
     dayjs().toDate()
   ])
   const [calendarVisible, setCalendarVisible] = useState(false)
+  const [activeTabKey, setActiveTabKey] = useState('overview')
 
   const { groupBuyCount, orderCount, totalPrice, totalProfit } = useAnalysisStore(
     state => state.count
@@ -126,53 +127,67 @@ export const Component = () => {
           />
         </Col>
       </Row>
-      <Row
+      <Tabs
         className="w-full"
-        gutter={[8, 8]}
-      >
-        <Col span={12}>
-          <Card loading={getCountLoading}>
-            <Statistic
-              title="团购单量"
-              value={groupBuyCount}
-              formatter={formatter}
-            />
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card loading={getCountLoading}>
-            <Statistic
-              title="订单量"
-              value={orderCount}
-              formatter={formatter}
-            />
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card loading={getCountLoading}>
-            <Statistic
-              title="总销售额"
-              value={totalPrice}
-              precision={2}
-              prefix="¥"
-              formatter={formatter}
-            />
-          </Card>
-        </Col>
-        {!globalSetting?.value?.sensitive && (
-          <Col span={12}>
-            <Card loading={getCountLoading}>
-              <Statistic
-                title="总利润"
-                value={totalProfit}
-                precision={2}
-                prefix="¥"
-                formatter={formatter}
-              />
-            </Card>
-          </Col>
-        )}
-      </Row>
+        type="card"
+        activeKey={activeTabKey}
+        onChange={setActiveTabKey}
+        items={[
+          {
+            key: 'overview',
+            label: '概况',
+            children: (
+              <Row
+                className="w-full"
+                gutter={[8, 8]}
+              >
+                <Col span={12}>
+                  <Card loading={getCountLoading}>
+                    <Statistic
+                      title="团购单量"
+                      value={groupBuyCount}
+                      formatter={formatter}
+                    />
+                  </Card>
+                </Col>
+                <Col span={12}>
+                  <Card loading={getCountLoading}>
+                    <Statistic
+                      title="订单量"
+                      value={orderCount}
+                      formatter={formatter}
+                    />
+                  </Card>
+                </Col>
+                <Col span={12}>
+                  <Card loading={getCountLoading}>
+                    <Statistic
+                      title="总销售额"
+                      value={totalPrice}
+                      precision={2}
+                      prefix="¥"
+                      formatter={formatter}
+                    />
+                  </Card>
+                </Col>
+                {!globalSetting?.value?.sensitive && (
+                  <Col span={12}>
+                    <Card loading={getCountLoading}>
+                      <Statistic
+                        title="总利润"
+                        value={totalProfit}
+                        precision={2}
+                        prefix="¥"
+                        formatter={formatter}
+                      />
+                    </Card>
+                  </Col>
+                )}
+              </Row>
+            )
+          }
+        ]}
+      />
     </>
   )
 }
