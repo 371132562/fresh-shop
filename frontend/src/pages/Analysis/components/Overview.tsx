@@ -2,35 +2,18 @@ import type { StatisticProps } from 'antd'
 import { Card, Col, Row, Statistic } from 'antd'
 import CountUp from 'react-countup'
 
+import useAnalysisStore from '@/stores/analysisStore'
 import useGlobalSettingStore from '@/stores/globalSettingStore'
 
 import { GroupBuyOrderTrendChart } from './GroupBuyOrderTrendChart'
 import { PriceProfitTrendChart } from './PriceProfitTrendChart'
 
-interface IOverviewProps {
-  getCountLoading: boolean
-  groupBuyCount: number
-  orderCount: number
-  totalPrice: number
-  totalProfit: number
-  groupBuyTrend: any[]
-  orderTrend: any[]
-  priceTrend: any[]
-  profitTrend: any[]
-}
-
-export const Overview = (props: IOverviewProps) => {
-  const {
-    getCountLoading,
-    groupBuyCount,
-    orderCount,
-    totalPrice,
-    totalProfit,
-    groupBuyTrend,
-    orderTrend,
-    priceTrend,
-    profitTrend
-  } = props
+export const Overview = () => {
+  const getCountLoading = useAnalysisStore(state => state.getCountLoading)
+  const groupBuyCount = useAnalysisStore(state => state.count.groupBuyCount)
+  const orderCount = useAnalysisStore(state => state.count.orderCount)
+  const totalPrice = useAnalysisStore(state => state.count.totalPrice)
+  const totalProfit = useAnalysisStore(state => state.count.totalProfit)
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
 
   const formatter: StatisticProps['formatter'] = value => (
@@ -46,7 +29,10 @@ export const Overview = (props: IOverviewProps) => {
       gutter={[8, 8]}
     >
       <Col span={12}>
-        <Card loading={getCountLoading}>
+        <Card
+          size="small"
+          loading={getCountLoading}
+        >
           <Statistic
             title="团购单量"
             value={groupBuyCount}
@@ -55,7 +41,10 @@ export const Overview = (props: IOverviewProps) => {
         </Card>
       </Col>
       <Col span={12}>
-        <Card loading={getCountLoading}>
+        <Card
+          size="small"
+          loading={getCountLoading}
+        >
           <Statistic
             title="订单量"
             value={orderCount}
@@ -64,7 +53,10 @@ export const Overview = (props: IOverviewProps) => {
         </Card>
       </Col>
       <Col span={12}>
-        <Card loading={getCountLoading}>
+        <Card
+          size="small"
+          loading={getCountLoading}
+        >
           <Statistic
             title="总销售额"
             value={totalPrice}
@@ -76,7 +68,10 @@ export const Overview = (props: IOverviewProps) => {
       </Col>
       {!globalSetting?.value?.sensitive && (
         <Col span={12}>
-          <Card loading={getCountLoading}>
+          <Card
+            size="small"
+            loading={getCountLoading}
+          >
             <Statistic
               title="总利润"
               value={totalProfit}
@@ -88,19 +83,10 @@ export const Overview = (props: IOverviewProps) => {
         </Col>
       )}
       <Col span={24}>
-        <GroupBuyOrderTrendChart
-          groupBuyTrend={groupBuyTrend}
-          orderTrend={orderTrend}
-          loading={getCountLoading}
-        />
+        <GroupBuyOrderTrendChart />
       </Col>
       <Col span={24}>
-        <PriceProfitTrendChart
-          priceTrend={priceTrend}
-          profitTrend={profitTrend}
-          loading={getCountLoading}
-          sensitive={globalSetting?.value?.sensitive}
-        />
+        <PriceProfitTrendChart />
       </Col>
     </Row>
   )

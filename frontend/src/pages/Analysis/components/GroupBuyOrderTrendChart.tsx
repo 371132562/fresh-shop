@@ -4,18 +4,13 @@ import * as echarts from 'echarts'
 import type { AnalysisCountResult } from 'fresh-shop-backend/types/dto'
 import { useEffect, useRef } from 'react'
 
-interface GroupBuyOrderTrendChartProps {
-  groupBuyTrend: AnalysisCountResult['groupBuyTrend']
-  orderTrend: AnalysisCountResult['orderTrend']
-  loading: boolean
-}
+import useAnalysisStore from '@/stores/analysisStore'
 
-export const GroupBuyOrderTrendChart = ({
-  groupBuyTrend,
-  orderTrend,
-  loading
-}: GroupBuyOrderTrendChartProps) => {
+export const GroupBuyOrderTrendChart = () => {
   const chartRef = useRef<HTMLDivElement>(null)
+  const getCountLoading = useAnalysisStore(state => state.getCountLoading)
+  const groupBuyTrend = useAnalysisStore(state => state.count.groupBuyTrend)
+  const orderTrend = useAnalysisStore(state => state.count.orderTrend)
 
   useEffect(() => {
     if (chartRef.current) {
@@ -96,7 +91,8 @@ export const GroupBuyOrderTrendChart = ({
 
   return (
     <Card
-      loading={loading}
+      size="small"
+      loading={getCountLoading}
       title="团购单和订单趋势"
     >
       <div

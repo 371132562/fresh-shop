@@ -18,6 +18,7 @@ rules:
       - 复杂对象使用交叉类型或联合类型
       - 类型定义优先放在backend/types目录下供前后端共用
       - 所有请求/响应数据结构必须有TypeScript类型定义
+      - 所有代码都需要改正eslint错误
 
   - title: 前端开发规范
     body: |
@@ -33,7 +34,7 @@ rules:
 
   - title: 前端样式规范
     body: |
-      - 样式方案优先级：Ant Design > CSS Modules > Tailwind CSS
+      - 样式方案优先级：Ant Design > Tailwind CSS > CSS Modules
       - 避免使用全局样式
       - 保持全局风格一致性
       - 以移动端为主要设计目标

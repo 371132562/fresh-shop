@@ -52,3 +52,4 @@ export const globalSettingUpsertApi = '/globalSetting/upsert'
 export const globalSettingDetailApi = '/globalSetting/detail'
 
 export const analysisCountApi = '/analysis/count'
+export const analysisRankApi = '/analysis/rank'

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import useAnalysisStore from '@/stores/analysisStore.ts'
 
 import { Overview } from './components/Overview'
+import { Rankings } from './components/Rankings'
 
 export const Component = () => {
   const [calendarValue, setCalendarValue] = useState<[Date, Date]>([
@@ -16,18 +17,8 @@ export const Component = () => {
   const [calendarVisible, setCalendarVisible] = useState(false)
   const [activeTabKey, setActiveTabKey] = useState('overview')
 
-  const {
-    groupBuyCount,
-    orderCount,
-    totalPrice,
-    totalProfit,
-    groupBuyTrend,
-    orderTrend,
-    priceTrend,
-    profitTrend
-  } = useAnalysisStore(state => state.count)
-  const getCountLoading = useAnalysisStore(state => state.getCountLoading)
   const getCount = useAnalysisStore(state => state.getCount)
+  const getRank = useAnalysisStore(state => state.getRank)
 
   const changeDateRange = (days: number) => {
     setCalendarValue([dayjs().subtract(days, 'day').toDate(), dayjs().toDate()])
@@ -38,7 +29,11 @@ export const Component = () => {
       startDate: calendarValue[0],
       endDate: calendarValue[1]
     })
-  }, [calendarValue])
+    getRank({
+      startDate: calendarValue[0],
+      endDate: calendarValue[1]
+    })
+  }, [calendarValue, getCount, getRank])
 
   return (
     <>
@@ -134,19 +129,12 @@ export const Component = () => {
           {
             key: 'overview',
             label: '概况',
-            children: (
-              <Overview
-                getCountLoading={getCountLoading}
-                groupBuyCount={groupBuyCount}
-                orderCount={orderCount}
-                totalPrice={totalPrice}
-                totalProfit={totalProfit}
-                groupBuyTrend={groupBuyTrend}
-                orderTrend={orderTrend}
-                priceTrend={priceTrend}
-                profitTrend={profitTrend}
-              />
-            )
+            children: <Overview />
+          },
+          {
+            key: 'rankings',
+            label: '排行',
+            children: <Rankings />
           }
         ]}
       />

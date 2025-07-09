@@ -4,20 +4,15 @@ import * as echarts from 'echarts'
 import type { AnalysisCountResult } from 'fresh-shop-backend/types/dto'
 import { useEffect, useRef } from 'react'
 
-interface PriceProfitTrendChartProps {
-  priceTrend: AnalysisCountResult['priceTrend']
-  profitTrend: AnalysisCountResult['profitTrend']
-  loading: boolean
-  sensitive?: boolean
-}
+import useAnalysisStore from '@/stores/analysisStore'
+import useGlobalSettingStore from '@/stores/globalSettingStore'
 
-export const PriceProfitTrendChart = ({
-  priceTrend,
-  profitTrend,
-  loading,
-  sensitive
-}: PriceProfitTrendChartProps) => {
+export const PriceProfitTrendChart = () => {
   const priceProfitChartRef = useRef<HTMLDivElement>(null)
+  const getCountLoading = useAnalysisStore(state => state.getCountLoading)
+  const priceTrend = useAnalysisStore(state => state.count.priceTrend)
+  const profitTrend = useAnalysisStore(state => state.count.profitTrend)
+  const sensitive = useGlobalSettingStore(state => state.globalSetting?.value?.sensitive)
 
   useEffect(() => {
     if (priceProfitChartRef.current) {
@@ -102,7 +97,8 @@ export const PriceProfitTrendChart = ({
 
   return (
     <Card
-      loading={loading}
+      size="small"
+      loading={getCountLoading}
       title="销售额和利润趋势"
     >
       <div

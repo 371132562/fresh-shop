@@ -156,3 +156,34 @@ export type AnalysisCountResult = {
     count: number;
   }[];
 };
+
+export type GroupBuyRankByOrderCountItem = {
+  id: string;
+  name: string;
+  orderCount: number;
+};
+
+export type GroupBuyRankByTotalSalesItem = {
+  id: string;
+  name: string;
+  totalSales: number;
+};
+
+export type GroupBuyRankByTotalProfitItem = {
+  id: string;
+  name: string;
+  totalProfit: number;
+};
+
+export type SupplierRankByGroupBuyCountItem = {
+  id: string;
+  name: string;
+  groupBuyCount: number;
+};
+
+export type AnalysisRankResult = {
+  groupBuyRankByOrderCount: GroupBuyRankByOrderCountItem[];
+  groupBuyRankByTotalSales: GroupBuyRankByTotalSalesItem[];
+  groupBuyRankByTotalProfit: GroupBuyRankByTotalProfitItem[];
+  supplierRankByGroupBuyCount: SupplierRankByGroupBuyCountItem[];
+};

@@ -9,4 +9,9 @@ export class AnalysisController {
   count(@Body() data: AnalysisCountParams) {
     return this.analysisService.count(data);
   }
+
+  @Post('rank')
+  getRankings(@Body() params: AnalysisCountParams) {
+    return this.analysisService.rank(params);
+  }
 }

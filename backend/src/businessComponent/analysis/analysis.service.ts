@@ -14,6 +14,7 @@ import {
   AnalysisCountParams,
   AnalysisCountResult,
   GroupBuyUnit,
+  AnalysisRankResult,
 } from '../../../types/dto'; // 导入类型
 
 /**
@@ -175,6 +176,120 @@ export class AnalysisService {
       orderTrend,
       priceTrend,
       profitTrend,
+    };
+  }
+
+  async rank(params: AnalysisCountParams): Promise<AnalysisRankResult> {
+    const { startDate, endDate } = params;
+
+    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
+      where: {
+        groupBuyStartDate: {
+          gte: startDate,
+          lte: endDate,
+        },
+        delete: 0,
+      },
+      include: {
+        order: {
+          where: {
+            delete: 0,
+            status: {
+              in: ['PAID', 'COMPLETED'],
+            },
+          },
+          select: {
+            quantity: true,
+            unitId: true,
+          },
+        },
+      },
+    });
+
+    // 1. 团购单以其包含的订单量进行团购单排名
+    const groupBuyRankByOrderCount = groupBuysWithOrders
+      .map((gb) => ({
+        id: gb.id,
+        name: gb.name,
+        orderCount: gb.order.length,
+      }))
+      .sort((a, b) => b.orderCount - a.orderCount)
+      .slice(0, 10);
+
+    // 2 & 3. 团购单以其包含的所有订单的销售额和利润进行排名
+    const groupBuysWithStats = groupBuysWithOrders.map((gb) => {
+      let totalSales = 0;
+      let totalProfit = 0;
+      const units = gb.units as Array<GroupBuyUnit>;
+
+      for (const order of gb.order as SelectedOrder[]) {
+        const selectedUnit = units.find((unit) => unit.id === order.unitId);
+
+        if (selectedUnit) {
+          totalSales += selectedUnit.price * order.quantity;
+          totalProfit +=
+            (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+        }
+      }
+
+      return {
+        id: gb.id,
+        name: gb.name,
+        totalSales,
+        totalProfit,
+      };
+    });
+
+    const groupBuyRankByTotalSales = [...groupBuysWithStats]
+      .sort((a, b) => b.totalSales - a.totalSales)
+      .slice(0, 10)
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        totalSales: item.totalSales,
+      }));
+
+    const groupBuyRankByTotalProfit = [...groupBuysWithStats]
+      .sort((a, b) => b.totalProfit - a.totalProfit)
+      .slice(0, 10)
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        totalProfit: item.totalProfit,
+      }));
+
+    // 4. 以供货商关联的团购单数量进行排名
+    const suppliers = await this.prisma.supplier.findMany({
+      where: {
+        delete: 0,
+      },
+      include: {
+        groupBuy: {
+          where: {
+            groupBuyStartDate: {
+              gte: startDate,
+              lte: endDate,
+            },
+            delete: 0,
+          },
+        },
+      },
+    });
+
+    const supplierRankByGroupBuyCount = suppliers
+      .map((s) => ({
+        id: s.id,
+        name: s.name,
+        groupBuyCount: s.groupBuy.length,
+      }))
+      .sort((a, b) => b.groupBuyCount - a.groupBuyCount)
+      .slice(0, 10);
+
+    return {
+      groupBuyRankByOrderCount,
+      groupBuyRankByTotalSales,
+      groupBuyRankByTotalProfit,
+      supplierRankByGroupBuyCount,
     };
   }
 }
