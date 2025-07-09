@@ -1,5 +1,5 @@
 import type { PopconfirmProps } from 'antd'
-import { Button, Flex, Image, message, Popconfirm, Spin } from 'antd'
+import { Button, Flex, Image, notification, Popconfirm, Spin } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
@@ -10,6 +10,7 @@ export const Component = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const [visible, setVisible] = useState(false)
+  const [noti, contextHolder] = notification.useNotification()
 
   const supplier = useSupplierStore(state => state.supplier)
   const getSupplier = useSupplierStore(state => state.getSupplier)
@@ -44,13 +45,17 @@ export const Component = () => {
   const confirm: PopconfirmProps['onConfirm'] = async () => {
     const res = await deleteSupplier({ id: id as string })
     if (res) {
-      message.success('删除成功')
+      noti.success({
+        message: '成功',
+        description: '删除成功'
+      })
       navigate('/supplier')
     }
   }
 
   return (
     <div className="w-full">
+      {contextHolder}
       <Spin
         spinning={getLoading}
         size="large"

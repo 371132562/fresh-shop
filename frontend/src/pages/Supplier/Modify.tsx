@@ -1,5 +1,5 @@
 import type { UploadFile } from 'antd'
-import { Form, Input, message, Modal } from 'antd'
+import { Form, Input, Modal, notification } from 'antd'
 import { Supplier } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 
@@ -16,6 +16,7 @@ interface params {
 const Modify = (props: params) => {
   const { visible, setVisible, id } = props
   const [form] = Form.useForm()
+  const [noti, contextHolder] = notification.useNotification()
 
   const [fileList, setFileList] = useState<UploadFile[] | Array<{ filename: string }>>([])
 
@@ -64,12 +65,18 @@ const Modify = (props: params) => {
         }
         const res = id ? await updateSupplier({ ...params, id }) : await createSupplier(params)
         if (res) {
-          message.success(id ? '编辑成功' : '添加成功')
+          noti.success({
+            message: '成功',
+            description: id ? '编辑成功' : '添加成功'
+          })
           setVisible(false)
         }
       })
       .catch(err => {
-        message.warning('表单未填写完整')
+        noti.warning({
+          message: '警告',
+          description: '表单未填写完整'
+        })
         console.log(err)
       })
   }
@@ -80,6 +87,7 @@ const Modify = (props: params) => {
 
   return (
     <>
+      {contextHolder}
       <Modal
         open={visible}
         onOk={handleOk}

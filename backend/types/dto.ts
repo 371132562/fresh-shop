@@ -129,6 +129,7 @@ export type OrderDetail = Order & {
   groupBuy: {
     id: string;
     name: string;
+    units: GroupBuyUnit[];
   };
 };
 

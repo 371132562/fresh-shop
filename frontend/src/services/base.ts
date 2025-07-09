@@ -1,5 +1,5 @@
 // 基于axios封装的请求模块
-import { message } from 'antd' // 导入 Ant Design 的 message 组件
+import { notification } from 'antd' // 导入 Ant Design 的 notification 组件
 import axios from 'axios'
 import { ErrorCode } from 'fresh-shop-backend/types/response.ts'
 
@@ -21,7 +21,10 @@ http.interceptors.request.use(
   },
   error => {
     // 处理请求错误，例如网络不通，请求被取消等
-    message.error('网络请求失败，请稍后再试！')
+    notification.error({
+      message: '错误',
+      description: '网络请求失败，请稍后再试！'
+    })
     return Promise.reject(error)
   }
 )
@@ -39,7 +42,10 @@ http.interceptors.response.use(
         return data
       } else {
         // 后端返回了 HTTP Status 200，但业务 code 表示错误
-        message.error(msg || '未知业务错误') // 显示后端返回的错误信息
+        notification.error({
+          message: '错误',
+          description: msg
+        })
         // 可以根据不同的 code 做更精细的错误处理或跳转
         switch (code) {
           case ErrorCode.TOKEN_EXPIRED:
@@ -72,8 +78,11 @@ http.interceptors.response.use(
     } else {
       // 理论上，如果后端异常过滤器设置得好，不会出现 status 不是 200 的情况
       // 但为了健壮性，仍然保留这部分处理
-      message.error(`HTTP 错误: ${status} - ${data.msg || '未知错误'}`)
-      return Promise.reject(new Error(data.msg || 'HTTP Error'))
+      notification.error({
+        message: '错误',
+        description: `HTTP 错误: ${status} - ${msg || '未知错误'}`
+      })
+      return Promise.reject(new Error(msg || 'HTTP Error'))
     }
   },
   error => {
@@ -109,13 +118,22 @@ http.interceptors.response.use(
         default:
           errorMessage = `网络错误: ${status}`
       }
-      message.error(errorMessage)
+      notification.error({
+        message: '错误',
+        description: errorMessage
+      })
     } else if (error.request) {
       // 请求已发出但没有收到响应 (例如网络断开或服务器没有响应)
-      message.error('服务器无响应，请检查网络或稍后再试！')
+      notification.error({
+        message: '错误',
+        description: '服务器无响应，请检查网络或稍后再试！'
+      })
     } else {
       // 发送请求时出了问题
-      message.error('请求发送失败：' + error.message)
+      notification.error({
+        message: '错误',
+        description: '请求发送失败：' + error.message
+      })
     }
     return Promise.reject(error)
   }

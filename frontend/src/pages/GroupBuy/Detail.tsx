@@ -1,5 +1,5 @@
 import type { PopconfirmProps } from 'antd'
-import { Button, Flex, Image, List, message, Popconfirm, Spin, Tag } from 'antd'
+import { Button, Flex, Image, List, notification, Popconfirm, Spin, Tag } from 'antd'
 import { GroupBuy, Order } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
@@ -18,6 +18,7 @@ export const Component = () => {
   const [againVisible, setAgainVisible] = useState(false)
   const [againGroupBuy, setAgainGroupBuy] = useState<GroupBuy | null>(null)
   const [orderModifyVisible, setOrderModifyVisible] = useState(false)
+  const [noti, contextHolder] = notification.useNotification()
 
   const groupBuy = useGroupBuyStore(state => state.groupBuy)
   const getGroupBuy = useGroupBuyStore(state => state.getGroupBuy)
@@ -61,7 +62,10 @@ export const Component = () => {
   const confirm: PopconfirmProps['onConfirm'] = async () => {
     const res = await deleteGroupBuy({ id: id as string })
     if (res) {
-      message.success('删除成功')
+      noti.success({
+        message: '成功',
+        description: '删除成功'
+      })
       navigate('/groupBuy')
     }
   }
@@ -78,20 +82,30 @@ export const Component = () => {
         status: nextStatus
       })
       if (res) {
-        message.success(`订单状态已更新为：${OrderStatusMap[nextStatus].label}`)
+        noti.success({
+          message: '成功',
+          description: `订单状态已更新为：${OrderStatusMap[nextStatus].label}`
+        })
         if (id) {
           getGroupBuy({ id })
         }
       } else {
-        message.error('更新订单状态失败')
+        noti.error({
+          message: '失败',
+          description: '更新订单状态失败'
+        })
       }
     } else {
-      message.info('订单已是最终状态，无法继续修改')
+      noti.info({
+        message: '提示',
+        description: '订单已是最终状态，无法继续修改'
+      })
     }
   }
 
   return (
     <div className="w-full">
+      {contextHolder}
       <Spin
         spinning={getLoading}
         size="large"

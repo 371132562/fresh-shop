@@ -1,4 +1,4 @@
-import { Form, Input, InputNumber, message, Modal, Select } from 'antd'
+import { Form, Input, InputNumber, Modal, notification, Select } from 'antd'
 import { useEffect, useState } from 'react'
 
 import useCustomerStore from '@/stores/customerStore.ts'
@@ -16,6 +16,7 @@ interface params {
 const Modify = (props: params) => {
   const { visible, setVisible, id, groupBuyId } = props
   const [form] = Form.useForm()
+  const [noti, contextHolder] = notification.useNotification()
 
   const [units, setUnits] = useState<GroupBuyUnit[]>([])
 
@@ -54,12 +55,18 @@ const Modify = (props: params) => {
       .then(async val => {
         const res = id ? await updateOrder({ ...val, id }) : await createOrder(val)
         if (res) {
-          message.success(id ? '编辑成功' : '添加成功')
+          noti.success({
+            message: '成功',
+            description: id ? '编辑成功' : '添加成功'
+          })
           setVisible(false)
         }
       })
       .catch(err => {
-        message.warning('表单未填写完整')
+        noti.warning({
+          message: '警告',
+          description: '表单未填写完整'
+        })
         console.log(err)
       })
   }
@@ -82,6 +89,7 @@ const Modify = (props: params) => {
 
   return (
     <>
+      {contextHolder}
       <Modal
         open={visible}
         onOk={handleOk}

@@ -80,7 +80,13 @@ export class OrderService {
       },
       include: {
         customer: true,
-        groupBuy: true,
+        groupBuy: {
+          select: {
+            id: true,
+            name: true,
+            units: true,
+          },
+        },
       },
     });
   }

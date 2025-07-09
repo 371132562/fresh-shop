@@ -1,4 +1,4 @@
-import { Button, Form, Input, message, Modal, Popconfirm } from 'antd'
+import { Button, Form, Input, Modal, notification, Popconfirm } from 'antd'
 import { useEffect } from 'react'
 
 import useCustomerAddressStore from '@/stores/customerAddressStore.ts'
@@ -13,6 +13,7 @@ interface params {
 const Modify = (props: params) => {
   const { visible, setVisible, id, setCurrentId } = props
   const [form] = Form.useForm()
+  const [noti, contextHolder] = notification.useNotification()
 
   const createLoading = useCustomerAddressStore(state => state.createLoading)
   const createCustomerAddress = useCustomerAddressStore(state => state.createCustomerAddress)
@@ -40,12 +41,18 @@ const Modify = (props: params) => {
           ? await updateCustomerAddress({ ...val, id })
           : await createCustomerAddress(val)
         if (res) {
-          message.success(id ? '编辑成功' : '添加成功')
+          noti.success({
+            message: '成功',
+            description: id ? '编辑成功' : '添加成功'
+          })
           handleCancel()
         }
       })
       .catch(err => {
-        message.warning('表单未填写完整')
+        noti.warning({
+          message: '警告',
+          description: '表单未填写完整'
+        })
         console.log(err)
       })
   }
@@ -59,13 +66,17 @@ const Modify = (props: params) => {
   const handleDelete = async () => {
     const res = await deleteCustomerAddress({ id: id as string })
     if (res) {
-      message.success('删除成功')
+      noti.success({
+        message: '成功',
+        description: '删除成功'
+      })
       setVisible(false)
     }
   }
 
   return (
     <>
+      {contextHolder}
       <Modal
         open={visible}
         onOk={handleOk}

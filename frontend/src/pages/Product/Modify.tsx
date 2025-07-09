@@ -1,4 +1,4 @@
-import { Button, Form, Input, message, Modal, Popconfirm, Select } from 'antd'
+import { Button, Form, Input, Modal, notification, Popconfirm, Select } from 'antd'
 import { useEffect } from 'react'
 
 import useProductStore from '@/stores/productStore.ts'
@@ -14,6 +14,7 @@ interface params {
 const Modify = (props: params) => {
   const { visible, setVisible, id, setCurrentId } = props
   const [form] = Form.useForm()
+  const [noti, contextHolder] = notification.useNotification()
 
   const createLoading = useProductStore(state => state.createLoading)
   const createProduct = useProductStore(state => state.createProduct)
@@ -42,12 +43,18 @@ const Modify = (props: params) => {
       .then(async val => {
         const res = id ? await updateProduct({ ...val, id }) : await createProduct(val)
         if (res) {
-          message.success(id ? '编辑成功' : '添加成功')
+          noti.success({
+            message: '成功',
+            description: id ? '编辑成功' : '添加成功'
+          })
           handleCancel()
         }
       })
       .catch(err => {
-        message.warning('表单未填写完整')
+        noti.warning({
+          message: '警告',
+          description: '表单未填写完整'
+        })
         console.log(err)
       })
   }
@@ -61,13 +68,17 @@ const Modify = (props: params) => {
   const handleDelete = async () => {
     const res = await deleteProduct({ id: id as string })
     if (res) {
-      message.success('删除成功')
+      noti.success({
+        message: '成功',
+        description: '删除成功'
+      })
       setVisible(false)
     }
   }
 
   return (
     <>
+      {contextHolder}
       <Modal
         open={visible}
         onOk={handleOk}
