@@ -8,6 +8,7 @@ import { NavLink } from 'react-router'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import useProductStore from '@/stores/productStore.ts'
 import useSupplierStore from '@/stores/supplierStore.ts'
+import { formatDate } from '@/utils'
 
 import Modify from './Modify.tsx'
 const { RangePicker } = DatePicker
@@ -141,6 +142,10 @@ export const Component = () => {
                 }
                 description={
                   <>
+                    <div className="mb-1 font-medium text-gray-800">
+                      发起时间：
+                      <span className="text-blue-500">{formatDate(item.groupBuyStartDate)}</span>
+                    </div>
                     {item.product?.name && (
                       <div className="mb-1 font-medium text-gray-800">
                         商品：<span className="text-blue-500">{item.product.name}</span>
