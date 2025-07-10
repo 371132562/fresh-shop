@@ -69,9 +69,14 @@ export class GroupBuyService {
       this.prisma.groupBuy.findMany({
         skip: skip,
         take: pageSize,
-        orderBy: {
-          createdAt: 'desc', // 假设您的表中有一个名为 'createdAt' 的字段
-        },
+        orderBy: [
+          {
+            groupBuyStartDate: 'desc',
+          },
+          {
+            createdAt: 'desc', // 假设您的表中有一个名为 'createdAt' 的字段
+          },
+        ],
         where,
         include: {
           supplier: true, // 包含所有 supplier 字段
