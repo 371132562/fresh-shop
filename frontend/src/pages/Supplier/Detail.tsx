@@ -10,7 +10,6 @@ export const Component = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const [visible, setVisible] = useState(false)
-  const [noti, contextHolder] = notification.useNotification()
 
   const supplier = useSupplierStore(state => state.supplier)
   const getSupplier = useSupplierStore(state => state.getSupplier)
@@ -45,7 +44,7 @@ export const Component = () => {
   const confirm: PopconfirmProps['onConfirm'] = async () => {
     const res = await deleteSupplier({ id: id as string })
     if (res) {
-      noti.success({
+      notification.success({
         message: '成功',
         description: '删除成功'
       })
@@ -55,7 +54,6 @@ export const Component = () => {
 
   return (
     <div className="w-full">
-      {contextHolder}
       <Spin
         spinning={getLoading}
         size="large"

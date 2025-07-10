@@ -15,7 +15,6 @@ interface params {
 const Modify = (props: params) => {
   const { visible, setVisible, id, setCurrentId } = props
   const [form] = Form.useForm()
-  const [noti, contextHolder] = notification.useNotification()
 
   const createLoading = useCustomerStore(state => state.createLoading)
   const createCustomer = useCustomerStore(state => state.createCustomer)
@@ -46,7 +45,7 @@ const Modify = (props: params) => {
       .then(async val => {
         const res = id ? await updateCustomer({ ...val, id }) : await createCustomer(val)
         if (res) {
-          noti.success({
+          notification.success({
             message: '成功',
             description: id ? '编辑成功' : '添加成功'
           })
@@ -54,7 +53,7 @@ const Modify = (props: params) => {
         }
       })
       .catch(err => {
-        noti.warning({
+        notification.warning({
           message: '警告',
           description: '表单未填写完整'
         })
@@ -71,7 +70,7 @@ const Modify = (props: params) => {
   const handleDelete = async () => {
     const res = await deleteCustomer({ id: id as string })
     if (res) {
-      noti.success({
+      notification.success({
         message: '成功',
         description: '删除成功'
       })
@@ -81,7 +80,6 @@ const Modify = (props: params) => {
 
   return (
     <>
-      {contextHolder}
       <Modal
         open={visible}
         onOk={handleOk}

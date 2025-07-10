@@ -31,7 +31,6 @@ interface params {
 const Modify = (props: params) => {
   const { visible, setVisible, id, againGroupBuy } = props
   const [form] = Form.useForm()
-  const [noti, contextHolder] = notification.useNotification()
 
   const [fileList, setFileList] = useState<UploadFile[] | Array<{ filename: string }>>([])
 
@@ -125,7 +124,7 @@ const Modify = (props: params) => {
         }
         const res = id ? await updateGroupBuy({ ...params, id }) : await createGroupBuy(params)
         if (res) {
-          noti.success({
+          notification.success({
             message: '成功',
             description: id ? '编辑成功' : '添加成功'
           })
@@ -133,7 +132,7 @@ const Modify = (props: params) => {
         }
       })
       .catch(err => {
-        noti.warning({
+        notification.warning({
           message: '警告',
           description: '表单未填写完整'
         })
@@ -151,7 +150,6 @@ const Modify = (props: params) => {
 
   return (
     <>
-      {contextHolder}
       <Modal
         open={visible}
         onOk={handleOk}

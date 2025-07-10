@@ -18,7 +18,6 @@ export const Component = () => {
   const [againVisible, setAgainVisible] = useState(false)
   const [againGroupBuy, setAgainGroupBuy] = useState<GroupBuy | null>(null)
   const [orderModifyVisible, setOrderModifyVisible] = useState(false)
-  const [noti, contextHolder] = notification.useNotification()
 
   const groupBuy = useGroupBuyStore(state => state.groupBuy)
   const getGroupBuy = useGroupBuyStore(state => state.getGroupBuy)
@@ -62,7 +61,7 @@ export const Component = () => {
   const confirm: PopconfirmProps['onConfirm'] = async () => {
     const res = await deleteGroupBuy({ id: id as string })
     if (res) {
-      noti.success({
+      notification.success({
         message: '成功',
         description: '删除成功'
       })
@@ -82,7 +81,7 @@ export const Component = () => {
         status: nextStatus
       })
       if (res) {
-        noti.success({
+        notification.success({
           message: '成功',
           description: `订单状态已更新为：${OrderStatusMap[nextStatus].label}`
         })
@@ -90,13 +89,13 @@ export const Component = () => {
           getGroupBuy({ id })
         }
       } else {
-        noti.error({
+        notification.error({
           message: '失败',
           description: '更新订单状态失败'
         })
       }
     } else {
-      noti.info({
+      notification.info({
         message: '提示',
         description: '订单已是最终状态，无法继续修改'
       })
@@ -105,7 +104,6 @@ export const Component = () => {
 
   return (
     <div className="w-full">
-      {contextHolder}
       <Spin
         spinning={getLoading}
         size="large"
