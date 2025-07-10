@@ -110,6 +110,9 @@ export class GroupBuyService {
         supplier: true, // 包含所有 supplier 字段
         product: true, // 包含所有 product 字段
         order: {
+          where: {
+            delete: 0,
+          },
           include: {
             customer: {
               select: {
