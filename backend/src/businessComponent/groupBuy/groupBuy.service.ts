@@ -83,7 +83,12 @@ export class GroupBuyService {
           product: true, // 包含所有 product 字段
           _count: {
             select: {
-              order: true, // 查询关联的订单数量
+              order: {
+                // 查询关联的订单数量
+                where: {
+                  delete: 0,
+                },
+              },
             },
           },
         },
