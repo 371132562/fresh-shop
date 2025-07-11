@@ -15,6 +15,25 @@ export class SupplierService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: Prisma.SupplierCreateInput): Promise<Supplier> {
+    const { name, phone, wechat } = data;
+    const existingSupplier = await this.prisma.supplier.findFirst({
+      where: {
+        delete: 0,
+        OR: [{ name: name }, { phone: phone }, { wechat: wechat }],
+      },
+    });
+
+    if (existingSupplier) {
+      if (existingSupplier.name === name) {
+        throw new BusinessException(ErrorCode.DATA_EXIST, '供货商名称已存在');
+      }
+      if (existingSupplier.phone === phone) {
+        throw new BusinessException(ErrorCode.DATA_EXIST, '供货商电话已存在');
+      }
+      if (existingSupplier.wechat === wechat) {
+        throw new BusinessException(ErrorCode.DATA_EXIST, '供货商微信已存在');
+      }
+    }
     return this.prisma.supplier.create({ data });
   }
 
