@@ -82,8 +82,13 @@ const Modify = (props: params) => {
 
   const groupBuyChange = (val: string) => {
     const groupBuy = allGroupBuy.find(item => item.id === val)
-    setUnits((groupBuy?.units as GroupBuyUnit[]) || [])
-    form.setFieldsValue({ unitId: undefined })
+    const newUnits = (groupBuy?.units as GroupBuyUnit[]) || []
+    setUnits(newUnits)
+    if (newUnits.length === 1) {
+      form.setFieldsValue({ unitId: newUnits[0].id })
+    } else {
+      form.setFieldsValue({ unitId: undefined })
+    }
   }
 
   return (
