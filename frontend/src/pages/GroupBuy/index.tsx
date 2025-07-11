@@ -1,11 +1,12 @@
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
-import { Button, DatePicker, FloatButton, Form, Input, List, Modal, Select } from 'antd'
+import { Button, DatePicker, FloatButton, Form, Input, List, Modal, Select, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { GroupBuyListItem } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
+import { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
 import useProductStore from '@/stores/productStore.ts'
 import useSupplierStore from '@/stores/supplierStore.ts'
 import { formatDate } from '@/utils'
@@ -151,8 +152,23 @@ export const Component = () => {
                         商品：<span className="text-blue-500">{item.product.name}</span>
                       </div>
                     )}
-                    <div className="mt-1 font-medium text-gray-800">
-                      订单数量：<span className="text-blue-500">{item._count.order}</span>
+                    <div className="mt-1 flex items-center font-medium text-gray-800">
+                      <Tag className="ml-2">订单数量：{item.orderStats.orderCount}</Tag>
+                      {Object.entries(item.orderStats)
+                        .filter(([key]) => key !== 'orderCount')
+                        .map(([status, count]) => {
+                          if (count === 0) return null // 如果数量为0，则不显示
+                          const statusInfo = OrderStatusMap[status as OrderStatus]
+                          return (
+                            <Tag
+                              color={statusInfo.color}
+                              key={status}
+                              className="ml-2"
+                            >
+                              {statusInfo.label}: {count}
+                            </Tag>
+                          )
+                        })}
                     </div>
                     {item.description && <div className="text-gray-600">{item.description}</div>}
                   </>

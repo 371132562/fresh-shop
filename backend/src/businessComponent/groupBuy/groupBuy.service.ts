@@ -4,7 +4,11 @@ import { BusinessException } from '../../exceptions/businessException';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { GroupBuy, Prisma } from '@prisma/client';
 
-import { GroupBuyPageParams, ListByPage } from '../../../types/dto';
+import {
+  GroupBuyPageParams,
+  ListByPage,
+  GroupBuyOrderStats,
+} from '../../../types/dto';
 
 @Injectable()
 export class GroupBuyService {
@@ -24,7 +28,9 @@ export class GroupBuyService {
     });
   }
 
-  async list(data: GroupBuyPageParams): Promise<ListByPage<GroupBuy[]>> {
+  async list(
+    data: GroupBuyPageParams,
+  ): Promise<ListByPage<(GroupBuy & { orderStats: GroupBuyOrderStats })[]>> {
     const {
       page,
       pageSize,
@@ -81,23 +87,61 @@ export class GroupBuyService {
         include: {
           supplier: true, // 包含所有 supplier 字段
           product: true, // 包含所有 product 字段
-          _count: {
-            select: {
-              order: {
-                // 查询关联的订单数量
-                where: {
-                  delete: 0,
-                },
-              },
-            },
-          },
         },
       }),
       this.prisma.groupBuy.count({ where }), // 获取总记录数
     ]);
 
+    const groupBuyIds = groupBuys.map((item) => item.id);
+
+    const orderStats = await this.prisma.order.groupBy({
+      by: ['groupBuyId', 'status'],
+      where: {
+        groupBuyId: {
+          in: groupBuyIds,
+        },
+        delete: 0,
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    const statsMap = new Map<string, GroupBuyOrderStats>();
+    orderStats.forEach((stat) => {
+      const { groupBuyId, status, _count } = stat;
+      if (!statsMap.has(groupBuyId)) {
+        statsMap.set(groupBuyId, {
+          orderCount: 0,
+          NOTPAID: 0,
+          PAID: 0,
+          COMPLETED: 0,
+          REFUNDED: 0,
+        });
+      }
+      const currentStats = statsMap.get(groupBuyId);
+      if (currentStats) {
+        currentStats[status] = _count.id;
+        currentStats.orderCount += _count.id;
+      }
+    });
+
+    const groupBuysWithStats = groupBuys.map((gb) => {
+      const stats = statsMap.get(gb.id) || {
+        orderCount: 0,
+        NOTPAID: 0,
+        PAID: 0,
+        COMPLETED: 0,
+        REFUNDED: 0,
+      };
+      return {
+        ...gb,
+        orderStats: stats,
+      };
+    });
+
     return {
-      data: groupBuys,
+      data: groupBuysWithStats,
       page: page,
       pageSize: pageSize,
       totalCount: totalCount,

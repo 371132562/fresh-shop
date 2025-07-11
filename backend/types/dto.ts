@@ -88,12 +88,18 @@ export type GroupBuyPageParams = CommonPageParams & {
   productIds: Product['id'][];
 };
 
+export type GroupBuyOrderStats = {
+  orderCount: number;
+  NOTPAID: number;
+  PAID: number;
+  COMPLETED: number;
+  REFUNDED: number;
+};
+
 export type GroupBuyListItem = GroupBuy & {
   supplier: Supplier;
   product: Product;
-  _count: {
-    order: number;
-  };
+  orderStats: GroupBuyOrderStats;
 };
 
 export type GroupBuyDetail = GroupBuy & {
