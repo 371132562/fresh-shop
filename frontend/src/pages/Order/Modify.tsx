@@ -80,6 +80,12 @@ const Modify = (props: params) => {
     return (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
   }
 
+  const groupBuyFilterOption = (input: string, option: any) => {
+    return String(option?.label ?? '')
+      .toLowerCase()
+      .includes(input.toLowerCase())
+  }
+
   const groupBuyChange = (val: string) => {
     const groupBuy = allGroupBuy.find(item => item.id === val)
     const newUnits = (groupBuy?.units as GroupBuyUnit[]) || []
@@ -144,7 +150,7 @@ const Modify = (props: params) => {
               showSearch
               allowClear
               placeholder="请选择团购单"
-              filterOption={filterOption}
+              filterOption={groupBuyFilterOption}
               onChange={groupBuyChange}
               disabled={!!groupBuyId}
             >
@@ -153,6 +159,7 @@ const Modify = (props: params) => {
                   <Select.Option
                     key={item.id}
                     value={item.id}
+                    label={item.name}
                   >
                     <div>
                       {item.name}
@@ -172,10 +179,8 @@ const Modify = (props: params) => {
           >
             <Select
               loading={getAllGroupBuyLoading}
-              showSearch
               allowClear
               placeholder="请选择团购单后选择一个规格"
-              filterOption={filterOption}
             >
               {units.map(item => {
                 return (

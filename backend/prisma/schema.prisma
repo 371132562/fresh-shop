@@ -24,8 +24,8 @@ model Supplier {
   createdAt   DateTime   @default(now()) // 创建时间
   updatedAt   DateTime   @updatedAt // 最后更新时间
 
-  @@index([id])
-  @@index([name])
+  @@index([id, delete])
+  @@index([name, delete])
 }
 
 // 商品类型
@@ -38,7 +38,7 @@ model ProductType {
   createdAt   DateTime  @default(now()) // 创建时间
   updatedAt   DateTime  @updatedAt // 最后更新时间
 
-  @@index([id])
+  @@index([id, delete])
 }
 
 // 商品
@@ -53,8 +53,8 @@ model Product {
   createdAt     DateTime    @default(now()) // 创建时间
   updatedAt     DateTime    @updatedAt // 最后更新时间
 
-  @@index([id])
-  @@index([name])
+  @@index([id, delete])
+  @@index([name, delete])
 }
 
 // 客户
@@ -72,8 +72,8 @@ model Customer {
   createdAt         DateTime        @default(now()) // 创建时间
   updatedAt         DateTime        @updatedAt // 最后更新时间
 
-  @@index([id])
-  @@index([name])
+  @@index([id, delete])
+  @@index([name, delete])
 }
 
 // 客户地址
@@ -103,8 +103,8 @@ model GroupBuy {
   createdAt         DateTime @default(now()) // 创建时间
   updatedAt         DateTime @updatedAt // 最后更新时间
 
-  @@index([id])
-  @@index([name])
+  @@index([id, delete])
+  @@index([name, delete])
 }
 
 enum OrderStatus {
@@ -129,9 +129,9 @@ model Order {
   createdAt   DateTime    @default(now()) // 创建时间
   updatedAt   DateTime    @updatedAt // 最后更新时间
 
-  @@index([id])
-  @@index([customerId])
-  @@index([groupBuyId])
+  @@index([id, delete])
+  @@index([customerId, delete])
+  @@index([groupBuyId, delete])
 }
 
 model GlobalSetting {

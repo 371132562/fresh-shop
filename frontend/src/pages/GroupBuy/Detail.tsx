@@ -42,6 +42,35 @@ export const Component = () => {
       : []
   }, [groupBuy])
 
+  const unitStatistics = useMemo(() => {
+    // 如果没有订单或规格信息，则返回空数组
+    if (
+      !groupBuy?.order?.length ||
+      !groupBuy.units ||
+      !Array.isArray(groupBuy.units) ||
+      !groupBuy.units.length
+    ) {
+      return []
+    }
+
+    const stats: Record<string, { name: string; quantity: number }> = {}
+
+    // 使用团购中所有可用规格初始化统计对象
+    ;(groupBuy.units as GroupBuyUnit[]).forEach(unit => {
+      stats[unit.id] = { name: unit.unit, quantity: 0 }
+    })
+
+    // 汇总每个订单的数量
+    ;(groupBuy.order as Order[]).forEach(order => {
+      if (order.unitId && stats[order.unitId]) {
+        stats[order.unitId].quantity += order.quantity
+      }
+    })
+
+    // 过滤掉未被订购的规格
+    return Object.values(stats).filter(item => item.quantity > 0)
+  }, [groupBuy])
+
   useEffect(() => {
     if (id) {
       getGroupBuy({ id })
@@ -244,7 +273,7 @@ export const Component = () => {
 
         {/* 图片展示区卡片 */}
         {images.length > 0 && (
-          <div className="rounded-lg bg-white p-4 shadow-sm">
+          <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
             {/* 保持 p-4 */}
             <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
               相关图片
@@ -280,6 +309,22 @@ export const Component = () => {
           <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
             订单信息 共 {groupBuy?.order?.length || 0} 条
           </h3>
+          {unitStatistics.length > 0 && (
+            <div className="mb-4 rounded-md bg-gray-50 p-4">
+              <h4 className="mb-3 text-base font-semibold text-gray-600">各规格售卖统计</h4>
+              <ul className="space-y-2">
+                {unitStatistics.map(stat => (
+                  <li
+                    key={stat.name}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <span className="text-gray-700">{stat.name}</span>
+                    <span className="font-bold text-blue-600">{stat.quantity} 份</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <List
             itemLayout="horizontal"
             dataSource={groupBuy?.order}
