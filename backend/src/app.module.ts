@@ -5,7 +5,6 @@ import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UploadModule } from './upload/upload.module';
-import { UPLOAD_DIR } from './utils/file-upload.utils'; // 导入上传目录常量
 
 //业务模块
 import { SupplierModule } from './businessComponent/supplier/supplier.module';
@@ -17,7 +16,6 @@ import { GroupBuyModule } from './businessComponent/groupBuy/groupBuy.module';
 import { OrderModule } from './businessComponent/order/order.module';
 import { AnalysisModule } from './businessComponent/analysis/analysis.module';
 import { GlobalSettingModule } from './businessComponent/globalSetting/globalSetting.module';
-import { MigrationModule } from './businessComponent/migration/migration.module';
 
 @Module({
   imports: [
@@ -51,7 +49,6 @@ import { MigrationModule } from './businessComponent/migration/migration.module'
     OrderModule,
     AnalysisModule,
     GlobalSettingModule,
-    MigrationModule,
   ],
   controllers: [],
   providers: [],

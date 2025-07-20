@@ -52,8 +52,5 @@ export const globalSettingUpsertApi = '/globalSetting/upsert'
 export const globalSettingDetailApi = '/globalSetting/detail'
 export const globalSettingListApi = '/globalSetting/list'
 
-// Migration
-export const deduplicateImagesApi = '/migration/deduplicate-images'
-
 export const analysisCountApi = '/analysis/count'
 export const analysisRankApi = '/analysis/rank'
