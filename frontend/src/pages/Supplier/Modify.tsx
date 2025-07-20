@@ -56,7 +56,7 @@ const Modify = (props: params) => {
           images: fileList.map(item => {
             if ('response' in item) {
               // 检查 item 是否包含 'response' 属性
-              return (item as UploadFile).response.data.url
+              return (item as UploadFile).response.data.filename
             } else {
               return (item as { filename: string }).filename
             }
