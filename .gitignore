@@ -23,7 +23,7 @@ stats.html
 *.db
 
 # 用户上传的文件
-uploads
+backend/db
 
 # Cypress 相关的忽略
 /cypress/videos/
