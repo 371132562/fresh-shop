@@ -24,8 +24,8 @@ import { GlobalSettingModule } from './businessComponent/globalSetting/globalSet
     // 配置 @nestjs/serve-static 模块来提供静态文件服务
     ServeStaticModule.forRoot(
       {
-        rootPath: join(process.cwd(), UPLOAD_DIR), // 静态文件在服务器上的物理路径
-        serveRoot: `/${UPLOAD_DIR.replace('./', '')}`, // URL 前缀，例如 /uploads/images
+        rootPath: join(process.env.UPLOAD_DIR as string), // 静态文件在服务器上的物理路径
+        serveRoot: `/images`, // URL 前缀，例如 /uploads/images
         // serveRoot: '/', // 可以省略，默认就是 '/'
         exclude: ['/'], // 可选：排除不需要提供静态服务的路由
       },
