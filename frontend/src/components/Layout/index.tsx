@@ -17,6 +17,7 @@ import { useOutlet } from 'react-router'
 import { NavLink } from 'react-router'
 
 import ErrorPage from '@/components/Error'
+import MigrationButton from '@/components/MigrationButton'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 
 import style from './index.module.less'
@@ -179,6 +180,12 @@ export const Component: FC = () => {
                 unCheckedChildren="否"
                 onChange={onSensitiveChange}
               />
+            </Form.Item>
+            <Form.Item
+              label={<span className="font-medium text-gray-700">历史图片去重</span>}
+              className="border-b border-gray-200 py-2 last:border-b-0"
+            >
+              <MigrationButton />
             </Form.Item>
           </Form>
         </div>

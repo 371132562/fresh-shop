@@ -17,6 +17,7 @@ import { GroupBuyModule } from './businessComponent/groupBuy/groupBuy.module';
 import { OrderModule } from './businessComponent/order/order.module';
 import { AnalysisModule } from './businessComponent/analysis/analysis.module';
 import { GlobalSettingModule } from './businessComponent/globalSetting/globalSetting.module';
+import { MigrationModule } from './businessComponent/migration/migration.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { GlobalSettingModule } from './businessComponent/globalSetting/globalSet
     OrderModule,
     AnalysisModule,
     GlobalSettingModule,
+    MigrationModule,
   ],
   controllers: [],
   providers: [],

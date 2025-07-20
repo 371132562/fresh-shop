@@ -27,10 +27,8 @@ export class UploadController {
     const result = await this.uploadService.processUploadedFile(file);
 
     return {
-      originalName: Buffer.from(file.originalname, 'latin1').toString('utf-8'),
-      filename: file.filename,
-      path: file.path, // 文件在服务器上的物理路径
-      url: result.url, // 获取可访问的 URL
+      originalName: file.originalname,
+      filename: result.filename,
     };
   }
 

@@ -143,3 +143,17 @@ model GlobalSetting {
 
   @@index([key])
 }
+
+// 上传的图片
+model Image {
+  id           String   @id @default(uuid())
+  filename     String   @unique // 生成的文件名
+  originalName String // 原始文件名
+  hash         String // 文件哈希值
+  delete       Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([hash, delete])
+  @@index([id, delete])
+}
