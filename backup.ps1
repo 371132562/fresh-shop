@@ -50,7 +50,7 @@ try {
 
 # 获取当前日期和时间，用于备份文件命名
 $dateStamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
-$backupFileName = "urbanization_backup_$dateStamp.tar"
+$backupFileName = "fresh-shop_backup_$dateStamp.tar"
 
 # 创建备份目录（如果不存在）
 $backupDir = ".\backups"
@@ -77,25 +77,25 @@ try {
 # 检查卷是否存在
 try {
     Write-Host "检查数据卷是否存在..." -ForegroundColor Gray
-    $volumeExists = docker volume ls --format "{{.Name}}" | Select-String -Pattern "urbanization_db"
+    $volumeExists = docker volume ls --format "{{.Name}}" | Select-String -Pattern "fresh-shop_db"
 
     if (-not $volumeExists) {
-        Handle-Error "未找到数据卷(urbanization_db)，请确保系统已经至少启动过一次。"
+        Handle-Error "未找到数据卷(fresh-shop_db)，请确保系统已经至少启动过一次。"
     } else {
-        Write-Host "找到数据卷: urbanization_db" -ForegroundColor Green
+        Write-Host "找到数据卷: fresh-shop_db" -ForegroundColor Green
     }
 } catch {
     Handle-Error "无法检查数据卷: $_"
 }
 
 # 创建一个临时容器来访问卷数据并备份
-Write-Host "正在备份数据卷urbanization_db..." -ForegroundColor Yellow
+Write-Host "正在备份数据卷fresh-shop_db..." -ForegroundColor Yellow
 Write-Host "备份文件将保存为: $backupDir\$backupFileName" -ForegroundColor Cyan
 
 try {
     # 创建临时容器并将卷挂载到容器中的/data目录，然后将/data目录打包成tar文件
     Write-Host "执行备份命令..." -ForegroundColor Gray
-    docker run --rm -v urbanization_db:/data -v ${PWD}/${backupDir}:/backup alpine tar -cf /backup/$backupFileName -C /data .
+    docker run --rm -v fresh-shop_db:/data -v ${PWD}/${backupDir}:/backup alpine tar -cf /backup/$backupFileName -C /data .
     
     if ($LASTEXITCODE -eq 0) {
         # 检查文件是否实际创建

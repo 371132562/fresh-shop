@@ -73,7 +73,7 @@ try {
 # 获取备份文件列表
 try {
     Write-Host "搜索备份文件..." -ForegroundColor Gray
-    $backupFiles = Get-ChildItem -Path $backupDir -Filter "urbanization_backup_*.tar" -ErrorAction Stop | Sort-Object LastWriteTime -Descending
+    $backupFiles = Get-ChildItem -Path $backupDir -Filter "fresh-shop_backup_*.tar" -ErrorAction Stop | Sort-Object LastWriteTime -Descending
 
     if ($backupFiles.Count -eq 0) {
         Handle-Error "未找到任何备份文件。请先运行备份脚本创建备份。"
@@ -150,11 +150,11 @@ try {
 # 检查卷是否存在，如果存在则删除
 try {
     Write-Host "检查卷是否存在..." -ForegroundColor Gray
-    $volumeExists = docker volume ls --format "{{.Name}}" | Select-String -Pattern "urbanization_db"
+    $volumeExists = docker volume ls --format "{{.Name}}" | Select-String -Pattern "fresh-shop_db"
 
     if ($volumeExists) {
         Write-Host "正在删除现有数据卷..." -ForegroundColor Yellow
-        docker volume rm urbanization_db
+        docker volume rm fresh-shop_db
         if ($LASTEXITCODE -ne 0) {
             Handle-Error "删除数据卷失败，错误码: $LASTEXITCODE"
         }
@@ -166,7 +166,7 @@ try {
 # 创建新的卷
 try {
     Write-Host "正在创建新数据卷..." -ForegroundColor Yellow
-    docker volume create urbanization_db
+    docker volume create fresh-shop_db
     if ($LASTEXITCODE -ne 0) {
         Handle-Error "创建新数据卷失败，错误码: $LASTEXITCODE"
     }
@@ -178,10 +178,10 @@ try {
 Write-Host "正在从备份文件恢复数据..." -ForegroundColor Yellow
 try {
     # 修正路径问题，使用${PWD}/${backupDir}格式
-    $restoreCommand = "docker run --rm -v urbanization_db:/data -v ${PWD}/${backupDir}:/backup alpine sh -c 'tar -xf /backup/$($selectedFile.Name) -C /data'"
+    $restoreCommand = "docker run --rm -v fresh-shop_db:/data -v ${PWD}/${backupDir}:/backup alpine sh -c 'tar -xf /backup/$($selectedFile.Name) -C /data'"
     Write-Host "执行命令: $restoreCommand" -ForegroundColor Gray
     
-    docker run --rm -v urbanization_db:/data -v ${PWD}/${backupDir}:/backup alpine sh -c "tar -xf /backup/$($selectedFile.Name) -C /data"
+    docker run --rm -v fresh-shop_db:/data -v ${PWD}/${backupDir}:/backup alpine sh -c "tar -xf /backup/$($selectedFile.Name) -C /data"
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "数据恢复成功！" -ForegroundColor Green
@@ -207,12 +207,12 @@ try {
 try {
     Write-Host "等待容器启动..." -ForegroundColor Gray
     Start-Sleep -Seconds 5
-    $containerStatus = docker ps --format "{{.Names}} - {{.Status}}" | Select-String -Pattern "urbanization"
+    $containerStatus = docker ps --format "{{.Names}} - {{.Status}}" | Select-String -Pattern "fresh-shop"
 
     if ($containerStatus) {
         Write-Host "`n已成功启动！" -ForegroundColor Green
         Write-Host "容器状态: $containerStatus" -ForegroundColor Green
-        Write-Host "系统访问地址: http://localhost:3333" -ForegroundColor Cyan
+        Write-Host "系统访问地址: http://localhost:3000" -ForegroundColor Cyan
     } else {
         Write-Host "`n警告: 容器可能未正常启动，请检查日志:" -ForegroundColor Red
         docker compose logs

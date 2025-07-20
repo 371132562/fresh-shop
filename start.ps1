@@ -188,7 +188,7 @@ try {
 # 删除相关的旧镜像
 try {
     Write-Host "正在查找旧镜像..." -ForegroundColor Yellow
-    $images = docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | Select-String -Pattern "linstar666/urbanization"
+    $images = docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | Select-String -Pattern "linstar666/fresh-shop"
 
     if ($images) {
         Write-Host "发现以下旧镜像，将被删除:" -ForegroundColor Yellow
@@ -199,7 +199,7 @@ try {
         # 使用prune命令，删除未使用的镜像
         Write-Host "正在删除旧镜像..." -ForegroundColor Yellow
         try {
-            docker image rm -f $(docker images --format "{{.ID}}" --filter=reference="linstar666/urbanization*")
+            docker image rm -f $(docker images --format "{{.ID}}" --filter=reference="linstar666/fresh-shop*")
             if ($LASTEXITCODE -ne 0) {
                 Write-Host "删除旧镜像时遇到问题，但将继续启动" -ForegroundColor Yellow
             }
@@ -230,12 +230,12 @@ try {
 try {
     Write-Host "等待容器启动..." -ForegroundColor Gray
     Start-Sleep -Seconds 5
-    $containerStatus = docker ps --format "{{.Names}} - {{.Status}}" | Select-String -Pattern "urbanization"
+    $containerStatus = docker ps --format "{{.Names}} - {{.Status}}" | Select-String -Pattern "fresh-shop"
 
     if ($containerStatus) {
         Write-Host "`n已成功启动！" -ForegroundColor Green
         Write-Host "容器状态: $containerStatus" -ForegroundColor Green
-        Write-Host "系统访问地址: http://localhost:3333" -ForegroundColor Cyan
+        Write-Host "系统访问地址: http://localhost:3000" -ForegroundColor Cyan
     } else {
         Write-Host "`n警告: 容器可能未正常启动，请检查日志:" -ForegroundColor Red
         docker compose logs
