@@ -200,41 +200,6 @@ export class GroupBuyService {
     });
   }
 
-  async deleteImage(id: string, filename: string): Promise<void> {
-    // 使用 Prisma 事务确保原子性操作
-    await this.prisma
-      .$transaction(async (tx) => {
-        // 获取团购单详情
-        const detail = await tx.groupBuy.findUnique({ where: { id } });
-
-        // 检查团购单是否存在
-        if (!detail) {
-          throw new BusinessException(
-            ErrorCode.RESOURCE_NOT_FOUND,
-            `团购单 ${id} 不存在。`,
-          );
-        }
-
-        // 3. 从图片列表中移除指定文件名
-        const updatedImages = (detail.images as Prisma.JsonArray).filter(
-          (item: string) => item !== filename,
-        );
-
-        // 4. 更新团购单的图片列表
-        await tx.groupBuy.update({
-          where: { id },
-          data: {
-            images: updatedImages,
-          },
-        });
-      })
-      .catch((error) => {
-        // 捕获事务中的任何错误，并重新抛出，以便上层控制器可以处理
-        console.error('删除图片事务失败:', error);
-        throw error; // 将错误重新抛出
-      });
-  }
-
   async listAll() {
     return this.prisma.groupBuy.findMany({
       where: {

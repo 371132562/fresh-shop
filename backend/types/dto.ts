@@ -22,15 +22,9 @@ export {
   GlobalSetting,
 };
 
-// 为 GlobalSetting 的 value 字段定义类型
-export type GlobalSettingValue = {
-  sensitive: boolean;
-};
-
-// 扩展 GlobalSetting 类型，明确 value 的类型
-export type GlobalSettingWithTypedValue = Omit<GlobalSetting, 'value'> & {
-  value: GlobalSettingValue;
-};
+// =================================
+// 通用类型
+// =================================
 
 export type CommonPageParams = {
   page: number;
@@ -45,6 +39,35 @@ export type ListByPage<T> = {
   totalPages: number;
 };
 
+export type DeleteImageDto = {
+  type: 'supplier' | 'groupBuy';
+  id: string;
+  filename: string;
+};
+
+// =================================
+// 全局设置 (GlobalSetting)
+// =================================
+
+// 为 GlobalSetting 的 value 字段定义类型
+export type GlobalSettingValue = {
+  sensitive: boolean;
+};
+
+// 扩展 GlobalSetting 类型，明确 value 的类型
+export type GlobalSettingWithTypedValue = Omit<GlobalSetting, 'value'> & {
+  value: GlobalSettingValue;
+};
+
+export type GlobalSettingUpsertParams = {
+  key: string;
+  value: any;
+};
+
+// =================================
+// 供货商 (Supplier)
+// =================================
+
 export type SupplierPageParams = CommonPageParams & {
   name: string;
   phone: string;
@@ -55,18 +78,34 @@ export type SupplierListItem = Supplier & {
   groupBuyCount: number;
 };
 
+// =================================
+// 商品类型 (ProductType)
+// =================================
+
 export type ProductTypePageParams = CommonPageParams & {
   name: string;
 };
+
+// =================================
+// 商品 (Product)
+// =================================
 
 export type ProductPageParams = CommonPageParams & {
   name: string;
   productTypeIds: ProductType['id'][];
 };
 
+// =================================
+// 客户地址 (CustomerAddress)
+// =================================
+
 export type CustomerAddressPageParams = CommonPageParams & {
   name: string;
 };
+
+// =================================
+// 客户 (Customer)
+// =================================
 
 export type CustomerListItem = Customer & {
   orderCount: number;
@@ -79,6 +118,10 @@ export type CustomerPageParams = CommonPageParams & {
   wechat: string;
   customerAddressIds: CustomerAddress['id'][];
 };
+
+// =================================
+// 团购 (GroupBuy)
+// =================================
 
 export type GroupBuyPageParams = CommonPageParams & {
   name: string;
@@ -124,6 +167,10 @@ export type AllGroupBuyItem = {
   units: GroupBuyUnit[];
 };
 
+// =================================
+// 订单 (Order)
+// =================================
+
 export type OrderPageParams = CommonPageParams & {
   customerIds: Customer['id'][];
   groupBuyIds: GroupBuy['id'][];
@@ -138,6 +185,10 @@ export type OrderDetail = Order & {
     units: GroupBuyUnit[];
   };
 };
+
+// =================================
+// 统计分析 (Analysis)
+// =================================
 
 export type AnalysisCountParams = {
   startDate: Date;

@@ -4,13 +4,10 @@ import http from './base.ts'
 
 export type DeleteImageType = 'supplier' | 'groupBuy'
 
-const deleteImageApi = {
-  supplier: '/supplier/deleteImage',
-  groupBuy: '/groupBuy/deleteImage'
-}
+const deleteImageApi = '/upload/delete'
 
 export const deleteImage = (data: {
   id: string
   filename: string
   type: DeleteImageType
-}): Promise<ResponseBody> => http.post(deleteImageApi[data.type], data)
+}): Promise<ResponseBody> => http.post(deleteImageApi, data)

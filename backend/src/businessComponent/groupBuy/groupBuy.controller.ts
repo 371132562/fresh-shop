@@ -33,11 +33,6 @@ export class GroupBuyController {
     return this.groupBuyService.delete(id);
   }
 
-  @Post('deleteImage')
-  async deleteImage(@Body() data: { id: string; filename: string }) {
-    return this.groupBuyService.deleteImage(data.id, data.filename);
-  }
-
   @Post('listAll')
   listAll() {
     return this.groupBuyService.listAll();

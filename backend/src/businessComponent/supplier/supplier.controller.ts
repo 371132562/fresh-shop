@@ -33,11 +33,6 @@ export class SupplierController {
     return this.supplierService.delete(id);
   }
 
-  @Post('deleteImage')
-  async deleteImage(@Body() data: { id: string; filename: string }) {
-    return this.supplierService.deleteImage(data.id, data.filename);
-  }
-
   @Post('listAll')
   listAll() {
     return this.supplierService.listAll();

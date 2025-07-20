@@ -7,6 +7,7 @@ import { unlink, readFile } from 'fs/promises'; // 导入 fs/promises 中的 unl
 import { existsSync } from 'fs'; // 导入 existsSync
 import { createHash } from 'crypto';
 import { PrismaService } from 'prisma/prisma.service';
+import { DeleteImageDto } from 'types/dto';
 
 @Injectable()
 export class UploadService {
@@ -63,39 +64,81 @@ export class UploadService {
     };
   }
 
-  /**
-   * 根据文件名（UUID）删除服务器上的图片文件
-   * @param filename 要删除的文件名（即UUID），包含扩展名
-   * @returns 删除操作的结果
-   */
-  async deleteFile(filename: string) {
-    const filePath = getImagePath(filename); // 获取文件的完整物理路径
+  async deleteFile(
+    deleteImageDto: DeleteImageDto,
+  ): Promise<{ message: string }> {
+    const { type, id, filename } = deleteImageDto;
 
-    // 1. 检查文件是否存在
-    if (!existsSync(filePath)) {
-      this.logger.warn(`文件不存在，无法删除: ${filePath}`);
-      throw new NotFoundException(`文件 ${filename} 不存在。`);
+    // 1. 根据类型更新业务实体
+    if (type === 'supplier') {
+      const record = await this.prisma.supplier.findUnique({ where: { id } });
+      if (!record)
+        throw new NotFoundException(`Supplier with id ${id} not found.`);
+      const updatedImages = (record.images as string[]).filter(
+        (img) => img !== filename,
+      );
+      await this.prisma.supplier.update({
+        where: { id },
+        data: { images: updatedImages },
+      });
+    } else if (type === 'groupBuy') {
+      const record = await this.prisma.groupBuy.findUnique({ where: { id } });
+      if (!record)
+        throw new NotFoundException(`GroupBuy with id ${id} not found.`);
+      const updatedImages = (record.images as string[]).filter(
+        (img) => img !== filename,
+      );
+      await this.prisma.groupBuy.update({
+        where: { id },
+        data: { images: updatedImages },
+      });
+    }
+    this.logger.log(`已更新业务实体 ${type} ${id} 的图片引用。`);
+
+    // 2. 检查图片是否仍在别处被引用
+    const suppliers = await this.prisma.supplier.findMany({
+      where: { delete: 0 },
+    });
+    const groupBuys = await this.prisma.groupBuy.findMany({
+      where: { delete: 0 },
+    });
+
+    const isReferenced =
+      suppliers.some((s) => (s.images as string[]).includes(filename)) ||
+      groupBuys.some((g) => (g.images as string[]).includes(filename));
+
+    if (isReferenced) {
+      this.logger.log(`文件 ${filename} 仍在其他地方被引用，跳过删除。`);
+      return { message: '图片引用已移除，但文件仍在其他地方使用中。' };
     }
 
-    // 2. 尝试删除文件
+    // 3. 如果没有引用，则物理删除
+    this.logger.log(`文件 ${filename} 已无引用，准备删除...`);
+    const filePath = getImagePath(filename);
+
+    if (existsSync(filePath)) {
+      try {
+        await unlink(filePath);
+        this.logger.log(`成功删除物理文件: ${filePath}`);
+      } catch (error) {
+        this.logger.error(`删除物理文件 ${filePath} 失败:`, error);
+      }
+    } else {
+      this.logger.warn(`物理文件未找到，跳过删除: ${filePath}`);
+    }
+
+    // 删除数据库记录
     try {
-      await unlink(filePath); // 使用异步删除
-      this.logger.log(`文件已成功删除: ${filePath}`);
-
-      // 在实际项目中，你还需要在这里从数据库中删除对应的文件记录
-      // 例如：await this.imageRepository.delete({ filename: filename });
-
-      return {
-        delete: true,
-      };
+      await this.prisma.image.delete({ where: { filename } });
+      this.logger.log(`成功从数据库中删除图片记录: ${filename}`);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(`删除文件 ${filePath} 失败: ${errorMessage}`);
+      this.logger.error(`从数据库中删除图片记录 ${filename} 失败:`, error);
       throw new BusinessException(
         ErrorCode.BUSINESS_FAILED,
-        `删除文件 ${filename} 失败。`,
+        `删除图片数据库记录 ${filename} 失败。`,
       );
     }
+
+    return { message: '图片已成功删除。' };
   }
 }
