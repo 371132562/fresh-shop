@@ -9,10 +9,14 @@ import {
 } from '../../../types/dto';
 import { BusinessException } from '../../exceptions/businessException';
 import { ErrorCode } from '../../../types/response';
+import { UploadService } from '../../upload/upload.service';
 
 @Injectable()
 export class SupplierService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private uploadService: UploadService,
+  ) {}
 
   async create(data: Prisma.SupplierCreateInput): Promise<Supplier> {
     const { name, phone, wechat } = data;
@@ -117,6 +121,17 @@ export class SupplierService {
   }
 
   async delete(id: string): Promise<Supplier> {
+    const existingSupplier = await this.prisma.supplier.findUnique({
+      where: { id, delete: 0 },
+    });
+
+    if (!existingSupplier) {
+      throw new BusinessException(
+        ErrorCode.RESOURCE_NOT_FOUND,
+        '供货商不存在或已被删除。',
+      );
+    }
+
     const groupBuyCount = await this.prisma.groupBuy.count({
       where: {
         supplierId: id,
@@ -130,10 +145,20 @@ export class SupplierService {
         `该供货商下存在关联的团购单（${groupBuyCount}条），无法删除。`,
       );
     }
-    return this.prisma.supplier.update({
+
+    const deletedSupplier = await this.prisma.supplier.update({
       where: { id },
       data: { delete: 1 },
     });
+
+    // 软删除成功后，清理关联的图片
+    if (existingSupplier.images && Array.isArray(existingSupplier.images)) {
+      for (const filename of existingSupplier.images as string[]) {
+        await this.uploadService.cleanupOrphanedImage(filename);
+      }
+    }
+
+    return deletedSupplier;
   }
 
   async listAll(): Promise<Supplier[]> {

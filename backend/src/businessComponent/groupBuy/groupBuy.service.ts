@@ -9,10 +9,14 @@ import {
   ListByPage,
   GroupBuyOrderStats,
 } from '../../../types/dto';
+import { UploadService } from 'src/upload/upload.service';
 
 @Injectable()
 export class GroupBuyService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private uploadService: UploadService,
+  ) {}
 
   async create(data: Prisma.GroupBuyCreateInput): Promise<GroupBuy> {
     return this.prisma.groupBuy.create({ data });
@@ -177,6 +181,16 @@ export class GroupBuyService {
   }
 
   async delete(id: string) {
+    const existingGroupBuy = await this.prisma.groupBuy.findUnique({
+      where: { id, delete: 0 },
+    });
+    if (!existingGroupBuy) {
+      throw new BusinessException(
+        ErrorCode.RESOURCE_NOT_FOUND,
+        '团购单不存在或已被删除。',
+      );
+    }
+
     const orderCount = await this.prisma.order.count({
       where: {
         groupBuyId: id,
@@ -190,7 +204,8 @@ export class GroupBuyService {
         `该团购单下存在关联的订单（${orderCount}条），无法删除。`,
       );
     }
-    return this.prisma.groupBuy.update({
+
+    const deletedGroupBuy = await this.prisma.groupBuy.update({
       where: {
         id,
       },
@@ -198,6 +213,15 @@ export class GroupBuyService {
         delete: 1,
       },
     });
+
+    // 软删除成功后，清理关联的图片
+    if (existingGroupBuy.images && Array.isArray(existingGroupBuy.images)) {
+      for (const filename of existingGroupBuy.images as string[]) {
+        await this.uploadService.cleanupOrphanedImage(filename);
+      }
+    }
+
+    return deletedGroupBuy;
   }
 
   async listAll() {

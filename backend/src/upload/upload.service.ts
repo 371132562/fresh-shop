@@ -69,7 +69,7 @@ export class UploadService {
   ): Promise<{ message: string }> {
     const { type, id, filename } = deleteImageDto;
 
-    // 1. 根据类型更新业务实体
+    // 根据类型更新业务实体
     if (type === 'supplier') {
       const record = await this.prisma.supplier.findUnique({ where: { id } });
       if (!record)
@@ -93,9 +93,19 @@ export class UploadService {
         data: { images: updatedImages },
       });
     }
-    this.logger.log(`已更新业务实体 ${type} ${id} 的图片引用。`);
+    this.logger.log(`已更新业务实体 ${type} #${id} 的图片引用。`);
 
-    // 2. 检查图片是否仍在别处被引用
+    // 调用通用清理方法
+    return this.cleanupOrphanedImage(filename);
+  }
+
+  /**
+   * 清理无引用的图片文件。
+   * 检查指定的图片文件名是否还在任何业务记录中被引用，如果没有，则执行物理删除。
+   * @param filename 要检查和清理的文件名
+   */
+  async cleanupOrphanedImage(filename: string): Promise<{ message: string }> {
+    // 检查图片是否仍在别处被引用
     const suppliers = await this.prisma.supplier.findMany({
       where: { delete: 0 },
     });
@@ -112,7 +122,7 @@ export class UploadService {
       return { message: '图片引用已移除，但文件仍在其他地方使用中。' };
     }
 
-    // 3. 如果没有引用，则物理删除
+    // 如果没有引用，则物理删除
     this.logger.log(`文件 ${filename} 已无引用，准备删除...`);
     const filePath = getImagePath(filename);
 
