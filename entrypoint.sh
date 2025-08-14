@@ -3,6 +3,7 @@ set -e
 
 # 在启动 NestJS 应用之前运行 Prisma migrate
 echo "Running Prisma migrate..."
+npm config set registry https://registry.npmmirror.com
 npx prisma migrate deploy --schema=./backend/prisma/schema.prisma
 
 # 启动 NestJS 应用
