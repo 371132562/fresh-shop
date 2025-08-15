@@ -37,4 +37,9 @@ export class CustomerController {
   listAll() {
     return this.customerService.listAll();
   }
+
+  @Post('consumptionDetail')
+  consumptionDetail(@Body('id') id: string) {
+    return this.customerService.getConsumptionDetail(id);
+  }
 }

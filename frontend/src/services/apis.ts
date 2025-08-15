@@ -32,6 +32,7 @@ export const customerDeleteApi = '/customer/delete'
 export const customerDetailApi = '/customer/detail'
 export const customerListApi = '/customer/list'
 export const customerListAllApi = '/customer/listAll'
+export const customerConsumptionDetailApi = '/customer/consumptionDetail'
 
 export const groupBuyCreateApi = '/groupBuy/create'
 export const groupBuyUpdateApi = '/groupBuy/update'

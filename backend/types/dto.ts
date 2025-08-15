@@ -109,14 +109,37 @@ export type CustomerAddressPageParams = CommonPageParams & {
 
 export type CustomerListItem = Customer & {
   orderCount: number;
+  orderTotalAmount: number; // 订单总额
   customerAddressName: string;
 };
+
+// 客户排序类型定义
+export type CustomerSortField = 'createdAt' | 'orderCount' | 'orderTotalAmount';
+export type CustomerSortOrder = 'asc' | 'desc';
 
 export type CustomerPageParams = CommonPageParams & {
   name: string;
   phone: string;
   wechat: string;
   customerAddressIds: CustomerAddress['id'][];
+  sortField?: CustomerSortField; // 排序字段
+  sortOrder?: CustomerSortOrder; // 排序方向
+};
+
+// 客户消费详情 DTO
+export type CustomerConsumptionDetailDto = {
+  orderCount: number; // 订单数量
+  totalAmount: number; // 订单总额
+  averagePricePerOrder: number; // 每单平均价格
+  topProducts: {
+    productId: string;
+    productName: string;
+    count: number;
+  }[]; // 购买最多的商品
+  topGroupBuys: {
+    groupBuyName: string;
+    count: number;
+  }[]; // 参与最多的团购
 };
 
 // =================================

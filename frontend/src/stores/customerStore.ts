@@ -1,8 +1,14 @@
-import { Customer } from 'fresh-shop-backend/types/dto.ts'
-import { CustomerListItem, CustomerPageParams, ListByPage } from 'fresh-shop-backend/types/dto.ts'
+import {
+  Customer,
+  CustomerConsumptionDetailDto,
+  CustomerListItem,
+  CustomerPageParams,
+  ListByPage
+} from 'fresh-shop-backend/types/dto.ts'
 import { create } from 'zustand'
 
 import {
+  customerConsumptionDetailApi,
   customerCreateApi,
   customerDeleteApi,
   customerDetailApi,
@@ -43,6 +49,11 @@ type CustomerStore = {
   getAllCustomerLoading: boolean
   getAllCustomer: () => Promise<void>
   allCustomer: Customer[]
+
+  consumptionDetail: CustomerConsumptionDetailDto | null
+  consumptionDetailLoading: boolean
+  getConsumptionDetail: (id: string) => Promise<void>
+  resetConsumptionDetail: () => void
 }
 
 const useCustomerStore = create<CustomerStore>((set, get) => ({
@@ -57,7 +68,9 @@ const useCustomerStore = create<CustomerStore>((set, get) => ({
     wechat: '',
     customerAddressIds: [],
     page: 1,
-    pageSize: 10
+    pageSize: 10,
+    sortField: 'createdAt' as CustomerPageParams['sortField'],
+    sortOrder: 'desc' as CustomerPageParams['sortOrder']
   },
   getCustomerList: async (data = get().pageParams) => {
     try {
@@ -163,7 +176,28 @@ const useCustomerStore = create<CustomerStore>((set, get) => ({
       set({ getAllCustomerLoading: false })
     }
   },
-  allCustomer: []
+  allCustomer: [],
+
+  consumptionDetail: null as CustomerConsumptionDetailDto | null,
+  consumptionDetailLoading: false,
+  getConsumptionDetail: async (id: string) => {
+    set({ consumptionDetailLoading: true })
+    try {
+      const res = await http.post<CustomerConsumptionDetailDto>(customerConsumptionDetailApi, {
+        id
+      })
+      set({ consumptionDetail: res.data, consumptionDetailLoading: false })
+    } catch (error) {
+      console.error(error)
+      set({ consumptionDetailLoading: false })
+    }
+  },
+  resetConsumptionDetail: () => {
+    set({
+      consumptionDetail: null,
+      consumptionDetailLoading: false
+    })
+  }
 }))
 
 export default useCustomerStore
