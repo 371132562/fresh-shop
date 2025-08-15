@@ -240,6 +240,9 @@ export const Component = () => {
               column={1}
               className="bg-white"
             >
+              <Descriptions.Item label="客户名称">
+                {consumptionDetail.customerName}
+              </Descriptions.Item>
               <Descriptions.Item label="订单数量">
                 <span className="text-blue-500">{consumptionDetail.orderCount}</span> 条
               </Descriptions.Item>

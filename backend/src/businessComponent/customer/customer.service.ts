@@ -18,6 +18,14 @@ export class CustomerService {
   async getConsumptionDetail(
     id: string,
   ): Promise<CustomerConsumptionDetailDto> {
+    const customer = await this.prisma.customer.findUnique({
+      where: { id },
+    });
+
+    if (!customer) {
+      throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, '客户不存在');
+    }
+
     const orders = await this.prisma.order.findMany({
       where: {
         customerId: id,
@@ -35,6 +43,7 @@ export class CustomerService {
     const orderCount = orders.length;
     if (orderCount === 0) {
       return {
+        customerName: customer.name,
         orderCount: 0,
         totalAmount: 0,
         averagePricePerOrder: 0,
@@ -90,6 +99,7 @@ export class CustomerService {
       }));
 
     return {
+      customerName: customer.name,
       orderCount,
       totalAmount,
       averagePricePerOrder,

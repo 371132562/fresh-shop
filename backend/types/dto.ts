@@ -128,6 +128,7 @@ export type CustomerPageParams = CommonPageParams & {
 
 // 客户消费详情 DTO
 export type CustomerConsumptionDetailDto = {
+  customerName: string; // 客户名称
   orderCount: number; // 订单数量
   totalAmount: number; // 订单总额
   averagePricePerOrder: number; // 每单平均价格
