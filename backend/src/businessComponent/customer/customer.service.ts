@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Customer, Prisma } from '@prisma/client';
+import { Customer, Prisma, OrderStatus } from '@prisma/client';
 
 import {
   CustomerPageParams,
@@ -30,6 +30,9 @@ export class CustomerService {
       where: {
         customerId: id,
         delete: 0,
+        status: {
+          in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+        },
       },
       include: {
         groupBuy: {
@@ -54,13 +57,27 @@ export class CustomerService {
 
     let totalAmount = 0;
     const productCounts: Record<string, { name: string; count: number }> = {};
-    const groupBuyCounts: Record<string, number> = {};
+    const groupBuyCounts: Record<
+      string,
+      { name: string; unit: string; count: number }
+    > = {};
 
     for (const order of orders) {
       const units = order.groupBuy.units as GroupBuyUnit[];
       const unit = units.find((u) => u.id === order.unitId);
       if (unit) {
         totalAmount += unit.price * order.quantity;
+
+        const groupBuyKey = `${order.groupBuy.name}-${unit.unit}`;
+        if (groupBuyCounts[groupBuyKey]) {
+          groupBuyCounts[groupBuyKey].count++;
+        } else {
+          groupBuyCounts[groupBuyKey] = {
+            name: order.groupBuy.name,
+            unit: unit.unit,
+            count: 1,
+          };
+        }
       }
 
       const productName = order.groupBuy.product.name;
@@ -71,13 +88,6 @@ export class CustomerService {
           name: productName,
           count: 1,
         };
-      }
-
-      const groupBuyName = order.groupBuy.name;
-      if (groupBuyCounts[groupBuyName]) {
-        groupBuyCounts[groupBuyName]++;
-      } else {
-        groupBuyCounts[groupBuyName] = 1;
       }
     }
 
@@ -91,11 +101,12 @@ export class CustomerService {
         count: data.count,
       }));
 
-    const topGroupBuys = Object.entries(groupBuyCounts)
-      .sort(([, a], [, b]) => b - a)
-      .map(([groupBuyName, count]) => ({
-        groupBuyName,
-        count,
+    const topGroupBuys = Object.values(groupBuyCounts)
+      .sort((a, b) => b.count - a.count)
+      .map((data) => ({
+        groupBuyName: data.name,
+        unitName: data.unit,
+        count: data.count,
       }));
 
     return {
@@ -182,86 +193,78 @@ export class CustomerService {
       };
     }
 
-    // 根据排序字段构建orderBy
-    let orderBy: Prisma.CustomerOrderByWithRelationInput = {
-      createdAt: 'desc',
-    };
-    if (sortField === 'createdAt') {
-      orderBy = { createdAt: sortOrder };
-    }
-    // 注意：orderCount 和 orderTotalAmount 需要在查询后进行排序，因为它们是计算字段
-
-    const [customers, totalCount] = await this.prisma.$transaction([
-      this.prisma.customer.findMany({
-        skip: skip,
-        take: pageSize,
-        orderBy: orderBy,
-        where,
-        include: {
-          // 新增：包含 customerAddress 信息
-          customerAddress: {
-            select: {
-              name: true, // 只选择 customerAddress 的 name 字段
+    // 对于计算字段（orderCount、orderTotalAmount），需要先获取所有数据进行排序，再分页
+    if (sortField === 'orderCount' || sortField === 'orderTotalAmount') {
+      // 获取所有符合条件的客户数据（不分页）
+      const [allCustomers, totalCount] = await this.prisma.$transaction([
+        this.prisma.customer.findMany({
+          where,
+          include: {
+            customerAddress: {
+              select: {
+                name: true,
+              },
             },
-          },
-          _count: {
-            select: {
-              orders: {
-                where: {
-                  delete: 0,
+            _count: {
+              select: {
+                orders: {
+                  where: {
+                    delete: 0,
+                    status: {
+                      in: ['PAID', 'COMPLETED'],
+                    },
+                  },
                 },
               },
             },
           },
-        },
-      }),
-      this.prisma.customer.count({ where }), // 获取总记录数
-    ]);
+        }),
+        this.prisma.customer.count({ where }),
+      ]);
 
-    // 使用dto.ts中定义的GroupBuyUnit类型
-
-    // 计算每个客户的订单总额
-    const customersWithTotalAmount = await Promise.all(
-      customers.map(async (customer) => {
-        // 获取该客户所有订单的详细信息来计算总金额
-        const orders = await this.prisma.order.findMany({
-          where: {
-            customerId: customer.id,
-            delete: 0,
-          },
-          include: {
-            groupBuy: {
-              select: {
-                units: true,
+      // 计算每个客户的订单总额
+      const customersWithTotalAmount = await Promise.all(
+        allCustomers.map(async (customer) => {
+          // 获取该客户所有订单的详细信息来计算总金额
+          const orders = await this.prisma.order.findMany({
+            where: {
+              customerId: customer.id,
+              delete: 0,
+              status: {
+                in: ['PAID', 'COMPLETED'],
               },
             },
-          },
-        });
+            include: {
+              groupBuy: {
+                select: {
+                  units: true,
+                },
+              },
+            },
+          });
 
-        // 计算总金额
-        let totalAmount = 0;
-        orders.forEach((order) => {
-          const units = order.groupBuy.units as GroupBuyUnit[];
-          const unit = units.find((u) => u.id === order.unitId);
-          if (unit) {
-            totalAmount += unit.price * order.quantity;
-          }
-        });
+          // 计算总金额
+          let totalAmount = 0;
+          orders.forEach((order) => {
+            const units = order.groupBuy.units as GroupBuyUnit[];
+            const unit = units.find((u) => u.id === order.unitId);
+            if (unit) {
+              totalAmount += unit.price * order.quantity;
+            }
+          });
 
-        return {
-          ...customer,
-          customerAddressName: customer.customerAddress?.name,
-          customerAddress: undefined,
-          orderCount: customer._count.orders,
-          orderTotalAmount: totalAmount,
-        };
-      }),
-    );
+          return {
+            ...customer,
+            customerAddressName: customer.customerAddress?.name,
+            customerAddress: undefined,
+            orderCount: customer._count.orders,
+            orderTotalAmount: totalAmount,
+          };
+        }),
+      );
 
-    // 如果是按计算字段排序，需要在这里进行排序
-    let sortedCustomers = customersWithTotalAmount;
-    if (sortField === 'orderCount' || sortField === 'orderTotalAmount') {
-      sortedCustomers = customersWithTotalAmount.sort((a, b) => {
+      // 全局排序
+      const sortedCustomers = customersWithTotalAmount.sort((a, b) => {
         const aValue = a[sortField];
         const bValue = b[sortField];
         if (sortOrder === 'asc') {
@@ -270,15 +273,102 @@ export class CustomerService {
           return bValue - aValue;
         }
       });
-    }
 
-    return {
-      data: sortedCustomers,
-      page: page,
-      pageSize: pageSize,
-      totalCount: totalCount,
-      totalPages: Math.ceil(totalCount / pageSize),
-    };
+      // 分页处理
+      const paginatedCustomers = sortedCustomers.slice(skip, skip + pageSize);
+
+      return {
+        data: paginatedCustomers,
+        page: page,
+        pageSize: pageSize,
+        totalCount: totalCount,
+        totalPages: Math.ceil(totalCount / pageSize),
+      };
+    } else {
+      // 对于非计算字段（如createdAt），可以直接在数据库层面排序和分页
+      let orderBy: Prisma.CustomerOrderByWithRelationInput = {
+        createdAt: 'desc',
+      };
+      if (sortField === 'createdAt') {
+        orderBy = { createdAt: sortOrder };
+      }
+
+      const [customers, totalCount] = await this.prisma.$transaction([
+        this.prisma.customer.findMany({
+          skip: skip,
+          take: pageSize,
+          orderBy: orderBy,
+          where,
+          include: {
+            customerAddress: {
+              select: {
+                name: true,
+              },
+            },
+            _count: {
+              select: {
+                orders: {
+                  where: {
+                    delete: 0,
+                    status: {
+                      in: ['PAID', 'COMPLETED'],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }),
+        this.prisma.customer.count({ where }),
+      ]);
+
+      // 计算每个客户的订单总额（仅对当前页数据）
+      const customersWithTotalAmount = await Promise.all(
+        customers.map(async (customer) => {
+          const orders = await this.prisma.order.findMany({
+            where: {
+              customerId: customer.id,
+              delete: 0,
+              status: {
+                in: ['PAID', 'COMPLETED'],
+              },
+            },
+            include: {
+              groupBuy: {
+                select: {
+                  units: true,
+                },
+              },
+            },
+          });
+
+          let totalAmount = 0;
+          orders.forEach((order) => {
+            const units = order.groupBuy.units as GroupBuyUnit[];
+            const unit = units.find((u) => u.id === order.unitId);
+            if (unit) {
+              totalAmount += unit.price * order.quantity;
+            }
+          });
+
+          return {
+            ...customer,
+            customerAddressName: customer.customerAddress?.name,
+            customerAddress: undefined,
+            orderCount: customer._count.orders,
+            orderTotalAmount: totalAmount,
+          };
+        }),
+      );
+
+      return {
+        data: customersWithTotalAmount,
+        page: page,
+        pageSize: pageSize,
+        totalCount: totalCount,
+        totalPages: Math.ceil(totalCount / pageSize),
+      };
+    }
   }
 
   async detail(id: string): Promise<Customer | null> {

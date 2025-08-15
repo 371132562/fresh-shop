@@ -139,6 +139,7 @@ export type CustomerConsumptionDetailDto = {
   }[]; // 购买最多的商品
   topGroupBuys: {
     groupBuyName: string;
+    unitName: string; // 新增：团购规格名称
     count: number;
   }[]; // 参与最多的团购
 };
@@ -263,15 +264,96 @@ export type GroupBuyRankByTotalProfitItem = {
   groupBuyStartDate: Date;
 };
 
-export type SupplierRankByGroupBuyCountItem = {
+export type SupplierRankByOrderCountItem = {
   id: string;
   name: string;
-  groupBuyCount: number;
+  orderCount: number;
 };
 
-export type AnalysisRankResult = {
+export type SupplierRankByTotalSalesItem = {
+  id: string;
+  name: string;
+  totalSales: number;
+};
+
+export type SupplierRankByTotalProfitItem = {
+  id: string;
+  name: string;
+  totalProfit: number;
+};
+
+export type MergedGroupBuyRankByOrderCountItem = {
+  name: string;
+  orderCount: number;
+};
+
+export type MergedGroupBuyRankByTotalSalesItem = {
+  name: string;
+  totalSales: number;
+};
+
+export type MergedGroupBuyRankByTotalProfitItem = {
+  name: string;
+  totalProfit: number;
+};
+
+export type CustomerRankByOrderCountItem = {
+  id: string;
+  name: string;
+  orderCount: number;
+};
+
+export type CustomerRankByTotalAmountItem = {
+  id: string;
+  name: string;
+  totalAmount: number;
+};
+
+export type CustomerRankByAverageOrderAmountItem = {
+  id: string;
+  name: string;
+  averageOrderAmount: number;
+};
+
+// 分离的排行榜返回类型
+export type GroupBuyRankResult = {
   groupBuyRankByOrderCount: GroupBuyRankByOrderCountItem[];
   groupBuyRankByTotalSales: GroupBuyRankByTotalSalesItem[];
   groupBuyRankByTotalProfit: GroupBuyRankByTotalProfitItem[];
-  supplierRankByGroupBuyCount: SupplierRankByGroupBuyCountItem[];
+};
+
+export type MergedGroupBuyRankResult = {
+  mergedGroupBuyRankByOrderCount: MergedGroupBuyRankByOrderCountItem[];
+  mergedGroupBuyRankByTotalSales: MergedGroupBuyRankByTotalSalesItem[];
+  mergedGroupBuyRankByTotalProfit: MergedGroupBuyRankByTotalProfitItem[];
+};
+
+export type CustomerRankResult = {
+  customerRankByOrderCount: CustomerRankByOrderCountItem[];
+  customerRankByTotalAmount: CustomerRankByTotalAmountItem[];
+  customerRankByAverageOrderAmount: CustomerRankByAverageOrderAmountItem[];
+};
+
+export type SupplierRankResult = {
+  supplierRankByOrderCount: SupplierRankByOrderCountItem[];
+  supplierRankByTotalSales: SupplierRankByTotalSalesItem[];
+  supplierRankByTotalProfit: SupplierRankByTotalProfitItem[];
+};
+
+// 合并团购单客户排行相关类型
+export type MergedGroupBuyCustomerRankItem = {
+  customerId: string;
+  customerName: string;
+  orderCount: number;
+};
+
+export type MergedGroupBuyCustomerRankParams = {
+  groupBuyName: string;
+  startDate: Date;
+  endDate: Date;
+};
+
+export type MergedGroupBuyCustomerRankResult = {
+  groupBuyName: string;
+  customerRank: MergedGroupBuyCustomerRankItem[];
 };

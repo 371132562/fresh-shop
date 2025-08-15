@@ -1,13 +1,16 @@
 import { CalendarOutlined } from '@ant-design/icons'
-import { Button, Col, Row, Tabs } from 'antd'
+import { Button, Col, Row, Select } from 'antd'
 import { CalendarPicker } from 'antd-mobile'
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore.ts'
 
+import { CustomerRankings } from './components/CustomerRankings' // 导入客户排行组件
+import { GroupBuyRankings } from './components/GroupBuyRankings'
+import { MergedGroupBuyRankings } from './components/MergedGroupBuyRankings'
 import { Overview } from './components/Overview'
-import { Rankings } from './components/Rankings'
+import { SupplierRankings } from './components/SupplierRankings'
 
 export const Component = () => {
   const [calendarValue, setCalendarValue] = useState<[Date, Date]>([
@@ -15,10 +18,13 @@ export const Component = () => {
     dayjs().toDate()
   ])
   const [calendarVisible, setCalendarVisible] = useState(false)
-  const [activeTabKey, setActiveTabKey] = useState('overview')
+  const [activeViewKey, setActiveViewKey] = useState('overview')
 
   const getCount = useAnalysisStore(state => state.getCount)
-  const getRank = useAnalysisStore(state => state.getRank)
+  const getGroupBuyRank = useAnalysisStore(state => state.getGroupBuyRank)
+  const getMergedGroupBuyRank = useAnalysisStore(state => state.getMergedGroupBuyRank)
+  const getCustomerRank = useAnalysisStore(state => state.getCustomerRank)
+  const getSupplierRank = useAnalysisStore(state => state.getSupplierRank)
 
   const changeDateRange = (days: number) => {
     setCalendarValue([dayjs().subtract(days, 'day').toDate(), dayjs().toDate()])
@@ -29,11 +35,46 @@ export const Component = () => {
       startDate: calendarValue[0],
       endDate: calendarValue[1]
     })
-    getRank({
+  }, [calendarValue])
+
+  // 根据选中的视图动态调用对应的排行榜接口
+  useEffect(() => {
+    const params = {
       startDate: calendarValue[0],
       endDate: calendarValue[1]
-    })
-  }, [calendarValue, getCount, getRank])
+    }
+
+    switch (activeViewKey) {
+      case 'group-buy-rankings':
+        getGroupBuyRank(params)
+        break
+      case 'merged-group-buy-rankings':
+        getMergedGroupBuyRank(params)
+        break
+      case 'customer-rankings':
+        getCustomerRank(params)
+        break
+      case 'supplier-rankings':
+        getSupplierRank(params)
+        break
+      case 'overview':
+        // 概况页面的数据已在上面的useEffect中处理
+        break
+    }
+  }, [activeViewKey, calendarValue])
+
+  const viewComponents: Record<string, React.ReactNode> = {
+    overview: <Overview />,
+    'group-buy-rankings': <GroupBuyRankings />,
+    'merged-group-buy-rankings': (
+      <MergedGroupBuyRankings
+        startDate={calendarValue[0]}
+        endDate={calendarValue[1]}
+      />
+    ),
+    'customer-rankings': <CustomerRankings />,
+    'supplier-rankings': <SupplierRankings />
+  }
 
   return (
     <>
@@ -60,7 +101,7 @@ export const Component = () => {
         </Col>
         <Col span={24}>
           <Row gutter={[8, 8]}>
-            <Col span={6}>
+            <Col span={4}>
               <Button
                 className="w-full"
                 onClick={() => changeDateRange(7)}
@@ -68,7 +109,15 @@ export const Component = () => {
                 7天
               </Button>
             </Col>
-            <Col span={6}>
+            <Col span={4}>
+              <Button
+                className="w-full"
+                onClick={() => changeDateRange(14)}
+              >
+                14天
+              </Button>
+            </Col>
+            <Col span={4}>
               <Button
                 className="w-full"
                 onClick={() => changeDateRange(30)}
@@ -76,7 +125,7 @@ export const Component = () => {
                 30天
               </Button>
             </Col>
-            <Col span={6}>
+            <Col span={4}>
               <Button
                 className="w-full"
                 onClick={() => changeDateRange(90)}
@@ -84,12 +133,20 @@ export const Component = () => {
                 90天
               </Button>
             </Col>
-            <Col span={6}>
+            <Col span={4}>
               <Button
                 className="w-full"
                 onClick={() => changeDateRange(180)}
               >
                 180天
+              </Button>
+            </Col>
+            <Col span={4}>
+              <Button
+                className="w-full"
+                onClick={() => changeDateRange(360)}
+              >
+                360天
               </Button>
             </Col>
           </Row>
@@ -120,24 +177,34 @@ export const Component = () => {
           />
         </Col>
       </Row>
-      <Tabs
+      <Select
         className="w-full"
-        type="card"
-        activeKey={activeTabKey}
-        onChange={setActiveTabKey}
-        items={[
+        value={activeViewKey}
+        onChange={setActiveViewKey}
+        options={[
           {
-            key: 'overview',
-            label: '概况',
-            children: <Overview />
+            value: 'overview',
+            label: '概况'
           },
           {
-            key: 'rankings',
-            label: '排行',
-            children: <Rankings />
+            value: 'group-buy-rankings',
+            label: '团购单排行'
+          },
+          {
+            value: 'merged-group-buy-rankings',
+            label: '团购单（合并）排行'
+          },
+          {
+            value: 'customer-rankings',
+            label: '客户排行'
+          },
+          {
+            value: 'supplier-rankings',
+            label: '供货商排行'
           }
         ]}
       />
+      <div className="mt-4 w-full">{viewComponents[activeViewKey]}</div>
     </>
   )
 }

@@ -3,23 +3,21 @@ import dayjs from 'dayjs'
 import type {
   GroupBuyRankByOrderCountItem,
   GroupBuyRankByTotalProfitItem,
-  GroupBuyRankByTotalSalesItem,
-  SupplierRankByGroupBuyCountItem
+  GroupBuyRankByTotalSalesItem
 } from 'fresh-shop-backend/types/dto'
 import { useMemo } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore'
 
-export const Rankings = () => {
-  const getRankLoading = useAnalysisStore(state => state.getRankLoading)
-  const rank = useAnalysisStore(state => state.rank)
+export const GroupBuyRankings = () => {
+  const getGroupBuyRankLoading = useAnalysisStore(state => state.getGroupBuyRankLoading)
+  const groupBuyRank = useAnalysisStore(state => state.groupBuyRank)
 
   const {
     groupBuyRankByOrderCount = [],
     groupBuyRankByTotalSales = [],
-    groupBuyRankByTotalProfit = [],
-    supplierRankByGroupBuyCount = []
-  } = useMemo(() => rank, [rank])
+    groupBuyRankByTotalProfit = []
+  } = useMemo(() => groupBuyRank, [groupBuyRank])
 
   // 定义Collapse的items配置
   const collapseItems = [
@@ -28,7 +26,7 @@ export const Rankings = () => {
       label: '团购单订单量排名',
       children: (
         <List
-          loading={getRankLoading}
+          loading={getGroupBuyRankLoading}
           dataSource={groupBuyRankByOrderCount}
           renderItem={(item: GroupBuyRankByOrderCountItem, index) => (
             <List.Item>
@@ -39,7 +37,8 @@ export const Rankings = () => {
                       {index + 1}.{item.name}
                     </div>
                     <div className="text-gray-400">
-                      发起日期：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')}
+                      发起日期：
+                      {dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')}
                     </div>
                   </div>
                 }
@@ -59,7 +58,7 @@ export const Rankings = () => {
       label: '团购单销售额排名',
       children: (
         <List
-          loading={getRankLoading}
+          loading={getGroupBuyRankLoading}
           dataSource={groupBuyRankByTotalSales}
           renderItem={(item: GroupBuyRankByTotalSalesItem, index) => (
             <List.Item>
@@ -70,7 +69,8 @@ export const Rankings = () => {
                       {index + 1}.{item.name}
                     </div>
                     <div className="text-gray-400">
-                      发起日期：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')}
+                      发起日期：
+                      {dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')}
                     </div>
                   </div>
                 }
@@ -90,7 +90,7 @@ export const Rankings = () => {
       label: '团购单利润排名',
       children: (
         <List
-          loading={getRankLoading}
+          loading={getGroupBuyRankLoading}
           dataSource={groupBuyRankByTotalProfit}
           renderItem={(item: GroupBuyRankByTotalProfitItem, index) => (
             <List.Item>
@@ -101,7 +101,8 @@ export const Rankings = () => {
                       {index + 1}.{item.name}
                     </div>
                     <div className="text-gray-400">
-                      发起日期：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')}
+                      发起日期：
+                      {dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')}
                     </div>
                   </div>
                 }
@@ -115,34 +116,13 @@ export const Rankings = () => {
           )}
         />
       )
-    },
-    {
-      key: '4',
-      label: '供货商活跃度排名',
-      children: (
-        <List
-          loading={getRankLoading}
-          dataSource={supplierRankByGroupBuyCount}
-          renderItem={(item: SupplierRankByGroupBuyCountItem, index) => (
-            <List.Item>
-              <List.Item.Meta
-                title={
-                  <span className="text-gray-800">
-                    <span className="font-bold">{index + 1}.</span> {item.name}
-                  </span>
-                }
-                description={
-                  <div>
-                    团购数: <span className="text-blue-500">{item.groupBuyCount}</span>
-                  </div>
-                }
-              />
-            </List.Item>
-          )}
-        />
-      )
     }
   ]
 
-  return <Collapse items={collapseItems} />
+  return (
+    <Collapse
+      items={collapseItems}
+      defaultActiveKey={['1']}
+    />
+  )
 }

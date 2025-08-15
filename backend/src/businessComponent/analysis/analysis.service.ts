@@ -14,7 +14,12 @@ import {
   AnalysisCountParams,
   AnalysisCountResult,
   GroupBuyUnit,
-  AnalysisRankResult,
+  GroupBuyRankResult,
+  MergedGroupBuyRankResult,
+  CustomerRankResult,
+  SupplierRankResult,
+  MergedGroupBuyCustomerRankParams,
+  MergedGroupBuyCustomerRankResult,
 } from '../../../types/dto'; // 导入类型
 
 /**
@@ -179,9 +184,15 @@ export class AnalysisService {
     };
   }
 
-  async rank(params: AnalysisCountParams): Promise<AnalysisRankResult> {
+  /**
+   * 获取团购单排行数据
+   */
+  async getGroupBuyRank(
+    params: AnalysisCountParams,
+  ): Promise<GroupBuyRankResult> {
     const { startDate, endDate } = params;
 
+    // 获取指定时间范围内的团购单及其关联订单
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: {
         groupBuyStartDate: {
@@ -206,94 +217,458 @@ export class AnalysisService {
       },
     });
 
-    // 1. 团购单以其包含的订单量进行团购单排名
-    const groupBuyRankByOrderCount = groupBuysWithOrders
-      .map((gb) => ({
-        id: gb.id,
-        name: gb.name,
-        orderCount: gb.order.length,
-        groupBuyStartDate: gb.groupBuyStartDate,
-      }))
-      .sort((a, b) => b.orderCount - a.orderCount)
-      .slice(0, 10);
-
-    // 2 & 3. 团购单以其包含的所有订单的销售额和利润进行排名
+    // 计算每个团购单的统计数据
     const groupBuysWithStats = groupBuysWithOrders.map((gb) => {
       let totalSales = 0;
       let totalProfit = 0;
       const units = gb.units as Array<GroupBuyUnit>;
 
-      for (const order of gb.order as SelectedOrder[]) {
+      for (const order of gb.order as Array<{
+        quantity: number;
+        unitId: string;
+      }>) {
         const selectedUnit = units.find((unit) => unit.id === order.unitId);
-
         if (selectedUnit) {
-          totalSales += selectedUnit.price * order.quantity;
-          totalProfit +=
+          const sale = selectedUnit.price * order.quantity;
+          const profit =
             (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+          totalSales += sale;
+          totalProfit += profit;
         }
       }
 
       return {
         id: gb.id,
         name: gb.name,
+        orderCount: gb.order.length,
         totalSales,
         totalProfit,
         groupBuyStartDate: gb.groupBuyStartDate,
       };
     });
 
+    // 生成排行榜
+    const groupBuyRankByOrderCount = [...groupBuysWithStats]
+      .sort((a, b) => b.orderCount - a.orderCount)
+      .slice(0, 10);
     const groupBuyRankByTotalSales = [...groupBuysWithStats]
       .sort((a, b) => b.totalSales - a.totalSales)
-      .slice(0, 10)
-      .map((item) => ({
-        id: item.id,
-        name: item.name,
-        totalSales: item.totalSales,
-        groupBuyStartDate: item.groupBuyStartDate,
-      }));
-
+      .slice(0, 10);
     const groupBuyRankByTotalProfit = [...groupBuysWithStats]
       .sort((a, b) => b.totalProfit - a.totalProfit)
-      .slice(0, 10)
-      .map((item) => ({
-        id: item.id,
-        name: item.name,
-        totalProfit: item.totalProfit,
-        groupBuyStartDate: item.groupBuyStartDate,
-      }));
-
-    // 4. 以供货商关联的团购单数量进行排名
-    const suppliers = await this.prisma.supplier.findMany({
-      where: {
-        delete: 0,
-      },
-      include: {
-        groupBuy: {
-          where: {
-            groupBuyStartDate: {
-              gte: startDate,
-              lte: endDate,
-            },
-            delete: 0,
-          },
-        },
-      },
-    });
-
-    const supplierRankByGroupBuyCount = suppliers
-      .map((s) => ({
-        id: s.id,
-        name: s.name,
-        groupBuyCount: s.groupBuy.length,
-      }))
-      .sort((a, b) => b.groupBuyCount - a.groupBuyCount)
       .slice(0, 10);
 
     return {
       groupBuyRankByOrderCount,
       groupBuyRankByTotalSales,
       groupBuyRankByTotalProfit,
-      supplierRankByGroupBuyCount,
+    };
+  }
+
+  /**
+   * 获取团购单（合并）排行数据
+   */
+  async getMergedGroupBuyRank(
+    params: AnalysisCountParams,
+  ): Promise<MergedGroupBuyRankResult> {
+    const { startDate, endDate } = params;
+
+    // 获取指定时间范围内的团购单及其关联订单和产品信息
+    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
+      where: {
+        groupBuyStartDate: {
+          gte: startDate,
+          lte: endDate,
+        },
+        delete: 0,
+      },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        order: {
+          where: {
+            delete: 0,
+            status: {
+              in: ['PAID', 'COMPLETED'],
+            },
+          },
+          select: {
+            quantity: true,
+            unitId: true,
+          },
+        },
+      },
+    });
+
+    // 按团购单名称合并团购单数据
+    const mergedData = new Map<
+      string,
+      {
+        productId: string;
+        name: string;
+        orderCount: number;
+        totalSales: number;
+        totalProfit: number;
+      }
+    >();
+
+    for (const gb of groupBuysWithOrders) {
+      const productId = gb.product.id;
+      const groupBuyName = gb.name; // 使用团购单名称作为合并键
+      const units = gb.units as Array<GroupBuyUnit>;
+
+      let totalSales = 0;
+      let totalProfit = 0;
+      const orderCount = gb.order.length;
+
+      for (const order of gb.order as Array<{
+        quantity: number;
+        unitId: string;
+      }>) {
+        const selectedUnit = units.find((unit) => unit.id === order.unitId);
+        if (selectedUnit) {
+          const sale = selectedUnit.price * order.quantity;
+          const profit =
+            (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+          totalSales += sale;
+          totalProfit += profit;
+        }
+      }
+
+      // 使用团购单名称作为合并的键值
+      if (mergedData.has(groupBuyName)) {
+        const existing = mergedData.get(groupBuyName)!;
+        existing.orderCount += orderCount;
+        existing.totalSales += totalSales;
+        existing.totalProfit += totalProfit;
+      } else {
+        mergedData.set(groupBuyName, {
+          productId,
+          name: groupBuyName, // 存储团购单名称
+          orderCount,
+          totalSales,
+          totalProfit,
+        });
+      }
+    }
+
+    const mergedArray = Array.from(mergedData.values());
+
+    // 生成排行榜
+    const mergedGroupBuyRankByOrderCount = [...mergedArray]
+      .sort((a, b) => b.orderCount - a.orderCount)
+      .slice(0, 10);
+    const mergedGroupBuyRankByTotalSales = [...mergedArray]
+      .sort((a, b) => b.totalSales - a.totalSales)
+      .slice(0, 10);
+    const mergedGroupBuyRankByTotalProfit = [...mergedArray]
+      .sort((a, b) => b.totalProfit - a.totalProfit)
+      .slice(0, 10);
+
+    return {
+      mergedGroupBuyRankByOrderCount,
+      mergedGroupBuyRankByTotalSales,
+      mergedGroupBuyRankByTotalProfit,
+    };
+  }
+
+  /**
+   * 获取客户排行数据
+   */
+  async getCustomerRank(
+    params: AnalysisCountParams,
+  ): Promise<CustomerRankResult> {
+    const { startDate, endDate } = params;
+
+    // 获取指定时间范围内的订单及其关联客户信息
+    const orders = await this.prisma.order.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+        delete: 0,
+        status: {
+          in: ['PAID', 'COMPLETED'],
+        },
+      },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+          },
+        },
+        groupBuy: {
+          select: {
+            units: true,
+          },
+        },
+      },
+    });
+
+    // 按客户合并订单数据
+    const customerData = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        phone: string;
+        orderCount: number;
+        totalAmount: number;
+      }
+    >();
+
+    for (const order of orders) {
+      if (!order.customer) continue;
+
+      const customerId = order.customer.id;
+      const customerName = order.customer.name || '';
+      const customerPhone = order.customer.phone || '';
+      const units = order.groupBuy.units as Array<GroupBuyUnit>;
+
+      // 计算订单金额
+      let orderAmount = 0;
+      const selectedUnit = units.find((unit) => unit.id === order.unitId);
+      if (selectedUnit) {
+        orderAmount = selectedUnit.price * order.quantity;
+      }
+
+      if (customerData.has(customerId)) {
+        const existing = customerData.get(customerId)!;
+        existing.orderCount += 1;
+        existing.totalAmount += orderAmount;
+      } else {
+        customerData.set(customerId, {
+          id: customerId,
+          name: customerName,
+          phone: customerPhone,
+          orderCount: 1,
+          totalAmount: orderAmount,
+        });
+      }
+    }
+
+    // 计算平均订单金额并转换为数组
+    const customersArray = Array.from(customerData.values()).map(
+      (customer) => ({
+        ...customer,
+        averageOrderAmount:
+          customer.orderCount > 0
+            ? customer.totalAmount / customer.orderCount
+            : 0,
+      }),
+    );
+
+    // 生成排行榜
+    const customerRankByOrderCount = [...customersArray]
+      .sort((a, b) => b.orderCount - a.orderCount)
+      .slice(0, 10);
+    const customerRankByTotalAmount = [...customersArray]
+      .sort((a, b) => b.totalAmount - a.totalAmount)
+      .slice(0, 10);
+    const customerRankByAverageOrderAmount = [...customersArray]
+      .sort((a, b) => b.averageOrderAmount - a.averageOrderAmount)
+      .slice(0, 10);
+
+    return {
+      customerRankByOrderCount,
+      customerRankByTotalAmount,
+      customerRankByAverageOrderAmount,
+    };
+  }
+
+  /**
+   * 获取供货商排行数据
+   */
+  async getSupplierRank(
+    params: AnalysisCountParams,
+  ): Promise<SupplierRankResult> {
+    const { startDate, endDate } = params;
+
+    // 获取指定时间范围内的团购单及其关联订单和供应商信息
+    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
+      where: {
+        groupBuyStartDate: {
+          gte: startDate,
+          lte: endDate,
+        },
+        delete: 0,
+      },
+      include: {
+        supplier: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        order: {
+          where: {
+            delete: 0,
+            status: {
+              in: ['PAID', 'COMPLETED'],
+            },
+          },
+          select: {
+            quantity: true,
+            unitId: true,
+          },
+        },
+      },
+    });
+
+    // 按供应商合并数据
+    const supplierData = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        orderCount: number;
+        totalSales: number;
+        totalProfit: number;
+      }
+    >();
+
+    for (const gb of groupBuysWithOrders) {
+      if (!gb.supplier) continue;
+
+      const supplierId = gb.supplier.id;
+      const supplierName = gb.supplier.name;
+      const units = gb.units as Array<GroupBuyUnit>;
+
+      let totalSales = 0;
+      let totalProfit = 0;
+      const orderCount = gb.order.length;
+
+      for (const order of gb.order as Array<{
+        quantity: number;
+        unitId: string;
+      }>) {
+        const selectedUnit = units.find((unit) => unit.id === order.unitId);
+        if (selectedUnit) {
+          const sale = selectedUnit.price * order.quantity;
+          const profit =
+            (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+          totalSales += sale;
+          totalProfit += profit;
+        }
+      }
+
+      if (supplierData.has(supplierId)) {
+        const existing = supplierData.get(supplierId)!;
+        existing.orderCount += orderCount;
+        existing.totalSales += totalSales;
+        existing.totalProfit += totalProfit;
+      } else {
+        supplierData.set(supplierId, {
+          id: supplierId,
+          name: supplierName,
+          orderCount,
+          totalSales,
+          totalProfit,
+        });
+      }
+    }
+
+    const suppliersArray = Array.from(supplierData.values());
+
+    // 生成排行榜
+    const supplierRankByOrderCount = [...suppliersArray]
+      .sort((a, b) => b.orderCount - a.orderCount)
+      .slice(0, 10);
+    const supplierRankByTotalSales = [...suppliersArray]
+      .sort((a, b) => b.totalSales - a.totalSales)
+      .slice(0, 10);
+    const supplierRankByTotalProfit = [...suppliersArray]
+      .sort((a, b) => b.totalProfit - a.totalProfit)
+      .slice(0, 10);
+
+    return {
+      supplierRankByOrderCount,
+      supplierRankByTotalSales,
+      supplierRankByTotalProfit,
+    };
+  }
+
+  /**
+   * 获取合并团购单的客户排行数据
+   */
+  async getMergedGroupBuyCustomerRank(
+    params: MergedGroupBuyCustomerRankParams,
+  ): Promise<MergedGroupBuyCustomerRankResult> {
+    const { groupBuyName, startDate, endDate } = params;
+
+    // 获取指定时间范围内同名的团购单及其关联订单和客户信息
+    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
+      where: {
+        name: groupBuyName, // 按团购单名称筛选
+        groupBuyStartDate: {
+          gte: startDate,
+          lte: endDate,
+        },
+        delete: 0,
+      },
+      include: {
+        order: {
+          where: {
+            delete: 0,
+            status: {
+              in: ['PAID', 'COMPLETED'],
+            },
+          },
+          include: {
+            customer: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // 按客户合并订单数据
+    const customerOrderMap = new Map<
+      string,
+      {
+        customerId: string;
+        customerName: string;
+        orderCount: number;
+      }
+    >();
+
+    for (const gb of groupBuysWithOrders) {
+      for (const order of gb.order) {
+        const customerId = order.customer.id;
+        const customerName = order.customer.name;
+
+        if (customerOrderMap.has(customerId)) {
+          const existing = customerOrderMap.get(customerId)!;
+          existing.orderCount += 1;
+        } else {
+          customerOrderMap.set(customerId, {
+            customerId,
+            customerName,
+            orderCount: 1,
+          });
+        }
+      }
+    }
+
+    // 转换为数组并按订单数量从高到低排序
+    const customerRank = Array.from(customerOrderMap.values()).sort(
+      (a, b) => b.orderCount - a.orderCount,
+    );
+
+    return {
+      groupBuyName,
+      customerRank,
     };
   }
 }
