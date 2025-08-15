@@ -39,6 +39,7 @@ export const ConsumptionDetailModal = ({
       onCancel={onClose}
       width={width}
       footer={null}
+      style={{ top: 20 }}
     >
       {loading ? (
         <div className="flex h-60 items-center justify-center">
