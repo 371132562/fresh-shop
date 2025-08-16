@@ -1,6 +1,14 @@
-import { GiftOutlined, ShoppingCartOutlined, UserOutlined } from '@ant-design/icons'
-import { Card, Col, List, Modal, Row, Statistic, Tag } from 'antd'
-import React from 'react'
+import {
+  CaretDownOutlined,
+  CaretRightOutlined,
+  DownOutlined,
+  ShoppingCartOutlined,
+  UpOutlined,
+  UserOutlined
+} from '@ant-design/icons'
+import { Button, Card, Col, Divider, Modal, Row, Statistic } from 'antd'
+import dayjs from 'dayjs'
+import React, { useState } from 'react'
 
 import type { CustomerConsumptionDetailDto } from '../../../../backend/types/dto'
 
@@ -25,9 +33,23 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
   title = '消费详情',
   width = 900
 }: ConsumptionDetailModalProps) => {
+  // 展开状态管理 - 记录每个商品的展开状态
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set())
+
   // 格式化金额显示
   const formatAmount = (amount: number) => {
     return `¥${amount.toFixed(2)}`
+  }
+
+  // 切换商品展开状态
+  const toggleProductExpand = (productId: string) => {
+    const newExpanded = new Set(expandedProducts)
+    if (newExpanded.has(productId)) {
+      newExpanded.delete(productId)
+    } else {
+      newExpanded.add(productId)
+    }
+    setExpandedProducts(newExpanded)
   }
 
   return (
@@ -51,9 +73,9 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
           {/* 统计概览 */}
           <Card
             title={
-              <div className="flex items-center gap-2">
+              <div className="flex h-12 items-center gap-2">
                 <UserOutlined className="text-blue-500" />
-                <span>客户： {consumptionDetail.customerName}</span>
+                <span className="text-lg font-medium">客户： {consumptionDetail.customerName}</span>
               </div>
             }
             size="small"
@@ -88,32 +110,99 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
           {/* 商品消费详情（融合商品和团购） */}
           <Card
             title={
-              <div className="flex items-center gap-2">
-                <ShoppingCartOutlined className="text-blue-500" />
-                <span>商品消费详情</span>
+              <div className="flex h-12 items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShoppingCartOutlined className="text-blue-500" />
+                  <span className="text-lg font-medium">商品消费详情</span>
+                </div>
+                {/* 全部展开/收起按钮 */}
+                {consumptionDetail.topProducts.length > 0 && (
+                  <Button
+                    type="primary"
+                    ghost
+                    size="middle"
+                    icon={
+                      consumptionDetail.topProducts.every(
+                        p =>
+                          !p.groupBuys ||
+                          p.groupBuys.length === 0 ||
+                          expandedProducts.has(p.productId)
+                      ) ? (
+                        <UpOutlined />
+                      ) : (
+                        <DownOutlined />
+                      )
+                    }
+                    onClick={() => {
+                      const hasGroupBuys = consumptionDetail.topProducts.some(
+                        p => p.groupBuys && p.groupBuys.length > 0
+                      )
+                      if (hasGroupBuys) {
+                        const allExpanded = consumptionDetail.topProducts.every(
+                          p =>
+                            !p.groupBuys ||
+                            p.groupBuys.length === 0 ||
+                            expandedProducts.has(p.productId)
+                        )
+                        if (allExpanded) {
+                          // 全部收起
+                          setExpandedProducts(new Set())
+                        } else {
+                          // 全部展开
+                          const allProductIds = new Set(
+                            consumptionDetail.topProducts
+                              .filter(p => p.groupBuys && p.groupBuys.length > 0)
+                              .map(p => p.productId)
+                          )
+                          setExpandedProducts(allProductIds)
+                        }
+                      }
+                    }}
+                    className="text-blue-500 hover:text-blue-600"
+                  >
+                    {consumptionDetail.topProducts.every(
+                      p =>
+                        !p.groupBuys ||
+                        p.groupBuys.length === 0 ||
+                        expandedProducts.has(p.productId)
+                    )
+                      ? '全部收起'
+                      : '全部展开'}
+                  </Button>
+                )}
               </div>
             }
             size="small"
           >
-            <div className="space-y-4">
+            <div className="space-y-2">
               {consumptionDetail.topProducts.map((product, index) => {
                 const totalGroupBuys = product.groupBuys?.length || 0
                 const totalGroupBuyAmount =
                   product.groupBuys?.reduce((sum, gb) => sum + (gb.totalAmount || 0), 0) || 0
 
                 return (
-                  <div
-                    key={product.productId}
-                    className="border-b border-gray-200 pb-4 last:border-b-0"
-                  >
-                    {/* 商品头部信息 */}
-                    <div className="mb-3 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-600">
+                  <div key={product.productId}>
+                    {/* 商品头部信息 - 可点击展开收起 */}
+                    <div
+                      className="flex cursor-pointer items-center justify-between rounded-lg p-3 transition-all duration-200 hover:bg-blue-50 hover:shadow-sm"
+                      onClick={() => toggleProductExpand(product.productId)}
+                    >
+                      <div className="flex items-center gap-4">
+                        {/* 展开收起按钮 - 移到序号左侧 */}
+                        {totalGroupBuys > 0 && (
+                          <div className="flex h-6 w-6 items-center justify-center">
+                            {expandedProducts.has(product.productId) ? (
+                              <CaretDownOutlined className="text-lg text-blue-500 transition-transform duration-200" />
+                            ) : (
+                              <CaretRightOutlined className="text-lg text-blue-500 transition-transform duration-200" />
+                            )}
+                          </div>
+                        )}
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-base font-bold text-white shadow-md">
                           {index + 1}
                         </div>
                         <div>
-                          <div className="text-base font-medium text-gray-800">
+                          <div className="text-lg font-semibold text-gray-800">
                             {product.productName}
                           </div>
                           <div className="text-sm text-gray-500">
@@ -122,91 +211,63 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-semibold text-blue-600">
+                        <div className="text-xl font-bold text-blue-600">
                           {formatAmount(totalGroupBuyAmount)}
                         </div>
                         <div className="text-sm text-gray-500">总消费</div>
                       </div>
                     </div>
-                    {/* 团购详情列表 */}
-                    {product.groupBuys && product.groupBuys.length > 0 && (
-                      <div className="ml-4 space-y-2 border-l-2 border-blue-100 pl-4">
-                        {product.groupBuys.map((groupBuy, gbIndex) => (
-                          <div
-                            key={`${product.productId}-${gbIndex}`}
-                            className="flex items-center justify-between rounded-md bg-gray-50 p-3"
-                          >
-                            <div className="flex items-center gap-3">
-                              <GiftOutlined className="text-green-500" />
-                              <div>
-                                <div className="font-medium text-gray-800">
-                                  {groupBuy.groupBuyName}
+                    {/* 团购详情列表 - 根据展开状态显示 */}
+                    {product.groupBuys &&
+                      product.groupBuys.length > 0 &&
+                      expandedProducts.has(product.productId) && (
+                        <div className="border-l-3 my-2 ml-4 space-y-2 border-blue-300 pl-4">
+                          {product.groupBuys.map((groupBuy, gbIndex) => (
+                            <div
+                              key={`${product.productId}-${gbIndex}`}
+                              className="flex items-center justify-between rounded-md bg-gray-50 p-3"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div>
+                                  <div className="font-medium text-gray-800">
+                                    {groupBuy.groupBuyName}
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    规格：{groupBuy.unitName}
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    最近参与：
+                                    {dayjs(groupBuy.latestGroupBuyStartDate).format('YYYY-MM-DD')}
+                                  </div>
                                 </div>
-                                <div className="text-sm text-gray-500">
-                                  规格：{groupBuy.unitName}
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <div className="w-14 text-center">
+                                  <div className="text-sm font-medium text-gray-600">
+                                    {groupBuy.count}
+                                  </div>
+                                  <div className="text-xs text-gray-500">次数</div>
+                                </div>
+                                <div className="w-20 text-right">
+                                  <div className="text-base font-semibold text-green-600">
+                                    {formatAmount(groupBuy.totalAmount || 0)}
+                                  </div>
+                                  <div className="text-xs text-gray-500">小计</div>
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <div className="w-14 text-center">
-                                <div className="text-sm font-medium text-gray-600">
-                                  {groupBuy.count}
-                                </div>
-                                <div className="text-xs text-gray-500">次数</div>
-                              </div>
-                              <div className="w-20 text-right">
-                                <div className="text-base font-semibold text-green-600">
-                                  {formatAmount(groupBuy.totalAmount || 0)}
-                                </div>
-                                <div className="text-xs text-gray-500">小计</div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      )}
+                    {/* 商品分割线 */}
+                    {index < consumptionDetail.topProducts.length - 1 && (
+                      <Divider className="!my-2 !border-gray-400" />
                     )}
                   </div>
                 )
               })}
             </div>
           </Card>
-
-          {/* 团购排行（保留兼容性，可选择性展示） */}
-          {consumptionDetail.topGroupBuys && consumptionDetail.topGroupBuys.length > 0 && (
-            <Card
-              title={
-                <div className="flex items-center gap-2">
-                  <GiftOutlined className="text-green-500" />
-                  <span>团购参与排行</span>
-                  <Tag color="orange">快速概览</Tag>
-                </div>
-              }
-              size="small"
-            >
-              <List
-                dataSource={consumptionDetail.topGroupBuys.slice(0, 5)}
-                renderItem={(item, index) => (
-                  <List.Item>
-                    <div className="flex w-full items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-xs font-semibold text-green-600">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <div className="font-medium">{item.groupBuyName}</div>
-                          <div className="text-sm text-gray-500">规格：{item.unitName}</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-lg font-semibold text-green-600">{item.count}</span>
-                        <span className="ml-1 text-gray-500">次</span>
-                      </div>
-                    </div>
-                  </List.Item>
-                )}
-              />
-            </Card>
-          )}
         </div>
       ) : (
         <div className="flex items-center justify-center py-8">
