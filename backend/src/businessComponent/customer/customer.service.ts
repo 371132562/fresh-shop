@@ -135,7 +135,12 @@ export class CustomerService {
         productId,
         productName: name,
         count,
-        groupBuys: Object.values(groupBuys).sort((a, b) => b.count - a.count),
+        groupBuys: Object.values(groupBuys).sort((a, b) => {
+          // 按照最近参与时间倒序排列（最新的在前）
+          const dateA = new Date(a.latestGroupBuyStartDate);
+          const dateB = new Date(b.latestGroupBuyStartDate);
+          return dateB.getTime() - dateA.getTime();
+        }),
       }));
 
     return {

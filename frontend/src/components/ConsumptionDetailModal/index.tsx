@@ -6,7 +6,7 @@ import {
   UpOutlined,
   UserOutlined
 } from '@ant-design/icons'
-import { Button, Card, Col, Divider, Modal, Row, Statistic } from 'antd'
+import { Button, Card, Col, Divider, Modal, Row, Statistic, Tag } from 'antd'
 import dayjs from 'dayjs'
 import React, { useState } from 'react'
 
@@ -180,6 +180,38 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
                 const totalGroupBuyAmount =
                   product.groupBuys?.reduce((sum, gb) => sum + (gb.totalAmount || 0), 0) || 0
 
+                // 找到该商品中最新的团购时间
+                const latestGroupBuyDate = product.groupBuys?.reduce(
+                  (latest, gb) => {
+                    const gbDate = new Date(gb.latestGroupBuyStartDate)
+                    return !latest || gbDate > latest ? gbDate : latest
+                  },
+                  null as Date | null
+                )
+
+                // 找到全局最新的团购时间（用于标识最新消费）
+                const globalLatestDate = consumptionDetail.topProducts.reduce(
+                  (globalLatest, p) => {
+                    const productLatest = p.groupBuys?.reduce(
+                      (latest, gb) => {
+                        const gbDate = new Date(gb.latestGroupBuyStartDate)
+                        return !latest || gbDate > latest ? gbDate : latest
+                      },
+                      null as Date | null
+                    )
+                    return !globalLatest || (productLatest && productLatest > globalLatest)
+                      ? productLatest
+                      : globalLatest
+                  },
+                  null as Date | null
+                )
+
+                // 判断当前商品是否包含最新消费
+                const isLatestConsumption =
+                  latestGroupBuyDate &&
+                  globalLatestDate &&
+                  latestGroupBuyDate.getTime() === globalLatestDate.getTime()
+
                 return (
                   <div key={product.productId}>
                     {/* 商品头部信息 - 可点击展开收起 */}
@@ -201,13 +233,21 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-base font-bold text-white shadow-md">
                           {index + 1}
                         </div>
-                        <div>
-                          <div className="text-lg font-semibold text-gray-800">
-                            {product.productName}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className="text-lg font-semibold text-gray-800">
+                              {product.productName}
+                            </div>
+                            {isLatestConsumption && <Tag color="red">最近参与</Tag>}
                           </div>
                           <div className="text-sm text-gray-500">
                             共购买 {product.count} 次 · {totalGroupBuys} 个团购规格
                           </div>
+                          {latestGroupBuyDate && (
+                            <div className="text-xs text-gray-400">
+                              最近参与: {dayjs(latestGroupBuyDate).format('YYYY-MM-DD')}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="text-right">
