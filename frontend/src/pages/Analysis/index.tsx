@@ -161,7 +161,7 @@ export const Component = () => {
           <CalendarPicker
             selectionMode="range"
             weekStartsOn="Monday"
-            min={dayjs('2025-06-01').toDate()}
+            min={dayjs('2025-05-01').toDate()}
             visible={calendarVisible}
             defaultValue={calendarValue}
             onClose={() => setCalendarVisible(false)}

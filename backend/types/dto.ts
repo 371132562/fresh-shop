@@ -136,12 +136,18 @@ export type CustomerConsumptionDetailDto = {
     productId: string;
     productName: string;
     count: number;
-  }[]; // 购买最多的商品
+    groupBuys: {
+      groupBuyName: string;
+      unitName: string;
+      count: number;
+      totalAmount: number; // 该团购规格的总消费金额
+    }[]; // 该商品下的团购单列表
+  }[]; // 购买最多的商品及其团购详情
   topGroupBuys: {
     groupBuyName: string;
     unitName: string; // 新增：团购规格名称
     count: number;
-  }[]; // 参与最多的团购
+  }[]; // 参与最多的团购（保留兼容性）
 };
 
 // =================================

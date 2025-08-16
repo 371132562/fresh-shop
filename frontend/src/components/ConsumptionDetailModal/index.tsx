@@ -1,127 +1,216 @@
-import { Descriptions, Modal, Table, Tag } from 'antd'
+import { GiftOutlined, ShoppingCartOutlined, UserOutlined } from '@ant-design/icons'
+import { Card, Col, List, Modal, Row, Statistic, Tag } from 'antd'
+import React from 'react'
 
 import type { CustomerConsumptionDetailDto } from '../../../../backend/types/dto'
 
-/**
- * 消费详情模态框组件的属性类型
- */
 type ConsumptionDetailModalProps = {
-  /** 模态框是否可见 */
   visible: boolean
-  /** 关闭模态框的回调函数 */
   onClose: () => void
-  /** 消费详情数据 */
   consumptionDetail: CustomerConsumptionDetailDto | null
-  /** 是否正在加载数据 */
-  loading: boolean
-  /** 模态框标题，默认为"消费详情" */
+  loading?: boolean
   title?: string
-  /** 模态框宽度，默认为800 */
   width?: number
 }
 
 /**
  * 消费详情模态框组件
- * 用于展示客户的消费详情信息，包括基础信息、购买商品排行和参与团购排行
+ * 展示客户的消费详情，包括基础信息、购买商品排行和参与团购排行
  */
-export const ConsumptionDetailModal = ({
+const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
   visible,
   onClose,
   consumptionDetail,
   loading,
   title = '消费详情',
-  width = 800
+  width = 900
 }: ConsumptionDetailModalProps) => {
+  // 格式化金额显示
+  const formatAmount = (amount: number) => {
+    return `¥${amount.toFixed(2)}`
+  }
+
   return (
     <Modal
       title={title}
       open={visible}
       onCancel={onClose}
-      width={width}
       footer={null}
-      style={{ top: 20 }}
+      width={width}
+      className="consumption-detail-modal"
+      style={{
+        top: 20
+      }}
     >
       {loading ? (
-        <div className="flex h-60 items-center justify-center">
-          <div className="text-lg">加载中...</div>
+        <div className="flex items-center justify-center py-8">
+          <div>加载中...</div>
         </div>
       ) : consumptionDetail ? (
         <div className="!space-y-4">
-          {/* 基础信息区域 */}
-          <Descriptions
-            title="基础信息"
-            bordered
-            column={1}
-            className="bg-white"
+          {/* 统计概览 */}
+          <Card
+            title={
+              <div className="flex items-center gap-2">
+                <UserOutlined className="text-blue-500" />
+                <span>客户： {consumptionDetail.customerName}</span>
+              </div>
+            }
+            size="small"
           >
-            <Descriptions.Item label="客户名称">
-              <span className="text-primary font-medium">{consumptionDetail.customerName}</span>
-            </Descriptions.Item>
-            <Descriptions.Item label="订单数量">
-              <span className="text-blue-500">{consumptionDetail.orderCount}</span>
-            </Descriptions.Item>
-            <Descriptions.Item label="订单总额">
-              <span className="text-green-500">¥{consumptionDetail.totalAmount.toFixed(2)}</span>
-            </Descriptions.Item>
-            <Descriptions.Item label="每单平均价格">
-              <span className="text-orange-500">
-                ¥{consumptionDetail.averagePricePerOrder.toFixed(2)}
-              </span>
-            </Descriptions.Item>
-          </Descriptions>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Statistic
+                  title="订单数量"
+                  value={consumptionDetail.orderCount}
+                  suffix="单"
+                />
+              </Col>
+              <Col span={8}>
+                <Statistic
+                  title="消费总额"
+                  value={consumptionDetail.totalAmount}
+                  precision={2}
+                  prefix="¥"
+                />
+              </Col>
+              <Col span={8}>
+                <Statistic
+                  title="平均单价"
+                  value={consumptionDetail.averagePricePerOrder}
+                  precision={2}
+                  prefix="¥"
+                />
+              </Col>
+            </Row>
+          </Card>
 
-          {/* 购买商品排行区域 */}
-          <div>
-            <div className="mb-4 text-lg font-medium">购买的商品（从高到低）</div>
-            <Table
-              dataSource={consumptionDetail.topProducts}
-              pagination={false}
-              size="middle"
-              className="bg-white"
-              rowKey={record => record.productId}
-            >
-              <Table.Column
-                title="商品名称"
-                dataIndex="productName"
-                key="productName"
-              />
-              <Table.Column
-                title="购买次数"
-                dataIndex="count"
-                key="count"
-                render={count => <Tag color="blue">{count} 次</Tag>}
-              />
-            </Table>
-          </div>
+          {/* 商品消费详情（融合商品和团购） */}
+          <Card
+            title={
+              <div className="flex items-center gap-2">
+                <ShoppingCartOutlined className="text-blue-500" />
+                <span>商品消费详情</span>
+              </div>
+            }
+            size="small"
+          >
+            <div className="space-y-4">
+              {consumptionDetail.topProducts.map((product, index) => {
+                const totalGroupBuys = product.groupBuys?.length || 0
+                const totalGroupBuyAmount =
+                  product.groupBuys?.reduce((sum, gb) => sum + (gb.totalAmount || 0), 0) || 0
 
-          {/* 参与团购排行区域 */}
-          <div>
-            <div className="mb-4 text-lg font-medium">参与的团购（从高到低）</div>
-            <Table
-              dataSource={consumptionDetail.topGroupBuys}
-              pagination={false}
-              size="middle"
-              className="bg-white"
-              rowKey={(record, index) => `${record.groupBuyName}-${record.unitName}-${index}`}
+                return (
+                  <div
+                    key={product.productId}
+                    className="border-b border-gray-200 pb-4 last:border-b-0"
+                  >
+                    {/* 商品头部信息 */}
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-600">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <div className="text-base font-medium text-gray-800">
+                            {product.productName}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            共购买 {product.count} 次 · {totalGroupBuys} 个团购规格
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-semibold text-blue-600">
+                          {formatAmount(totalGroupBuyAmount)}
+                        </div>
+                        <div className="text-sm text-gray-500">总消费</div>
+                      </div>
+                    </div>
+                    {/* 团购详情列表 */}
+                    {product.groupBuys && product.groupBuys.length > 0 && (
+                      <div className="ml-4 space-y-2 border-l-2 border-blue-100 pl-4">
+                        {product.groupBuys.map((groupBuy, gbIndex) => (
+                          <div
+                            key={`${product.productId}-${gbIndex}`}
+                            className="flex items-center justify-between rounded-md bg-gray-50 p-3"
+                          >
+                            <div className="flex items-center gap-3">
+                              <GiftOutlined className="text-green-500" />
+                              <div>
+                                <div className="font-medium text-gray-800">
+                                  {groupBuy.groupBuyName}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  规格：{groupBuy.unitName}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="w-14 text-center">
+                                <div className="text-sm font-medium text-gray-600">
+                                  {groupBuy.count}
+                                </div>
+                                <div className="text-xs text-gray-500">次数</div>
+                              </div>
+                              <div className="w-20 text-right">
+                                <div className="text-base font-semibold text-green-600">
+                                  {formatAmount(groupBuy.totalAmount || 0)}
+                                </div>
+                                <div className="text-xs text-gray-500">小计</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </Card>
+
+          {/* 团购排行（保留兼容性，可选择性展示） */}
+          {consumptionDetail.topGroupBuys && consumptionDetail.topGroupBuys.length > 0 && (
+            <Card
+              title={
+                <div className="flex items-center gap-2">
+                  <GiftOutlined className="text-green-500" />
+                  <span>团购参与排行</span>
+                  <Tag color="orange">快速概览</Tag>
+                </div>
+              }
+              size="small"
             >
-              <Table.Column
-                title="团购名称"
-                dataIndex="groupBuyName"
-                key="groupBuyName"
-                render={(_, record: any) => `${record.groupBuyName}（${record.unitName}）`}
+              <List
+                dataSource={consumptionDetail.topGroupBuys.slice(0, 5)}
+                renderItem={(item, index) => (
+                  <List.Item>
+                    <div className="flex w-full items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-xs font-semibold text-green-600">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <div className="font-medium">{item.groupBuyName}</div>
+                          <div className="text-sm text-gray-500">规格：{item.unitName}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-lg font-semibold text-green-600">{item.count}</span>
+                        <span className="ml-1 text-gray-500">次</span>
+                      </div>
+                    </div>
+                  </List.Item>
+                )}
               />
-              <Table.Column
-                title="参与次数"
-                dataIndex="count"
-                key="count"
-                render={count => <Tag color="green">{count} 次</Tag>}
-              />
-            </Table>
-          </div>
+            </Card>
+          )}
         </div>
       ) : (
-        <div className="flex h-60 items-center justify-center">
-          <div className="text-lg text-gray-500">暂无消费数据</div>
+        <div className="flex items-center justify-center py-8">
+          <div>暂无数据</div>
         </div>
       )}
     </Modal>

@@ -56,7 +56,22 @@ export class CustomerService {
     }
 
     let totalAmount = 0;
-    const productCounts: Record<string, { name: string; count: number }> = {};
+    const productCounts: Record<
+      string,
+      {
+        name: string;
+        count: number;
+        groupBuys: Record<
+          string,
+          {
+            groupBuyName: string;
+            unitName: string;
+            count: number;
+            totalAmount: number;
+          }
+        >;
+      }
+    > = {};
     const groupBuyCounts: Record<
       string,
       { name: string; unit: string; count: number }
@@ -66,8 +81,10 @@ export class CustomerService {
       const units = order.groupBuy.units as GroupBuyUnit[];
       const unit = units.find((u) => u.id === order.unitId);
       if (unit) {
-        totalAmount += unit.price * order.quantity;
+        const orderAmount = unit.price * order.quantity;
+        totalAmount += orderAmount;
 
+        // 统计团购数据（保留原有逻辑用于兼容性）
         const groupBuyKey = `${order.groupBuy.name}-${unit.unit}`;
         if (groupBuyCounts[groupBuyKey]) {
           groupBuyCounts[groupBuyKey].count++;
@@ -78,16 +95,33 @@ export class CustomerService {
             count: 1,
           };
         }
-      }
 
-      const productName = order.groupBuy.product.name;
-      if (productCounts[order.groupBuy.productId]) {
+        // 统计商品及其团购数据
+        const productName = order.groupBuy.product.name;
+        if (!productCounts[order.groupBuy.productId]) {
+          productCounts[order.groupBuy.productId] = {
+            name: productName,
+            count: 0,
+            groupBuys: {},
+          };
+        }
+
         productCounts[order.groupBuy.productId].count++;
-      } else {
-        productCounts[order.groupBuy.productId] = {
-          name: productName,
-          count: 1,
-        };
+
+        // 在商品下统计团购数据
+        if (!productCounts[order.groupBuy.productId].groupBuys[groupBuyKey]) {
+          productCounts[order.groupBuy.productId].groupBuys[groupBuyKey] = {
+            groupBuyName: order.groupBuy.name,
+            unitName: unit.unit,
+            count: 0,
+            totalAmount: 0,
+          };
+        }
+
+        productCounts[order.groupBuy.productId].groupBuys[groupBuyKey].count++;
+        productCounts[order.groupBuy.productId].groupBuys[
+          groupBuyKey
+        ].totalAmount += orderAmount;
       }
     }
 
@@ -95,10 +129,12 @@ export class CustomerService {
 
     const topProducts = Object.entries(productCounts)
       .sort(([, a], [, b]) => b.count - a.count)
-      .map(([productId, data]) => ({
+      .slice(0, 5)
+      .map(([productId, { name, count, groupBuys }]) => ({
         productId,
-        productName: data.name,
-        count: data.count,
+        productName: name,
+        count,
+        groupBuys: Object.values(groupBuys).sort((a, b) => b.count - a.count),
       }));
 
     const topGroupBuys = Object.values(groupBuyCounts)
