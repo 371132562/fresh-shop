@@ -9,7 +9,6 @@ import useAnalysisStore from '@/stores/analysisStore.ts'
 import { CustomerRankings } from './components/CustomerRankings' // 导入客户排行组件
 import { GroupBuyRankings } from './components/GroupBuyRankings'
 import { MergedGroupBuyOverview } from './components/MergedGroupBuyOverview'
-import { MergedGroupBuyRankings } from './components/MergedGroupBuyRankings'
 import { Overview } from './components/Overview'
 import { SupplierRankings } from './components/SupplierRankings'
 
@@ -23,7 +22,6 @@ export const Component = () => {
 
   const getCount = useAnalysisStore(state => state.getCount)
   const getGroupBuyRank = useAnalysisStore(state => state.getGroupBuyRank)
-  const getMergedGroupBuyRank = useAnalysisStore(state => state.getMergedGroupBuyRank)
   const getCustomerRank = useAnalysisStore(state => state.getCustomerRank)
   const getSupplierRank = useAnalysisStore(state => state.getSupplierRank)
   const getMergedGroupBuyOverview = useAnalysisStore(state => state.getMergedGroupBuyOverview)
@@ -49,9 +47,6 @@ export const Component = () => {
     switch (activeViewKey) {
       case 'group-buy-rankings':
         getGroupBuyRank(params)
-        break
-      case 'merged-group-buy-rankings':
-        getMergedGroupBuyRank(params)
         break
       case 'customer-rankings':
         getCustomerRank(params)
@@ -82,12 +77,6 @@ export const Component = () => {
       />
     ),
     'group-buy-rankings': <GroupBuyRankings />,
-    'merged-group-buy-rankings': (
-      <MergedGroupBuyRankings
-        startDate={calendarValue[0]}
-        endDate={calendarValue[1]}
-      />
-    ),
     'customer-rankings': <CustomerRankings />,
     'supplier-rankings': <SupplierRankings />
   }
@@ -217,10 +206,6 @@ export const Component = () => {
               {
                 value: 'group-buy-rankings',
                 label: '团购单排行'
-              },
-              {
-                value: 'merged-group-buy-rankings',
-                label: '团购单（合并）排行'
               },
               {
                 value: 'customer-rankings',

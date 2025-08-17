@@ -2,7 +2,6 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { AnalysisService } from './analysis.service';
 import {
   AnalysisCountParams,
-  MergedGroupBuyCustomerRankParams,
   MergedGroupBuyOverviewParams,
   MergedGroupBuyOverviewDetailParams,
   MergedGroupBuyFrequencyCustomersParams,
@@ -27,14 +26,6 @@ export class AnalysisController {
   }
 
   /**
-   * 获取团购单（合并）排行数据
-   */
-  @Post('mergedGroupBuyRank')
-  getMergedGroupBuyRank(@Body() params: AnalysisCountParams) {
-    return this.analysisService.getMergedGroupBuyRank(params);
-  }
-
-  /**
    * 获取客户排行数据
    */
   @Post('customerRank')
@@ -48,16 +39,6 @@ export class AnalysisController {
   @Post('supplierRank')
   getSupplierRank(@Body() params: AnalysisCountParams) {
     return this.analysisService.getSupplierRank(params);
-  }
-
-  /**
-   * 获取合并团购单的客户排行数据
-   */
-  @Post('mergedGroupBuyCustomerRank')
-  getMergedGroupBuyCustomerRank(
-    @Body() params: MergedGroupBuyCustomerRankParams,
-  ) {
-    return this.analysisService.getMergedGroupBuyCustomerRank(params);
   }
 
   /**

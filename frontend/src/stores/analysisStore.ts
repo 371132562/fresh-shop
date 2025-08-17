@@ -4,11 +4,9 @@ import {
   analysisCountApi,
   analysisCustomerRankApi,
   analysisGroupBuyRankApi,
-  analysisMergedGroupBuyCustomerRankApi,
   analysisMergedGroupBuyFrequencyCustomersApi,
   analysisMergedGroupBuyOverviewApi,
   analysisMergedGroupBuyOverviewDetailApi,
-  analysisMergedGroupBuyRankApi,
   analysisMergedGroupBuyRegionalCustomersApi,
   analysisSupplierRankApi
 } from '@/services/apis'
@@ -17,17 +15,15 @@ import http from '@/services/base'
 import type {
   AnalysisCountParams,
   AnalysisCountResult,
+  CustomerBasicInfo,
   CustomerRankResult,
   GroupBuyRankResult,
-  MergedGroupBuyCustomerRankParams,
-  MergedGroupBuyCustomerRankResult,
   MergedGroupBuyFrequencyCustomersParams,
   MergedGroupBuyFrequencyCustomersResult,
   MergedGroupBuyOverviewDetail,
   MergedGroupBuyOverviewDetailParams,
   MergedGroupBuyOverviewParams,
   MergedGroupBuyOverviewResult,
-  MergedGroupBuyRankResult,
   MergedGroupBuyRegionalCustomersParams,
   MergedGroupBuyRegionalCustomersResult,
   SupplierRankResult
@@ -42,17 +38,6 @@ type AnalysisStore = {
   groupBuyRank: GroupBuyRankResult
   getGroupBuyRank: (data: AnalysisCountParams) => Promise<void>
   getGroupBuyRankLoading: boolean
-
-  // 团购单（合并）排行榜数据
-  mergedGroupBuyRank: MergedGroupBuyRankResult
-  getMergedGroupBuyRank: (data: AnalysisCountParams) => Promise<void>
-  getMergedGroupBuyRankLoading: boolean
-
-  // 合并团购单客户排行榜数据
-  mergedGroupBuyCustomerRank: MergedGroupBuyCustomerRankResult | null
-  getMergedGroupBuyCustomerRank: (data: MergedGroupBuyCustomerRankParams) => Promise<void>
-  getMergedGroupBuyCustomerRankLoading: boolean
-  resetMergedGroupBuyCustomerRank: () => void
 
   // 客户排行榜数据
   customerRank: CustomerRankResult
@@ -94,6 +79,15 @@ type AnalysisStore = {
     params: MergedGroupBuyRegionalCustomersParams
   ) => Promise<void>
   resetMergedGroupBuyRegionalCustomers: () => void
+
+  // 客户列表模态框状态
+  customerListData: CustomerBasicInfo[]
+  customerListLoading: boolean
+  customerListTitle: string
+  setCustomerListData: (data: CustomerBasicInfo[]) => void
+  setCustomerListLoading: (loading: boolean) => void
+  setCustomerListTitle: (title: string) => void
+  resetCustomerList: () => void
 }
 
 const useAnalysisStore = create<AnalysisStore>(set => ({
@@ -134,41 +128,6 @@ const useAnalysisStore = create<AnalysisStore>(set => ({
     }
   },
   getGroupBuyRankLoading: false,
-
-  // 团购单（合并）排行榜数据
-  mergedGroupBuyRank: {
-    mergedGroupBuyRankByOrderCount: [],
-    mergedGroupBuyRankByTotalSales: [],
-    mergedGroupBuyRankByTotalProfit: []
-  },
-  getMergedGroupBuyRank: async data => {
-    try {
-      set({ getMergedGroupBuyRankLoading: true })
-      const res = await http.post<MergedGroupBuyRankResult>(analysisMergedGroupBuyRankApi, data)
-      set({ mergedGroupBuyRank: res.data })
-    } finally {
-      set({ getMergedGroupBuyRankLoading: false })
-    }
-  },
-  getMergedGroupBuyRankLoading: false,
-
-  // 合并团购单客户排行榜数据
-  mergedGroupBuyCustomerRank: null,
-  getMergedGroupBuyCustomerRank: async data => {
-    set({ getMergedGroupBuyCustomerRankLoading: true })
-    try {
-      const res = await http.post(analysisMergedGroupBuyCustomerRankApi, data)
-      set({ mergedGroupBuyCustomerRank: res.data })
-    } catch (error) {
-      console.error('获取合并团购单客户排行失败:', error)
-    } finally {
-      set({ getMergedGroupBuyCustomerRankLoading: false })
-    }
-  },
-  getMergedGroupBuyCustomerRankLoading: false,
-  resetMergedGroupBuyCustomerRank: () => {
-    set({ mergedGroupBuyCustomerRank: null })
-  },
 
   // 客户排行榜数据
   customerRank: {
@@ -253,13 +212,17 @@ const useAnalysisStore = create<AnalysisStore>(set => ({
   mergedGroupBuyFrequencyCustomers: null,
   mergedGroupBuyFrequencyCustomersLoading: false,
   getMergedGroupBuyFrequencyCustomers: async (params: MergedGroupBuyFrequencyCustomersParams) => {
-    set({ mergedGroupBuyFrequencyCustomersLoading: true })
     try {
+      set({ mergedGroupBuyFrequencyCustomersLoading: true })
       const res = await http.post<MergedGroupBuyFrequencyCustomersResult>(
         analysisMergedGroupBuyFrequencyCustomersApi,
         params
       )
-      set({ mergedGroupBuyFrequencyCustomers: res.data })
+      set({
+        mergedGroupBuyFrequencyCustomers: res.data,
+        customerListData: res.data.customers,
+        customerListLoading: false
+      })
     } finally {
       set({ mergedGroupBuyFrequencyCustomersLoading: false })
     }
@@ -272,19 +235,40 @@ const useAnalysisStore = create<AnalysisStore>(set => ({
   mergedGroupBuyRegionalCustomers: null,
   mergedGroupBuyRegionalCustomersLoading: false,
   getMergedGroupBuyRegionalCustomers: async (params: MergedGroupBuyRegionalCustomersParams) => {
-    set({ mergedGroupBuyRegionalCustomersLoading: true })
     try {
+      set({ mergedGroupBuyRegionalCustomersLoading: true })
       const res = await http.post<MergedGroupBuyRegionalCustomersResult>(
         analysisMergedGroupBuyRegionalCustomersApi,
         params
       )
-      set({ mergedGroupBuyRegionalCustomers: res.data })
+      set({
+        mergedGroupBuyRegionalCustomers: res.data,
+        customerListData: res.data.customers,
+        customerListLoading: false
+      })
     } finally {
       set({ mergedGroupBuyRegionalCustomersLoading: false })
     }
   },
   resetMergedGroupBuyRegionalCustomers: () => {
     set({ mergedGroupBuyRegionalCustomers: null })
+  },
+
+  // 客户列表模态框状态管理
+  customerListData: [],
+  customerListLoading: false,
+  customerListTitle: '',
+  setCustomerListData: (data: CustomerBasicInfo[]) => {
+    set({ customerListData: data })
+  },
+  setCustomerListLoading: (loading: boolean) => {
+    set({ customerListLoading: loading })
+  },
+  setCustomerListTitle: (title: string) => {
+    set({ customerListTitle: title })
+  },
+  resetCustomerList: () => {
+    set({ customerListData: [], customerListLoading: false, customerListTitle: '' })
   }
 }))
 

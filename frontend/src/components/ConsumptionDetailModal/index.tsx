@@ -216,23 +216,31 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
                   <div key={product.productId}>
                     {/* 商品头部信息 - 可点击展开收起 */}
                     <div
-                      className="flex cursor-pointer items-center justify-between rounded-lg p-3 transition-all duration-200 hover:bg-blue-50 hover:shadow-sm"
-                      onClick={() => toggleProductExpand(product.productId)}
+                      className={`group flex items-center justify-between rounded-lg p-3 transition-all duration-200 hover:bg-blue-50 hover:shadow-sm ${
+                        totalGroupBuys > 0 ? 'cursor-pointer' : ''
+                      }`}
+                      onClick={() => {
+                        if (totalGroupBuys > 0) {
+                          toggleProductExpand(product.productId)
+                        }
+                      }}
                     >
                       <div className="flex items-center gap-3">
-                        {/* 展开收起按钮 - 现代化设计 */}
-                        {totalGroupBuys > 0 && (
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 shadow-sm transition-all duration-300 hover:from-blue-50 hover:to-blue-100 hover:shadow-md">
-                            {expandedProducts.has(product.productId) ? (
-                              <CaretDownOutlined className="text-base text-slate-600 transition-all duration-300 hover:text-blue-600" />
-                            ) : (
-                              <CaretRightOutlined className="text-base text-slate-600 transition-all duration-300 hover:text-blue-600" />
-                            )}
-                          </div>
-                        )}
-                        {/* 序号 - 简洁设计 */}
-                        <div className="flex h-10 w-6 items-center justify-center text-base font-bold">
-                          {index + 1}.
+                        {/* 展开收起图标 */}
+                        <div className="flex w-2 items-center justify-center">
+                          {totalGroupBuys > 0 && (
+                            <div className="text-slate-400 transition-all duration-300 group-hover:text-blue-500">
+                              {expandedProducts.has(product.productId) ? (
+                                <CaretDownOutlined />
+                              ) : (
+                                <CaretRightOutlined />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {/* 序号 - 圆形设计 */}
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600">
+                          {index + 1}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">

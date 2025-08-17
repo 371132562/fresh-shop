@@ -2,7 +2,7 @@ import { BarChartOutlined, TeamOutlined, TrophyOutlined, UserOutlined } from '@a
 import { Button, Card, Col, Divider, Modal, Row, Statistic, Table } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
-import type { CustomerBasicInfo, MergedGroupBuyOverviewDetail } from 'fresh-shop-backend/types/dto'
+import type { MergedGroupBuyOverviewDetail } from 'fresh-shop-backend/types/dto'
 import React, { useState } from 'react'
 
 import ConsumptionDetailModal from '@/components/ConsumptionDetailModal'
@@ -30,28 +30,30 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
 }: MergedGroupBuyDetailModalProps) => {
   // 客户列表模态框状态
   const [customerListVisible, setCustomerListVisible] = useState(false)
-  const [customerListTitle, setCustomerListTitle] = useState('')
-  const [customerListData, setCustomerListData] = useState<CustomerBasicInfo[]>([])
-  const [customerListLoading, setCustomerListLoading] = useState(false)
 
   // 消费详情模态框状态
   const [consumptionDetailVisible, setConsumptionDetailVisible] = useState(false)
 
-  // 获取分析数据的方法
-  const {
-    getMergedGroupBuyFrequencyCustomers,
-    getMergedGroupBuyRegionalCustomers,
-    mergedGroupBuyFrequencyCustomers,
-    mergedGroupBuyRegionalCustomers
-  } = useAnalysisStore()
+  // 从 Zustand store 中获取分析数据的方法和状态
+  const getMergedGroupBuyFrequencyCustomers = useAnalysisStore(
+    state => state.getMergedGroupBuyFrequencyCustomers
+  )
+  const getMergedGroupBuyRegionalCustomers = useAnalysisStore(
+    state => state.getMergedGroupBuyRegionalCustomers
+  )
+  const customerListData = useAnalysisStore(state => state.customerListData)
+  const customerListLoading = useAnalysisStore(state => state.customerListLoading)
+  const customerListTitle = useAnalysisStore(state => state.customerListTitle)
+  const setCustomerListData = useAnalysisStore(state => state.setCustomerListData)
+  const setCustomerListLoading = useAnalysisStore(state => state.setCustomerListLoading)
+  const setCustomerListTitle = useAnalysisStore(state => state.setCustomerListTitle)
+  const resetCustomerList = useAnalysisStore(state => state.resetCustomerList)
 
-  // 获取客户数据的方法
-  const {
-    getConsumptionDetail,
-    consumptionDetail,
-    consumptionDetailLoading,
-    resetConsumptionDetail
-  } = useCustomerStore()
+  // 从 Zustand store 中获取客户数据的方法和状态
+  const getConsumptionDetail = useCustomerStore(state => state.getConsumptionDetail)
+  const consumptionDetail = useCustomerStore(state => state.consumptionDetail)
+  const consumptionDetailLoading = useCustomerStore(state => state.consumptionDetailLoading)
+  const resetConsumptionDetail = useCustomerStore(state => state.resetConsumptionDetail)
 
   // 处理购买频次点击事件
   const handleFrequencyClick = async (frequency: number) => {
@@ -60,21 +62,14 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
     setCustomerListTitle(`购买${frequency}次 的客户列表`)
     setCustomerListVisible(true)
     setCustomerListLoading(true)
+    setCustomerListData([]) // 清空之前的数据
 
-    try {
-      await getMergedGroupBuyFrequencyCustomers({
-        groupBuyName: detailData.groupBuyName,
-        frequency,
-        startDate: detailData.startDate,
-        endDate: detailData.endDate
-      })
-
-      if (mergedGroupBuyFrequencyCustomers) {
-        setCustomerListData(mergedGroupBuyFrequencyCustomers.customers)
-      }
-    } finally {
-      setCustomerListLoading(false)
-    }
+    await getMergedGroupBuyFrequencyCustomers({
+      groupBuyName: detailData.groupBuyName,
+      frequency,
+      startDate: detailData.startDate,
+      endDate: detailData.endDate
+    })
   }
 
   // 处理地域点击事件
@@ -84,21 +79,14 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
     setCustomerListTitle(`${addressName} 地址的客户列表`)
     setCustomerListVisible(true)
     setCustomerListLoading(true)
+    setCustomerListData([]) // 清空之前的数据
 
-    try {
-      await getMergedGroupBuyRegionalCustomers({
-        groupBuyName: detailData.groupBuyName,
-        addressId,
-        startDate: detailData.startDate,
-        endDate: detailData.endDate
-      })
-
-      if (mergedGroupBuyRegionalCustomers) {
-        setCustomerListData(mergedGroupBuyRegionalCustomers.customers)
-      }
-    } finally {
-      setCustomerListLoading(false)
-    }
+    await getMergedGroupBuyRegionalCustomers({
+      groupBuyName: detailData.groupBuyName,
+      addressId,
+      startDate: detailData.startDate,
+      endDate: detailData.endDate
+    })
   }
   // 客户购买次数分布表格列定义
   const purchaseFrequencyColumns: ColumnsType<{
@@ -454,8 +442,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
         open={customerListVisible}
         onCancel={() => {
           setCustomerListVisible(false)
-          setCustomerListData([])
-          setCustomerListTitle('')
+          resetCustomerList()
         }}
         footer={null}
         width={600}

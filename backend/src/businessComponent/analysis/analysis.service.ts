@@ -15,11 +15,8 @@ import {
   AnalysisCountResult,
   GroupBuyUnit,
   GroupBuyRankResult,
-  MergedGroupBuyRankResult,
   CustomerRankResult,
   SupplierRankResult,
-  MergedGroupBuyCustomerRankParams,
-  MergedGroupBuyCustomerRankResult,
   MergedGroupBuyOverviewParams,
   MergedGroupBuyOverviewResult,
   MergedGroupBuyOverviewDetail,
@@ -277,117 +274,6 @@ export class AnalysisService {
   }
 
   /**
-   * 获取团购单（合并）排行数据
-   */
-  async getMergedGroupBuyRank(
-    params: AnalysisCountParams,
-  ): Promise<MergedGroupBuyRankResult> {
-    const { startDate, endDate } = params;
-
-    // 获取指定时间范围内的团购单及其关联订单和产品信息
-    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
-      where: {
-        groupBuyStartDate: {
-          gte: startDate,
-          lte: endDate,
-        },
-        delete: 0,
-      },
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        order: {
-          where: {
-            delete: 0,
-            status: {
-              in: ['PAID', 'COMPLETED'],
-            },
-          },
-          select: {
-            quantity: true,
-            unitId: true,
-          },
-        },
-      },
-    });
-
-    // 按团购单名称合并团购单数据
-    const mergedData = new Map<
-      string,
-      {
-        productId: string;
-        name: string;
-        orderCount: number;
-        totalSales: number;
-        totalProfit: number;
-      }
-    >();
-
-    for (const gb of groupBuysWithOrders) {
-      const productId = gb.product.id;
-      const groupBuyName = gb.name; // 使用团购单名称作为合并键
-      const units = gb.units as Array<GroupBuyUnit>;
-
-      let totalSales = 0;
-      let totalProfit = 0;
-      const orderCount = gb.order.length;
-
-      for (const order of gb.order as Array<{
-        quantity: number;
-        unitId: string;
-      }>) {
-        const selectedUnit = units.find((unit) => unit.id === order.unitId);
-        if (selectedUnit) {
-          const sale = selectedUnit.price * order.quantity;
-          const profit =
-            (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
-          totalSales += sale;
-          totalProfit += profit;
-        }
-      }
-
-      // 使用团购单名称作为合并的键值
-      if (mergedData.has(groupBuyName)) {
-        const existing = mergedData.get(groupBuyName)!;
-        existing.orderCount += orderCount;
-        existing.totalSales += totalSales;
-        existing.totalProfit += totalProfit;
-      } else {
-        mergedData.set(groupBuyName, {
-          productId,
-          name: groupBuyName, // 存储团购单名称
-          orderCount,
-          totalSales,
-          totalProfit,
-        });
-      }
-    }
-
-    const mergedArray = Array.from(mergedData.values());
-
-    // 生成排行榜
-    const mergedGroupBuyRankByOrderCount = [...mergedArray]
-      .sort((a, b) => b.orderCount - a.orderCount)
-      .slice(0, 10);
-    const mergedGroupBuyRankByTotalSales = [...mergedArray]
-      .sort((a, b) => b.totalSales - a.totalSales)
-      .slice(0, 10);
-    const mergedGroupBuyRankByTotalProfit = [...mergedArray]
-      .sort((a, b) => b.totalProfit - a.totalProfit)
-      .slice(0, 10);
-
-    return {
-      mergedGroupBuyRankByOrderCount,
-      mergedGroupBuyRankByTotalSales,
-      mergedGroupBuyRankByTotalProfit,
-    };
-  }
-
-  /**
    * 获取客户排行数据
    */
   async getCustomerRank(
@@ -603,83 +489,6 @@ export class AnalysisService {
       supplierRankByOrderCount,
       supplierRankByTotalSales,
       supplierRankByTotalProfit,
-    };
-  }
-
-  /**
-   * 获取合并团购单的客户排行数据
-   */
-  async getMergedGroupBuyCustomerRank(
-    params: MergedGroupBuyCustomerRankParams,
-  ): Promise<MergedGroupBuyCustomerRankResult> {
-    const { groupBuyName, startDate, endDate } = params;
-
-    // 获取指定时间范围内同名的团购单及其关联订单和客户信息
-    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
-      where: {
-        name: groupBuyName, // 按团购单名称筛选
-        groupBuyStartDate: {
-          gte: startDate,
-          lte: endDate,
-        },
-        delete: 0,
-      },
-      include: {
-        order: {
-          where: {
-            delete: 0,
-            status: {
-              in: ['PAID', 'COMPLETED'],
-            },
-          },
-          include: {
-            customer: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    // 按客户合并订单数据
-    const customerOrderMap = new Map<
-      string,
-      {
-        customerId: string;
-        customerName: string;
-        orderCount: number;
-      }
-    >();
-
-    for (const gb of groupBuysWithOrders) {
-      for (const order of gb.order) {
-        const customerId = order.customer.id;
-        const customerName = order.customer.name;
-
-        if (customerOrderMap.has(customerId)) {
-          const existing = customerOrderMap.get(customerId)!;
-          existing.orderCount += 1;
-        } else {
-          customerOrderMap.set(customerId, {
-            customerId,
-            customerName,
-            orderCount: 1,
-          });
-        }
-      }
-    }
-
-    // 转换为数组并按订单数量从高到低排序
-    const customerRank = Array.from(customerOrderMap.values()).sort(
-      (a, b) => b.orderCount - a.orderCount,
-    );
-
-    return {
-      groupBuyName,
-      customerRank,
     };
   }
 
