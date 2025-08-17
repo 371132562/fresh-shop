@@ -1,5 +1,6 @@
 import { SearchOutlined } from '@ant-design/icons'
 import { Button, Form, Input, List, Modal, Select } from 'antd'
+import type { MergedGroupBuyOverviewListItem } from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
 
 import MergedGroupBuyDetailModal from '@/components/MergedGroupBuyDetailModal'
@@ -87,8 +88,8 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
   const handleItemClick = (groupBuyName: string) => {
     getMergedGroupBuyOverviewDetail({
       groupBuyName,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString()
+      startDate,
+      endDate
     })
     setDetailVisible(true)
   }
@@ -227,7 +228,7 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
             onChange: handlePageChange
           }}
           dataSource={mergedGroupBuyOverviewList}
-          renderItem={item => (
+          renderItem={(item: MergedGroupBuyOverviewListItem) => (
             <List.Item>
               <List.Item.Meta
                 title={<span className="text-lg font-medium">{item.groupBuyName}</span>}

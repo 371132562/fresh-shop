@@ -231,8 +231,8 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
                           </div>
                         )}
                         {/* 序号 - 简洁设计 */}
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-base font-semibold text-white shadow-sm">
-                          {index + 1}
+                        <div className="flex h-10 w-6 items-center justify-center text-base font-bold">
+                          {index + 1}.
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">

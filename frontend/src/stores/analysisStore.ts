@@ -1,16 +1,3 @@
-import {
-  AnalysisCountParams,
-  AnalysisCountResult,
-  CustomerRankResult,
-  GroupBuyRankResult,
-  MergedGroupBuyCustomerRankParams,
-  MergedGroupBuyCustomerRankResult,
-  MergedGroupBuyOverviewDetail,
-  MergedGroupBuyOverviewParams,
-  MergedGroupBuyOverviewResult,
-  MergedGroupBuyRankResult,
-  SupplierRankResult
-} from 'fresh-shop-backend/types/dto.ts'
 import { create } from 'zustand'
 
 import {
@@ -18,12 +5,33 @@ import {
   analysisCustomerRankApi,
   analysisGroupBuyRankApi,
   analysisMergedGroupBuyCustomerRankApi,
+  analysisMergedGroupBuyFrequencyCustomersApi,
   analysisMergedGroupBuyOverviewApi,
   analysisMergedGroupBuyOverviewDetailApi,
   analysisMergedGroupBuyRankApi,
+  analysisMergedGroupBuyRegionalCustomersApi,
   analysisSupplierRankApi
-} from '@/services/apis.ts'
+} from '@/services/apis'
 import http from '@/services/base'
+
+import type {
+  AnalysisCountParams,
+  AnalysisCountResult,
+  CustomerRankResult,
+  GroupBuyRankResult,
+  MergedGroupBuyCustomerRankParams,
+  MergedGroupBuyCustomerRankResult,
+  MergedGroupBuyFrequencyCustomersParams,
+  MergedGroupBuyFrequencyCustomersResult,
+  MergedGroupBuyOverviewDetail,
+  MergedGroupBuyOverviewDetailParams,
+  MergedGroupBuyOverviewParams,
+  MergedGroupBuyOverviewResult,
+  MergedGroupBuyRankResult,
+  MergedGroupBuyRegionalCustomersParams,
+  MergedGroupBuyRegionalCustomersResult,
+  SupplierRankResult
+} from '../../../backend/types/dto'
 
 type AnalysisStore = {
   count: AnalysisCountResult
@@ -68,12 +76,24 @@ type AnalysisStore = {
   // 团购单合并概况详情数据
   mergedGroupBuyOverviewDetail: MergedGroupBuyOverviewDetail | null
   mergedGroupBuyOverviewDetailLoading: boolean
-  getMergedGroupBuyOverviewDetail: (params: {
-    groupBuyName: string
-    startDate: string
-    endDate: string
-  }) => Promise<void>
+  getMergedGroupBuyOverviewDetail: (params: MergedGroupBuyOverviewDetailParams) => Promise<void>
   resetMergedGroupBuyOverviewDetail: () => void
+
+  // 获取特定购买频次的客户列表
+  mergedGroupBuyFrequencyCustomers: MergedGroupBuyFrequencyCustomersResult | null
+  mergedGroupBuyFrequencyCustomersLoading: boolean
+  getMergedGroupBuyFrequencyCustomers: (
+    params: MergedGroupBuyFrequencyCustomersParams
+  ) => Promise<void>
+  resetMergedGroupBuyFrequencyCustomers: () => void
+
+  // 获取特定区域的客户列表
+  mergedGroupBuyRegionalCustomers: MergedGroupBuyRegionalCustomersResult | null
+  mergedGroupBuyRegionalCustomersLoading: boolean
+  getMergedGroupBuyRegionalCustomers: (
+    params: MergedGroupBuyRegionalCustomersParams
+  ) => Promise<void>
+  resetMergedGroupBuyRegionalCustomers: () => void
 }
 
 const useAnalysisStore = create<AnalysisStore>(set => ({
@@ -227,6 +247,44 @@ const useAnalysisStore = create<AnalysisStore>(set => ({
   },
   resetMergedGroupBuyOverviewDetail: () => {
     set({ mergedGroupBuyOverviewDetail: null })
+  },
+
+  // 获取特定购买频次的客户列表
+  mergedGroupBuyFrequencyCustomers: null,
+  mergedGroupBuyFrequencyCustomersLoading: false,
+  getMergedGroupBuyFrequencyCustomers: async (params: MergedGroupBuyFrequencyCustomersParams) => {
+    set({ mergedGroupBuyFrequencyCustomersLoading: true })
+    try {
+      const res = await http.post<MergedGroupBuyFrequencyCustomersResult>(
+        analysisMergedGroupBuyFrequencyCustomersApi,
+        params
+      )
+      set({ mergedGroupBuyFrequencyCustomers: res.data })
+    } finally {
+      set({ mergedGroupBuyFrequencyCustomersLoading: false })
+    }
+  },
+  resetMergedGroupBuyFrequencyCustomers: () => {
+    set({ mergedGroupBuyFrequencyCustomers: null })
+  },
+
+  // 获取特定区域的客户列表
+  mergedGroupBuyRegionalCustomers: null,
+  mergedGroupBuyRegionalCustomersLoading: false,
+  getMergedGroupBuyRegionalCustomers: async (params: MergedGroupBuyRegionalCustomersParams) => {
+    set({ mergedGroupBuyRegionalCustomersLoading: true })
+    try {
+      const res = await http.post<MergedGroupBuyRegionalCustomersResult>(
+        analysisMergedGroupBuyRegionalCustomersApi,
+        params
+      )
+      set({ mergedGroupBuyRegionalCustomers: res.data })
+    } finally {
+      set({ mergedGroupBuyRegionalCustomersLoading: false })
+    }
+  },
+  resetMergedGroupBuyRegionalCustomers: () => {
+    set({ mergedGroupBuyRegionalCustomers: null })
   }
 }))
 

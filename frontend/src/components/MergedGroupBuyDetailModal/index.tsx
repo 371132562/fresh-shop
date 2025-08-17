@@ -1,10 +1,13 @@
 import { BarChartOutlined, TeamOutlined, TrophyOutlined, UserOutlined } from '@ant-design/icons'
-import { Card, Col, Divider, Modal, Row, Statistic, Table } from 'antd'
+import { Button, Card, Col, Divider, Modal, Row, Statistic, Table } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
-import React from 'react'
+import type { CustomerBasicInfo, MergedGroupBuyOverviewDetail } from 'fresh-shop-backend/types/dto'
+import React, { useState } from 'react'
 
-import type { MergedGroupBuyOverviewDetail } from '../../../../backend/types/dto'
+import ConsumptionDetailModal from '@/components/ConsumptionDetailModal'
+import useAnalysisStore from '@/stores/analysisStore'
+import useCustomerStore from '@/stores/customerStore'
 
 type MergedGroupBuyDetailModalProps = {
   visible: boolean
@@ -25,23 +28,102 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   loading,
   width = 1000
 }: MergedGroupBuyDetailModalProps) => {
+  // 客户列表模态框状态
+  const [customerListVisible, setCustomerListVisible] = useState(false)
+  const [customerListTitle, setCustomerListTitle] = useState('')
+  const [customerListData, setCustomerListData] = useState<CustomerBasicInfo[]>([])
+  const [customerListLoading, setCustomerListLoading] = useState(false)
+
+  // 消费详情模态框状态
+  const [consumptionDetailVisible, setConsumptionDetailVisible] = useState(false)
+
+  // 获取分析数据的方法
+  const {
+    getMergedGroupBuyFrequencyCustomers,
+    getMergedGroupBuyRegionalCustomers,
+    mergedGroupBuyFrequencyCustomers,
+    mergedGroupBuyRegionalCustomers
+  } = useAnalysisStore()
+
+  // 获取客户数据的方法
+  const {
+    getConsumptionDetail,
+    consumptionDetail,
+    consumptionDetailLoading,
+    resetConsumptionDetail
+  } = useCustomerStore()
+
+  // 处理购买频次点击事件
+  const handleFrequencyClick = async (frequency: number) => {
+    if (!detailData) return
+
+    setCustomerListTitle(`购买${frequency}次 的客户列表`)
+    setCustomerListVisible(true)
+    setCustomerListLoading(true)
+
+    try {
+      await getMergedGroupBuyFrequencyCustomers({
+        groupBuyName: detailData.groupBuyName,
+        frequency,
+        startDate: detailData.startDate,
+        endDate: detailData.endDate
+      })
+
+      if (mergedGroupBuyFrequencyCustomers) {
+        setCustomerListData(mergedGroupBuyFrequencyCustomers.customers)
+      }
+    } finally {
+      setCustomerListLoading(false)
+    }
+  }
+
+  // 处理地域点击事件
+  const handleRegionalClick = async (addressId: string, addressName: string) => {
+    if (!detailData) return
+
+    setCustomerListTitle(`${addressName} 地址的客户列表`)
+    setCustomerListVisible(true)
+    setCustomerListLoading(true)
+
+    try {
+      await getMergedGroupBuyRegionalCustomers({
+        groupBuyName: detailData.groupBuyName,
+        addressId,
+        startDate: detailData.startDate,
+        endDate: detailData.endDate
+      })
+
+      if (mergedGroupBuyRegionalCustomers) {
+        setCustomerListData(mergedGroupBuyRegionalCustomers.customers)
+      }
+    } finally {
+      setCustomerListLoading(false)
+    }
+  }
   // 客户购买次数分布表格列定义
   const purchaseFrequencyColumns: ColumnsType<{
     key: number
-    frequency: string
+    frequency: number
     count: number
   }> = [
     {
       title: '购买次数',
       dataIndex: 'frequency',
       key: 'frequency',
-      render: (frequency: string) => <span className="font-medium">{frequency}</span>
+      render: (frequency: number) => <span>{frequency}次</span>
     },
     {
       title: '客户数量',
       dataIndex: 'count',
       key: 'count',
-      render: (count: number) => <span className="font-medium">{count}人</span>
+      render: (count: number, { frequency }) => (
+        <span
+          className="cursor-pointer font-medium text-blue-600 hover:text-blue-800"
+          onClick={() => handleFrequencyClick(frequency)}
+        >
+          {count}人
+        </span>
+      )
     }
   ]
 
@@ -49,21 +131,27 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   const regionalSalesColumns: ColumnsType<{
     key: number
     addressName: string
+    addressId: string
     customerCount: number
   }> = [
     {
-      title: '地区',
+      title: '地址',
       dataIndex: 'addressName',
       key: 'addressName',
-      render: (addressName: string) => (
-        <span className="font-medium">{addressName || '未知地区'}</span>
-      )
+      render: (addressName: string) => <span>{addressName || '未知地址'}</span>
     },
     {
       title: '客户数量',
       dataIndex: 'customerCount',
       key: 'customerCount',
-      render: (count: number) => <span className="font-medium">{count}人</span>
+      render: (count: number, record) => (
+        <span
+          className="cursor-pointer font-medium text-blue-600 hover:text-blue-800"
+          onClick={() => handleRegionalClick(record.addressId, record.addressName)}
+        >
+          {count}人
+        </span>
+      )
     }
   ]
 
@@ -95,8 +183,8 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                 </div>
                 {detailData.startDate && detailData.endDate ? (
                   <span className="text-sm text-orange-500">
-                    统计时间：{dayjs(detailData.startDate).format('YYYY-MM-DD HH:mm:ss')} -{' '}
-                    {dayjs(detailData.endDate).format('YYYY-MM-DD HH:mm:ss')}
+                    统计时间：{dayjs(detailData.startDate).format('YYYY-MM-DD')} -{' '}
+                    {dayjs(detailData.endDate).format('YYYY-MM-DD')}
                   </span>
                 ) : (
                   <span className="text-sm text-orange-500">当前为全部同名团购单统计</span>
@@ -252,7 +340,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
             <Row gutter={16}>
               <Col span={8}>
                 <Statistic
-                  title="独立客户数"
+                  title="参与客户数"
                   value={detailData.uniqueCustomerCount}
                   suffix="人"
                   valueStyle={{ color: '#722ed1' }}
@@ -345,6 +433,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
               columns={regionalSalesColumns}
               dataSource={detailData.regionalSales.map((item, index) => ({
                 key: index,
+                addressId: item.addressId,
                 addressName: item.addressName,
                 customerCount: item.customerCount
               }))}
@@ -358,6 +447,64 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
           <div className="text-gray-500">暂无数据</div>
         </div>
       )}
+
+      {/* 客户列表模态框 */}
+      <Modal
+        title={customerListTitle}
+        open={customerListVisible}
+        onCancel={() => {
+          setCustomerListVisible(false)
+          setCustomerListData([])
+          setCustomerListTitle('')
+        }}
+        footer={null}
+        width={600}
+      >
+        <Table
+          columns={[
+            {
+              title: '客户姓名',
+              dataIndex: 'customerName',
+              key: 'customerName'
+            },
+            {
+              title: '操作',
+              key: 'action',
+              render: (_, record) => (
+                <Button
+                  type="primary"
+                  ghost
+                  onClick={() => {
+                    getConsumptionDetail(record.customerId)
+                    setConsumptionDetailVisible(true)
+                  }}
+                >
+                  查看客户全部消费详情
+                </Button>
+              )
+            }
+          ]}
+          dataSource={customerListData.map((customer, index) => ({
+            key: index,
+            customerId: customer.customerId,
+            customerName: customer.customerName
+          }))}
+          loading={customerListLoading}
+          pagination={false}
+          size="middle"
+        />
+      </Modal>
+
+      {/* 消费详情模态框 */}
+      <ConsumptionDetailModal
+        visible={consumptionDetailVisible}
+        onClose={() => {
+          setConsumptionDetailVisible(false)
+          resetConsumptionDetail()
+        }}
+        consumptionDetail={consumptionDetail}
+        loading={consumptionDetailLoading}
+      />
     </Modal>
   )
 }

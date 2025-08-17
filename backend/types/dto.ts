@@ -295,11 +295,11 @@ export type CustomerRankResult = {
 };
 
 /**
- * 客户购买次数统计
- * 用于分析客户购买频次分布
+ * 客户购买频次分布
+ * 用于统计客户的购买次数分布情况
  */
 export type CustomerPurchaseFrequency = {
-  frequency: string; // 购买次数描述（如"1次", "2次", "3次或以上"）
+  frequency: number; // 购买次数（如1, 2, 3等）
   count: number; // 该频次的客户数量
 };
 
@@ -485,6 +485,16 @@ export type MergedGroupBuyCustomerRankResult = {
   customerRank: MergedGroupBuyCustomerRankItem[]; // 客户排行列表
 };
 
+/**
+ * 团购合并概况详情查询参数
+ * 用于查询特定团购名称的详细统计信息
+ */
+export type MergedGroupBuyOverviewDetailParams = {
+  groupBuyName: string; // 团购名称
+  startDate?: Date; // 统计开始时间（可选，支持无时间参数查询全部数据）
+  endDate?: Date; // 统计结束时间（可选，支持无时间参数查询全部数据）
+};
+
 // ===================================================================
 // 团购概况分析模块
 // 包含团购合并统计、概况分析相关的数据传输对象
@@ -528,6 +538,7 @@ export type MergedGroupBuyOverviewListItem = {
  * 用于分析不同地区的销售情况
  */
 export type RegionalSalesItem = {
+  addressId: string; // 地址ID
   addressName: string; // 地址名称
   customerCount: number; // 购买客户数
 };
@@ -552,6 +563,56 @@ export type MergedGroupBuyOverviewDetail = {
   multiPurchaseCustomerCount: number; // 多次购买客户总数
   multiPurchaseCustomerRatio: number; // 多次购买客户比例
   regionalSales: RegionalSalesItem[]; // 地域销售分析
+};
+
+/**
+ * 获取特定购买频次客户列表的请求参数
+ * 用于查询在指定团购和时间范围内具有特定购买频次的客户
+ */
+export type MergedGroupBuyFrequencyCustomersParams = {
+  groupBuyName: string; // 团购名称
+  frequency: number; // 购买频次
+  startDate?: Date; // 统计开始时间（可选）
+  endDate?: Date; // 统计结束时间（可选）
+};
+
+/**
+ * 获取特定区域客户列表的请求参数
+ * 用于查询在指定团购和时间范围内特定区域的客户
+ */
+export type MergedGroupBuyRegionalCustomersParams = {
+  groupBuyName: string; // 团购名称
+  addressId: string; // 地址ID
+  startDate?: Date; // 统计开始时间（可选）
+  endDate?: Date; // 统计结束时间（可选）
+};
+
+/**
+ * 客户基本信息
+ * 用于客户列表展示
+ */
+export type CustomerBasicInfo = {
+  customerId: string; // 客户ID
+  customerName: string; // 客户名称
+};
+
+/**
+ * 特定购买频次客户列表结果
+ */
+export type MergedGroupBuyFrequencyCustomersResult = {
+  groupBuyName: string; // 团购名称
+  frequency: number; // 购买频次
+  customers: CustomerBasicInfo[]; // 客户列表
+};
+
+/**
+ * 特定区域客户列表结果
+ */
+export type MergedGroupBuyRegionalCustomersResult = {
+  groupBuyName: string; // 团购名称
+  addressId: string; // 地址ID
+  addressName: string; // 地址名称
+  customers: CustomerBasicInfo[]; // 客户列表
 };
 
 /**

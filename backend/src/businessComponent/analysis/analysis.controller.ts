@@ -4,6 +4,9 @@ import {
   AnalysisCountParams,
   MergedGroupBuyCustomerRankParams,
   MergedGroupBuyOverviewParams,
+  MergedGroupBuyOverviewDetailParams,
+  MergedGroupBuyFrequencyCustomersParams,
+  MergedGroupBuyRegionalCustomersParams,
 } from '../../../types/dto';
 
 @Controller('analysis')
@@ -70,8 +73,28 @@ export class AnalysisController {
    */
   @Post('mergedGroupBuyOverviewDetail')
   getMergedGroupBuyOverviewDetail(
-    @Body() params: { groupBuyName: string; startDate: Date; endDate: Date },
+    @Body() params: MergedGroupBuyOverviewDetailParams,
   ) {
     return this.analysisService.getMergedGroupBuyOverviewDetail(params);
+  }
+
+  /**
+   * 获取特定购买频次的客户列表
+   */
+  @Post('mergedGroupBuyFrequencyCustomers')
+  getMergedGroupBuyFrequencyCustomers(
+    @Body() params: MergedGroupBuyFrequencyCustomersParams,
+  ) {
+    return this.analysisService.getMergedGroupBuyFrequencyCustomers(params);
+  }
+
+  /**
+   * 获取特定区域的客户列表
+   */
+  @Post('mergedGroupBuyRegionalCustomers')
+  getMergedGroupBuyRegionalCustomers(
+    @Body() params: MergedGroupBuyRegionalCustomersParams,
+  ) {
+    return this.analysisService.getMergedGroupBuyRegionalCustomers(params);
   }
 }

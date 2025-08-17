@@ -212,7 +212,6 @@ export const MergedGroupBuyRankings = ({ startDate, endDate }: MergedGroupBuyRan
             <Table
               dataSource={mergedGroupBuyCustomerRank.customerRank}
               pagination={false}
-              size="middle"
               className="bg-white"
               rowKey="customerId"
             >
@@ -232,7 +231,6 @@ export const MergedGroupBuyRankings = ({ startDate, endDate }: MergedGroupBuyRan
                 key="action"
                 render={(_, record: any) => (
                   <Button
-                    size="small"
                     type="primary"
                     ghost
                     onClick={() => handleConsumptionDetail(record.customerId)}

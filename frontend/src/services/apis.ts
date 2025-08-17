@@ -61,3 +61,7 @@ export const analysisSupplierRankApi = '/analysis/supplierRank'
 export const analysisMergedGroupBuyCustomerRankApi = '/analysis/mergedGroupBuyCustomerRank'
 export const analysisMergedGroupBuyOverviewApi = '/analysis/mergedGroupBuyOverview'
 export const analysisMergedGroupBuyOverviewDetailApi = '/analysis/mergedGroupBuyOverviewDetail'
+export const analysisMergedGroupBuyFrequencyCustomersApi =
+  '/analysis/mergedGroupBuyFrequencyCustomers'
+export const analysisMergedGroupBuyRegionalCustomersApi =
+  '/analysis/mergedGroupBuyRegionalCustomers'

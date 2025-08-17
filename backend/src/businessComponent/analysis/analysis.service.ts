@@ -23,8 +23,14 @@ import {
   MergedGroupBuyOverviewParams,
   MergedGroupBuyOverviewResult,
   MergedGroupBuyOverviewDetail,
+  MergedGroupBuyOverviewDetailParams,
   CustomerPurchaseFrequency,
   RegionalSalesItem,
+  MergedGroupBuyFrequencyCustomersParams,
+  MergedGroupBuyFrequencyCustomersResult,
+  MergedGroupBuyRegionalCustomersParams,
+  MergedGroupBuyRegionalCustomersResult,
+  CustomerBasicInfo,
 } from '../../../types/dto'; // 导入类型
 
 /**
@@ -865,11 +871,9 @@ export class AnalysisService {
   /**
    * 获取团购单合并概况详情数据
    */
-  async getMergedGroupBuyOverviewDetail(params: {
-    groupBuyName: string;
-    startDate?: Date;
-    endDate?: Date;
-  }): Promise<MergedGroupBuyOverviewDetail> {
+  async getMergedGroupBuyOverviewDetail(
+    params: MergedGroupBuyOverviewDetailParams,
+  ): Promise<MergedGroupBuyOverviewDetail> {
     const { groupBuyName, startDate, endDate } = params;
 
     // 1. 构建查询条件
@@ -893,6 +897,12 @@ export class AnalysisService {
         supplier: true,
         product: true,
         order: {
+          where: {
+            delete: 0,
+            status: {
+              in: ['PAID', 'COMPLETED'],
+            },
+          },
           include: {
             customer: {
               include: {
@@ -964,11 +974,11 @@ export class AnalysisService {
           // 统计地域销售数据
           const customerAddress = order.customer.customerAddress;
           if (customerAddress) {
-            const addressName = customerAddress.name;
-            if (!regionalCustomers.has(addressName)) {
-              regionalCustomers.set(addressName, new Set<string>());
+            const addressKey = `${customerAddress.id}|${customerAddress.name}`;
+            if (!regionalCustomers.has(addressKey)) {
+              regionalCustomers.set(addressKey, new Set<string>());
             }
-            regionalCustomers.get(addressName)!.add(order.customerId);
+            regionalCustomers.get(addressKey)!.add(order.customerId);
           }
         }
       }
@@ -993,12 +1003,10 @@ export class AnalysisService {
       purchaseFrequencyMap.entries(),
     )
       .map(([purchaseCount, customerCount]) => ({
-        frequency: `${purchaseCount}次`,
+        frequency: purchaseCount,
         count: customerCount,
-        purchaseCount, // 添加购买次数用于排序
       }))
-      .sort((a, b) => b.purchaseCount - a.purchaseCount) // 按购买次数从高到低排序
-      .map(({ frequency, count }) => ({ frequency, count })); // 移除临时的purchaseCount字段
+      .sort((a, b) => b.frequency - a.frequency); // 按购买次数从高到低排序
 
     // 5. 多次购买客户统计
     const multiPurchaseCustomerCount = Array.from(
@@ -1012,10 +1020,14 @@ export class AnalysisService {
     // 6. 地域销售分析
     const regionalSalesResult: RegionalSalesItem[] = Array.from(
       regionalCustomers.entries(),
-    ).map(([addressName, customerSet]) => ({
-      addressName,
-      customerCount: customerSet.size,
-    }));
+    ).map(([addressKey, customerSet]) => {
+      const [addressId, addressName] = addressKey.split('|');
+      return {
+        addressId,
+        addressName,
+        customerCount: customerSet.size,
+      };
+    });
 
     return {
       groupBuyName,
@@ -1033,6 +1045,181 @@ export class AnalysisService {
       multiPurchaseCustomerCount,
       multiPurchaseCustomerRatio,
       regionalSales: regionalSalesResult,
+    };
+  }
+
+  /**
+   * 获取特定购买频次的客户列表
+   */
+  async getMergedGroupBuyFrequencyCustomers(
+    params: MergedGroupBuyFrequencyCustomersParams,
+  ): Promise<MergedGroupBuyFrequencyCustomersResult> {
+    const { groupBuyName, frequency, startDate, endDate } = params;
+
+    // 1. 构建查询条件
+    const whereCondition = {
+      name: groupBuyName,
+      delete: 0,
+      // 如果提供了时间参数，则添加时间过滤条件
+      ...(startDate &&
+        endDate && {
+          groupBuyStartDate: {
+            gte: startDate,
+            lte: endDate,
+          },
+        }),
+    };
+
+    // 2. 查询指定名称的团购单及其订单数据
+    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
+      where: whereCondition,
+      include: {
+        order: {
+          where: {
+            delete: 0,
+            status: {
+              in: ['PAID', 'COMPLETED'],
+            },
+          },
+          include: {
+            customer: {
+              select: {
+                id: true,
+                name: true,
+                phone: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // 3. 统计每个客户的购买次数
+    const customerPurchaseCounts = new Map<
+      string,
+      {
+        customer: CustomerBasicInfo;
+        count: number;
+      }
+    >();
+
+    for (const groupBuy of groupBuysWithOrders) {
+      for (const order of groupBuy.order) {
+        const customerId = order.customer.id;
+        const customerInfo = {
+          customerId: order.customer.id,
+          customerName: order.customer.name,
+        };
+
+        if (customerPurchaseCounts.has(customerId)) {
+          const existing = customerPurchaseCounts.get(customerId)!;
+          existing.count += 1;
+        } else {
+          customerPurchaseCounts.set(customerId, {
+            customer: customerInfo,
+            count: 1,
+          });
+        }
+      }
+    }
+
+    // 4. 筛选出指定购买频次的客户
+    const filteredCustomers = Array.from(customerPurchaseCounts.values())
+      .filter((item) => item.count === frequency)
+      .map((item) => item.customer);
+
+    return {
+      groupBuyName,
+      frequency,
+      customers: filteredCustomers,
+    };
+  }
+
+  /**
+   * 获取特定区域的客户列表
+   */
+  async getMergedGroupBuyRegionalCustomers(
+    params: MergedGroupBuyRegionalCustomersParams,
+  ): Promise<MergedGroupBuyRegionalCustomersResult> {
+    const { groupBuyName, addressId, startDate, endDate } = params;
+
+    // 1. 构建查询条件
+    const whereCondition = {
+      name: groupBuyName,
+      delete: 0,
+      // 如果提供了时间参数，则添加时间过滤条件
+      ...(startDate &&
+        endDate && {
+          groupBuyStartDate: {
+            gte: startDate,
+            lte: endDate,
+          },
+        }),
+    };
+
+    // 2. 查询指定名称的团购单及其订单数据
+    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
+      where: whereCondition,
+      include: {
+        order: {
+          where: {
+            delete: 0,
+            status: {
+              in: ['PAID', 'COMPLETED'],
+            },
+          },
+          include: {
+            customer: {
+              include: {
+                customerAddress: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // 3. 筛选出指定区域的客户
+    const regionalCustomers = new Map<string, CustomerBasicInfo>();
+
+    for (const groupBuy of groupBuysWithOrders) {
+      for (const order of groupBuy.order) {
+        const customerAddress = order.customer.customerAddress;
+        if (customerAddress && customerAddress.id === addressId) {
+          const customerId = order.customer.id;
+          if (!regionalCustomers.has(customerId)) {
+            regionalCustomers.set(customerId, {
+              customerId: order.customer.id,
+              customerName: order.customer.name,
+            });
+          }
+        }
+      }
+    }
+
+    // 获取地址名称
+    let addressName = '';
+    for (const groupBuy of groupBuysWithOrders) {
+      for (const order of groupBuy.order) {
+        const customerAddress = order.customer.customerAddress;
+        if (customerAddress && customerAddress.id === addressId) {
+          addressName = customerAddress.name;
+          break;
+        }
+      }
+      if (addressName) break;
+    }
+
+    return {
+      groupBuyName,
+      addressId,
+      addressName,
+      customers: Array.from(regionalCustomers.values()),
     };
   }
 }
