@@ -97,7 +97,7 @@ export const MergedGroupBuyRankings = ({ startDate, endDate }: MergedGroupBuyRan
                       ghost
                       onClick={() => handleViewCustomerRank(item.name)}
                     >
-                      查看客户排行
+                      查看所选时段内客户排行
                     </Button>
                   </div>
                 }
@@ -125,8 +125,17 @@ export const MergedGroupBuyRankings = ({ startDate, endDate }: MergedGroupBuyRan
                   </div>
                 }
                 description={
-                  <div>
-                    销售额: <span className="text-blue-500">¥{item.totalSales.toFixed(2)}</span>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      销售额: <span className="text-blue-500">¥{item.totalSales.toFixed(2)}</span>
+                    </div>
+                    <Button
+                      type="primary"
+                      ghost
+                      onClick={() => handleViewCustomerRank(item.name)}
+                    >
+                      查看所选时段内客户排行
+                    </Button>
                   </div>
                 }
               />
@@ -153,8 +162,17 @@ export const MergedGroupBuyRankings = ({ startDate, endDate }: MergedGroupBuyRan
                   </div>
                 }
                 description={
-                  <div>
-                    利润: <span className="text-blue-500">¥{item.totalProfit.toFixed(2)}</span>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      利润: <span className="text-blue-500">¥{item.totalProfit.toFixed(2)}</span>
+                    </div>
+                    <Button
+                      type="primary"
+                      ghost
+                      onClick={() => handleViewCustomerRank(item.name)}
+                    >
+                      查看所选时段内客户排行
+                    </Button>
                   </div>
                 }
               />
@@ -219,7 +237,7 @@ export const MergedGroupBuyRankings = ({ startDate, endDate }: MergedGroupBuyRan
                     ghost
                     onClick={() => handleConsumptionDetail(record.customerId)}
                   >
-                    查看消费详情
+                    查看客户全部消费详情
                   </Button>
                 )}
               />

@@ -5,6 +5,9 @@ import {
   GroupBuyRankResult,
   MergedGroupBuyCustomerRankParams,
   MergedGroupBuyCustomerRankResult,
+  MergedGroupBuyOverviewDetail,
+  MergedGroupBuyOverviewParams,
+  MergedGroupBuyOverviewResult,
   MergedGroupBuyRankResult,
   SupplierRankResult
 } from 'fresh-shop-backend/types/dto.ts'
@@ -15,6 +18,8 @@ import {
   analysisCustomerRankApi,
   analysisGroupBuyRankApi,
   analysisMergedGroupBuyCustomerRankApi,
+  analysisMergedGroupBuyOverviewApi,
+  analysisMergedGroupBuyOverviewDetailApi,
   analysisMergedGroupBuyRankApi,
   analysisSupplierRankApi
 } from '@/services/apis.ts'
@@ -50,6 +55,25 @@ type AnalysisStore = {
   supplierRank: SupplierRankResult
   getSupplierRank: (data: AnalysisCountParams) => Promise<void>
   getSupplierRankLoading: boolean
+
+  // 团购单合并概况数据
+  mergedGroupBuyOverviewList: MergedGroupBuyOverviewResult['list']
+  mergedGroupBuyOverviewTotal: number
+  mergedGroupBuyOverviewPage: number
+  mergedGroupBuyOverviewPageSize: number
+  mergedGroupBuyOverviewLoading: boolean
+  getMergedGroupBuyOverview: (data: MergedGroupBuyOverviewParams) => Promise<void>
+  setMergedGroupBuyOverviewPage: (page: number) => void
+
+  // 团购单合并概况详情数据
+  mergedGroupBuyOverviewDetail: MergedGroupBuyOverviewDetail | null
+  mergedGroupBuyOverviewDetailLoading: boolean
+  getMergedGroupBuyOverviewDetail: (params: {
+    groupBuyName: string
+    startDate: string
+    endDate: string
+  }) => Promise<void>
+  resetMergedGroupBuyOverviewDetail: () => void
 }
 
 const useAnalysisStore = create<AnalysisStore>(set => ({
@@ -160,7 +184,50 @@ const useAnalysisStore = create<AnalysisStore>(set => ({
       set({ getSupplierRankLoading: false })
     }
   },
-  getSupplierRankLoading: false
+  getSupplierRankLoading: false,
+
+  // 团购单合并概况数据
+  mergedGroupBuyOverviewList: [],
+  mergedGroupBuyOverviewTotal: 0,
+  mergedGroupBuyOverviewPage: 1,
+  mergedGroupBuyOverviewPageSize: 10,
+  mergedGroupBuyOverviewLoading: false,
+  getMergedGroupBuyOverview: async data => {
+    try {
+      set({ mergedGroupBuyOverviewLoading: true })
+      const res = await http.post<MergedGroupBuyOverviewResult>(
+        analysisMergedGroupBuyOverviewApi,
+        data
+      )
+      set({
+        mergedGroupBuyOverviewList: res.data.list,
+        mergedGroupBuyOverviewTotal: res.data.total,
+        mergedGroupBuyOverviewPage: res.data.page,
+        mergedGroupBuyOverviewPageSize: res.data.pageSize
+      })
+    } finally {
+      set({ mergedGroupBuyOverviewLoading: false })
+    }
+  },
+  setMergedGroupBuyOverviewPage: page => {
+    set({ mergedGroupBuyOverviewPage: page })
+  },
+
+  // 团购单合并概况详情数据
+  mergedGroupBuyOverviewDetail: null,
+  mergedGroupBuyOverviewDetailLoading: false,
+  getMergedGroupBuyOverviewDetail: async params => {
+    set({ mergedGroupBuyOverviewDetailLoading: true })
+    try {
+      const res = await http.post(analysisMergedGroupBuyOverviewDetailApi, params)
+      set({ mergedGroupBuyOverviewDetail: res.data })
+    } finally {
+      set({ mergedGroupBuyOverviewDetailLoading: false })
+    }
+  },
+  resetMergedGroupBuyOverviewDetail: () => {
+    set({ mergedGroupBuyOverviewDetail: null })
+  }
 }))
 
 export default useAnalysisStore

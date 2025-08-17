@@ -50,7 +50,7 @@ export class CustomerService {
         orderCount: 0,
         totalAmount: 0,
         averagePricePerOrder: 0,
-        topProducts: []
+        topProducts: [],
       };
     }
 
@@ -129,7 +129,19 @@ export class CustomerService {
     const averagePricePerOrder = totalAmount / orderCount;
 
     const topProducts = Object.entries(productCounts)
-      .sort(([, a], [, b]) => b.count - a.count)
+      .sort(([, a], [, b]) => {
+        // 计算每个商品的总消费金额
+        const totalAmountA = Object.values(a.groupBuys).reduce(
+          (sum, gb) => sum + gb.totalAmount,
+          0,
+        );
+        const totalAmountB = Object.values(b.groupBuys).reduce(
+          (sum, gb) => sum + gb.totalAmount,
+          0,
+        );
+        // 按照总消费金额从高到低排序
+        return totalAmountB - totalAmountA;
+      })
       .slice(0, 5)
       .map(([productId, { name, count, groupBuys }]) => ({
         productId,
@@ -149,7 +161,6 @@ export class CustomerService {
       totalAmount,
       averagePricePerOrder,
       topProducts,
-
     };
   }
 

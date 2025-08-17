@@ -205,9 +205,9 @@ export const Component = () => {
               </span>
             </div>
 
-            {/* 供应商 */}
+            {/* 供货商 */}
             <div className="flex items-start text-base">
-              <span className="w-20 flex-shrink-0 font-medium text-gray-500">供应商：</span>
+              <span className="w-20 flex-shrink-0 font-medium text-gray-500">供货商：</span>
               <span className="word-break-all flex-grow break-words text-gray-700">
                 {groupBuy?.supplier?.name || <span className="italic text-gray-400">无</span>}
               </span>

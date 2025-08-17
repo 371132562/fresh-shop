@@ -78,7 +78,7 @@ export const Component = () => {
                 编辑
               </Button>
               <Popconfirm
-                title={<div className="text-lg">确定要删除这个供应商吗？</div>}
+                title={<div className="text-lg">确定要删除这个供货商吗？</div>}
                 placement="left"
                 onConfirm={confirm}
                 okText="是"
@@ -148,7 +148,7 @@ export const Component = () => {
                   >
                     <Image
                       src={image}
-                      alt={`供应商图片 ${index + 1}`}
+                      alt={`供货商图片 ${index + 1}`}
                       className="h-full w-full object-cover" // 图片覆盖整个区域
                       fallback="/placeholder.svg" // 自定义加载失败的占位符
                       placeholder={
@@ -166,7 +166,7 @@ export const Component = () => {
         {/* 如果没有数据，显示提示 */}
         {!getLoading && !supplier?.id && (
           <div className="py-8 text-center text-gray-500">
-            <p className="mb-2">暂无供应商信息。</p>
+            <p className="mb-2">暂无供货商信息。</p>
             <p className="text-sm">请检查ID或稍后重试。</p>
           </div>
         )}

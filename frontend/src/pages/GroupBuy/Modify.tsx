@@ -185,7 +185,7 @@ const Modify = (props: params) => {
             />
           </Form.Item>
           <Form.Item
-            label="供应商"
+            label="供货商"
             name="supplierId"
             rules={[{ required: true, message: '请选择供货商' }]}
           >
@@ -193,7 +193,7 @@ const Modify = (props: params) => {
               loading={getAllSuppliersLoading}
               showSearch
               allowClear
-              placeholder="请选择供应商"
+              placeholder="请选择供货商"
               filterOption={filterOption}
             >
               {allSupplierList.map(item => {

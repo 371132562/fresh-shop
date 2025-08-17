@@ -5,6 +5,8 @@ import { GroupBuyListItem } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
+import MergedGroupBuyDetailModal from '@/components/MergedGroupBuyDetailModal'
+import useAnalysisStore from '@/stores/analysisStore'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
 import useProductStore from '@/stores/productStore.ts'
@@ -17,6 +19,7 @@ const { RangePicker } = DatePicker
 export const Component = () => {
   const [visible, setVisible] = useState(false)
   const [searchVisible, setSearchVisible] = useState(false)
+  const [detailVisible, setDetailVisible] = useState(false)
   const [form] = Form.useForm()
 
   const listLoading = useGroupBuyStore(state => state.listLoading)
@@ -30,6 +33,18 @@ export const Component = () => {
   const allProductsList = useProductStore(state => state.allProductsList)
   const getAllProducts = useProductStore(state => state.getAllProducts)
   const getAllProductsListLoading = useProductStore(state => state.getAllProductsListLoading)
+
+  // 详情模态框相关状态
+  const mergedGroupBuyOverviewDetail = useAnalysisStore(state => state.mergedGroupBuyOverviewDetail)
+  const mergedGroupBuyOverviewDetailLoading = useAnalysisStore(
+    state => state.mergedGroupBuyOverviewDetailLoading
+  )
+  const getMergedGroupBuyOverviewDetail = useAnalysisStore(
+    state => state.getMergedGroupBuyOverviewDetail
+  )
+  const resetMergedGroupBuyOverviewDetail = useAnalysisStore(
+    state => state.resetMergedGroupBuyOverviewDetail
+  )
 
   useEffect(() => {
     getAllSuppliers()
@@ -74,6 +89,22 @@ export const Component = () => {
 
   const handleCancel = () => {
     setSearchVisible(false)
+  }
+
+  // 处理查看详情
+  const handleViewDetail = (item: GroupBuyListItem) => {
+    getMergedGroupBuyOverviewDetail({
+      groupBuyName: item.name,
+      startDate: '',
+      endDate: ''
+    })
+    setDetailVisible(true)
+  }
+
+  // 关闭详情模态框
+  const handleDetailCancel = () => {
+    setDetailVisible(false)
+    resetMergedGroupBuyOverviewDetail()
   }
 
   const resetSearch = () => {
@@ -142,36 +173,45 @@ export const Component = () => {
                   </NavLink>
                 }
                 description={
-                  <>
-                    <div className="mb-1 font-medium text-gray-800">
-                      发起时间：
-                      <span className="text-blue-500">{formatDate(item.groupBuyStartDate)}</span>
-                    </div>
-                    {item.product?.name && (
+                  <div className="flex items-start justify-between">
+                    <div>
                       <div className="mb-1 font-medium text-gray-800">
-                        商品：<span className="text-blue-500">{item.product.name}</span>
+                        发起时间：
+                        <span className="text-blue-500">{formatDate(item.groupBuyStartDate)}</span>
                       </div>
-                    )}
-                    <div className="mt-1 flex items-center font-medium text-gray-800">
-                      <Tag className="ml-2">订单数量：{item.orderStats.orderCount}</Tag>
-                      {Object.entries(item.orderStats)
-                        .filter(([key]) => key !== 'orderCount')
-                        .map(([status, count]) => {
-                          if (count === 0) return null // 如果数量为0，则不显示
-                          const statusInfo = OrderStatusMap[status as OrderStatus]
-                          return (
-                            <Tag
-                              color={statusInfo.color}
-                              key={status}
-                              className="ml-2"
-                            >
-                              {statusInfo.label}: {count}
-                            </Tag>
-                          )
-                        })}
+                      {item.product?.name && (
+                        <div className="mb-1 font-medium text-gray-800">
+                          商品：<span className="text-blue-500">{item.product.name}</span>
+                        </div>
+                      )}
+                      <div className="mt-1 flex items-center font-medium text-gray-800">
+                        <Tag className="ml-2">订单数量：{item.orderStats.orderCount}</Tag>
+                        {Object.entries(item.orderStats)
+                          .filter(([key]) => key !== 'orderCount')
+                          .map(([status, count]) => {
+                            if (count === 0) return null // 如果数量为0，则不显示
+                            const statusInfo = OrderStatusMap[status as OrderStatus]
+                            return (
+                              <Tag
+                                color={statusInfo.color}
+                                key={status}
+                                className="ml-2"
+                              >
+                                {statusInfo.label}: {count}
+                              </Tag>
+                            )
+                          })}
+                      </div>
+                      {item.description && <div className="text-gray-600">{item.description}</div>}
                     </div>
-                    {item.description && <div className="text-gray-600">{item.description}</div>}
-                  </>
+                    <Button
+                      type="primary"
+                      ghost
+                      onClick={() => handleViewDetail(item)}
+                    >
+                      查看销售数据
+                    </Button>
+                  </div>
                 }
               />
             </List.Item>
@@ -234,7 +274,7 @@ export const Component = () => {
             />
           </Form.Item>
           <Form.Item
-            label="按供应商搜索(可多选)"
+            label="按供货商搜索(可多选)"
             name="supplierIds"
           >
             <Select
@@ -242,7 +282,7 @@ export const Component = () => {
               showSearch
               mode="multiple"
               allowClear
-              placeholder="请选择供应商"
+              placeholder="请选择供货商"
               filterOption={filterOption}
             >
               {allSupplierList.map(item => {
@@ -283,6 +323,12 @@ export const Component = () => {
           </Form.Item>
         </Form>
       </Modal>
+      <MergedGroupBuyDetailModal
+        visible={detailVisible}
+        onClose={handleDetailCancel}
+        detailData={mergedGroupBuyOverviewDetail}
+        loading={mergedGroupBuyOverviewDetailLoading}
+      />
     </>
   )
 }

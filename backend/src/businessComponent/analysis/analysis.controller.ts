@@ -3,6 +3,7 @@ import { AnalysisService } from './analysis.service';
 import {
   AnalysisCountParams,
   MergedGroupBuyCustomerRankParams,
+  MergedGroupBuyOverviewParams,
 } from '../../../types/dto';
 
 @Controller('analysis')
@@ -54,5 +55,23 @@ export class AnalysisController {
     @Body() params: MergedGroupBuyCustomerRankParams,
   ) {
     return this.analysisService.getMergedGroupBuyCustomerRank(params);
+  }
+
+  /**
+   * 获取团购单（合并）概况数据
+   */
+  @Post('mergedGroupBuyOverview')
+  getMergedGroupBuyOverview(@Body() params: MergedGroupBuyOverviewParams) {
+    return this.analysisService.getMergedGroupBuyOverview(params);
+  }
+
+  /**
+   * 获取团购单（合并）概况详情数据
+   */
+  @Post('mergedGroupBuyOverviewDetail')
+  getMergedGroupBuyOverviewDetail(
+    @Body() params: { groupBuyName: string; startDate: Date; endDate: Date },
+  ) {
+    return this.analysisService.getMergedGroupBuyOverviewDetail(params);
   }
 }

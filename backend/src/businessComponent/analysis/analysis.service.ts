@@ -20,6 +20,11 @@ import {
   SupplierRankResult,
   MergedGroupBuyCustomerRankParams,
   MergedGroupBuyCustomerRankResult,
+  MergedGroupBuyOverviewParams,
+  MergedGroupBuyOverviewResult,
+  MergedGroupBuyOverviewDetail,
+  CustomerPurchaseFrequency,
+  RegionalSalesItem,
 } from '../../../types/dto'; // 导入类型
 
 /**
@@ -669,6 +674,365 @@ export class AnalysisService {
     return {
       groupBuyName,
       customerRank,
+    };
+  }
+
+  /**
+   * 获取团购单合并概况数据
+   * 针对同名的团购单进行聚合分析
+   */
+  async getMergedGroupBuyOverview(
+    params: MergedGroupBuyOverviewParams,
+  ): Promise<MergedGroupBuyOverviewResult> {
+    const {
+      startDate,
+      endDate,
+      page = 1,
+      pageSize = 10,
+      groupBuyName,
+      supplierIds,
+      sortField = 'totalRevenue',
+      sortOrder = 'desc',
+    } = params;
+
+    // 1. 构建查询条件
+    const whereCondition = {
+      delete: 0,
+      ...(groupBuyName && {
+        name: {
+          contains: groupBuyName,
+        },
+      }),
+      ...(supplierIds &&
+        supplierIds.length > 0 && {
+          supplierId: {
+            in: supplierIds,
+          },
+        }),
+      // 如果提供了时间参数，则添加时间过滤条件
+      ...(startDate &&
+        endDate && {
+          groupBuyStartDate: {
+            gte: startDate,
+            lte: endDate,
+          },
+        }),
+    };
+
+    // 2. 获取指定时间范围内的所有团购单及其订单数据
+    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
+      where: whereCondition,
+      include: {
+        order: {
+          where: {
+            delete: 0,
+            status: {
+              in: ['PAID', 'COMPLETED'],
+            },
+          },
+          select: {
+            quantity: true,
+            unitId: true,
+            customerId: true,
+          },
+        },
+      },
+    });
+
+    // 2. 按团购单名称进行分组聚合
+    const mergedDataMap = new Map<
+      string,
+      {
+        groupBuyName: string;
+        totalRevenue: number;
+        totalProfit: number;
+        totalOrderCount: number;
+        uniqueCustomerIds: Set<string>;
+        totalQuantity: number;
+      }
+    >();
+
+    // 遍历所有团购单，按名称聚合数据
+    for (const groupBuy of groupBuysWithOrders) {
+      const groupBuyName = groupBuy.name;
+      const units = groupBuy.units as Array<GroupBuyUnit>;
+
+      // 如果该名称的团购单还未在Map中，则初始化
+      if (!mergedDataMap.has(groupBuyName)) {
+        mergedDataMap.set(groupBuyName, {
+          groupBuyName,
+          totalRevenue: 0,
+          totalProfit: 0,
+          totalOrderCount: 0,
+          uniqueCustomerIds: new Set<string>(),
+          totalQuantity: 0,
+        });
+      }
+
+      const mergedData = mergedDataMap.get(groupBuyName)!;
+
+      // 遍历当前团购单的所有订单
+      for (const order of groupBuy.order as Array<{
+        quantity: number;
+        unitId: string;
+        customerId: string;
+      }>) {
+        // 根据unitId找到对应的规格信息
+        const selectedUnit = units.find((unit) => unit.id === order.unitId);
+        if (selectedUnit) {
+          const revenue = selectedUnit.price * order.quantity;
+          const profit =
+            (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+
+          mergedData.totalRevenue += revenue;
+          mergedData.totalProfit += profit;
+          mergedData.totalOrderCount += 1;
+          mergedData.uniqueCustomerIds.add(order.customerId);
+          mergedData.totalQuantity += order.quantity;
+        }
+      }
+    }
+
+    // 3. 转换为数组并计算派生指标
+    const mergedDataArray = Array.from(mergedDataMap.values()).map((data) => {
+      const uniqueCustomerCount = data.uniqueCustomerIds.size;
+      const totalProfitMargin =
+        data.totalRevenue > 0
+          ? (data.totalProfit / data.totalRevenue) * 100
+          : 0;
+      const averageCustomerOrderValue =
+        uniqueCustomerCount > 0 ? data.totalRevenue / uniqueCustomerCount : 0;
+
+      return {
+        groupBuyName: data.groupBuyName,
+        totalRevenue: data.totalRevenue,
+        totalProfit: data.totalProfit,
+        totalProfitMargin,
+        totalOrderCount: data.totalOrderCount,
+        uniqueCustomerCount,
+        averageCustomerOrderValue,
+      };
+    });
+
+    // 4. 根据指定字段和排序方式进行排序
+    mergedDataArray.sort((a, b) => {
+      let aValue: number;
+      let bValue: number;
+
+      switch (sortField) {
+        case 'totalRevenue':
+          aValue = a.totalRevenue;
+          bValue = b.totalRevenue;
+          break;
+        case 'totalProfit':
+          aValue = a.totalProfit;
+          bValue = b.totalProfit;
+          break;
+        case 'uniqueCustomerCount':
+          aValue = a.uniqueCustomerCount;
+          bValue = b.uniqueCustomerCount;
+          break;
+        case 'totalOrderCount':
+          aValue = a.totalOrderCount;
+          bValue = b.totalOrderCount;
+          break;
+        default:
+          aValue = a.totalRevenue;
+          bValue = b.totalRevenue;
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue - bValue;
+      } else {
+        return bValue - aValue;
+      }
+    });
+
+    // 5. 分页处理
+    const total = mergedDataArray.length;
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedData = mergedDataArray.slice(startIndex, endIndex);
+
+    return {
+      list: paginatedData,
+      total,
+      page,
+      pageSize,
+    };
+  }
+
+  /**
+   * 获取团购单合并概况详情数据
+   */
+  async getMergedGroupBuyOverviewDetail(params: {
+    groupBuyName: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<MergedGroupBuyOverviewDetail> {
+    const { groupBuyName, startDate, endDate } = params;
+
+    // 1. 构建查询条件
+    const whereCondition = {
+      name: groupBuyName,
+      delete: 0,
+      // 如果提供了时间参数，则添加时间过滤条件
+      ...(startDate &&
+        endDate && {
+          groupBuyStartDate: {
+            gte: startDate,
+            lte: endDate,
+          },
+        }),
+    };
+
+    // 2. 查询指定名称的团购单及其订单数据
+    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
+      where: whereCondition,
+      include: {
+        supplier: true,
+        product: true,
+        order: {
+          include: {
+            customer: {
+              include: {
+                customerAddress: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (groupBuysWithOrders.length === 0) {
+      // 如果没有找到数据，返回空的详情对象
+      return {
+        groupBuyName,
+        supplierNames: [],
+        startDate,
+        endDate,
+        totalRevenue: 0,
+        totalProfit: 0,
+        totalProfitMargin: 0,
+        totalOrderCount: 0,
+        uniqueCustomerCount: 0,
+        averageCustomerOrderValue: 0,
+        totalGroupBuyCount: 0,
+        customerPurchaseFrequency: [],
+        multiPurchaseCustomerCount: 0,
+        multiPurchaseCustomerRatio: 0,
+        regionalSales: [],
+      };
+    }
+
+    // 2. 聚合数据计算
+    let totalRevenue = 0;
+    let totalProfit = 0;
+    let totalOrderCount = 0;
+    const uniqueCustomerIds = new Set<string>();
+    const customerPurchaseCounts = new Map<string, number>();
+    const regionalCustomers = new Map<string, Set<string>>();
+    const supplierNamesSet = new Set<string>();
+
+    for (const groupBuy of groupBuysWithOrders) {
+      const units = groupBuy.units as Array<GroupBuyUnit>;
+
+      // 收集供货商名称
+      if (groupBuy.supplier && groupBuy.supplier.name) {
+        supplierNamesSet.add(groupBuy.supplier.name);
+      }
+
+      // 遍历当前团购单的所有订单
+      for (const order of groupBuy.order) {
+        // 根据unitId找到对应的规格信息
+        const selectedUnit = units.find((unit) => unit.id === order.unitId);
+        if (selectedUnit) {
+          const revenue = selectedUnit.price * order.quantity;
+          const profit =
+            (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+
+          totalRevenue += revenue;
+          totalProfit += profit;
+          totalOrderCount += 1;
+          uniqueCustomerIds.add(order.customerId);
+
+          // 统计客户购买次数
+          const currentCount =
+            customerPurchaseCounts.get(order.customerId) || 0;
+          customerPurchaseCounts.set(order.customerId, currentCount + 1);
+
+          // 统计地域销售数据
+          const customerAddress = order.customer.customerAddress;
+          if (customerAddress) {
+            const addressName = customerAddress.name;
+            if (!regionalCustomers.has(addressName)) {
+              regionalCustomers.set(addressName, new Set<string>());
+            }
+            regionalCustomers.get(addressName)!.add(order.customerId);
+          }
+        }
+      }
+    }
+
+    // 3. 计算派生指标
+    const uniqueCustomerCount = uniqueCustomerIds.size;
+    const averageCustomerOrderValue =
+      uniqueCustomerCount > 0 ? totalRevenue / uniqueCustomerCount : 0;
+    const totalGroupBuyCount = groupBuysWithOrders.length;
+    const totalProfitMargin =
+      totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+
+    // 4. 客户购买次数分布统计
+    const purchaseFrequencyMap = new Map<number, number>();
+    for (const count of customerPurchaseCounts.values()) {
+      const currentFreq = purchaseFrequencyMap.get(count) || 0;
+      purchaseFrequencyMap.set(count, currentFreq + 1);
+    }
+
+    const customerPurchaseFrequency: CustomerPurchaseFrequency[] = Array.from(
+      purchaseFrequencyMap.entries(),
+    )
+      .map(([purchaseCount, customerCount]) => ({
+        frequency: `${purchaseCount}次`,
+        count: customerCount,
+        purchaseCount, // 添加购买次数用于排序
+      }))
+      .sort((a, b) => b.purchaseCount - a.purchaseCount) // 按购买次数从高到低排序
+      .map(({ frequency, count }) => ({ frequency, count })); // 移除临时的purchaseCount字段
+
+    // 5. 多次购买客户统计
+    const multiPurchaseCustomerCount = Array.from(
+      customerPurchaseCounts.values(),
+    ).filter((count) => count > 1).length;
+    const multiPurchaseCustomerRatio =
+      uniqueCustomerCount > 0
+        ? (multiPurchaseCustomerCount / uniqueCustomerCount) * 100
+        : 0;
+
+    // 6. 地域销售分析
+    const regionalSalesResult: RegionalSalesItem[] = Array.from(
+      regionalCustomers.entries(),
+    ).map(([addressName, customerSet]) => ({
+      addressName,
+      customerCount: customerSet.size,
+    }));
+
+    return {
+      groupBuyName,
+      supplierNames: Array.from(supplierNamesSet),
+      startDate,
+      endDate,
+      totalRevenue,
+      totalProfit,
+      totalProfitMargin,
+      totalOrderCount,
+      uniqueCustomerCount,
+      averageCustomerOrderValue,
+      totalGroupBuyCount,
+      customerPurchaseFrequency,
+      multiPurchaseCustomerCount,
+      multiPurchaseCustomerRatio,
+      regionalSales: regionalSalesResult,
     };
   }
 }

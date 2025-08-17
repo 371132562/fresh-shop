@@ -8,6 +8,7 @@ import useAnalysisStore from '@/stores/analysisStore.ts'
 
 import { CustomerRankings } from './components/CustomerRankings' // 导入客户排行组件
 import { GroupBuyRankings } from './components/GroupBuyRankings'
+import { MergedGroupBuyOverview } from './components/MergedGroupBuyOverview'
 import { MergedGroupBuyRankings } from './components/MergedGroupBuyRankings'
 import { Overview } from './components/Overview'
 import { SupplierRankings } from './components/SupplierRankings'
@@ -25,6 +26,7 @@ export const Component = () => {
   const getMergedGroupBuyRank = useAnalysisStore(state => state.getMergedGroupBuyRank)
   const getCustomerRank = useAnalysisStore(state => state.getCustomerRank)
   const getSupplierRank = useAnalysisStore(state => state.getSupplierRank)
+  const getMergedGroupBuyOverview = useAnalysisStore(state => state.getMergedGroupBuyOverview)
 
   const changeDateRange = (days: number) => {
     setCalendarValue([dayjs().subtract(days, 'day').toDate(), dayjs().toDate()])
@@ -58,13 +60,27 @@ export const Component = () => {
         getSupplierRank(params)
         break
       case 'overview':
-        // 概况页面的数据已在上面的useEffect中处理
+        // 整体概况页面的数据已在上面的useEffect中处理
+        break
+      case 'merged-group-buy-overview':
+        getMergedGroupBuyOverview({
+          startDate: params.startDate,
+          endDate: params.endDate,
+          page: 1,
+          pageSize: 10
+        })
         break
     }
   }, [activeViewKey, calendarValue])
 
   const viewComponents: Record<string, React.ReactNode> = {
     overview: <Overview />,
+    'merged-group-buy-overview': (
+      <MergedGroupBuyOverview
+        startDate={calendarValue[0]}
+        endDate={calendarValue[1]}
+      />
+    ),
     'group-buy-rankings': <GroupBuyRankings />,
     'merged-group-buy-rankings': (
       <MergedGroupBuyRankings
@@ -183,24 +199,38 @@ export const Component = () => {
         onChange={setActiveViewKey}
         options={[
           {
-            value: 'overview',
-            label: '概况'
+            label: '概览数据',
+            options: [
+              {
+                value: 'overview',
+                label: '整体概况'
+              },
+              {
+                value: 'merged-group-buy-overview',
+                label: '团购单（合并）概况'
+              }
+            ]
           },
           {
-            value: 'group-buy-rankings',
-            label: '团购单排行'
-          },
-          {
-            value: 'merged-group-buy-rankings',
-            label: '团购单（合并）排行'
-          },
-          {
-            value: 'customer-rankings',
-            label: '客户排行'
-          },
-          {
-            value: 'supplier-rankings',
-            label: '供货商排行'
+            label: '排行数据',
+            options: [
+              {
+                value: 'group-buy-rankings',
+                label: '团购单排行'
+              },
+              {
+                value: 'merged-group-buy-rankings',
+                label: '团购单（合并）排行'
+              },
+              {
+                value: 'customer-rankings',
+                label: '客户排行'
+              },
+              {
+                value: 'supplier-rankings',
+                label: '供货商排行'
+              }
+            ]
           }
         ]}
       />

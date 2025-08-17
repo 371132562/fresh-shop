@@ -219,18 +219,19 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
                       className="flex cursor-pointer items-center justify-between rounded-lg p-3 transition-all duration-200 hover:bg-blue-50 hover:shadow-sm"
                       onClick={() => toggleProductExpand(product.productId)}
                     >
-                      <div className="flex items-center gap-4">
-                        {/* 展开收起按钮 - 移到序号左侧 */}
+                      <div className="flex items-center gap-3">
+                        {/* 展开收起按钮 - 现代化设计 */}
                         {totalGroupBuys > 0 && (
-                          <div className="flex h-6 w-6 items-center justify-center">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 shadow-sm transition-all duration-300 hover:from-blue-50 hover:to-blue-100 hover:shadow-md">
                             {expandedProducts.has(product.productId) ? (
-                              <CaretDownOutlined className="text-lg text-blue-500 transition-transform duration-200" />
+                              <CaretDownOutlined className="text-base text-slate-600 transition-all duration-300 hover:text-blue-600" />
                             ) : (
-                              <CaretRightOutlined className="text-lg text-blue-500 transition-transform duration-200" />
+                              <CaretRightOutlined className="text-base text-slate-600 transition-all duration-300 hover:text-blue-600" />
                             )}
                           </div>
                         )}
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-base font-bold text-white shadow-md">
+                        {/* 序号 - 简洁设计 */}
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-base font-semibold text-white shadow-sm">
                           {index + 1}
                         </div>
                         <div className="flex-1">
