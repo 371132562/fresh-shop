@@ -327,7 +327,7 @@ export class CustomerService {
                   where: {
                     delete: 0,
                     status: {
-                      in: ['PAID', 'COMPLETED'],
+                      in: [OrderStatus.PAID, OrderStatus.COMPLETED],
                     },
                   },
                 },
@@ -347,7 +347,7 @@ export class CustomerService {
               customerId: customer.id,
               delete: 0,
               status: {
-                in: ['PAID', 'COMPLETED'],
+                in: [OrderStatus.PAID, OrderStatus.COMPLETED],
               },
             },
             include: {
@@ -427,7 +427,7 @@ export class CustomerService {
                   where: {
                     delete: 0,
                     status: {
-                      in: ['PAID', 'COMPLETED'],
+                      in: [OrderStatus.PAID, OrderStatus.COMPLETED],
                     },
                   },
                 },
@@ -446,7 +446,7 @@ export class CustomerService {
               customerId: customer.id,
               delete: 0,
               status: {
-                in: ['PAID', 'COMPLETED'],
+                in: [OrderStatus.PAID, OrderStatus.COMPLETED],
               },
             },
             include: {

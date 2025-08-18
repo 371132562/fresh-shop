@@ -4,7 +4,7 @@ import * as dayjs from 'dayjs'; // 导入 dayjs
 import * as utc from 'dayjs/plugin/utc';
 import * as timezone from 'dayjs/plugin/timezone';
 import * as isSameOrBefore from 'dayjs/plugin/isSameOrBefore'; // 导入 isSameOrBefore 插件
-
+import { OrderStatus } from '@prisma/client';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrBefore); // 扩展 isSameOrBefore 插件
@@ -76,7 +76,7 @@ export class AnalysisService {
         order: {
           where: {
             status: {
-              in: ['PAID', 'COMPLETED'], // 只统计已付款和已完成的订单
+              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
             },
             delete: 0, // 确保订单未被删除
           },
@@ -214,7 +214,7 @@ export class AnalysisService {
           where: {
             delete: 0,
             status: {
-              in: ['PAID', 'COMPLETED'],
+              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
             },
           },
           select: {
@@ -290,7 +290,7 @@ export class AnalysisService {
         },
         delete: 0,
         status: {
-          in: ['PAID', 'COMPLETED'],
+          in: [OrderStatus.PAID, OrderStatus.COMPLETED],
         },
       },
       include: {
@@ -408,7 +408,7 @@ export class AnalysisService {
           where: {
             delete: 0,
             status: {
-              in: ['PAID', 'COMPLETED'],
+              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
             },
           },
           select: {
@@ -542,7 +542,7 @@ export class AnalysisService {
           where: {
             delete: 0,
             status: {
-              in: ['PAID', 'COMPLETED'],
+              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
             },
           },
           select: {
@@ -709,7 +709,7 @@ export class AnalysisService {
           where: {
             delete: 0,
             status: {
-              in: ['PAID', 'COMPLETED'],
+              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
             },
           },
           include: {
@@ -887,7 +887,7 @@ export class AnalysisService {
           where: {
             delete: 0,
             status: {
-              in: ['PAID', 'COMPLETED'],
+              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
             },
           },
           include: {
@@ -974,7 +974,7 @@ export class AnalysisService {
           where: {
             delete: 0,
             status: {
-              in: ['PAID', 'COMPLETED'],
+              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
             },
           },
           include: {
