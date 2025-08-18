@@ -319,6 +319,7 @@ export type GroupBuyPageParams = CommonPageParams & {
   endDate: Date | null; // 结束时间筛选
   supplierIds: Supplier['id'][]; // 供货商ID数组（精确匹配）
   productIds: Product['id'][]; // 商品ID数组（精确匹配）
+  orderStatuses: OrderStatus[]; // 订单状态数组（精确匹配）
 };
 
 /**
@@ -491,6 +492,7 @@ export type MergedGroupBuyOverviewDetail = {
   totalProfit: number; // 总利润
   totalProfitMargin: number; // 总利润率
   totalOrderCount: number; // 总订单量
+  totalRefundedOrderCount: number; // 退款订单数
   uniqueCustomerCount: number; // 总参与客户数（去重）
   averageCustomerOrderValue: number; // 平均客单价
   totalGroupBuyCount: number; // 该名称团购单总发起次数

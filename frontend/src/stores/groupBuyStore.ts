@@ -71,7 +71,8 @@ const useGroupBuyStore = create<GroupBuyStore>((set, get) => ({
     supplierIds: [],
     productIds: [],
     startDate: null,
-    endDate: null
+    endDate: null,
+    orderStatuses: [] // 订单状态筛选数组
   },
   getGroupBuyList: async (data = get().pageParams) => {
     try {

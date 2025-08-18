@@ -348,9 +348,9 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
               </Col>
               <Col span={8}>
                 <Statistic
-                  title="团购发起次数"
-                  value={detailData.totalGroupBuyCount}
-                  suffix="次"
+                  title="退款订单数"
+                  value={detailData.totalRefundedOrderCount}
+                  suffix="单"
                   valueStyle={{ color: '#fa8c16' }}
                 />
               </Col>

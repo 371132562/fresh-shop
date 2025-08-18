@@ -699,7 +699,7 @@ export class AnalysisService {
         }),
     };
 
-    // 2. 查询指定名称的团购单及其订单数据
+    // 2. 查询指定名称的团购单及其订单数据（包含所有状态的订单）
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: whereCondition,
       include: {
@@ -708,9 +708,6 @@ export class AnalysisService {
         order: {
           where: {
             delete: 0,
-            status: {
-              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
-            },
           },
           include: {
             customer: {
@@ -719,6 +716,26 @@ export class AnalysisService {
               },
             },
           },
+        },
+      },
+    });
+
+    // 2.1 单独查询退款订单数据
+    const refundedOrdersCount = await this.prisma.order.count({
+      where: {
+        delete: 0,
+        status: OrderStatus.REFUNDED,
+        groupBuy: {
+          name: groupBuyName,
+          delete: 0,
+          // 如果提供了时间参数，则添加时间过滤条件
+          ...(startDate &&
+            endDate && {
+              groupBuyStartDate: {
+                gte: startDate,
+                lte: endDate,
+              },
+            }),
         },
       },
     });
@@ -734,6 +751,7 @@ export class AnalysisService {
         totalProfit: 0,
         totalProfitMargin: 0,
         totalOrderCount: 0,
+        totalRefundedOrderCount: refundedOrdersCount,
         uniqueCustomerCount: 0,
         averageCustomerOrderValue: 0,
         totalGroupBuyCount: 0,
@@ -761,33 +779,39 @@ export class AnalysisService {
         supplierNamesSet.add(groupBuy.supplier.name);
       }
 
-      // 遍历当前团购单的所有订单
+      // 遍历当前团购单的所有订单（只统计已支付和已完成的订单）
       for (const order of groupBuy.order) {
-        // 根据unitId找到对应的规格信息
-        const selectedUnit = units.find((unit) => unit.id === order.unitId);
-        if (selectedUnit) {
-          const revenue = selectedUnit.price * order.quantity;
-          const profit =
-            (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+        // 只处理已支付和已完成的订单进行收入和利润统计
+        if (
+          order.status === OrderStatus.PAID ||
+          order.status === OrderStatus.COMPLETED
+        ) {
+          // 根据unitId找到对应的规格信息
+          const selectedUnit = units.find((unit) => unit.id === order.unitId);
+          if (selectedUnit) {
+            const revenue = selectedUnit.price * order.quantity;
+            const profit =
+              (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
 
-          totalRevenue += revenue;
-          totalProfit += profit;
-          totalOrderCount += 1;
-          uniqueCustomerIds.add(order.customerId);
+            totalRevenue += revenue;
+            totalProfit += profit;
+            totalOrderCount += 1;
+            uniqueCustomerIds.add(order.customerId);
 
-          // 统计客户购买次数
-          const currentCount =
-            customerPurchaseCounts.get(order.customerId) || 0;
-          customerPurchaseCounts.set(order.customerId, currentCount + 1);
+            // 统计客户购买次数
+            const currentCount =
+              customerPurchaseCounts.get(order.customerId) || 0;
+            customerPurchaseCounts.set(order.customerId, currentCount + 1);
 
-          // 统计地域销售数据
-          const customerAddress = order.customer.customerAddress;
-          if (customerAddress) {
-            const addressKey = `${customerAddress.id}|${customerAddress.name}`;
-            if (!regionalCustomers.has(addressKey)) {
-              regionalCustomers.set(addressKey, new Set<string>());
+            // 统计地域销售数据
+            const customerAddress = order.customer.customerAddress;
+            if (customerAddress) {
+              const addressKey = `${customerAddress.id}|${customerAddress.name}`;
+              if (!regionalCustomers.has(addressKey)) {
+                regionalCustomers.set(addressKey, new Set<string>());
+              }
+              regionalCustomers.get(addressKey)!.add(order.customerId);
             }
-            regionalCustomers.get(addressKey)!.add(order.customerId);
           }
         }
       }
@@ -847,6 +871,7 @@ export class AnalysisService {
       totalProfit,
       totalProfitMargin,
       totalOrderCount,
+      totalRefundedOrderCount: refundedOrdersCount,
       uniqueCustomerCount,
       averageCustomerOrderValue,
       totalGroupBuyCount,

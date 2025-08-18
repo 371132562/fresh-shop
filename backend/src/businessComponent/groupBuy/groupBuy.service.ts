@@ -43,6 +43,7 @@ export class GroupBuyService {
       endDate,
       supplierIds,
       productIds,
+      orderStatuses,
     } = data;
     const skip = (page - 1) * pageSize; // 计算要跳过的记录数
 
@@ -72,6 +73,18 @@ export class GroupBuyService {
     if (productIds && productIds.length > 0) {
       where.productId = {
         in: productIds,
+      };
+    }
+
+    // 如果指定了订单状态筛选，需要筛选出包含指定状态订单的团购单
+    if (orderStatuses && orderStatuses.length > 0) {
+      where.order = {
+        some: {
+          status: {
+            in: orderStatuses,
+          },
+          delete: 0,
+        },
       };
     }
 

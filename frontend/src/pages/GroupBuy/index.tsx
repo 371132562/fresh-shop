@@ -8,7 +8,7 @@ import { NavLink } from 'react-router'
 import MergedGroupBuyDetailModal from '@/components/MergedGroupBuyDetailModal'
 import useAnalysisStore from '@/stores/analysisStore'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
-import { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
+import { OrderStatus, OrderStatusMap, OrderStatusOptions } from '@/stores/orderStore.ts'
 import useProductStore from '@/stores/productStore.ts'
 import useSupplierStore from '@/stores/supplierStore.ts'
 import { formatDate } from '@/utils'
@@ -50,12 +50,13 @@ export const Component = () => {
     getAllSuppliers()
     getAllProducts()
     pageChange()
-    const { name, supplierIds, productIds, startDate, endDate } = pageParams
+    const { name, supplierIds, productIds, startDate, endDate, orderStatuses } = pageParams
 
     form.setFieldsValue({
       name,
       supplierIds,
       productIds,
+      orderStatuses,
       groupBuySearchDate: startDate && endDate ? [dayjs(startDate), dayjs(endDate)] : []
     })
   }, [])
@@ -71,12 +72,13 @@ export const Component = () => {
     form
       .validateFields()
       .then(async val => {
-        const { name, groupBuySearchDate, supplierIds, productIds } = val
+        const { name, groupBuySearchDate, supplierIds, productIds, orderStatuses } = val
         setPageParams({
           page: 1,
           name,
           supplierIds,
           productIds,
+          orderStatuses: orderStatuses || [], // 订单状态筛选数组
           startDate: groupBuySearchDate?.[0]?.toDate() ?? null,
           endDate: groupBuySearchDate?.[1]?.toDate() ?? null
         })
@@ -94,9 +96,7 @@ export const Component = () => {
   // 处理查看详情
   const handleViewDetail = (item: GroupBuyListItem) => {
     getMergedGroupBuyOverviewDetail({
-      groupBuyName: item.name,
-      startDate: '',
-      endDate: ''
+      groupBuyName: item.name
     })
     setDetailVisible(true)
   }
@@ -113,7 +113,8 @@ export const Component = () => {
       startDate: null,
       endDate: null,
       supplierIds: [],
-      productIds: []
+      productIds: [],
+      orderStatuses: [] // 重置订单状态筛选
     }
     form.setFieldsValue(resetValues)
     setPageParams({
@@ -316,6 +317,27 @@ export const Component = () => {
                     value={item.id}
                   >
                     {item.name}
+                  </Select.Option>
+                )
+              })}
+            </Select>
+          </Form.Item>
+          <Form.Item
+            label="按订单状态搜索(可多选)"
+            name="orderStatuses"
+          >
+            <Select
+              mode="multiple"
+              allowClear
+              placeholder="请选择订单状态"
+            >
+              {OrderStatusOptions.map(option => {
+                return (
+                  <Select.Option
+                    key={option.value}
+                    value={option.value}
+                  >
+                    <Tag color={option.color}>{option.label}</Tag>
                   </Select.Option>
                 )
               })}
