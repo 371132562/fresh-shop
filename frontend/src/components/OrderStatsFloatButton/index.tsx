@@ -33,7 +33,6 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
   const getOrderStats = useOrderStore(state => state.getOrderStats)
   const refreshOrderStats = useOrderStore(state => state.refreshOrderStats)
   const updateOrder = useOrderStore(state => state.updateOrder)
-  const statsLoading = useOrderStore(state => state.statsLoading)
 
   // 组件挂载时获取订单统计数据
   useEffect(() => {
@@ -110,7 +109,6 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
             size="large"
             icon={<ShoppingCartOutlined className="!text-2xl !text-white" />}
             onClick={handleFloatButtonClick}
-            loading={statsLoading}
             className="!text-white transition duration-200 hover:bg-blue-600/50 active:bg-blue-600/50"
           />
         </Badge>
