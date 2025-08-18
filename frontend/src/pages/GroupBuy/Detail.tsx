@@ -26,6 +26,7 @@ export const Component = () => {
   const setGroupBuy = useGroupBuyStore(state => state.setGroupBuy)
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
   const updateOrder = useOrderStore(state => state.updateOrder)
+  const refreshOrderStats = useOrderStore(state => state.refreshOrderStats)
 
   const images: string[] = useMemo(() => {
     return Array.isArray(groupBuy?.images)
@@ -117,6 +118,8 @@ export const Component = () => {
         if (id) {
           getGroupBuy({ id })
         }
+        // 重新获取订单统计数据
+        refreshOrderStats()
       } else {
         notification.error({
           message: '失败',

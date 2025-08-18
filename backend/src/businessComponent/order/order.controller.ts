@@ -42,4 +42,9 @@ export class OrderController {
   refund(@Body('id') id: string) {
     return this.orderService.refund(id);
   }
+
+  @Post('stats')
+  getOrderStats() {
+    return this.orderService.getOrderStats();
+  }
 }

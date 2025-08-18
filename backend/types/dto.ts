@@ -591,6 +591,39 @@ export type OrderDetail = Order & {
   }; // 团购基本信息
 };
 
+/**
+ * 订单统计数据
+ * 包含未付款和已付款订单的数量及详细列表
+ */
+export type OrderStatsResult = {
+  notPaidCount: number; // 未付款订单数量
+  paidCount: number; // 已付款订单数量
+  notPaidOrders: (Order & {
+    customer: {
+      id: string;
+      name: string;
+      phone: string;
+    };
+    groupBuy: {
+      id: string;
+      name: string;
+      groupBuyStartDate: Date;
+    };
+  })[]; // 未付款订单详细列表
+  paidOrders: (Order & {
+    customer: {
+      id: string;
+      name: string;
+      phone: string;
+    };
+    groupBuy: {
+      id: string;
+      name: string;
+      groupBuyStartDate: Date;
+    };
+  })[]; // 已付款订单详细列表
+};
+
 // ===================================================================
 // 统计分析模块 (Analysis)
 // 包含数据统计、趋势分析相关的数据传输对象

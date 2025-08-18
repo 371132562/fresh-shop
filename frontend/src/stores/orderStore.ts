@@ -1,4 +1,10 @@
-import { ListByPage, Order, OrderDetail, OrderPageParams } from 'fresh-shop-backend/types/dto.ts'
+import {
+  ListByPage,
+  Order,
+  OrderDetail,
+  OrderPageParams,
+  OrderStatsResult
+} from 'fresh-shop-backend/types/dto.ts'
 import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
 
@@ -9,6 +15,7 @@ import {
   orderListAllApi,
   orderListApi,
   orderRefundApi,
+  orderStatsApi,
   orderUpdateApi
 } from '@/services/apis.ts'
 import http from '@/services/base.ts'
@@ -68,6 +75,14 @@ type OrderStore = {
 
   refundLoading: boolean
   refundOrder: (data: OrderId) => Promise<boolean>
+
+  // 订单统计相关状态
+  orderStats: OrderStatsResult | null
+  statsLoading: boolean
+  // 订单统计相关方法
+  getOrderStats: () => Promise<void>
+  clearOrderStats: () => void
+  refreshOrderStats: () => Promise<void>
 }
 
 const useOrderStore = create<OrderStore>((set, get) => ({
@@ -83,6 +98,9 @@ const useOrderStore = create<OrderStore>((set, get) => ({
     customerIds: [],
     groupBuyIds: []
   },
+  // 订单统计相关状态初始化
+  orderStats: null,
+  statsLoading: false,
   getOrderList: async (data = get().pageParams) => {
     try {
       set({ listLoading: true })
@@ -200,6 +218,25 @@ const useOrderStore = create<OrderStore>((set, get) => ({
       set({ refundLoading: false })
       get().getOrder(data)
     }
+  },
+
+  // 订单统计相关方法实现
+  getOrderStats: async () => {
+    try {
+      set({ statsLoading: true })
+      const res = await http.post(orderStatsApi)
+      set({ orderStats: res.data })
+    } catch (err) {
+      console.error(err)
+    } finally {
+      set({ statsLoading: false })
+    }
+  },
+  clearOrderStats: () => {
+    set({ orderStats: null })
+  },
+  refreshOrderStats: async () => {
+    await get().getOrderStats()
   }
 }))
 

@@ -17,6 +17,7 @@ import { useOutlet } from 'react-router'
 import { NavLink } from 'react-router'
 
 import ErrorPage from '@/components/Error'
+import OrderStatsButton from '@/components/OrderStatsFloatButton'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 
 import style from './index.module.less'
@@ -67,14 +68,17 @@ export const Component: FC = () => {
         {/* 头部：固定顶部，深色背景，居中，有阴影，顶部圆角 */}
         <header className="sticky top-0 z-10 rounded-b-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-1 shadow-md">
           <div className="flex items-center justify-between">
-            {/* 菜单图标：点击区域更大，视觉反馈更强 */}
-            <div
-              className="cursor-pointer rounded-full p-2 text-white transition duration-200 active:bg-blue-600/50"
-              onClick={() => {
-                setOpen(true)
-              }}
-            >
-              <UnorderedListOutlined className="text-2xl" />
+            {/* 左侧按钮组：菜单和订单统计 */}
+            <div className="flex items-center space-x-2">
+              <div
+                className="cursor-pointer rounded-full p-2 text-white transition duration-200 hover:bg-blue-600/50 active:bg-blue-600/50"
+                onClick={() => {
+                  setOpen(true)
+                }}
+              >
+                <UnorderedListOutlined className="text-2xl" />
+              </div>
+              <OrderStatsButton className="cursor-pointer rounded-full p-2 text-white transition duration-200 active:bg-blue-600/50" />
             </div>
             {/* 标题：居中，白色字体，更粗的字体 */}
             <p className="flex h-16 items-center justify-center text-2xl font-bold tracking-wide text-white">

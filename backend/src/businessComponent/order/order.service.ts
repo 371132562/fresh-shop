@@ -123,4 +123,56 @@ export class OrderService {
       },
     });
   }
+
+  /**
+   * 获取订单统计数据
+   * 返回未付款和已付款订单的数量及详细列表
+   */
+  async getOrderStats() {
+    const where: Prisma.OrderWhereInput = {
+      delete: 0,
+      status: {
+        in: [OrderStatus.NOTPAID, OrderStatus.PAID],
+      },
+    };
+
+    // 获取未付款和已付款的订单
+    const orders = await this.prisma.order.findMany({
+      where,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+          },
+        },
+        groupBuy: {
+          select: {
+            id: true,
+            name: true,
+            groupBuyStartDate: true,
+          },
+        },
+      },
+    });
+
+    // 分别统计未付款和已付款订单
+    const notPaidOrders = orders.filter(
+      (order) => order.status === OrderStatus.NOTPAID,
+    );
+    const paidOrders = orders.filter(
+      (order) => order.status === OrderStatus.PAID,
+    );
+
+    return {
+      notPaidCount: notPaidOrders.length,
+      paidCount: paidOrders.length,
+      notPaidOrders,
+      paidOrders,
+    };
+  }
 }
