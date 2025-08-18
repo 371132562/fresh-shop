@@ -244,6 +244,7 @@ export type CustomerConsumptionDetailDto = {
     productId: string; // 商品ID
     productName: string; // 商品名称
     count: number; // 购买次数
+    isLatestConsumption: boolean; // 是否为最近参团的商品
     groupBuys: {
       groupBuyName: string; // 团购名称
       unitName: string; // 规格名称

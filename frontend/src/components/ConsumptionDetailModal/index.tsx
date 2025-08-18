@@ -23,7 +23,7 @@ type ConsumptionDetailModalProps = {
 
 /**
  * 消费详情模态框组件
- * 展示客户的消费详情，包括基础信息、购买商品排行和参与团购排行
+ * 展示客户的消费详情，包括基础信息、购买商品排行和参团团购排行
  */
 const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
   visible,
@@ -63,6 +63,7 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
       style={{
         top: 20
       }}
+      destroyOnHidden
     >
       {loading ? (
         <div className="flex items-center justify-center py-8">
@@ -180,7 +181,7 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
                 const totalGroupBuyAmount =
                   product.groupBuys?.reduce((sum, gb) => sum + (gb.totalAmount || 0), 0) || 0
 
-                // 找到该商品中最新的团购时间
+                // 找到该商品中最新的团购时间（用于显示最近参团时间）
                 const latestGroupBuyDate = product.groupBuys?.reduce(
                   (latest, gb) => {
                     const gbDate = new Date(gb.latestGroupBuyStartDate)
@@ -189,28 +190,8 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
                   null as Date | null
                 )
 
-                // 找到全局最新的团购时间（用于标识最新消费）
-                const globalLatestDate = consumptionDetail.topProducts.reduce(
-                  (globalLatest, p) => {
-                    const productLatest = p.groupBuys?.reduce(
-                      (latest, gb) => {
-                        const gbDate = new Date(gb.latestGroupBuyStartDate)
-                        return !latest || gbDate > latest ? gbDate : latest
-                      },
-                      null as Date | null
-                    )
-                    return !globalLatest || (productLatest && productLatest > globalLatest)
-                      ? productLatest
-                      : globalLatest
-                  },
-                  null as Date | null
-                )
-
-                // 判断当前商品是否包含最新消费
-                const isLatestConsumption =
-                  latestGroupBuyDate &&
-                  globalLatestDate &&
-                  latestGroupBuyDate.getTime() === globalLatestDate.getTime()
+                // 直接使用后端返回的 isLatestConsumption 字段
+                const isLatestConsumption = product.isLatestConsumption
 
                 return (
                   <div key={product.productId}>
@@ -247,14 +228,12 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
                             <div className="text-lg font-semibold text-gray-800">
                               {product.productName}
                             </div>
-                            {isLatestConsumption && <Tag color="red">最近参与</Tag>}
+                            {isLatestConsumption && <Tag color="red">最新购买</Tag>}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            共购买 {product.count} 次 · {totalGroupBuys} 个团购规格
-                          </div>
+                          <div className="text-sm text-gray-500">共购买 {product.count} 次</div>
                           {latestGroupBuyDate && (
                             <div className="text-xs text-gray-400">
-                              最近参与: {dayjs(latestGroupBuyDate).format('YYYY-MM-DD')}
+                              最后购买时间: {dayjs(latestGroupBuyDate).format('YYYY-MM-DD')}
                             </div>
                           )}
                         </div>
@@ -285,7 +264,7 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
                                     规格：{groupBuy.unitName}
                                   </div>
                                   <div className="text-xs text-gray-400">
-                                    最近参与：
+                                    发起时间：
                                     {dayjs(groupBuy.latestGroupBuyStartDate).format('YYYY-MM-DD')}
                                   </div>
                                 </div>
