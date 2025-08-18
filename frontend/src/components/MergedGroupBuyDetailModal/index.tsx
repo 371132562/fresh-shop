@@ -9,6 +9,9 @@ import ConsumptionDetailModal from '@/components/ConsumptionDetailModal'
 import useAnalysisStore from '@/stores/analysisStore'
 import useCustomerStore from '@/stores/customerStore'
 
+import PurchaseFrequencyChart from './components/PurchaseFrequencyChart'
+import RegionalSalesChart from './components/RegionalSalesChart'
+
 type MergedGroupBuyDetailModalProps = {
   visible: boolean
   onClose: () => void
@@ -394,17 +397,28 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
               <span className="text-sm text-gray-600">客户购买次数分布</span>
             </Divider>
 
-            <Table
-              columns={purchaseFrequencyColumns}
-              dataSource={detailData.customerPurchaseFrequency.map((item, index) => ({
-                key: index,
-                frequency: item.frequency,
-                count: item.count
-              }))}
-              pagination={false}
-              size="small"
-              className="mt-2"
-            />
+            {/* 购买次数分布图表和表格 */}
+            <Row gutter={16}>
+              <Col span={12}>
+                <PurchaseFrequencyChart
+                  data={detailData.customerPurchaseFrequency}
+                  onFrequencyClick={handleFrequencyClick}
+                />
+              </Col>
+              <Col span={12}>
+                <Table
+                  columns={purchaseFrequencyColumns}
+                  dataSource={detailData.customerPurchaseFrequency.map((item, index) => ({
+                    key: index,
+                    frequency: item.frequency,
+                    count: item.count
+                  }))}
+                  pagination={false}
+                  size="small"
+                  className="mt-2"
+                />
+              </Col>
+            </Row>
           </Card>
 
           {/* 地域销售分析 */}
@@ -417,17 +431,28 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
             }
             size="small"
           >
-            <Table
-              columns={regionalSalesColumns}
-              dataSource={detailData.regionalSales.map((item, index) => ({
-                key: index,
-                addressId: item.addressId,
-                addressName: item.addressName,
-                customerCount: item.customerCount
-              }))}
-              pagination={false}
-              size="small"
-            />
+            {/* 地域销售分布图表和表格 */}
+            <Row gutter={16}>
+              <Col span={12}>
+                <RegionalSalesChart
+                  data={detailData.regionalSales}
+                  onRegionalClick={handleRegionalClick}
+                />
+              </Col>
+              <Col span={12}>
+                <Table
+                  columns={regionalSalesColumns}
+                  dataSource={detailData.regionalSales.map((item, index) => ({
+                    key: index,
+                    addressId: item.addressId,
+                    addressName: item.addressName,
+                    customerCount: item.customerCount
+                  }))}
+                  pagination={false}
+                  size="small"
+                />
+              </Col>
+            </Row>
           </Card>
         </div>
       ) : (
