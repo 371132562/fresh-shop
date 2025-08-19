@@ -108,7 +108,7 @@ model GroupBuy {
 }
 
 enum OrderStatus {
-  NOTPAID // 未付款
+  NOTPAID // 待付款
   PAID // 已付款
   COMPLETED // 已完成
   REFUNDED // 已退款

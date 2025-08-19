@@ -593,10 +593,10 @@ export type OrderDetail = Order & {
 
 /**
  * 订单统计数据
- * 包含未付款和已付款订单的数量及详细列表
+ * 包含待付款和已付款订单的数量及详细列表
  */
 export type OrderStatsResult = {
-  notPaidCount: number; // 未付款订单数量
+  notPaidCount: number; // 待付款订单数量
   paidCount: number; // 已付款订单数量
   notPaidOrders: (Order & {
     customer: {
@@ -609,7 +609,7 @@ export type OrderStatsResult = {
       name: string;
       groupBuyStartDate: Date;
     };
-  })[]; // 未付款订单详细列表
+  })[]; // 待付款订单详细列表
   paidOrders: (Order & {
     customer: {
       id: string;

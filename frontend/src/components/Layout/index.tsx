@@ -163,7 +163,6 @@ export const Component: FC = () => {
         }}
       >
         <div className="flex flex-col p-4">
-          {/* 移除 p-2，由 body padding 控制 */}
           <Form
             name="global_settings" // 为表单添加名称
             layout="horizontal" // 水平布局更适合设置项

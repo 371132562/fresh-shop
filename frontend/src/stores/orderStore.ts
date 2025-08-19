@@ -28,7 +28,7 @@ export enum OrderStatus {
 }
 
 export const OrderStatusMap: Record<OrderStatus, { label: string; color: string }> = {
-  [OrderStatus.NOTPAID]: { label: '未付款', color: '#f5bc2d' },
+  [OrderStatus.NOTPAID]: { label: '待付款', color: '#f5bc2d' },
   [OrderStatus.PAID]: { label: '已付款', color: '#2db7f5' },
   [OrderStatus.COMPLETED]: { label: '已完成', color: '#87d068' },
   [OrderStatus.REFUNDED]: { label: '已退款', color: '#f50' }

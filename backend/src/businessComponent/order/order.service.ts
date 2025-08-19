@@ -126,7 +126,7 @@ export class OrderService {
 
   /**
    * 获取订单统计数据
-   * 返回未付款和已付款订单的数量及详细列表
+   * 返回待付款和已付款订单的数量及详细列表
    */
   async getOrderStats() {
     const where: Prisma.OrderWhereInput = {
@@ -136,7 +136,7 @@ export class OrderService {
       },
     };
 
-    // 获取未付款和已付款的订单
+    // 获取待付款和已付款的订单
     const orders = await this.prisma.order.findMany({
       where,
       orderBy: {
@@ -160,7 +160,7 @@ export class OrderService {
       },
     });
 
-    // 分别统计未付款和已付款订单
+    // 分别统计待付款和已付款订单
     const notPaidOrders = orders.filter(
       (order) => order.status === OrderStatus.NOTPAID,
     );

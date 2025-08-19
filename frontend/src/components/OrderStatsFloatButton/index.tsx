@@ -23,7 +23,7 @@ type OrderStatsButtonProps = {
 
 /**
  * 订单统计按钮组件
- * 显示未付款和已付款订单数量，点击可查看详细列表
+ * 显示待付款和已付款订单数量，点击可查看详细列表
  */
 const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
   const navigate = useNavigate()
@@ -39,7 +39,7 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
     getOrderStats()
   }, [])
 
-  // 计算总的待处理订单数量（未付款 + 已付款）
+  // 计算总的待处理订单数量（待付款 + 已付款）
   const totalPendingCount = (orderStats?.notPaidCount || 0) + (orderStats?.paidCount || 0)
 
   // 处理悬浮按钮点击
@@ -51,7 +51,6 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
 
   // 处理订单条目点击，跳转到团购单详情页
   const handleOrderClick = (groupBuyId: string) => {
-    // 使用window.location进行页面跳转
     navigate(`/groupBuy/detail/${groupBuyId}`)
     setModalVisible(false)
   }
@@ -117,49 +116,39 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
       {/* 订单详情弹窗 */}
       <Modal
         title={
-          <div style={{ textAlign: 'center', fontSize: '18px', fontWeight: 600, color: '#2c3e50' }}>
-            📋 未完成状态订单
-          </div>
+          <div className="text-center text-lg font-semibold text-slate-700">📋 未完成状态订单</div>
         }
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
         width={800}
         centered
-        style={{ top: 20 }}
+        className="!top-5"
       >
         <Space
           direction="vertical"
-          style={{ width: '100%' }}
+          className="w-full"
           size="large"
         >
           {/* 统计概览卡片 */}
           <Card
-            style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              border: 'none',
-              borderRadius: '12px'
-            }}
-            bodyStyle={{ padding: '20px' }}
+            className="!rounded-xl !border-none !bg-gradient-to-br !from-sky-600 !to-purple-600"
+            styles={{ body: { padding: '20px' } }}
           >
-            <div style={{ color: 'white', textAlign: 'center' }}>
-              <div style={{ fontSize: '16px', fontWeight: 500, marginBottom: '12px' }}>
-                📊 订单统计
-              </div>
+            <div className="text-center text-white">
+              <div className="mb-3 text-base font-medium">📊 订单统计</div>
               <Space size="large">
                 <div>
-                  <div style={{ fontSize: '24px', fontWeight: 'bold' }}>
-                    {orderStats.notPaidCount}
-                  </div>
-                  <div style={{ fontSize: '12px', opacity: 0.9 }}>未付款</div>
+                  <div className="text-2xl font-bold">{orderStats.notPaidCount}</div>
+                  <div className="text-xs opacity-90">待付款</div>
                 </div>
                 <Divider
                   type="vertical"
-                  style={{ borderColor: 'rgba(255,255,255,0.3)', height: '40px' }}
+                  className="!h-10 !border-white/30"
                 />
                 <div>
-                  <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{orderStats.paidCount}</div>
-                  <div style={{ fontSize: '12px', opacity: 0.9 }}>已付款</div>
+                  <div className="text-2xl font-bold">{orderStats.paidCount}</div>
+                  <div className="text-xs opacity-90">已付款</div>
                 </div>
               </Space>
             </div>
@@ -167,75 +156,38 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
 
           {/* 两列布局 */}
           <Row gutter={24}>
-            {/* 左列：未付款订单列表 */}
+            {/* 左列：待付款订单列表 */}
             <Col span={12}>
               {orderStats.notPaidOrders.length > 0 && (
                 <div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      marginBottom: '12px',
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      color: '#fa8c16'
-                    }}
-                  >
-                    <ClockCircleOutlined style={{ marginRight: '8px' }} />
-                    未付款订单
+                  <div className="mb-3 flex items-center text-base font-semibold text-orange-500">
+                    <ClockCircleOutlined className="mr-2" />
+                    待付款订单
                   </div>
                   <Space
                     direction="vertical"
-                    style={{ width: '100%' }}
+                    className="w-full"
                     size="small"
                   >
                     {orderStats.notPaidOrders.map((order, index) => (
                       <Card
                         key={index}
                         onClick={() => handleOrderClick(order.groupBuy.id)}
-                        style={{
-                          borderRadius: '8px',
-                          border: '1px solid #ffe7ba',
-                          backgroundColor: '#fffbf0',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease'
-                        }}
+                        className="cursor-pointer rounded-lg border border-orange-200 bg-orange-50 transition-all duration-300 hover:shadow-md"
                         styles={{ body: { padding: '12px 16px' } }}
                       >
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                          }}
-                        >
-                          <div style={{ flex: 1 }}>
-                            <div
-                              style={{
-                                fontWeight: 600,
-                                fontSize: '14px',
-                                color: '#2c3e50',
-                                marginBottom: '4px'
-                              }}
-                            >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="mb-1 text-sm font-semibold text-slate-700">
                               👤 {order.customer.name}
                             </div>
-                            <div style={{ fontSize: '12px', color: '#7f8c8d' }}>
+                            <div className="text-xs text-gray-500">
                               🛒 {order.groupBuy.name} (
                               {dayjs(order.groupBuy.groupBuyStartDate).format('MM-DD')})
                             </div>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div
-                              style={{
-                                padding: '4px 8px',
-                                borderRadius: '12px',
-                                backgroundColor: '#fa8c16',
-                                color: 'white',
-                                fontSize: '10px',
-                                fontWeight: 500
-                              }}
-                            >
+                          <div className="flex items-center gap-2">
+                            <div className="rounded-xl bg-orange-500 px-2 py-1 text-xs font-medium text-white">
                               待付款
                             </div>
                             {(() => {
@@ -288,72 +240,34 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
             <Col span={12}>
               {orderStats.paidOrders.length > 0 && (
                 <div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      marginBottom: '12px',
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      color: '#52c41a'
-                    }}
-                  >
-                    <CheckCircleOutlined style={{ marginRight: '8px' }} />
+                  <div className="mb-3 flex items-center text-base font-semibold text-green-500">
+                    <CheckCircleOutlined className="mr-2" />
                     已付款订单
                   </div>
                   <Space
                     direction="vertical"
-                    style={{ width: '100%' }}
+                    className="w-full"
                     size="small"
                   >
                     {orderStats.paidOrders.map((order, index) => (
                       <Card
                         key={index}
-                        hoverable
                         onClick={() => handleOrderClick(order.groupBuy.id)}
-                        style={{
-                          borderRadius: '8px',
-                          border: '1px solid #b7eb8f',
-                          backgroundColor: '#f6ffed',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease'
-                        }}
+                        className="cursor-pointer rounded-lg border border-green-200 bg-green-50 transition-all duration-300"
                         styles={{ body: { padding: '12px 16px' } }}
                       >
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                          }}
-                        >
-                          <div style={{ flex: 1 }}>
-                            <div
-                              style={{
-                                fontWeight: 600,
-                                fontSize: '14px',
-                                color: '#2c3e50',
-                                marginBottom: '4px'
-                              }}
-                            >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="mb-1 text-sm font-semibold text-slate-700">
                               👤 {order.customer.name}
                             </div>
-                            <div style={{ fontSize: '12px', color: '#7f8c8d' }}>
+                            <div className="text-xs text-gray-500">
                               🛒 {order.groupBuy.name} (
                               {dayjs(order.groupBuy.groupBuyStartDate).format('MM-DD')})
                             </div>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div
-                              style={{
-                                padding: '4px 8px',
-                                borderRadius: '12px',
-                                backgroundColor: '#52c41a',
-                                color: 'white',
-                                fontSize: '10px',
-                                fontWeight: 500
-                              }}
-                            >
+                          <div className="flex items-center gap-2">
+                            <div className="rounded-xl bg-green-500 px-2 py-1 text-xs font-medium text-white">
                               待完成
                             </div>
                             {(() => {
