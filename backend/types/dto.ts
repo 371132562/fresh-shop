@@ -595,33 +595,25 @@ export type OrderDetail = Order & {
  * 订单统计数据
  * 包含待付款和已付款订单的数量及详细列表
  */
+
+export type OrderStatsItem = Order & {
+  customer: {
+    id: string;
+    name: string;
+    phone: string;
+  };
+  groupBuy: {
+    id: string;
+    name: string;
+    groupBuyStartDate: Date;
+  };
+};
+
 export type OrderStatsResult = {
   notPaidCount: number; // 待付款订单数量
   paidCount: number; // 已付款订单数量
-  notPaidOrders: (Order & {
-    customer: {
-      id: string;
-      name: string;
-      phone: string;
-    };
-    groupBuy: {
-      id: string;
-      name: string;
-      groupBuyStartDate: Date;
-    };
-  })[]; // 待付款订单详细列表
-  paidOrders: (Order & {
-    customer: {
-      id: string;
-      name: string;
-      phone: string;
-    };
-    groupBuy: {
-      id: string;
-      name: string;
-      groupBuyStartDate: Date;
-    };
-  })[]; // 已付款订单详细列表
+  notPaidOrders: OrderStatsItem[]; // 待付款订单详细列表
+  paidOrders: OrderStatsItem[]; // 已付款订单详细列表
 };
 
 // ===================================================================

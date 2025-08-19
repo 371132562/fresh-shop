@@ -12,6 +12,7 @@ import {
   Space
 } from 'antd'
 import dayjs from 'dayjs'
+import { OrderStatsItem } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -56,7 +57,7 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
   }
 
   // 处理订单状态更新
-  const handleUpdateOrderStatus = async (order: any) => {
+  const handleUpdateOrderStatus = async (order: OrderStatsItem) => {
     if (!order.id) return
     // 统一使用前端 OrderStatus 类型，避免类型不兼容
     const orderStatusValues = Object.values(OrderStatus) as OrderStatus[]
