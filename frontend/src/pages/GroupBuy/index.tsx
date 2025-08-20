@@ -1,12 +1,14 @@
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { Button, DatePicker, FloatButton, Form, Input, List, Modal, Select, Tag } from 'antd'
 import dayjs from 'dayjs'
-import { GroupBuyListItem } from 'fresh-shop-backend/types/dto.ts'
+import {
+  GroupBuyListItem,
+  MergedGroupBuyOverviewDetailParams
+} from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
 import MergedGroupBuyDetailModal from '@/components/MergedGroupBuyDetailModal'
-import useAnalysisStore from '@/stores/analysisStore'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import { OrderStatus, OrderStatusMap, OrderStatusOptions } from '@/stores/orderStore.ts'
 import useProductStore from '@/stores/productStore.ts'
@@ -35,16 +37,6 @@ export const Component = () => {
   const getAllProductsListLoading = useProductStore(state => state.getAllProductsListLoading)
 
   // 详情模态框相关状态
-  const mergedGroupBuyOverviewDetail = useAnalysisStore(state => state.mergedGroupBuyOverviewDetail)
-  const mergedGroupBuyOverviewDetailLoading = useAnalysisStore(
-    state => state.mergedGroupBuyOverviewDetailLoading
-  )
-  const getMergedGroupBuyOverviewDetail = useAnalysisStore(
-    state => state.getMergedGroupBuyOverviewDetail
-  )
-  const resetMergedGroupBuyOverviewDetail = useAnalysisStore(
-    state => state.resetMergedGroupBuyOverviewDetail
-  )
 
   useEffect(() => {
     getAllSuppliers()
@@ -93,9 +85,11 @@ export const Component = () => {
     setSearchVisible(false)
   }
 
+  const [detailParams, setDetailParams] = useState<MergedGroupBuyOverviewDetailParams | undefined>()
+
   // 处理查看详情
   const handleViewDetail = (item: GroupBuyListItem) => {
-    getMergedGroupBuyOverviewDetail({
+    setDetailParams({
       groupBuyName: item.name,
       supplierId: item.supplierId
     })
@@ -105,7 +99,7 @@ export const Component = () => {
   // 关闭详情模态框
   const handleDetailCancel = () => {
     setDetailVisible(false)
-    resetMergedGroupBuyOverviewDetail()
+    setDetailParams(undefined)
   }
 
   const resetSearch = () => {
@@ -349,8 +343,7 @@ export const Component = () => {
       <MergedGroupBuyDetailModal
         visible={detailVisible}
         onClose={handleDetailCancel}
-        detailData={mergedGroupBuyOverviewDetail}
-        loading={mergedGroupBuyOverviewDetailLoading}
+        params={detailParams}
       />
     </>
   )

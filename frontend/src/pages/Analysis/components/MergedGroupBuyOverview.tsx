@@ -1,6 +1,7 @@
 import { SearchOutlined } from '@ant-design/icons'
 import { Button, Form, Input, List, Modal, Select } from 'antd'
 import type {
+  MergedGroupBuyOverviewDetailParams,
   MergedGroupBuyOverviewListItem,
   MergedGroupBuyOverviewSortField,
   SortOrder
@@ -44,16 +45,6 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
   const setMergedGroupBuyOverviewPage = useAnalysisStore(
     state => state.setMergedGroupBuyOverviewPage
   )
-  const getMergedGroupBuyOverviewDetail = useAnalysisStore(
-    state => state.getMergedGroupBuyOverviewDetail
-  )
-  const mergedGroupBuyOverviewDetail = useAnalysisStore(state => state.mergedGroupBuyOverviewDetail)
-  const mergedGroupBuyOverviewDetailLoading = useAnalysisStore(
-    state => state.mergedGroupBuyOverviewDetailLoading
-  )
-  const resetMergedGroupBuyOverviewDetail = useAnalysisStore(
-    state => state.resetMergedGroupBuyOverviewDetail
-  )
 
   // 供货商数据
   const allSupplierList = useSupplierStore(state => state.allSupplierList)
@@ -85,8 +76,10 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
     fetchData(page)
   }
 
+  const [detailParams, setDetailParams] = useState<MergedGroupBuyOverviewDetailParams | undefined>()
+
   const handleItemClick = (item: MergedGroupBuyOverviewListItem) => {
-    getMergedGroupBuyOverviewDetail({
+    setDetailParams({
       groupBuyName: item.groupBuyName,
       supplierId: item.supplierId,
       startDate,
@@ -97,7 +90,7 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
 
   const handleDetailClose = () => {
     setDetailVisible(false)
-    resetMergedGroupBuyOverviewDetail()
+    setDetailParams(undefined)
   }
 
   // 搜索处理
@@ -348,8 +341,7 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
       <MergedGroupBuyDetailModal
         visible={detailVisible}
         onClose={handleDetailClose}
-        detailData={mergedGroupBuyOverviewDetail}
-        loading={mergedGroupBuyOverviewDetailLoading}
+        params={detailParams}
       />
     </>
   )

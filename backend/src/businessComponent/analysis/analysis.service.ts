@@ -599,7 +599,7 @@ export class AnalysisService {
         });
       }
 
-      const mergedData = mergedDataMap.get(groupBuyName)!;
+      const mergedData = mergedDataMap.get(uniqueKey)!;
 
       // 遍历当前团购单的所有订单
       for (const order of groupBuy.order as Array<{

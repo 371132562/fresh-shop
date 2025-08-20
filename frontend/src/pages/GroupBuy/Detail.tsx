@@ -1,13 +1,16 @@
 import type { PopconfirmProps } from 'antd'
 import { Button, Flex, Image, List, notification, Popconfirm, Spin, Tag } from 'antd'
-import { GroupBuy, Order } from 'fresh-shop-backend/types/dto.ts'
+import {
+  GroupBuy,
+  MergedGroupBuyOverviewDetailParams,
+  Order
+} from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
 import MergedGroupBuyDetailModal from '@/components/MergedGroupBuyDetailModal'
 import Modify from '@/pages/GroupBuy/Modify.tsx'
 import OrderModify from '@/pages/Order/Modify.tsx'
-import useAnalysisStore from '@/stores/analysisStore'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import useGroupBuyStore, { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
 import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
@@ -32,16 +35,6 @@ export const Component = () => {
   const refreshOrderStats = useOrderStore(state => state.refreshOrderStats)
 
   // 详情模态框相关状态
-  const mergedGroupBuyOverviewDetail = useAnalysisStore(state => state.mergedGroupBuyOverviewDetail)
-  const mergedGroupBuyOverviewDetailLoading = useAnalysisStore(
-    state => state.mergedGroupBuyOverviewDetailLoading
-  )
-  const getMergedGroupBuyOverviewDetail = useAnalysisStore(
-    state => state.getMergedGroupBuyOverviewDetail
-  )
-  const resetMergedGroupBuyOverviewDetail = useAnalysisStore(
-    state => state.resetMergedGroupBuyOverviewDetail
-  )
 
   const images: string[] = useMemo(() => {
     return Array.isArray(groupBuy?.images)
@@ -114,10 +107,12 @@ export const Component = () => {
     }
   }
 
+  const [detailParams, setDetailParams] = useState<MergedGroupBuyOverviewDetailParams | undefined>()
+
   // 处理查看详情
   const handleViewDetail = () => {
     if (groupBuy?.name && groupBuy?.supplierId) {
-      getMergedGroupBuyOverviewDetail({
+      setDetailParams({
         groupBuyName: groupBuy.name,
         supplierId: groupBuy.supplierId
       })
@@ -128,7 +123,7 @@ export const Component = () => {
   // 关闭详情模态框
   const handleDetailCancel = () => {
     setDetailVisible(false)
-    resetMergedGroupBuyOverviewDetail()
+    setDetailParams(undefined)
   }
 
   const handleUpdateOrderStatus = async (order: Order) => {
@@ -485,8 +480,7 @@ export const Component = () => {
       <MergedGroupBuyDetailModal
         visible={detailVisible}
         onClose={handleDetailCancel}
-        detailData={mergedGroupBuyOverviewDetail}
-        loading={mergedGroupBuyOverviewDetailLoading}
+        params={detailParams}
       />
     </div>
   )

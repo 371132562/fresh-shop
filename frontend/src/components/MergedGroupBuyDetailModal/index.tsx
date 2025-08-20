@@ -2,8 +2,8 @@ import { BarChartOutlined, TeamOutlined, TrophyOutlined, UserOutlined } from '@a
 import { Button, Card, Col, Divider, Modal, Row, Statistic, Table } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
-import type { MergedGroupBuyOverviewDetail } from 'fresh-shop-backend/types/dto'
-import React, { useState } from 'react'
+import type { MergedGroupBuyOverviewDetailParams } from 'fresh-shop-backend/types/dto'
+import React, { useEffect, useState } from 'react'
 
 import ConsumptionDetailModal from '@/components/ConsumptionDetailModal'
 import useAnalysisStore from '@/stores/analysisStore'
@@ -15,8 +15,7 @@ import RegionalSalesChart from './components/RegionalSalesChart'
 type MergedGroupBuyDetailModalProps = {
   visible: boolean
   onClose: () => void
-  detailData: MergedGroupBuyOverviewDetail | null
-  loading?: boolean
+  params?: MergedGroupBuyOverviewDetailParams
   width?: number
 }
 
@@ -27,8 +26,7 @@ type MergedGroupBuyDetailModalProps = {
 const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   visible,
   onClose,
-  detailData,
-  loading,
+  params,
   width = 1000
 }: MergedGroupBuyDetailModalProps) => {
   // 客户列表模态框状态
@@ -38,9 +36,29 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   const [consumptionDetailVisible, setConsumptionDetailVisible] = useState(false)
 
   // 从 Zustand store 中获取分析数据的方法和状态
+  const getMergedGroupBuyOverviewDetail = useAnalysisStore(
+    state => state.getMergedGroupBuyOverviewDetail
+  )
   const getMergedGroupBuyFrequencyCustomers = useAnalysisStore(
     state => state.getMergedGroupBuyFrequencyCustomers
   )
+  const mergedGroupBuyOverviewDetail = useAnalysisStore(state => state.mergedGroupBuyOverviewDetail)
+  const mergedGroupBuyOverviewDetailLoading = useAnalysisStore(
+    state => state.mergedGroupBuyOverviewDetailLoading
+  )
+  const resetMergedGroupBuyOverviewDetail = useAnalysisStore(
+    state => state.resetMergedGroupBuyOverviewDetail
+  )
+
+  // 当模态框打开且有参数时，获取详情数据
+  useEffect(() => {
+    if (visible && params) {
+      getMergedGroupBuyOverviewDetail(params)
+    } else if (!visible) {
+      // 当模态框关闭时，清理数据
+      resetMergedGroupBuyOverviewDetail()
+    }
+  }, [visible, params, getMergedGroupBuyOverviewDetail, resetMergedGroupBuyOverviewDetail])
   const getMergedGroupBuyRegionalCustomers = useAnalysisStore(
     state => state.getMergedGroupBuyRegionalCustomers
   )
@@ -60,7 +78,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
 
   // 处理购买频次点击事件
   const handleFrequencyClick = async (frequency: number) => {
-    if (!detailData) return
+    if (!mergedGroupBuyOverviewDetail) return
 
     setCustomerListTitle(`购买${frequency}次 的客户列表`)
     setCustomerListVisible(true)
@@ -68,17 +86,17 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
     setCustomerListData([]) // 清空之前的数据
 
     await getMergedGroupBuyFrequencyCustomers({
-      groupBuyName: detailData.groupBuyName,
-      supplierId: detailData.supplierId,
+      groupBuyName: mergedGroupBuyOverviewDetail.groupBuyName,
+      supplierId: mergedGroupBuyOverviewDetail.supplierId,
       frequency,
-      startDate: detailData.startDate,
-      endDate: detailData.endDate
+      startDate: mergedGroupBuyOverviewDetail.startDate,
+      endDate: mergedGroupBuyOverviewDetail.endDate
     })
   }
 
   // 处理地域点击事件
   const handleRegionalClick = async (addressId: string, addressName: string) => {
-    if (!detailData) return
+    if (!mergedGroupBuyOverviewDetail) return
 
     setCustomerListTitle(`${addressName} 地址的客户列表`)
     setCustomerListVisible(true)
@@ -86,11 +104,11 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
     setCustomerListData([]) // 清空之前的数据
 
     await getMergedGroupBuyRegionalCustomers({
-      groupBuyName: detailData.groupBuyName,
-      supplierId: detailData.supplierId,
+      groupBuyName: mergedGroupBuyOverviewDetail.groupBuyName,
+      supplierId: mergedGroupBuyOverviewDetail.supplierId,
       addressId,
-      startDate: detailData.startDate,
-      endDate: detailData.endDate
+      startDate: mergedGroupBuyOverviewDetail.startDate,
+      endDate: mergedGroupBuyOverviewDetail.endDate
     })
   }
   // 客户购买次数分布表格列定义
@@ -160,11 +178,11 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
         top: 20
       }}
     >
-      {loading ? (
+      {mergedGroupBuyOverviewDetailLoading ? (
         <div className="flex items-center justify-center py-8">
           <div>加载中...</div>
         </div>
-      ) : detailData ? (
+      ) : mergedGroupBuyOverviewDetail ? (
         <div className="!space-y-4">
           {/* 团购单基本信息 */}
           <Card
@@ -172,12 +190,14 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
               <div className="flex h-12 items-center justify-between">
                 <div className="flex items-center gap-2">
                   <TrophyOutlined className="text-blue-500" />
-                  <span className="text-lg font-medium">团购单：{detailData.groupBuyName}</span>
+                  <span className="text-lg font-medium">
+                    团购单：{mergedGroupBuyOverviewDetail.groupBuyName}
+                  </span>
                 </div>
-                {detailData.startDate && detailData.endDate ? (
+                {mergedGroupBuyOverviewDetail.startDate && mergedGroupBuyOverviewDetail.endDate ? (
                   <span className="text-sm text-orange-500">
-                    统计时间：{dayjs(detailData.startDate).format('YYYY-MM-DD')} -{' '}
-                    {dayjs(detailData.endDate).format('YYYY-MM-DD')}
+                    统计时间：{dayjs(mergedGroupBuyOverviewDetail.startDate).format('YYYY-MM-DD')} -{' '}
+                    {dayjs(mergedGroupBuyOverviewDetail.endDate).format('YYYY-MM-DD')}
                   </span>
                 ) : (
                   <span className="text-sm text-orange-500">当前为全部同名团购单统计</span>
@@ -205,7 +225,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                       <div>
                         <div className="text-sm font-medium text-gray-600">总销售额</div>
                         <div className="mt-1 text-xl font-bold text-emerald-600">
-                          ¥{detailData.totalRevenue.toFixed(2)}
+                          ¥{mergedGroupBuyOverviewDetail.totalRevenue.toFixed(2)}
                         </div>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
@@ -225,7 +245,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                       <div>
                         <div className="text-sm font-medium text-gray-600">总利润</div>
                         <div className="mt-1 text-xl font-bold text-red-500">
-                          ¥{detailData.totalProfit.toFixed(2)}
+                          ¥{mergedGroupBuyOverviewDetail.totalProfit.toFixed(2)}
                         </div>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
@@ -245,7 +265,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                       <div>
                         <div className="text-sm font-medium text-gray-600">利润率</div>
                         <div className="mt-1 text-xl font-bold text-blue-500">
-                          {detailData.totalProfitMargin.toFixed(1)}%
+                          {mergedGroupBuyOverviewDetail.totalProfitMargin.toFixed(1)}%
                         </div>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
@@ -265,7 +285,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                       <div>
                         <div className="text-sm font-medium text-gray-600">总订单量</div>
                         <div className="mt-1 text-xl font-bold text-purple-600">
-                          {detailData.totalOrderCount}单
+                          {mergedGroupBuyOverviewDetail.totalOrderCount}单
                         </div>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
@@ -285,7 +305,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                       <div>
                         <div className="text-sm font-medium text-gray-600">发起次数</div>
                         <div className="mt-1 text-xl font-bold text-orange-500">
-                          {detailData.totalGroupBuyCount}次
+                          {mergedGroupBuyOverviewDetail.totalGroupBuyCount}次
                         </div>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
@@ -305,7 +325,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                       <div className="flex-1">
                         <div className="text-sm font-medium text-gray-600">供货商</div>
                         <div className="mt-1 text-xl font-bold text-green-600">
-                          {detailData.supplierName || '暂无供货商'}
+                          {mergedGroupBuyOverviewDetail.supplierName || '暂无供货商'}
                         </div>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
@@ -332,7 +352,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
               <Col span={8}>
                 <Statistic
                   title="参与客户数"
-                  value={detailData.uniqueCustomerCount}
+                  value={mergedGroupBuyOverviewDetail.uniqueCustomerCount}
                   suffix="人"
                   valueStyle={{ color: '#722ed1' }}
                 />
@@ -340,7 +360,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
               <Col span={8}>
                 <Statistic
                   title="平均客单价"
-                  value={detailData.averageCustomerOrderValue}
+                  value={mergedGroupBuyOverviewDetail.averageCustomerOrderValue}
                   precision={2}
                   prefix="¥"
                   valueStyle={{ color: '#eb2f96' }}
@@ -349,7 +369,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
               <Col span={8}>
                 <Statistic
                   title="退款订单数"
-                  value={detailData.totalRefundedOrderCount}
+                  value={mergedGroupBuyOverviewDetail.totalRefundedOrderCount}
                   suffix="单"
                   valueStyle={{ color: '#fa8c16' }}
                 />
@@ -374,7 +394,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
               <Col span={12}>
                 <Statistic
                   title="多次购买客户数"
-                  value={detailData.multiPurchaseCustomerCount}
+                  value={mergedGroupBuyOverviewDetail.multiPurchaseCustomerCount}
                   suffix="人"
                   valueStyle={{ color: '#52c41a' }}
                 />
@@ -382,7 +402,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
               <Col span={12}>
                 <Statistic
                   title="多次购买客户占比"
-                  value={detailData.multiPurchaseCustomerRatio}
+                  value={mergedGroupBuyOverviewDetail.multiPurchaseCustomerRatio}
                   precision={1}
                   suffix="%"
                   valueStyle={{ color: '#1890ff' }}
@@ -401,18 +421,20 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
             <Row gutter={16}>
               <Col span={12}>
                 <PurchaseFrequencyChart
-                  data={detailData.customerPurchaseFrequency}
+                  data={mergedGroupBuyOverviewDetail.customerPurchaseFrequency}
                   onFrequencyClick={handleFrequencyClick}
                 />
               </Col>
               <Col span={12}>
                 <Table
                   columns={purchaseFrequencyColumns}
-                  dataSource={detailData.customerPurchaseFrequency.map((item, index) => ({
-                    key: index,
-                    frequency: item.frequency,
-                    count: item.count
-                  }))}
+                  dataSource={mergedGroupBuyOverviewDetail.customerPurchaseFrequency.map(
+                    (item, index) => ({
+                      key: index,
+                      frequency: item.frequency,
+                      count: item.count
+                    })
+                  )}
                   pagination={false}
                   size="small"
                   className="mt-2"
@@ -435,14 +457,14 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
             <Row gutter={16}>
               <Col span={12}>
                 <RegionalSalesChart
-                  data={detailData.regionalSales}
+                  data={mergedGroupBuyOverviewDetail.regionalSales}
                   onRegionalClick={handleRegionalClick}
                 />
               </Col>
               <Col span={12}>
                 <Table
                   columns={regionalSalesColumns}
-                  dataSource={detailData.regionalSales.map((item, index) => ({
+                  dataSource={mergedGroupBuyOverviewDetail.regionalSales.map((item, index) => ({
                     key: index,
                     addressId: item.addressId,
                     addressName: item.addressName,
