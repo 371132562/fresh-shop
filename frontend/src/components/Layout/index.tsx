@@ -10,7 +10,7 @@ import {
   UnorderedListOutlined,
   UserOutlined
 } from '@ant-design/icons' // 导入更多图标
-import { Drawer, Form, Switch } from 'antd'
+import { Button, Checkbox, Drawer, Form, Image, notification, Switch, Tag } from 'antd'
 import { FC, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useOutlet } from 'react-router'
@@ -19,6 +19,7 @@ import { NavLink } from 'react-router'
 import ErrorPage from '@/components/Error'
 import OrderStatsButton from '@/components/OrderStatsFloatButton'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
+import { buildImageUrl } from '@/utils'
 
 import style from './index.module.less'
 
@@ -26,6 +27,8 @@ export const Component: FC = () => {
   const outlet = useOutlet()
   const [open, setOpen] = useState(false)
   const [settingOpen, setSettingOpen] = useState(false)
+  // 孤立图片 - 本地选中集合
+  const [selectedFilenames, setSelectedFilenames] = useState<string[]>([])
 
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
   const getGlobalSettingLoading = useGlobalSettingStore(state => state.getGlobalSettingLoading)
@@ -34,6 +37,12 @@ export const Component: FC = () => {
     state => state.upsertGlobalSettingLoading
   )
   const upsertGlobalSetting = useGlobalSettingStore(state => state.upsertGlobalSetting)
+  // 孤立图片
+  const orphanImages = useGlobalSettingStore(state => state.orphanImages)
+  const orphanScanLoading = useGlobalSettingStore(state => state.orphanScanLoading)
+  const orphanDeleteLoading = useGlobalSettingStore(state => state.orphanDeleteLoading)
+  const scanOrphans = useGlobalSettingStore(state => state.scanOrphans)
+  const deleteOrphans = useGlobalSettingStore(state => state.deleteOrphans)
 
   useEffect(() => {
     getGlobalSetting({ key: 'setting' })
@@ -57,6 +66,46 @@ export const Component: FC = () => {
         ? { ...globalSetting.value, sensitive: checked }
         : { sensitive: checked }
     })
+  }
+
+  const allSelected = orphanImages.length > 0 && selectedFilenames.length === orphanImages.length
+
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedFilenames(orphanImages.map(i => i.filename))
+    } else {
+      setSelectedFilenames([])
+    }
+  }
+
+  const toggleSelectOne = (filename: string, checked: boolean) => {
+    setSelectedFilenames(prev => {
+      if (checked) return Array.from(new Set([...prev, filename]))
+      return prev.filter(f => f !== filename)
+    })
+  }
+
+  const handleScan = async () => {
+    const ok = await scanOrphans()
+    if (ok) setSelectedFilenames([])
+  }
+
+  const handleDeleteSelected = async () => {
+    if (selectedFilenames.length === 0) return
+    const res = await deleteOrphans(selectedFilenames)
+    if (res) {
+      const { deleted, skipped } = res
+      if (deleted.length) {
+        notification.success({ message: '已删除', description: `删除 ${deleted.length} 张图片` })
+      }
+      if (skipped.length) {
+        notification.warning({
+          message: '跳过',
+          description: `有 ${skipped.length} 张图片被引用或无法删除，已跳过`
+        })
+      }
+      setSelectedFilenames([])
+    }
   }
 
   return (
@@ -152,7 +201,7 @@ export const Component: FC = () => {
           setSettingOpen(false)
         }}
         open={settingOpen}
-        width={280}
+        width={600}
         styles={{
           body: { padding: 0 }, // 保持 body padding 为 0
           header: {
@@ -166,8 +215,8 @@ export const Component: FC = () => {
           <Form
             name="global_settings" // 为表单添加名称
             layout="horizontal" // 水平布局更适合设置项
-            labelCol={{ span: 10 }} // 调整标签和控件的比例
-            wrapperCol={{ span: 12 }}
+            labelCol={{ span: 6 }} // 调整标签和控件的比例
+            wrapperCol={{ span: 16 }}
             autoComplete="off"
           >
             <Form.Item
@@ -182,6 +231,87 @@ export const Component: FC = () => {
                 unCheckedChildren="否"
                 onChange={onSensitiveChange}
               />
+            </Form.Item>
+
+            {/* 孤立图片清理 */}
+            <Form.Item
+              label={<span className="font-medium text-gray-700">孤立图片清理</span>}
+              className="border-b border-gray-200 py-2 last:border-b-0"
+            >
+              <div className="flex w-full flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="primary"
+                    onClick={handleScan}
+                    loading={orphanScanLoading}
+                  >
+                    检索孤立图片
+                  </Button>
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={selectedFilenames.length > 0 && !allSelected}
+                    onChange={e => toggleSelectAll(e.target.checked)}
+                    disabled={orphanImages.length === 0}
+                  >
+                    全选
+                  </Checkbox>
+                  <Button
+                    danger
+                    disabled={selectedFilenames.length === 0}
+                    onClick={handleDeleteSelected}
+                    loading={orphanDeleteLoading}
+                  >
+                    删除所选
+                  </Button>
+                </div>
+                <div className="text-sm text-gray-500">
+                  共 {orphanImages.length} 张候选图片（仅展示未被引用的文件，支持预览与多选删除）。
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {orphanImages.map(item => (
+                    <div
+                      key={item.filename}
+                      className="flex w-full flex-col items-center justify-start overflow-hidden rounded-md border border-gray-200 p-2 shadow-sm"
+                    >
+                      <Checkbox
+                        className="w-full"
+                        checked={selectedFilenames.includes(item.filename)}
+                        onChange={e => toggleSelectOne(item.filename, e.target.checked)}
+                      >
+                        <span
+                          className="block w-full truncate text-xs"
+                          title={item.filename}
+                        >
+                          {item.filename}
+                        </span>
+                      </Checkbox>
+                      <div className="mt-1 flex w-full flex-wrap items-center gap-1">
+                        <Tag color={item.inDisk ? 'green' : 'default'}>
+                          磁盘{item.inDisk ? '✓' : '×'}
+                        </Tag>
+                        <Tag color={item.inDB ? 'blue' : 'default'}>
+                          数据库{item.inDB ? '✓' : '×'}
+                        </Tag>
+                      </div>
+                      {item.inDisk ? (
+                        <div className="mt-1 w-full">
+                          <Image
+                            src={buildImageUrl(item.filename)}
+                            width={120}
+                            height={120}
+                            style={{ objectFit: 'cover' }}
+                            preview={{}}
+                          />
+                        </div>
+                      ) : (
+                        <div className="mt-2 flex h-[120px] w-full items-center justify-center rounded bg-gray-100 text-xs text-gray-400">
+                          无预览
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </Form.Item>
           </Form>
         </div>

@@ -1,9 +1,7 @@
 // src/upload/upload.service.ts
 import { Injectable, Logger, NotFoundException } from '@nestjs/common'; // 导入 Logger, NotFoundException
-import { BusinessException } from '../exceptions/businessException';
-import { ErrorCode } from '../../types/response';
 import { getImagePath } from '../utils/file-upload.utils'; // 导入 getImagePath
-import { unlink, readFile } from 'fs/promises'; // 导入 fs/promises 中的 unlink 用于异步删除文件
+import { unlink, readFile, readdir } from 'fs/promises'; // 导入 fs/promises 中的 unlink 用于异步删除文件
 import { existsSync } from 'fs'; // 导入 existsSync
 import { createHash } from 'crypto';
 import { PrismaService } from 'prisma/prisma.service';
@@ -130,25 +128,115 @@ export class UploadService {
       try {
         await unlink(filePath);
         this.logger.log(`成功删除物理文件: ${filePath}`);
-      } catch (error) {
-        this.logger.error(`删除物理文件 ${filePath} 失败:`, error);
+      } catch {
+        this.logger.error(`删除物理文件 ${filePath} 失败`);
       }
     } else {
       this.logger.warn(`物理文件未找到，跳过删除: ${filePath}`);
     }
 
-    // 删除数据库记录
+    // 删除数据库记录（如果存在则删除，不存在则忽略）
     try {
       await this.prisma.image.delete({ where: { filename } });
       this.logger.log(`成功从数据库中删除图片记录: ${filename}`);
-    } catch (error) {
-      this.logger.error(`从数据库中删除图片记录 ${filename} 失败:`, error);
-      throw new BusinessException(
-        ErrorCode.BUSINESS_FAILED,
-        `删除图片数据库记录 ${filename} 失败。`,
-      );
+    } catch {
+      // 可能不存在记录或唯一约束不匹配，按需求不抛错，仅记录日志
+      this.logger.warn(`数据库中未找到图片记录或删除失败(忽略): ${filename}`);
     }
 
     return { message: '图片已成功删除。' };
+  }
+
+  /**
+   * 扫描孤立图片：合并磁盘与数据库中的文件名集合，并剔除仍被引用的文件
+   * 返回可用于前端预览的列表
+   */
+  async scanOrphanImages(): Promise<
+    { filename: string; inDisk: boolean; inDB: boolean }[]
+  > {
+    // 读取磁盘文件名
+    let diskFiles: string[] = [];
+    try {
+      const uploadDirPath = getImagePath('');
+      // getImagePath('') => join(process.cwd(), UPLOAD_DIR, '')
+      const entries = await readdir(uploadDirPath, { withFileTypes: true });
+      diskFiles = entries.filter((e) => e.isFile()).map((e) => e.name);
+    } catch (e) {
+      this.logger.error('读取上传目录失败', e);
+    }
+
+    // 读取数据库文件名
+    const dbImages = await this.prisma.image.findMany({
+      where: { delete: 0 },
+      select: { filename: true },
+    });
+    const dbFiles = dbImages.map((i) => i.filename);
+
+    // 合并集合
+    const union = new Set<string>([...diskFiles, ...dbFiles]);
+
+    // 构建引用集合
+    const [suppliers, groupBuys] = await Promise.all([
+      this.prisma.supplier.findMany({ where: { delete: 0 } }),
+      this.prisma.groupBuy.findMany({ where: { delete: 0 } }),
+    ]);
+
+    const referenced = new Set<string>();
+    suppliers.forEach((s) => {
+      (s.images as string[]).forEach((f) => referenced.add(f));
+    });
+    groupBuys.forEach((g) => {
+      (g.images as string[]).forEach((f) => referenced.add(f));
+    });
+
+    // 过滤出未被引用的文件
+    const orphanList: { filename: string; inDisk: boolean; inDB: boolean }[] =
+      [];
+    union.forEach((f) => {
+      if (!referenced.has(f)) {
+        orphanList.push({
+          filename: f,
+          inDisk: diskFiles.includes(f),
+          inDB: dbFiles.includes(f),
+        });
+      }
+    });
+
+    return orphanList;
+  }
+
+  /**
+   * 批量删除孤立图片
+   */
+  async deleteOrphanImages(
+    filenames: string[],
+  ): Promise<{ deleted: string[]; skipped: string[] }> {
+    const deleted: string[] = [];
+    const skipped: string[] = [];
+
+    // 预取引用数据到内存，减少循环内查询
+    const [suppliers, groupBuys] = await Promise.all([
+      this.prisma.supplier.findMany({ where: { delete: 0 } }),
+      this.prisma.groupBuy.findMany({ where: { delete: 0 } }),
+    ]);
+
+    const referenced = new Set<string>();
+    suppliers.forEach((s) => {
+      (s.images as string[]).forEach((f) => referenced.add(f));
+    });
+    groupBuys.forEach((g) => {
+      (g.images as string[]).forEach((f) => referenced.add(f));
+    });
+
+    for (const filename of filenames) {
+      if (referenced.has(filename)) {
+        skipped.push(filename);
+        continue;
+      }
+      await this.cleanupOrphanedImage(filename);
+      deleted.push(filename);
+    }
+
+    return { deleted, skipped };
   }
 }

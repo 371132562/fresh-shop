@@ -38,4 +38,18 @@ export class UploadController {
     // 调用服务执行删除逻辑
     return this.uploadService.deleteFile(deleteImageDto);
   }
+
+  @Post('scan-orphans') // /upload/scan-orphans
+  async scanOrphans() {
+    const list = await this.uploadService.scanOrphanImages();
+    return { list };
+  }
+
+  @Post('delete-orphans') // /upload/delete-orphans
+  async deleteOrphans(@Body() data: { filenames: string[] }) {
+    if (!data?.filenames || !Array.isArray(data.filenames)) {
+      throw new BadRequestException('参数错误：filenames 必须为数组');
+    }
+    return this.uploadService.deleteOrphanImages(data.filenames);
+  }
 }

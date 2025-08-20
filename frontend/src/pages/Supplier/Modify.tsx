@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 
 import ImagesUpload from '@/components/ImagesUpload'
 import useSupplierStore from '@/stores/supplierStore.ts'
-import { validatePhoneNumber } from '@/utils'
+import { buildImageUrl, validatePhoneNumber } from '@/utils'
 
 interface params {
   visible: boolean
@@ -34,12 +34,7 @@ const Modify = (props: params) => {
           imagesArr
             .filter((image): image is string => typeof image === 'string')
             .map(image => ({
-              url:
-                '//' +
-                location.hostname +
-                (location.port ? import.meta.env.VITE_IMAGES_PORT : '') +
-                import.meta.env.VITE_IMAGES_BASE_URL +
-                image,
+              url: buildImageUrl(image),
               filename: image
             }))
         )

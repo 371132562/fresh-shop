@@ -64,6 +64,30 @@ export type DeleteImageDto = {
   filename: string; // 文件名
 };
 
+/**
+ * 孤立图片扫描结果项
+ */
+export type OrphanImageItem = {
+  filename: string; // 文件名
+  inDisk: boolean; // 是否存在于物理磁盘
+  inDB: boolean; // 是否存在于数据库 image 表
+};
+
+/**
+ * 扫描孤立图片返回结果
+ */
+export type ScanOrphanImagesResult = {
+  list: OrphanImageItem[];
+};
+
+/**
+ * 批量删除孤立图片返回结果
+ */
+export type DeleteOrphanImagesResult = {
+  deleted: string[]; // 实际删除的文件名
+  skipped: string[]; // 因被引用或其他原因跳过的文件名
+};
+
 // ===================================================================
 // 全局设置模块 (GlobalSetting)
 // 包含系统全局配置相关的数据传输对象

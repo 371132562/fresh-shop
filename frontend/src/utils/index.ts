@@ -19,3 +19,13 @@ export const validatePhoneNumber = (_: any, value: string) => {
 export const formatDate = (date: Date) => {
   return dayjs(date).format('YYYY-MM-DD')
 }
+
+// 构建图片完整预览地址（统一逻辑）
+// 例：//{host}{VITE_IMAGES_PORT}{VITE_IMAGES_BASE_URL}{filename}
+export const buildImageUrl = (filename: string): string => {
+  if (!filename) return ''
+  const host = location.hostname
+  const port = location.port ? (import.meta.env.VITE_IMAGES_PORT as string) : ''
+  const base = import.meta.env.VITE_IMAGES_BASE_URL as string
+  return `//${host}${port}${base}${filename}`
+}

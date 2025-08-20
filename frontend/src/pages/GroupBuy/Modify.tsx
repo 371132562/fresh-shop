@@ -20,6 +20,7 @@ import ImagesUpload from '@/components/ImagesUpload'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import useProductStore from '@/stores/productStore.ts'
 import useSupplierStore from '@/stores/supplierStore.ts'
+import { buildImageUrl } from '@/utils'
 
 interface params {
   visible: boolean
@@ -61,12 +62,7 @@ const Modify = (props: params) => {
           imagesArr
             .filter((image): image is string => typeof image === 'string')
             .map(image => ({
-              url:
-                '//' +
-                location.hostname +
-                (location.port ? import.meta.env.VITE_IMAGES_PORT : '') +
-                import.meta.env.VITE_IMAGES_BASE_URL +
-                image,
+              url: buildImageUrl(image),
               filename: image
             }))
         )
@@ -85,12 +81,7 @@ const Modify = (props: params) => {
           imagesArr
             .filter((image): image is string => typeof image === 'string')
             .map(image => ({
-              url:
-                '//' +
-                location.hostname +
-                (location.port ? import.meta.env.VITE_IMAGES_PORT : '') +
-                import.meta.env.VITE_IMAGES_BASE_URL +
-                image,
+              url: buildImageUrl(image),
               filename: image
             }))
         )

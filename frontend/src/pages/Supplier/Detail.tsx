@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router'
 
 import Modify from '@/pages/Supplier/Modify.tsx'
 import useSupplierStore from '@/stores/supplierStore.ts'
+import { buildImageUrl } from '@/utils'
 
 export const Component = () => {
   const { id } = useParams()
@@ -21,14 +22,7 @@ export const Component = () => {
     return Array.isArray(supplier?.images)
       ? supplier.images
           .filter((image): image is string => typeof image === 'string')
-          .map(
-            image =>
-              '//' +
-              location.hostname +
-              (location.port ? import.meta.env.VITE_IMAGES_PORT : '') +
-              import.meta.env.VITE_IMAGES_BASE_URL +
-              image
-          )
+          .map(image => buildImageUrl(image))
       : []
   }, [supplier])
 

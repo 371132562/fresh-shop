@@ -14,7 +14,7 @@ import OrderModify from '@/pages/Order/Modify.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import useGroupBuyStore, { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
 import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
-import { formatDate } from '@/utils'
+import { buildImageUrl, formatDate } from '@/utils'
 
 export const Component = () => {
   const { id } = useParams()
@@ -40,14 +40,7 @@ export const Component = () => {
     return Array.isArray(groupBuy?.images)
       ? groupBuy.images
           .filter((image): image is string => typeof image === 'string')
-          .map(
-            image =>
-              '//' +
-              location.hostname +
-              (location.port ? import.meta.env.VITE_IMAGES_PORT : '') +
-              import.meta.env.VITE_IMAGES_BASE_URL +
-              image
-          )
+          .map(image => buildImageUrl(image))
       : []
   }, [groupBuy])
 
