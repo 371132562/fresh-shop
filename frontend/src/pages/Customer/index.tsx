@@ -1,5 +1,6 @@
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { Button, FloatButton, Form, Input, List, Modal, Select, Tag } from 'antd'
+import type { CustomerSortField, SortOrder } from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
 
 import ConsumptionDetailModal from '@/components/ConsumptionDetailModal'
@@ -122,8 +123,8 @@ export const Component = () => {
                   onChange={value => {
                     const [sortField, sortOrder] = value.split('_') as [string, string]
                     setPageParams({
-                      sortField: sortField as any,
-                      sortOrder: sortOrder as any,
+                      sortField: sortField as CustomerSortField,
+                      sortOrder: sortOrder as SortOrder,
                       page: 1
                     })
                   }}

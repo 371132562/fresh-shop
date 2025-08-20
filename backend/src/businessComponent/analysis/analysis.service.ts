@@ -538,6 +538,12 @@ export class AnalysisService {
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: whereCondition,
       include: {
+        supplier: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         order: {
           where: {
             delete: 0,
@@ -554,11 +560,13 @@ export class AnalysisService {
       },
     });
 
-    // 2. 按团购单名称进行分组聚合
+    // 2. 按团购单名称和供货商ID进行分组聚合
     const mergedDataMap = new Map<
       string,
       {
         groupBuyName: string;
+        supplierId: string;
+        supplierName: string;
         totalRevenue: number;
         totalProfit: number;
         totalOrderCount: number;
@@ -567,15 +575,22 @@ export class AnalysisService {
       }
     >();
 
-    // 遍历所有团购单，按名称聚合数据
+    // 遍历所有团购单，按名称和供货商ID聚合数据
     for (const groupBuy of groupBuysWithOrders) {
       const groupBuyName = groupBuy.name;
+      const supplierId = groupBuy.supplierId;
+      const supplierName = groupBuy.supplier?.name || '未知供货商';
       const units = groupBuy.units as Array<GroupBuyUnit>;
 
-      // 如果该名称的团购单还未在Map中，则初始化
-      if (!mergedDataMap.has(groupBuyName)) {
-        mergedDataMap.set(groupBuyName, {
+      // 生成唯一键：团购名称 + 供货商ID
+      const uniqueKey = `${groupBuyName}|${supplierId}`;
+
+      // 如果该名称和供货商的团购单还未在Map中，则初始化
+      if (!mergedDataMap.has(uniqueKey)) {
+        mergedDataMap.set(uniqueKey, {
           groupBuyName,
+          supplierId,
+          supplierName,
           totalRevenue: 0,
           totalProfit: 0,
           totalOrderCount: 0,
@@ -620,6 +635,8 @@ export class AnalysisService {
 
       return {
         groupBuyName: data.groupBuyName,
+        supplierId: data.supplierId,
+        supplierName: data.supplierName,
         totalRevenue: data.totalRevenue,
         totalProfit: data.totalProfit,
         totalProfitMargin,
@@ -642,6 +659,10 @@ export class AnalysisService {
         case 'totalProfit':
           aValue = a.totalProfit;
           bValue = b.totalProfit;
+          break;
+        case 'profitMargin':
+          aValue = a.totalProfitMargin;
+          bValue = b.totalProfitMargin;
           break;
         case 'uniqueCustomerCount':
           aValue = a.uniqueCustomerCount;
@@ -683,11 +704,12 @@ export class AnalysisService {
   async getMergedGroupBuyOverviewDetail(
     params: MergedGroupBuyOverviewDetailParams,
   ): Promise<MergedGroupBuyOverviewDetail> {
-    const { groupBuyName, startDate, endDate } = params;
+    const { groupBuyName, supplierId, startDate, endDate } = params;
 
     // 1. 构建查询条件
     const whereCondition = {
       name: groupBuyName,
+      supplierId: supplierId,
       delete: 0,
       // 如果提供了时间参数，则添加时间过滤条件
       ...(startDate &&
@@ -727,6 +749,7 @@ export class AnalysisService {
         status: OrderStatus.REFUNDED,
         groupBuy: {
           name: groupBuyName,
+          supplierId: supplierId,
           delete: 0,
           // 如果提供了时间参数，则添加时间过滤条件
           ...(startDate &&
@@ -744,7 +767,8 @@ export class AnalysisService {
       // 如果没有找到数据，返回空的详情对象
       return {
         groupBuyName,
-        supplierNames: [],
+        supplierId: supplierId,
+        supplierName: '',
         startDate,
         endDate,
         totalRevenue: 0,
@@ -862,9 +886,13 @@ export class AnalysisService {
       };
     });
 
+    // 获取供货商信息
+    const supplierName = groupBuysWithOrders[0]?.supplier?.name || '未知供货商';
+
     return {
       groupBuyName,
-      supplierNames: Array.from(supplierNamesSet),
+      supplierId: supplierId,
+      supplierName: supplierName,
       startDate,
       endDate,
       totalRevenue,
@@ -888,11 +916,12 @@ export class AnalysisService {
   async getMergedGroupBuyFrequencyCustomers(
     params: MergedGroupBuyFrequencyCustomersParams,
   ): Promise<MergedGroupBuyFrequencyCustomersResult> {
-    const { groupBuyName, frequency, startDate, endDate } = params;
+    const { groupBuyName, supplierId, frequency, startDate, endDate } = params;
 
     // 1. 构建查询条件
     const whereCondition = {
       name: groupBuyName,
+      supplierId: supplierId,
       delete: 0,
       // 如果提供了时间参数，则添加时间过滤条件
       ...(startDate &&
@@ -975,11 +1004,12 @@ export class AnalysisService {
   async getMergedGroupBuyRegionalCustomers(
     params: MergedGroupBuyRegionalCustomersParams,
   ): Promise<MergedGroupBuyRegionalCustomersResult> {
-    const { groupBuyName, addressId, startDate, endDate } = params;
+    const { groupBuyName, supplierId, addressId, startDate, endDate } = params;
 
     // 1. 构建查询条件
     const whereCondition = {
       name: groupBuyName,
+      supplierId: supplierId,
       delete: 0,
       // 如果提供了时间参数，则添加时间过滤条件
       ...(startDate &&

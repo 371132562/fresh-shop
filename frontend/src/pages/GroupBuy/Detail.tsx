@@ -4,8 +4,10 @@ import { GroupBuy, Order } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
+import MergedGroupBuyDetailModal from '@/components/MergedGroupBuyDetailModal'
 import Modify from '@/pages/GroupBuy/Modify.tsx'
 import OrderModify from '@/pages/Order/Modify.tsx'
+import useAnalysisStore from '@/stores/analysisStore'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import useGroupBuyStore, { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
 import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
@@ -18,6 +20,7 @@ export const Component = () => {
   const [againVisible, setAgainVisible] = useState(false)
   const [againGroupBuy, setAgainGroupBuy] = useState<GroupBuy | null>(null)
   const [orderModifyVisible, setOrderModifyVisible] = useState(false)
+  const [detailVisible, setDetailVisible] = useState(false)
 
   const groupBuy = useGroupBuyStore(state => state.groupBuy)
   const getGroupBuy = useGroupBuyStore(state => state.getGroupBuy)
@@ -27,6 +30,18 @@ export const Component = () => {
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
   const updateOrder = useOrderStore(state => state.updateOrder)
   const refreshOrderStats = useOrderStore(state => state.refreshOrderStats)
+
+  // 详情模态框相关状态
+  const mergedGroupBuyOverviewDetail = useAnalysisStore(state => state.mergedGroupBuyOverviewDetail)
+  const mergedGroupBuyOverviewDetailLoading = useAnalysisStore(
+    state => state.mergedGroupBuyOverviewDetailLoading
+  )
+  const getMergedGroupBuyOverviewDetail = useAnalysisStore(
+    state => state.getMergedGroupBuyOverviewDetail
+  )
+  const resetMergedGroupBuyOverviewDetail = useAnalysisStore(
+    state => state.resetMergedGroupBuyOverviewDetail
+  )
 
   const images: string[] = useMemo(() => {
     return Array.isArray(groupBuy?.images)
@@ -99,6 +114,23 @@ export const Component = () => {
     }
   }
 
+  // 处理查看详情
+  const handleViewDetail = () => {
+    if (groupBuy?.name && groupBuy?.supplierId) {
+      getMergedGroupBuyOverviewDetail({
+        groupBuyName: groupBuy.name,
+        supplierId: groupBuy.supplierId
+      })
+      setDetailVisible(true)
+    }
+  }
+
+  // 关闭详情模态框
+  const handleDetailCancel = () => {
+    setDetailVisible(false)
+    resetMergedGroupBuyOverviewDetail()
+  }
+
   const handleUpdateOrderStatus = async (order: Order) => {
     if (!order.id) return
     // 统一使用前端 OrderStatus 类型，避免类型不兼容
@@ -144,54 +176,62 @@ export const Component = () => {
       >
         {/* 主要信息卡片 */}
         <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
-          {/* 卡片标题及操作按钮：保持你原有的设计不变 */}
-          <h3 className="mb-4 flex flex-col justify-between border-b border-gray-100 pb-3 text-xl font-bold text-gray-800">
+          {/* 卡片标题及操作按钮 */}
+          <h3 className="mb-4 border-b border-gray-100 pb-3 text-xl font-bold text-gray-800">
             <div className="mb-3">{groupBuy?.name || '加载中...'}</div>
-            <Flex
-              gap="small"
-              wrap
-              justify="end"
-            >
+            <div className="flex items-center justify-between">
               <Button
                 type="primary"
-                onClick={() => setOrderModifyVisible(true)}
+                ghost
+                onClick={handleViewDetail}
               >
-                添加订单
+                查看销售数据
               </Button>
-              <Button
-                color="primary"
-                variant="solid"
-                onClick={() => {
-                  setAgainVisible(true)
-                  setAgainGroupBuy(groupBuy)
-                }}
-              >
-                再次发起
-              </Button>
-              <Button
-                color="primary"
-                variant="outlined"
-                onClick={() => setVisible(true)}
-              >
-                编辑
-              </Button>
-              <Popconfirm
-                title={<div className="text-lg">确定要删除这个团购单吗？</div>}
-                placement="left"
-                onConfirm={confirm}
-                okText="是"
-                cancelText="否"
-                okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
-                cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
+              <Flex
+                gap="small"
+                wrap
               >
                 <Button
-                  color="danger"
-                  variant="solid"
+                  type="primary"
+                  onClick={() => setOrderModifyVisible(true)}
                 >
-                  删除
+                  添加订单
                 </Button>
-              </Popconfirm>
-            </Flex>
+                <Button
+                  color="primary"
+                  variant="solid"
+                  onClick={() => {
+                    setAgainVisible(true)
+                    setAgainGroupBuy(groupBuy)
+                  }}
+                >
+                  再次发起
+                </Button>
+                <Button
+                  color="primary"
+                  variant="outlined"
+                  onClick={() => setVisible(true)}
+                >
+                  编辑
+                </Button>
+                <Popconfirm
+                  title={<div className="text-lg">确定要删除这个团购单吗？</div>}
+                  placement="left"
+                  onConfirm={confirm}
+                  okText="是"
+                  cancelText="否"
+                  okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
+                  cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
+                >
+                  <Button
+                    color="danger"
+                    variant="solid"
+                  >
+                    删除
+                  </Button>
+                </Popconfirm>
+              </Flex>
+            </div>
           </h3>
 
           {/* 团购基础信息：改回单列模式 */}
@@ -442,6 +482,12 @@ export const Component = () => {
           groupBuyId={id}
         />
       )}
+      <MergedGroupBuyDetailModal
+        visible={detailVisible}
+        onClose={handleDetailCancel}
+        detailData={mergedGroupBuyOverviewDetail}
+        loading={mergedGroupBuyOverviewDetailLoading}
+      />
     </div>
   )
 }

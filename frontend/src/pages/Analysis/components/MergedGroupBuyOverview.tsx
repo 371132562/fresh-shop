@@ -1,6 +1,10 @@
 import { SearchOutlined } from '@ant-design/icons'
 import { Button, Form, Input, List, Modal, Select } from 'antd'
-import type { MergedGroupBuyOverviewListItem } from 'fresh-shop-backend/types/dto'
+import type {
+  MergedGroupBuyOverviewListItem,
+  MergedGroupBuyOverviewSortField,
+  SortOrder
+} from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
 
 import MergedGroupBuyDetailModal from '@/components/MergedGroupBuyDetailModal'
@@ -22,12 +26,8 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
   const [searchParams, setSearchParams] = useState({
     groupBuyName: '',
     supplierIds: [] as string[],
-    sortField: 'totalRevenue' as
-      | 'totalRevenue'
-      | 'totalProfit'
-      | 'uniqueCustomerCount'
-      | 'totalOrderCount',
-    sortOrder: 'desc' as 'asc' | 'desc'
+    sortField: 'totalRevenue' as MergedGroupBuyOverviewSortField,
+    sortOrder: 'desc' as SortOrder
   })
   const [form] = Form.useForm()
 
@@ -85,9 +85,10 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
     fetchData(page)
   }
 
-  const handleItemClick = (groupBuyName: string) => {
+  const handleItemClick = (item: MergedGroupBuyOverviewListItem) => {
     getMergedGroupBuyOverviewDetail({
-      groupBuyName,
+      groupBuyName: item.groupBuyName,
+      supplierId: item.supplierId,
       startDate,
       endDate
     })
@@ -161,12 +162,8 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
     const [sortField, sortOrder] = value.split('_') as [string, string]
     const newSearchParams = {
       ...searchParams,
-      sortField: sortField as
-        | 'totalRevenue'
-        | 'totalProfit'
-        | 'uniqueCustomerCount'
-        | 'totalOrderCount',
-      sortOrder: sortOrder as 'asc' | 'desc'
+      sortField: sortField as MergedGroupBuyOverviewSortField,
+      sortOrder: sortOrder as SortOrder
     }
     setSearchParams(newSearchParams)
     setMergedGroupBuyOverviewPage(1)
@@ -208,8 +205,10 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
                     { label: '按总销售额正序', value: 'totalRevenue_asc' },
                     { label: '按总利润倒序', value: 'totalProfit_desc' },
                     { label: '按总利润正序', value: 'totalProfit_asc' },
-                    { label: '按参与客户数倒序', value: 'uniqueCustomerCount_desc' },
-                    { label: '按参与客户数正序', value: 'uniqueCustomerCount_asc' },
+                    { label: '按利润率倒序', value: 'profitMargin_desc' },
+                    { label: '按利润率正序', value: 'profitMargin_asc' },
+                    { label: '按参团客户数倒序', value: 'uniqueCustomerCount_desc' },
+                    { label: '按参团客户数正序', value: 'uniqueCustomerCount_asc' },
                     { label: '按订单量倒序', value: 'totalOrderCount_desc' },
                     { label: '按订单量正序', value: 'totalOrderCount_asc' }
                   ]}
@@ -231,7 +230,12 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
           renderItem={(item: MergedGroupBuyOverviewListItem) => (
             <List.Item>
               <List.Item.Meta
-                title={<span className="text-lg font-medium">{item.groupBuyName}</span>}
+                title={
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-medium">{item.groupBuyName}</span>
+                    <span className="text-sm text-gray-500">({item.supplierName})</span>
+                  </div>
+                }
                 description={
                   <div className="flex items-start justify-between">
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -263,7 +267,7 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
                     <Button
                       type="primary"
                       ghost
-                      onClick={() => handleItemClick(item.groupBuyName)}
+                      onClick={() => handleItemClick(item)}
                     >
                       查看销售数据
                     </Button>

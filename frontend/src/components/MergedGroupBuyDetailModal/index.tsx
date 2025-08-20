@@ -69,6 +69,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
 
     await getMergedGroupBuyFrequencyCustomers({
       groupBuyName: detailData.groupBuyName,
+      supplierId: detailData.supplierId,
       frequency,
       startDate: detailData.startDate,
       endDate: detailData.endDate
@@ -86,6 +87,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
 
     await getMergedGroupBuyRegionalCustomers({
       groupBuyName: detailData.groupBuyName,
+      supplierId: detailData.supplierId,
       addressId,
       startDate: detailData.startDate,
       endDate: detailData.endDate
@@ -303,9 +305,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                       <div className="flex-1">
                         <div className="text-sm font-medium text-gray-600">供货商</div>
                         <div className="mt-1 text-xl font-bold text-green-600">
-                          {detailData.supplierNames && detailData.supplierNames.length > 0
-                            ? detailData.supplierNames.join('、')
-                            : '暂无供货商'}
+                          {detailData.supplierName || '暂无供货商'}
                         </div>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">

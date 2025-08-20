@@ -28,6 +28,12 @@ export {
 // ===================================================================
 
 /**
+ * 通用排序方向枚举
+ * 定义所有排序操作的升降序
+ */
+export type SortOrder = 'asc' | 'desc';
+
+/**
  * 通用分页参数
  * 用于所有需要分页的查询接口
  */
@@ -203,12 +209,6 @@ export type CustomerAddressPageParams = CommonPageParams & {
 export type CustomerSortField = 'createdAt' | 'orderCount' | 'orderTotalAmount';
 
 /**
- * 客户排序方向枚举
- * 定义排序的升降序
- */
-export type CustomerSortOrder = 'asc' | 'desc';
-
-/**
  * 客户分页查询参数
  * 用于客户列表的筛选、排序和分页查询
  */
@@ -218,7 +218,7 @@ export type CustomerPageParams = CommonPageParams & {
   wechat: string; // 微信号（模糊搜索）
   customerAddressIds: CustomerAddress['id'][]; // 客户地址ID数组（精确匹配）
   sortField?: CustomerSortField; // 排序字段（可选）
-  sortOrder?: CustomerSortOrder; // 排序方向（可选）
+  sortOrder?: SortOrder; // 排序方向（可选）
 };
 
 /**
@@ -422,11 +422,23 @@ export type GroupBuyRankResult = {
 };
 
 /**
+ * 团购合并概况排序字段枚举
+ * 定义团购合并概况列表支持的排序字段
+ */
+export type MergedGroupBuyOverviewSortField =
+  | 'totalRevenue'
+  | 'totalProfit'
+  | 'profitMargin'
+  | 'uniqueCustomerCount'
+  | 'totalOrderCount';
+
+/**
  * 团购合并概况详情查询参数
- * 用于查询特定团购名称的详细统计信息
+ * 用于获取特定团购名称的详细统计数据
  */
 export type MergedGroupBuyOverviewDetailParams = {
   groupBuyName: string; // 团购名称
+  supplierId: string; // 供货商ID
   startDate?: Date; // 统计开始时间（可选，支持无时间参数查询全部数据）
   endDate?: Date; // 统计结束时间（可选，支持无时间参数查询全部数据）
 };
@@ -449,12 +461,8 @@ export type MergedGroupBuyOverviewParams = {
   groupBuyName?: string; // 按团购名称搜索（模糊匹配）
   supplierIds?: Supplier['id'][]; // 按供应商ID数组搜索（精确匹配）
   // 排序参数
-  sortField?:
-    | 'totalRevenue'
-    | 'totalProfit'
-    | 'uniqueCustomerCount'
-    | 'totalOrderCount'; // 排序字段
-  sortOrder?: 'asc' | 'desc'; // 排序方向
+  sortField?: MergedGroupBuyOverviewSortField; // 排序字段
+  sortOrder?: SortOrder; // 排序方向
 };
 
 /**
@@ -463,6 +471,8 @@ export type MergedGroupBuyOverviewParams = {
  */
 export type MergedGroupBuyOverviewListItem = {
   groupBuyName: string; // 团购名称
+  supplierId: string; // 供货商ID
+  supplierName: string; // 供货商名称
   totalRevenue: number; // 总销售额
   totalProfit: number; // 总利润
   totalOrderCount: number; // 总订单量
@@ -485,7 +495,8 @@ export type RegionalSalesItem = {
  */
 export type MergedGroupBuyOverviewDetail = {
   groupBuyName: string; // 团购名称
-  supplierNames: string[]; // 供货商名称列表（可能有多个供货商）
+  supplierId: string; // 供货商ID
+  supplierName: string; // 供货商名称
   startDate?: Date; // 统计开始时间（可选）
   endDate?: Date; // 统计结束时间（可选）
   totalRevenue: number; // 总销售额
@@ -508,6 +519,7 @@ export type MergedGroupBuyOverviewDetail = {
  */
 export type MergedGroupBuyFrequencyCustomersParams = {
   groupBuyName: string; // 团购名称
+  supplierId: string; // 供货商ID
   frequency: number; // 购买频次
   startDate?: Date; // 统计开始时间（可选）
   endDate?: Date; // 统计结束时间（可选）
@@ -519,6 +531,7 @@ export type MergedGroupBuyFrequencyCustomersParams = {
  */
 export type MergedGroupBuyRegionalCustomersParams = {
   groupBuyName: string; // 团购名称
+  supplierId: string; // 供货商ID
   addressId: string; // 地址ID
   startDate?: Date; // 统计开始时间（可选）
   endDate?: Date; // 统计结束时间（可选）

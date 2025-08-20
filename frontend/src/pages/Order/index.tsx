@@ -131,7 +131,7 @@ export const Component = () => {
                     )}
                     {item.quantity && (
                       <div className="mt-1 font-medium text-gray-800">
-                        订单数量：<span className="text-blue-500">{item.quantity}</span>
+                        购买数量：<span className="text-blue-500">{item.quantity}</span>
                       </div>
                     )}
                     {item.description && <div className="text-gray-600">{item.description}</div>}

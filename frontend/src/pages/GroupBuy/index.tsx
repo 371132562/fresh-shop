@@ -96,7 +96,8 @@ export const Component = () => {
   // 处理查看详情
   const handleViewDetail = (item: GroupBuyListItem) => {
     getMergedGroupBuyOverviewDetail({
-      groupBuyName: item.name
+      groupBuyName: item.name,
+      supplierId: item.supplierId
     })
     setDetailVisible(true)
   }
