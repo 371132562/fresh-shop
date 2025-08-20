@@ -1,4 +1,10 @@
-import { BarChartOutlined, TeamOutlined, TrophyOutlined, UserOutlined } from '@ant-design/icons'
+import {
+  BarChartOutlined,
+  HistoryOutlined,
+  TeamOutlined,
+  TrophyOutlined,
+  UserOutlined
+} from '@ant-design/icons'
 import { Button, Card, Col, Divider, Modal, Row, Statistic, Table } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
@@ -131,6 +137,12 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
       setCustomerListData
     ]
   )
+
+  // 处理团购单详情跳转
+  const handleGroupBuyDetailClick = useCallback((groupBuyId: string) => {
+    // 在新标签页中打开团购单详情页面
+    window.open(`/groupBuy/detail/${groupBuyId}`, '_blank')
+  }, [])
   // 客户购买次数分布表格列定义
   const purchaseFrequencyColumns: ColumnsType<{
     key: number
@@ -358,6 +370,129 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
             </div>
           </Card>
 
+          {/* 团购发起历史 */}
+          <Card
+            title={
+              <div className="flex h-12 items-center gap-2">
+                <HistoryOutlined className="text-indigo-500" />
+                <span className="text-lg font-medium">团购发起历史</span>
+              </div>
+            }
+            size="small"
+          >
+            {mergedGroupBuyOverviewDetail.groupBuyLaunchHistory &&
+            mergedGroupBuyOverviewDetail.groupBuyLaunchHistory.length > 0 ? (
+              <div className="space-y-4">
+                {/* 发起历史统计 */}
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Statistic
+                      title="平均每次订单数"
+                      value={
+                        mergedGroupBuyOverviewDetail.groupBuyLaunchHistory.reduce(
+                          (sum, item) => sum + item.orderCount,
+                          0
+                        ) / mergedGroupBuyOverviewDetail.groupBuyLaunchHistory.length
+                      }
+                      precision={1}
+                      suffix="单"
+                      valueStyle={{ color: '#52c41a' }}
+                    />
+                  </Col>
+                  <Col span={12}>
+                    <Statistic
+                      title="最近发起时间"
+                      value={dayjs(
+                        mergedGroupBuyOverviewDetail.groupBuyLaunchHistory[0]?.launchDate
+                      ).format('YYYY-MM-DD')}
+                      valueStyle={{ color: '#722ed1' }}
+                    />
+                  </Col>
+                </Row>
+
+                <Divider
+                  orientation="left"
+                  orientationMargin="0"
+                >
+                  <span className="text-sm text-gray-600">详细发起记录</span>
+                </Divider>
+
+                {/* 发起历史表格 */}
+                <Table
+                  columns={[
+                    {
+                      title: '发起时间',
+                      dataIndex: 'launchDate',
+                      key: 'launchDate',
+                      render: (date: Date, record) => (
+                        <div
+                          className="flex cursor-pointer items-center gap-2 text-blue-500 transition-colors hover:text-blue-600"
+                          onClick={() => handleGroupBuyDetailClick(record.groupBuyId)}
+                          title="点击查看团购单详情"
+                        >
+                          {dayjs(date).format('YYYY-MM-DD')}
+                        </div>
+                      ),
+                      defaultSortOrder: 'descend' as const
+                    },
+                    {
+                      title: '订单数量',
+                      dataIndex: 'orderCount',
+                      key: 'orderCount',
+                      render: (count: number) => (
+                        <span className="font-medium text-green-600">{count}单</span>
+                      )
+                    },
+                    {
+                      title: '销售额',
+                      dataIndex: 'revenue',
+                      key: 'revenue',
+                      render: (revenue: number) => (
+                        <span className="font-medium text-emerald-600">¥{revenue.toFixed(2)}</span>
+                      )
+                    },
+                    {
+                      title: '利润',
+                      dataIndex: 'profit',
+                      key: 'profit',
+                      render: (profit: number) => (
+                        <span className="font-medium text-red-500">¥{profit.toFixed(2)}</span>
+                      )
+                    },
+                    {
+                      title: '利润率',
+                      key: 'profitMargin',
+                      render: (_, record) => {
+                        const margin =
+                          record.revenue > 0 ? (record.profit / record.revenue) * 100 : 0
+                        return (
+                          <span
+                            className={`font-medium ${margin >= 0 ? 'text-blue-600' : 'text-red-500'}`}
+                          >
+                            {margin.toFixed(1)}%
+                          </span>
+                        )
+                      }
+                    }
+                  ]}
+                  dataSource={mergedGroupBuyOverviewDetail.groupBuyLaunchHistory.map(
+                    (item, index) => ({
+                      key: index,
+                      ...item
+                    })
+                  )}
+                  pagination={false}
+                  size="small"
+                  className="mt-2"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-gray-500">暂无发起历史记录</div>
+              </div>
+            )}
+          </Card>
+
           {/* 客户统计信息 */}
           <Card
             title={
@@ -407,10 +542,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
             }
             size="small"
           >
-            <Row
-              gutter={16}
-              className="mb-4"
-            >
+            <Row gutter={16}>
               <Col span={12}>
                 <Statistic
                   title="多次购买客户数"

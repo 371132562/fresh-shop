@@ -28,6 +28,7 @@ import {
   MergedGroupBuyRegionalCustomersParams,
   MergedGroupBuyRegionalCustomersResult,
   CustomerBasicInfo,
+  GroupBuyLaunchHistory,
 } from '../../../types/dto'; // 导入类型
 
 /**
@@ -783,6 +784,7 @@ export class AnalysisService {
         multiPurchaseCustomerCount: 0,
         multiPurchaseCustomerRatio: 0,
         regionalSales: [],
+        groupBuyLaunchHistory: [],
       };
     }
 
@@ -886,6 +888,47 @@ export class AnalysisService {
       };
     });
 
+    // 7. 团购发起历史记录
+    const groupBuyLaunchHistory: GroupBuyLaunchHistory[] =
+      groupBuysWithOrders.map((groupBuy) => {
+        // 计算该次团购的订单数量和销售额
+        let orderCount = 0;
+        let revenue = 0;
+        let profit = 0;
+        const units = groupBuy.units as Array<GroupBuyUnit>;
+
+        for (const order of groupBuy.order) {
+          // 只统计已支付和已完成的订单
+          if (
+            order.status === OrderStatus.PAID ||
+            order.status === OrderStatus.COMPLETED
+          ) {
+            orderCount += 1;
+            const selectedUnit = units.find((unit) => unit.id === order.unitId);
+            if (selectedUnit) {
+              const orderRevenue = selectedUnit.price * order.quantity;
+              const orderProfit =
+                (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+              revenue += orderRevenue;
+              profit += orderProfit;
+            }
+          }
+        }
+
+        return {
+          groupBuyId: groupBuy.id,
+          launchDate: groupBuy.groupBuyStartDate,
+          orderCount,
+          revenue,
+          profit,
+        };
+      });
+
+    // 按发起时间排序（从新到旧）
+    groupBuyLaunchHistory.sort(
+      (a, b) => b.launchDate.getTime() - a.launchDate.getTime(),
+    );
+
     // 获取供货商信息
     const supplierName = groupBuysWithOrders[0]?.supplier?.name || '未知供货商';
 
@@ -907,6 +950,7 @@ export class AnalysisService {
       multiPurchaseCustomerCount,
       multiPurchaseCustomerRatio,
       regionalSales: regionalSalesResult,
+      groupBuyLaunchHistory,
     };
   }
 

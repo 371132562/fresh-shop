@@ -490,6 +490,18 @@ export type RegionalSalesItem = {
 };
 
 /**
+ * 团购发起历史记录
+ * 用于展示同一名称团购的多次发起情况
+ */
+export type GroupBuyLaunchHistory = {
+  groupBuyId: string; // 团购单ID
+  launchDate: Date; // 发起时间
+  orderCount: number; // 该次发起的订单数量
+  revenue: number; // 该次发起的销售额
+  profit: number; // 该次发起的利润
+};
+
+/**
  * 团购合并概况详情
  * 包含特定团购名称的详细统计分析数据
  */
@@ -511,6 +523,7 @@ export type MergedGroupBuyOverviewDetail = {
   multiPurchaseCustomerCount: number; // 多次购买客户总数
   multiPurchaseCustomerRatio: number; // 多次购买客户比例
   regionalSales: RegionalSalesItem[]; // 地域销售分析
+  groupBuyLaunchHistory: GroupBuyLaunchHistory[]; // 团购发起历史记录
 };
 
 /**
