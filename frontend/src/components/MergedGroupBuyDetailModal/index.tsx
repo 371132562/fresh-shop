@@ -36,7 +36,8 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   width = 1000
 }: MergedGroupBuyDetailModalProps) => {
   // 客户列表模态框状态
-  const [customerListVisible, setCustomerListVisible] = useState(false)
+  const customerListVisible = useAnalysisStore(state => state.customerListVisible)
+  const setCustomerListVisible = useAnalysisStore(state => state.setCustomerListVisible)
 
   // 消费详情模态框状态
   const [consumptionDetailVisible, setConsumptionDetailVisible] = useState(false)
@@ -45,9 +46,6 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   const getMergedGroupBuyOverviewDetail = useAnalysisStore(
     state => state.getMergedGroupBuyOverviewDetail
   )
-  const getMergedGroupBuyFrequencyCustomers = useAnalysisStore(
-    state => state.getMergedGroupBuyFrequencyCustomers
-  )
   const mergedGroupBuyOverviewDetail = useAnalysisStore(state => state.mergedGroupBuyOverviewDetail)
   const mergedGroupBuyOverviewDetailLoading = useAnalysisStore(
     state => state.mergedGroupBuyOverviewDetailLoading
@@ -55,6 +53,8 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   const resetMergedGroupBuyOverviewDetail = useAnalysisStore(
     state => state.resetMergedGroupBuyOverviewDetail
   )
+  const handleFrequencyClick = useAnalysisStore(state => state.handleFrequencyClick)
+  const handleRegionalClick = useAnalysisStore(state => state.handleRegionalClick)
 
   // 当模态框打开且有参数时，获取详情数据
   useEffect(() => {
@@ -65,15 +65,9 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
       resetMergedGroupBuyOverviewDetail()
     }
   }, [visible, params, getMergedGroupBuyOverviewDetail, resetMergedGroupBuyOverviewDetail])
-  const getMergedGroupBuyRegionalCustomers = useAnalysisStore(
-    state => state.getMergedGroupBuyRegionalCustomers
-  )
   const customerListData = useAnalysisStore(state => state.customerListData)
   const customerListLoading = useAnalysisStore(state => state.customerListLoading)
   const customerListTitle = useAnalysisStore(state => state.customerListTitle)
-  const setCustomerListData = useAnalysisStore(state => state.setCustomerListData)
-  const setCustomerListLoading = useAnalysisStore(state => state.setCustomerListLoading)
-  const setCustomerListTitle = useAnalysisStore(state => state.setCustomerListTitle)
   const resetCustomerList = useAnalysisStore(state => state.resetCustomerList)
 
   // 从 Zustand store 中获取客户数据的方法和状态
@@ -81,62 +75,6 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   const consumptionDetail = useCustomerStore(state => state.consumptionDetail)
   const consumptionDetailLoading = useCustomerStore(state => state.consumptionDetailLoading)
   const resetConsumptionDetail = useCustomerStore(state => state.resetConsumptionDetail)
-
-  // 处理购买频次点击事件
-  const handleFrequencyClick = useCallback(
-    async (frequency: number) => {
-      if (!mergedGroupBuyOverviewDetail) return
-
-      setCustomerListTitle(`购买${frequency}次 的客户列表`)
-      setCustomerListVisible(true)
-      setCustomerListLoading(true)
-      setCustomerListData([]) // 清空之前的数据
-
-      await getMergedGroupBuyFrequencyCustomers({
-        groupBuyName: mergedGroupBuyOverviewDetail.groupBuyName,
-        supplierId: mergedGroupBuyOverviewDetail.supplierId,
-        frequency,
-        startDate: mergedGroupBuyOverviewDetail.startDate,
-        endDate: mergedGroupBuyOverviewDetail.endDate
-      })
-    },
-    [
-      mergedGroupBuyOverviewDetail,
-      getMergedGroupBuyFrequencyCustomers,
-      setCustomerListTitle,
-      setCustomerListVisible,
-      setCustomerListLoading,
-      setCustomerListData
-    ]
-  )
-
-  // 处理地域点击事件
-  const handleRegionalClick = useCallback(
-    async (addressId: string, addressName: string) => {
-      if (!mergedGroupBuyOverviewDetail) return
-
-      setCustomerListTitle(`${addressName} 地址的客户列表`)
-      setCustomerListVisible(true)
-      setCustomerListLoading(true)
-      setCustomerListData([]) // 清空之前的数据
-
-      await getMergedGroupBuyRegionalCustomers({
-        groupBuyName: mergedGroupBuyOverviewDetail.groupBuyName,
-        supplierId: mergedGroupBuyOverviewDetail.supplierId,
-        addressId,
-        startDate: mergedGroupBuyOverviewDetail.startDate,
-        endDate: mergedGroupBuyOverviewDetail.endDate
-      })
-    },
-    [
-      mergedGroupBuyOverviewDetail,
-      getMergedGroupBuyRegionalCustomers,
-      setCustomerListTitle,
-      setCustomerListVisible,
-      setCustomerListLoading,
-      setCustomerListData
-    ]
-  )
 
   // 处理团购单详情跳转
   const handleGroupBuyDetailClick = useCallback((groupBuyId: string) => {

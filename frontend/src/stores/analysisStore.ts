@@ -84,13 +84,21 @@ type AnalysisStore = {
   customerListData: CustomerBasicInfo[]
   customerListLoading: boolean
   customerListTitle: string
+  customerListVisible: boolean
   setCustomerListData: (data: CustomerBasicInfo[]) => void
   setCustomerListLoading: (loading: boolean) => void
   setCustomerListTitle: (title: string) => void
+  setCustomerListVisible: (visible: boolean) => void
   resetCustomerList: () => void
+
+  // 处理购买频次点击事件
+  handleFrequencyClick: (frequency: number) => Promise<void>
+
+  // 处理地域点击事件
+  handleRegionalClick: (addressId: string, addressName: string) => Promise<void>
 }
 
-const useAnalysisStore = create<AnalysisStore>(set => ({
+const useAnalysisStore = create<AnalysisStore>((set, get) => ({
   count: {
     groupBuyCount: 0,
     orderCount: 0,
@@ -258,6 +266,7 @@ const useAnalysisStore = create<AnalysisStore>(set => ({
   customerListData: [],
   customerListLoading: false,
   customerListTitle: '',
+  customerListVisible: false,
   setCustomerListData: (data: CustomerBasicInfo[]) => {
     set({ customerListData: data })
   },
@@ -267,8 +276,60 @@ const useAnalysisStore = create<AnalysisStore>(set => ({
   setCustomerListTitle: (title: string) => {
     set({ customerListTitle: title })
   },
+  setCustomerListVisible: (visible: boolean) => {
+    set({ customerListVisible: visible })
+  },
   resetCustomerList: () => {
-    set({ customerListData: [], customerListLoading: false, customerListTitle: '' })
+    set({
+      customerListData: [],
+      customerListLoading: false,
+      customerListTitle: '',
+      customerListVisible: false
+    })
+  },
+
+  // 处理购买频次点击事件
+  handleFrequencyClick: async (frequency: number) => {
+    const state = get()
+    const detail = state.mergedGroupBuyOverviewDetail
+    if (!detail) return
+
+    set({
+      customerListTitle: `购买${frequency}次 的客户列表`,
+      customerListLoading: true,
+      customerListData: [],
+      customerListVisible: true
+    })
+
+    await state.getMergedGroupBuyFrequencyCustomers({
+      groupBuyName: detail.groupBuyName,
+      supplierId: detail.supplierId,
+      frequency,
+      startDate: detail.startDate,
+      endDate: detail.endDate
+    })
+  },
+
+  // 处理地域点击事件
+  handleRegionalClick: async (addressId: string, addressName: string) => {
+    const state = get()
+    const detail = state.mergedGroupBuyOverviewDetail
+    if (!detail) return
+
+    set({
+      customerListTitle: `${addressName} 地址的客户列表`,
+      customerListLoading: true,
+      customerListData: [],
+      customerListVisible: true
+    })
+
+    await state.getMergedGroupBuyRegionalCustomers({
+      groupBuyName: detail.groupBuyName,
+      supplierId: detail.supplierId,
+      addressId,
+      startDate: detail.startDate,
+      endDate: detail.endDate
+    })
   }
 }))
 
