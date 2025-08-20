@@ -22,9 +22,17 @@ const PurchaseFrequencyChart: React.FC<PurchaseFrequencyChartProps> = ({
 }) => {
   const chartRef = useRef<HTMLDivElement>(null)
 
+  const chartInstanceRef = useRef<echarts.ECharts | null>(null)
+
   useEffect(() => {
     if (chartRef.current && data && data.length > 0) {
+      // 如果已经存在实例，先销毁
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.dispose()
+      }
+
       const chartInstance = echarts.init(chartRef.current)
+      chartInstanceRef.current = chartInstance
 
       // 转换数据格式为echarts需要的格式
       const chartData = data.map(item => ({
@@ -91,15 +99,6 @@ const PurchaseFrequencyChart: React.FC<PurchaseFrequencyChartProps> = ({
 
       chartInstance.setOption(option)
 
-      // 添加点击事件
-      if (onFrequencyClick) {
-        chartInstance.on('click', (params: any) => {
-          if (params.data && params.data.frequency) {
-            onFrequencyClick(params.data.frequency)
-          }
-        })
-      }
-
       // 监听容器大小变化
       const resizeObserver = new ResizeObserver(() => {
         chartInstance.resize()
@@ -108,10 +107,26 @@ const PurchaseFrequencyChart: React.FC<PurchaseFrequencyChartProps> = ({
 
       return () => {
         chartInstance.dispose()
+        chartInstanceRef.current = null
         resizeObserver.disconnect()
       }
     }
-  }, [data, onFrequencyClick])
+  }, [data]) // 移除 onFrequencyClick 依赖
+
+  // 单独处理点击事件，避免因回调函数变化导致重新渲染
+  useEffect(() => {
+    if (chartInstanceRef.current && onFrequencyClick) {
+      // 清除之前的点击事件
+      chartInstanceRef.current.off('click')
+
+      // 添加新的点击事件
+      chartInstanceRef.current.on('click', (params: any) => {
+        if (params.data && params.data.frequency) {
+          onFrequencyClick(params.data.frequency)
+        }
+      })
+    }
+  }, [onFrequencyClick])
 
   return (
     <Card

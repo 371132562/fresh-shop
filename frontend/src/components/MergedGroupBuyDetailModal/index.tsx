@@ -3,7 +3,7 @@ import { Button, Card, Col, Divider, Modal, Row, Statistic, Table } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import type { MergedGroupBuyOverviewDetailParams } from 'fresh-shop-backend/types/dto'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 import ConsumptionDetailModal from '@/components/ConsumptionDetailModal'
 import useAnalysisStore from '@/stores/analysisStore'
@@ -77,40 +77,60 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   const resetConsumptionDetail = useCustomerStore(state => state.resetConsumptionDetail)
 
   // 处理购买频次点击事件
-  const handleFrequencyClick = async (frequency: number) => {
-    if (!mergedGroupBuyOverviewDetail) return
+  const handleFrequencyClick = useCallback(
+    async (frequency: number) => {
+      if (!mergedGroupBuyOverviewDetail) return
 
-    setCustomerListTitle(`购买${frequency}次 的客户列表`)
-    setCustomerListVisible(true)
-    setCustomerListLoading(true)
-    setCustomerListData([]) // 清空之前的数据
+      setCustomerListTitle(`购买${frequency}次 的客户列表`)
+      setCustomerListVisible(true)
+      setCustomerListLoading(true)
+      setCustomerListData([]) // 清空之前的数据
 
-    await getMergedGroupBuyFrequencyCustomers({
-      groupBuyName: mergedGroupBuyOverviewDetail.groupBuyName,
-      supplierId: mergedGroupBuyOverviewDetail.supplierId,
-      frequency,
-      startDate: mergedGroupBuyOverviewDetail.startDate,
-      endDate: mergedGroupBuyOverviewDetail.endDate
-    })
-  }
+      await getMergedGroupBuyFrequencyCustomers({
+        groupBuyName: mergedGroupBuyOverviewDetail.groupBuyName,
+        supplierId: mergedGroupBuyOverviewDetail.supplierId,
+        frequency,
+        startDate: mergedGroupBuyOverviewDetail.startDate,
+        endDate: mergedGroupBuyOverviewDetail.endDate
+      })
+    },
+    [
+      mergedGroupBuyOverviewDetail,
+      getMergedGroupBuyFrequencyCustomers,
+      setCustomerListTitle,
+      setCustomerListVisible,
+      setCustomerListLoading,
+      setCustomerListData
+    ]
+  )
 
   // 处理地域点击事件
-  const handleRegionalClick = async (addressId: string, addressName: string) => {
-    if (!mergedGroupBuyOverviewDetail) return
+  const handleRegionalClick = useCallback(
+    async (addressId: string, addressName: string) => {
+      if (!mergedGroupBuyOverviewDetail) return
 
-    setCustomerListTitle(`${addressName} 地址的客户列表`)
-    setCustomerListVisible(true)
-    setCustomerListLoading(true)
-    setCustomerListData([]) // 清空之前的数据
+      setCustomerListTitle(`${addressName} 地址的客户列表`)
+      setCustomerListVisible(true)
+      setCustomerListLoading(true)
+      setCustomerListData([]) // 清空之前的数据
 
-    await getMergedGroupBuyRegionalCustomers({
-      groupBuyName: mergedGroupBuyOverviewDetail.groupBuyName,
-      supplierId: mergedGroupBuyOverviewDetail.supplierId,
-      addressId,
-      startDate: mergedGroupBuyOverviewDetail.startDate,
-      endDate: mergedGroupBuyOverviewDetail.endDate
-    })
-  }
+      await getMergedGroupBuyRegionalCustomers({
+        groupBuyName: mergedGroupBuyOverviewDetail.groupBuyName,
+        supplierId: mergedGroupBuyOverviewDetail.supplierId,
+        addressId,
+        startDate: mergedGroupBuyOverviewDetail.startDate,
+        endDate: mergedGroupBuyOverviewDetail.endDate
+      })
+    },
+    [
+      mergedGroupBuyOverviewDetail,
+      getMergedGroupBuyRegionalCustomers,
+      setCustomerListTitle,
+      setCustomerListVisible,
+      setCustomerListLoading,
+      setCustomerListData
+    ]
+  )
   // 客户购买次数分布表格列定义
   const purchaseFrequencyColumns: ColumnsType<{
     key: number

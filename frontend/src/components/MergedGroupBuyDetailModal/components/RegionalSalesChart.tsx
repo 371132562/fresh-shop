@@ -23,9 +23,17 @@ const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({
 }) => {
   const chartRef = useRef<HTMLDivElement>(null)
 
+  const chartInstanceRef = useRef<echarts.ECharts | null>(null)
+
   useEffect(() => {
     if (chartRef.current && data && data.length > 0) {
+      // 如果已经存在实例，先销毁
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.dispose()
+      }
+
       const chartInstance = echarts.init(chartRef.current)
+      chartInstanceRef.current = chartInstance
 
       // 提取地址名称和客户数量
       const addressNames = data.map(item => item.addressName || '未知地址')
@@ -110,15 +118,6 @@ const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({
 
       chartInstance.setOption(option)
 
-      // 添加点击事件
-      if (onRegionalClick) {
-        chartInstance.on('click', (params: any) => {
-          if (params.data && params.data.addressId) {
-            onRegionalClick(params.data.addressId, params.data.addressName)
-          }
-        })
-      }
-
       // 监听容器大小变化
       const resizeObserver = new ResizeObserver(() => {
         chartInstance.resize()
@@ -127,10 +126,26 @@ const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({
 
       return () => {
         chartInstance.dispose()
+        chartInstanceRef.current = null
         resizeObserver.disconnect()
       }
     }
-  }, [data, onRegionalClick])
+  }, [data]) // 移除 onRegionalClick 依赖
+
+  // 单独处理点击事件，避免因回调函数变化导致重新渲染
+  useEffect(() => {
+    if (chartInstanceRef.current && onRegionalClick) {
+      // 清除之前的点击事件
+      chartInstanceRef.current.off('click')
+
+      // 添加新的点击事件
+      chartInstanceRef.current.on('click', (params: any) => {
+        if (params.data && params.data.addressId) {
+          onRegionalClick(params.data.addressId, params.data.addressName)
+        }
+      })
+    }
+  }, [onRegionalClick])
 
   return (
     <Card
