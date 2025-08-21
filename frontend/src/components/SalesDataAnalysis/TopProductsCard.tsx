@@ -1,5 +1,5 @@
 import { TrophyOutlined } from '@ant-design/icons'
-import { Card, Empty, List, Progress, Segmented, Tag, Tooltip } from 'antd'
+import { Badge, Card, Empty, List, Progress, Segmented, Tag, Tooltip } from 'antd'
 import type { TopProductItem } from 'fresh-shop-backend/types/dto'
 import React, { useMemo, useState } from 'react'
 
@@ -94,8 +94,8 @@ const TopProductsCard: React.FC<TopProductsCardProps> = ({
                 <List.Item className="px-2 py-2">
                   <div className="flex w-full items-start gap-3">
                     {/* 排名圆形徽标 */}
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">
-                      {index + 1}
+                    <div className="pt-1">
+                      <Badge color={margin >= 30 ? 'green' : margin >= 15 ? 'blue' : 'volcano'} />
                     </div>
 
                     {/* 主体内容区域 */}
