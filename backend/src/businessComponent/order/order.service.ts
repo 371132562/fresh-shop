@@ -20,7 +20,7 @@ export class OrderService {
   }
 
   async list(data: OrderPageParams): Promise<ListByPage<Order[]>> {
-    const { page, pageSize, customerIds, groupBuyIds, status } = data;
+    const { page, pageSize, customerIds, groupBuyIds, statuses } = data;
     const skip = (page - 1) * pageSize; // 计算要跳过的记录数
 
     const where: Prisma.OrderWhereInput = {
@@ -39,8 +39,10 @@ export class OrderService {
       };
     }
 
-    if (status) {
-      where.status = status;
+    if (statuses && statuses.length > 0) {
+      where.status = {
+        in: statuses,
+      };
     }
 
     const [orders, totalCount] = await this.prisma.$transaction([
@@ -57,6 +59,7 @@ export class OrderService {
             select: {
               id: true,
               name: true,
+              groupBuyStartDate: true,
             },
           },
         },
@@ -84,6 +87,7 @@ export class OrderService {
           select: {
             id: true,
             name: true,
+            groupBuyStartDate: true,
             units: true,
           },
         },

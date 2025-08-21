@@ -94,7 +94,7 @@ const useOrderStore = create<OrderStore>((set, get) => ({
   pageParams: {
     page: 1,
     pageSize: 10,
-    status: '',
+    statuses: [],
     customerIds: [],
     groupBuyIds: []
   },

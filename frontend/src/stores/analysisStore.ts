@@ -8,7 +8,11 @@ import {
   analysisMergedGroupBuyOverviewApi,
   analysisMergedGroupBuyOverviewDetailApi,
   analysisMergedGroupBuyRegionalCustomersApi,
-  analysisSupplierRankApi
+  analysisSupplierFrequencyCustomersApi,
+  analysisSupplierOverviewApi,
+  analysisSupplierOverviewDetailApi,
+  analysisSupplierRankApi,
+  analysisSupplierRegionalCustomersApi
 } from '@/services/apis'
 import http from '@/services/base'
 
@@ -26,7 +30,15 @@ import type {
   MergedGroupBuyOverviewResult,
   MergedGroupBuyRegionalCustomersParams,
   MergedGroupBuyRegionalCustomersResult,
-  SupplierRankResult
+  SupplierFrequencyCustomersParams,
+  SupplierFrequencyCustomersResult,
+  SupplierOverviewDetail,
+  SupplierOverviewDetailParams,
+  SupplierOverviewParams,
+  SupplierOverviewResult,
+  SupplierRankResult,
+  SupplierRegionalCustomersParams,
+  SupplierRegionalCustomersResult
 } from '../../../backend/types/dto'
 
 type AnalysisStore = {
@@ -96,6 +108,27 @@ type AnalysisStore = {
 
   // 处理地域点击事件
   handleRegionalClick: (addressId: string, addressName: string) => Promise<void>
+
+  // 供货商概况数据
+  supplierOverviewList: SupplierOverviewResult['list']
+  supplierOverviewTotal: number
+  supplierOverviewPage: number
+  supplierOverviewPageSize: number
+  supplierOverviewLoading: boolean
+  getSupplierOverview: (data: SupplierOverviewParams) => Promise<void>
+  setSupplierOverviewPage: (page: number) => void
+
+  // 供货商概况详情数据
+  supplierOverviewDetail: SupplierOverviewDetail | null
+  supplierOverviewDetailLoading: boolean
+  getSupplierOverviewDetail: (params: SupplierOverviewDetailParams) => Promise<void>
+  resetSupplierOverviewDetail: () => void
+
+  // 获取供货商特定购买频次的客户列表
+  getSupplierFrequencyCustomers: (params: SupplierFrequencyCustomersParams) => Promise<void>
+
+  // 获取供货商特定区域的客户列表
+  getSupplierRegionalCustomers: (params: SupplierRegionalCustomersParams) => Promise<void>
 }
 
 const useAnalysisStore = create<AnalysisStore>((set, get) => ({
@@ -292,7 +325,9 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
   handleFrequencyClick: async (frequency: number) => {
     const state = get()
     const detail = state.mergedGroupBuyOverviewDetail
-    if (!detail) return
+    const supplierDetail = state.supplierOverviewDetail
+
+    if (!detail && !supplierDetail) return
 
     set({
       customerListTitle: `购买${frequency}次 的客户列表`,
@@ -301,20 +336,34 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
       customerListVisible: true
     })
 
-    await state.getMergedGroupBuyFrequencyCustomers({
-      groupBuyName: detail.groupBuyName,
-      supplierId: detail.supplierId,
-      frequency,
-      startDate: detail.startDate,
-      endDate: detail.endDate
-    })
+    // 根据当前详情类型调用不同的接口
+    if (detail) {
+      // 团购详情
+      await state.getMergedGroupBuyFrequencyCustomers({
+        groupBuyName: detail.groupBuyName,
+        supplierId: detail.supplierId,
+        frequency,
+        startDate: detail.startDate,
+        endDate: detail.endDate
+      })
+    } else if (supplierDetail) {
+      // 供货商详情
+      await state.getSupplierFrequencyCustomers({
+        supplierId: supplierDetail.supplierId,
+        frequency,
+        startDate: supplierDetail.startDate,
+        endDate: supplierDetail.endDate
+      })
+    }
   },
 
   // 处理地域点击事件
   handleRegionalClick: async (addressId: string, addressName: string) => {
     const state = get()
     const detail = state.mergedGroupBuyOverviewDetail
-    if (!detail) return
+    const supplierDetail = state.supplierOverviewDetail
+
+    if (!detail && !supplierDetail) return
 
     set({
       customerListTitle: `${addressName} 地址的客户列表`,
@@ -323,13 +372,99 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
       customerListVisible: true
     })
 
-    await state.getMergedGroupBuyRegionalCustomers({
-      groupBuyName: detail.groupBuyName,
-      supplierId: detail.supplierId,
-      addressId,
-      startDate: detail.startDate,
-      endDate: detail.endDate
-    })
+    // 根据当前详情类型调用不同的接口
+    if (detail) {
+      // 团购详情
+      await state.getMergedGroupBuyRegionalCustomers({
+        groupBuyName: detail.groupBuyName,
+        supplierId: detail.supplierId,
+        addressId,
+        startDate: detail.startDate,
+        endDate: detail.endDate
+      })
+    } else if (supplierDetail) {
+      // 供货商详情
+      await state.getSupplierRegionalCustomers({
+        supplierId: supplierDetail.supplierId,
+        addressId,
+        startDate: supplierDetail.startDate,
+        endDate: supplierDetail.endDate
+      })
+    }
+  },
+
+  // 供货商概况数据
+  supplierOverviewList: [],
+  supplierOverviewTotal: 0,
+  supplierOverviewPage: 1,
+  supplierOverviewPageSize: 10,
+  supplierOverviewLoading: false,
+  getSupplierOverview: async data => {
+    try {
+      set({ supplierOverviewLoading: true })
+      const res = await http.post<SupplierOverviewResult>(analysisSupplierOverviewApi, data)
+      set({
+        supplierOverviewList: res.data.list,
+        supplierOverviewTotal: res.data.total,
+        supplierOverviewPage: res.data.page,
+        supplierOverviewPageSize: res.data.pageSize
+      })
+    } finally {
+      set({ supplierOverviewLoading: false })
+    }
+  },
+  setSupplierOverviewPage: page => {
+    set({ supplierOverviewPage: page })
+  },
+
+  // 供货商概况详情数据
+  supplierOverviewDetail: null,
+  supplierOverviewDetailLoading: false,
+  getSupplierOverviewDetail: async params => {
+    set({ supplierOverviewDetailLoading: true })
+    try {
+      const res = await http.post(analysisSupplierOverviewDetailApi, params)
+      set({ supplierOverviewDetail: res.data })
+    } finally {
+      set({ supplierOverviewDetailLoading: false })
+    }
+  },
+  resetSupplierOverviewDetail: () => {
+    set({ supplierOverviewDetail: null })
+  },
+
+  // 获取供货商特定购买频次的客户列表
+  getSupplierFrequencyCustomers: async (params: SupplierFrequencyCustomersParams) => {
+    try {
+      set({ customerListLoading: true })
+      const res = await http.post<SupplierFrequencyCustomersResult>(
+        analysisSupplierFrequencyCustomersApi,
+        params
+      )
+      set({
+        customerListData: res.data.customers,
+        customerListLoading: false
+      })
+    } finally {
+      set({ customerListLoading: false })
+    }
+  },
+
+  // 获取供货商特定区域的客户列表
+  getSupplierRegionalCustomers: async (params: SupplierRegionalCustomersParams) => {
+    try {
+      set({ customerListLoading: true })
+      const res = await http.post<SupplierRegionalCustomersResult>(
+        analysisSupplierRegionalCustomersApi,
+        params
+      )
+      set({
+        customerListData: res.data.customers,
+        customerListLoading: false
+      })
+    } finally {
+      set({ customerListLoading: false })
+    }
   }
 }))
 

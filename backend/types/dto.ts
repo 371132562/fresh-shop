@@ -523,6 +523,9 @@ export type GroupBuyLaunchHistory = {
   orderCount: number; // 该次发起的订单数量
   revenue: number; // 该次发起的销售额
   profit: number; // 该次发起的利润
+  groupBuyName: string; // 团购名称
+  customerCount: number; // 该次发起的客户数
+  refundedOrderCount: number; // 该次发起的退款订单数
 };
 
 /**
@@ -539,13 +542,14 @@ export type MergedGroupBuyOverviewDetail = {
   totalProfit: number; // 总利润
   totalProfitMargin: number; // 总利润率
   totalOrderCount: number; // 总订单量
-  totalRefundedOrderCount: number; // 退款订单数
   uniqueCustomerCount: number; // 总参与客户数（去重）
   averageCustomerOrderValue: number; // 平均客单价
   totalGroupBuyCount: number; // 该名称团购单总发起次数
   customerPurchaseFrequency: CustomerPurchaseFrequency[]; // 客户购买次数分布
   multiPurchaseCustomerCount: number; // 多次购买客户总数
   multiPurchaseCustomerRatio: number; // 多次购买客户比例
+  repeatCustomerCount: number; // 复购客户数
+  repeatCustomerRatio: number; // 复购客户比例
   regionalSales: RegionalSalesItem[]; // 地域销售分析
   groupBuyLaunchHistory: GroupBuyLaunchHistory[]; // 团购发起历史记录
 };
@@ -625,7 +629,7 @@ export type MergedGroupBuyOverviewResult = {
 export type OrderPageParams = CommonPageParams & {
   customerIds: Customer['id'][]; // 客户ID数组（精确匹配）
   groupBuyIds: GroupBuy['id'][]; // 团购ID数组（精确匹配）
-  status: OrderStatus | ''; // 订单状态（精确匹配，空字符串表示全部）
+  statuses: OrderStatus[]; // 订单状态数组（精确匹配）
 };
 
 /**
@@ -637,6 +641,7 @@ export type OrderDetail = Order & {
   groupBuy: {
     id: string; // 团购ID
     name: string; // 团购名称
+    groupBuyStartDate: Date; // 团购发起时间
     units: GroupBuyUnit[]; // 团购规格列表
   }; // 团购基本信息
 };
@@ -711,4 +716,262 @@ export type AnalysisCountResult = {
     date: Date; // 日期
     count: number; // 利润
   }[]; // 利润趋势
+};
+
+// ===================================================================
+// 供货商概况分析模块
+// 包含供货商维度统计、概况分析相关的数据传输对象
+//
+// 功能说明：
+// - 提供供货商维度的数据统计和分析功能
+// - 支持供货商概况列表和详情数据查询
+// - 包含多维度分析：销售、客户、产品、地域、时间等
+// - 支持搜索、排序、分页等查询功能
+// ===================================================================
+
+/**
+ * 供货商概况排序字段
+ * 定义供货商概况列表支持的排序字段
+ *
+ * 支持的排序维度：
+ * - totalRevenue: 按总销售额排序
+ * - totalProfit: 按总利润排序
+ * - totalOrderCount: 按总订单量排序
+ * - uniqueCustomerCount: 按参与客户数排序
+ * - totalGroupBuyCount: 按团购单数排序
+ * - averageProfitMargin: 按平均利润率排序
+ */
+export type SupplierOverviewSortField =
+  | 'totalRevenue' // 总销售额
+  | 'totalProfit' // 总利润
+  | 'totalOrderCount' // 总订单量
+  | 'uniqueCustomerCount' // 参与客户数
+  | 'totalGroupBuyCount' // 团购单数
+  | 'averageProfitMargin'; // 平均利润率
+
+/**
+ * 供货商概况查询参数
+ * 用于供货商维度的概况分析查询
+ *
+ * 查询功能：
+ * - 支持时间范围过滤（可选）
+ * - 支持分页查询
+ * - 支持按供货商名称搜索
+ * - 支持多字段排序
+ *
+ * 使用场景：
+ * - 供货商概况列表页面
+ * - 供货商绩效排行
+ * - 供货商搜索和筛选
+ */
+export type SupplierOverviewParams = {
+  // 时间范围参数（可选）
+  startDate?: Date; // 统计开始时间，不提供则查询全部历史数据
+  endDate?: Date; // 统计结束时间，不提供则查询全部历史数据
+
+  // 分页参数（可选）
+  page?: number; // 页码，从1开始，默认为1
+  pageSize?: number; // 每页数量，默认为10
+
+  // 搜索参数
+  supplierName?: string; // 按供货商名称搜索，支持模糊匹配
+
+  // 排序参数
+  sortField?: SupplierOverviewSortField; // 排序字段，默认为totalRevenue
+  sortOrder?: SortOrder; // 排序方向，默认为desc
+};
+
+/**
+ * 供货商概况列表项
+ * 用于展示供货商维度的统计数据
+ *
+ * 数据说明：
+ * - 包含供货商的基本信息和核心业绩指标
+ * - 所有数值均为指定时间范围内的累计统计
+ * - 客户数为去重后的唯一客户数量
+ *
+ * 使用场景：
+ * - 供货商概况列表展示
+ * - 供货商绩效排行
+ * - 供货商筛选和比较
+ */
+export type SupplierOverviewListItem = {
+  // 基本信息
+  supplierId: string; // 供货商唯一标识
+  supplierName: string; // 供货商名称
+
+  // 核心业绩指标
+  totalRevenue: number; // 总销售额（元）
+  totalProfit: number; // 总利润（元）
+  totalOrderCount: number; // 总订单量（单）
+  uniqueCustomerCount: number; // 参与客户数（人，去重）
+  totalGroupBuyCount: number; // 团购单数（个）
+  averageProfitMargin: number; // 平均利润率（%）
+};
+
+/**
+ * 供货商概况分页结果
+ * 包含分页信息的供货商概况列表响应
+ */
+export type SupplierOverviewResult = {
+  list: SupplierOverviewListItem[]; // 概况列表
+  total: number; // 总记录数
+  page: number; // 当前页码
+  pageSize: number; // 每页数量
+};
+
+/**
+ * 热销产品统计项
+ * 用于分析供货商的热销产品排行
+ *
+ * 数据说明：
+ * - 按销售额排序的热销产品列表
+ * - 包含产品的销售表现和客户覆盖情况
+ * - 用于识别供货商的核心产品和市场表现
+ *
+ * 使用场景：
+ * - 供货商详情页面的热销产品排行
+ * - 产品表现分析和优化建议
+ * - 供货商产品策略制定
+ */
+export type TopProductItem = {
+  // 产品基本信息
+  productId: string; // 产品唯一标识
+  productName: string; // 产品名称
+
+  // 销售表现指标
+  totalRevenue: number; // 总销售额（元）
+  totalProfit: number; // 总利润（元）
+  orderCount: number; // 订单数量（单）
+  groupBuyCount: number; // 团购单数量（个）
+};
+
+/**
+ * 产品分类统计项
+ * 用于分析供货商不同产品分类的表现
+ *
+ * 数据说明：
+ * - 按产品分类维度的销售统计
+ * - 包含分类的销售表现和产品覆盖情况
+ * - 用于分析供货商的产品结构优势
+ *
+ * 使用场景：
+ * - 供货商详情页面的产品分类分析
+ * - 产品结构优化建议
+ * - 供货商产品策略分析
+ */
+export type ProductCategoryStat = {
+  // 分类基本信息
+  categoryId: string; // 分类唯一标识
+  categoryName: string; // 分类名称
+
+  // 销售表现指标
+  totalRevenue: number; // 总销售额（元）
+  totalProfit: number; // 总利润（元）
+  orderCount: number; // 订单数量（单）
+  productCount: number; // 产品数量（个）
+  groupBuyCount: number; // 团购单数量（个）
+};
+
+/**
+ * 供货商团购历史记录
+ * 用于展示供货商的团购发起历史
+ */
+export type SupplierGroupBuyHistory = {
+  groupBuyId: string; // 团购单ID
+  groupBuyName: string; // 团购名称
+  launchDate: Date; // 发起时间
+  orderCount: number; // 该次团购的订单数量
+  revenue: number; // 该次团购的销售额
+  profit: number; // 该次团购的利润
+  customerCount: number; // 该次团购的客户数
+  refundedOrderCount: number; // 该次团购的退款订单数
+};
+
+/**
+ * 供货商概况详情查询参数
+ * 用于获取特定供货商的详细统计数据
+ */
+export type SupplierOverviewDetailParams = {
+  supplierId: string; // 供货商ID
+  startDate?: Date; // 统计开始时间（可选，支持无时间参数查询全部数据）
+  endDate?: Date; // 统计结束时间（可选，支持无时间参数查询全部数据）
+};
+
+/**
+ * 供货商概况详情
+ * 包含特定供货商的详细统计分析数据
+ */
+export type SupplierOverviewDetail = {
+  supplierId: string; // 供货商ID
+  supplierName: string; // 供货商名称
+  startDate?: Date; // 统计开始时间（可选）
+  endDate?: Date; // 统计结束时间（可选）
+
+  // 核心业绩指标
+  totalRevenue: number; // 总销售额
+  totalProfit: number; // 总利润
+  averageProfitMargin: number; // 平均利润率
+  totalOrderCount: number; // 总订单量
+
+  // 客户分析
+  uniqueCustomerCount: number; // 总参与客户数
+  averageCustomerOrderValue: number; // 平均客单价
+  repeatCustomerCount: number; // 复购客户数
+  repeatCustomerRatio: number; // 复购客户比例
+  customerPurchaseFrequency: CustomerPurchaseFrequency[]; // 客户购买次数分布
+  multiPurchaseCustomerCount: number; // 多次购买客户数
+  multiPurchaseCustomerRatio: number; // 多次购买客户占比
+
+  // 团购分析
+  totalGroupBuyCount: number; // 发起的团购单总数
+  averageGroupBuyRevenue: number; // 平均每次团购销售额
+
+  // 产品分析
+  topProducts: TopProductItem[]; // 热销产品排行
+  productCategoryStats: ProductCategoryStat[]; // 产品分类统计
+
+  // 地域分析
+  regionalSales: RegionalSalesItem[]; // 地域销售分布
+
+  // 团购历史
+  groupBuyHistory: GroupBuyLaunchHistory[]; // 团购发起历史
+};
+
+/**
+ * 获取供货商特定购买频次客户列表的请求参数
+ * 用于查询在指定供货商和时间范围内具有特定购买频次的客户
+ */
+export type SupplierFrequencyCustomersParams = {
+  supplierId: string; // 供货商ID
+  frequency: number; // 购买频次
+  startDate?: Date; // 统计开始时间（可选）
+  endDate?: Date; // 统计结束时间（可选）
+};
+
+/**
+ * 供货商特定购买频次客户列表响应
+ * 包含指定购买频次的客户基本信息列表
+ */
+export type SupplierFrequencyCustomersResult = {
+  customers: CustomerBasicInfo[]; // 客户基本信息列表
+};
+
+/**
+ * 获取供货商特定区域客户列表的请求参数
+ * 用于查询在指定供货商和时间范围内特定地址的客户
+ */
+export type SupplierRegionalCustomersParams = {
+  supplierId: string; // 供货商ID
+  addressId: string; // 地址ID
+  startDate?: Date; // 统计开始时间（可选）
+  endDate?: Date; // 统计结束时间（可选）
+};
+
+/**
+ * 供货商特定区域客户列表响应
+ * 包含指定地址的客户基本信息列表
+ */
+export type SupplierRegionalCustomersResult = {
+  customers: CustomerBasicInfo[]; // 客户基本信息列表
 };

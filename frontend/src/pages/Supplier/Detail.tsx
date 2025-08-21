@@ -3,6 +3,7 @@ import { Button, Flex, Image, notification, Popconfirm, Spin } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
+import SupplierDetailModal from '@/components/SalesDataAnalysis/SupplierDetailModal'
 import Modify from '@/pages/Supplier/Modify.tsx'
 import useSupplierStore from '@/stores/supplierStore.ts'
 import { buildImageUrl } from '@/utils'
@@ -11,6 +12,7 @@ export const Component = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const [visible, setVisible] = useState(false)
+  const [detailModalVisible, setDetailModalVisible] = useState(false)
 
   const supplier = useSupplierStore(state => state.supplier)
   const getSupplier = useSupplierStore(state => state.getSupplier)
@@ -59,35 +61,44 @@ export const Component = () => {
         <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
           <h3 className="mb-4 flex flex-col justify-between border-b border-gray-100 pb-3 text-xl font-bold text-gray-800">
             <div className="mb-3"> {supplier?.name || '加载中...'}</div>
-            <Flex
-              gap="small"
-              wrap
-              justify="end"
-            >
+            <div className="flex items-center justify-between">
               <Button
-                color="primary"
-                variant="outlined"
-                onClick={() => setVisible(true)}
+                type="primary"
+                ghost
+                onClick={() => setDetailModalVisible(true)}
               >
-                编辑
+                查看详细数据
               </Button>
-              <Popconfirm
-                title={<div className="text-lg">确定要删除这个供货商吗？</div>}
-                placement="left"
-                onConfirm={confirm}
-                okText="是"
-                cancelText="否"
-                okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
-                cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
+              <Flex
+                gap="small"
+                wrap
+                justify="end"
               >
                 <Button
-                  color="danger"
-                  variant="solid"
+                  color="primary"
+                  variant="outlined"
+                  onClick={() => setVisible(true)}
                 >
-                  删除
+                  编辑
                 </Button>
-              </Popconfirm>
-            </Flex>
+                <Popconfirm
+                  title={<div className="text-lg">确定要删除这个供货商吗？</div>}
+                  placement="left"
+                  onConfirm={confirm}
+                  okText="是"
+                  cancelText="否"
+                  okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
+                  cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
+                >
+                  <Button
+                    color="danger"
+                    variant="solid"
+                  >
+                    删除
+                  </Button>
+                </Popconfirm>
+              </Flex>
+            </div>
           </h3>
 
           {/* 信息列表 */}
@@ -170,6 +181,17 @@ export const Component = () => {
           id={id}
           visible={visible}
           setVisible={setVisible}
+        />
+      )}
+      {detailModalVisible && supplier && (
+        <SupplierDetailModal
+          visible={detailModalVisible}
+          onClose={() => setDetailModalVisible(false)}
+          params={{
+            supplierId: supplier.id,
+            startDate: undefined,
+            endDate: undefined
+          }}
         />
       )}
     </div>

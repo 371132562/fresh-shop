@@ -4,6 +4,7 @@ import type { SupplierListItem } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
+import SupplierDetailModal from '@/components/SalesDataAnalysis/SupplierDetailModal'
 import useSupplierStore from '@/stores/supplierStore.ts'
 import { validatePhoneNumber } from '@/utils'
 
@@ -12,6 +13,8 @@ import Modify from './Modify.tsx'
 export const Component = () => {
   const [visible, setVisible] = useState(false)
   const [searchVisible, setSearchVisible] = useState(false)
+  const [detailModalVisible, setDetailModalVisible] = useState(false)
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierListItem | null>(null)
   const [form] = Form.useForm()
 
   const listLoading = useSupplierStore(state => state.listLoading)
@@ -29,6 +32,12 @@ export const Component = () => {
     setPageParams({
       page
     })
+  }
+
+  // 处理查看详细数据
+  const handleViewDetail = (supplier: SupplierListItem) => {
+    setSelectedSupplier(supplier)
+    setDetailModalVisible(true)
   }
 
   //搜索
@@ -98,7 +107,18 @@ export const Component = () => {
           }}
           dataSource={suppliersList}
           renderItem={(item: SupplierListItem) => (
-            <List.Item>
+            <List.Item
+              actions={[
+                <Button
+                  key="detail"
+                  type="primary"
+                  ghost
+                  onClick={() => handleViewDetail(item)}
+                >
+                  查看详细数据
+                </Button>
+              ]}
+            >
               <List.Item.Meta
                 title={
                   <NavLink to={`/supplier/detail/${item.id}`}>
@@ -137,6 +157,20 @@ export const Component = () => {
         <Modify
           visible={visible}
           setVisible={setVisible}
+        />
+      )}
+      {detailModalVisible && selectedSupplier && (
+        <SupplierDetailModal
+          visible={detailModalVisible}
+          onClose={() => {
+            setDetailModalVisible(false)
+            setSelectedSupplier(null)
+          }}
+          params={{
+            supplierId: selectedSupplier.id,
+            startDate: undefined,
+            endDate: undefined
+          }}
         />
       )}
       <Modal

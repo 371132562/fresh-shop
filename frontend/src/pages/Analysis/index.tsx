@@ -10,6 +10,7 @@ import { CustomerRankings } from './components/CustomerRankings' // 导入客户
 import { GroupBuyRankings } from './components/GroupBuyRankings'
 import { MergedGroupBuyOverview } from './components/MergedGroupBuyOverview'
 import { Overview } from './components/Overview'
+import { SupplierOverview } from './components/SupplierOverview'
 import { SupplierRankings } from './components/SupplierRankings'
 
 export const Component = () => {
@@ -25,6 +26,7 @@ export const Component = () => {
   const getCustomerRank = useAnalysisStore(state => state.getCustomerRank)
   const getSupplierRank = useAnalysisStore(state => state.getSupplierRank)
   const getMergedGroupBuyOverview = useAnalysisStore(state => state.getMergedGroupBuyOverview)
+  const getSupplierOverview = useAnalysisStore(state => state.getSupplierOverview)
 
   const changeDateRange = (days: number) => {
     setCalendarValue([dayjs().subtract(days, 'day').toDate(), dayjs().toDate()])
@@ -65,6 +67,14 @@ export const Component = () => {
           pageSize: 10
         })
         break
+      case 'supplier-overview':
+        getSupplierOverview({
+          startDate: params.startDate,
+          endDate: params.endDate,
+          page: 1,
+          pageSize: 10
+        })
+        break
     }
   }, [activeViewKey, calendarValue])
 
@@ -72,6 +82,12 @@ export const Component = () => {
     overview: <Overview />,
     'merged-group-buy-overview': (
       <MergedGroupBuyOverview
+        startDate={calendarValue[0]}
+        endDate={calendarValue[1]}
+      />
+    ),
+    'supplier-overview': (
+      <SupplierOverview
         startDate={calendarValue[0]}
         endDate={calendarValue[1]}
       />
@@ -197,6 +213,10 @@ export const Component = () => {
               {
                 value: 'merged-group-buy-overview',
                 label: '团购单（合并）概况'
+              },
+              {
+                value: 'supplier-overview',
+                label: '供货商概况'
               }
             ]
           },

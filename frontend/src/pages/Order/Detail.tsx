@@ -7,6 +7,7 @@ import Modify from '@/pages/Order/Modify.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
 import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
+import { formatDate } from '@/utils'
 
 export const Component = () => {
   const { id } = useParams()
@@ -48,7 +49,7 @@ export const Component = () => {
         message: '成功',
         description: '删除成功'
       })
-      navigate('/order')
+      navigate(-1)
     }
   }
 
@@ -149,7 +150,23 @@ export const Component = () => {
             <div className="flex items-start text-base">
               <span className="w-20 flex-shrink-0 font-medium text-gray-500">团购单：</span>
               <span className="word-break-all flex-grow break-words text-gray-700">
-                {order?.groupBuy?.name || <span className="italic text-gray-400">无</span>}
+                {order?.groupBuy?.name ? (
+                  <Button
+                    type="link"
+                    style={{ padding: 0, height: 'auto' }}
+                    className="text-gray-700 hover:text-blue-500"
+                    onClick={() => navigate(`/groupBuy/detail/${order.groupBuy.id}`)}
+                  >
+                    {order.groupBuy.name}
+                    {order.groupBuy.groupBuyStartDate && (
+                      <span className="ml-2 text-sm text-gray-500">
+                        ({'发起时间：' + formatDate(order.groupBuy.groupBuyStartDate)})
+                      </span>
+                    )}
+                  </Button>
+                ) : (
+                  <span className="italic text-gray-400">无</span>
+                )}
               </span>
             </div>
 

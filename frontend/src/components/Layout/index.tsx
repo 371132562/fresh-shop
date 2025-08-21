@@ -87,7 +87,37 @@ export const Component: FC = () => {
 
   const handleScan = async () => {
     const ok = await scanOrphans()
-    if (ok) setSelectedFilenames([])
+    if (ok) {
+      setSelectedFilenames([])
+      // 根据扫描结果给出友好的交互提示
+      if (orphanImages.length === 0) {
+        notification.success({
+          message: '扫描完成',
+          description: '未发现孤立图片，系统运行良好！'
+        })
+      } else {
+        // 统计不同类型的孤立图片
+        const diskOnly = orphanImages.filter(item => item.inDisk && !item.inDB).length
+        const dbOnly = orphanImages.filter(item => !item.inDisk && item.inDB).length
+        const neither = orphanImages.filter(item => !item.inDisk && !item.inDB).length
+
+        let description = `发现 ${orphanImages.length} 张孤立图片：`
+        if (diskOnly > 0) description += `\n• ${diskOnly} 张仅存在于磁盘（可安全删除）`
+        if (dbOnly > 0) description += `\n• ${dbOnly} 张仅存在于数据库（记录异常）`
+        if (neither > 0) description += `\n• ${neither} 张既不在磁盘也不在数据库（数据不一致）`
+
+        notification.info({
+          message: '扫描完成',
+          description,
+          duration: 5 // 延长显示时间，让用户有足够时间阅读详细信息
+        })
+      }
+    } else {
+      notification.error({
+        message: '扫描失败',
+        description: '无法检索孤立图片，请稍后重试'
+      })
+    }
   }
 
   const handleDeleteSelected = async () => {
@@ -96,15 +126,30 @@ export const Component: FC = () => {
     if (res) {
       const { deleted, skipped } = res
       if (deleted.length) {
-        notification.success({ message: '已删除', description: `删除 ${deleted.length} 张图片` })
+        notification.success({
+          message: '删除成功',
+          description: `成功删除 ${deleted.length} 张孤立图片，释放了存储空间`
+        })
       }
       if (skipped.length) {
         notification.warning({
-          message: '跳过',
-          description: `有 ${skipped.length} 张图片被引用或无法删除，已跳过`
+          message: '部分跳过',
+          description: `有 ${skipped.length} 张图片因被引用或文件锁定而无法删除，已自动跳过。这些图片可能正在被其他功能使用。`
+        })
+      }
+      // 如果没有删除任何文件，给出提示
+      if (deleted.length === 0 && skipped.length === 0) {
+        notification.info({
+          message: '删除完成',
+          description: '没有文件被删除，可能是文件已被其他进程占用或权限不足'
         })
       }
       setSelectedFilenames([])
+    } else {
+      notification.error({
+        message: '删除失败',
+        description: '删除操作失败，请检查网络连接或稍后重试'
+      })
     }
   }
 
@@ -265,7 +310,18 @@ export const Component: FC = () => {
                   </Button>
                 </div>
                 <div className="text-sm text-gray-500">
-                  共 {orphanImages.length} 张候选图片（仅展示未被引用的文件，支持预览与多选删除）。
+                  共 {orphanImages.length} 张候选图片
+                  {orphanImages.length > 0 && (
+                    <span>
+                      （{orphanImages.filter(item => item.inDisk && !item.inDB).length}{' '}
+                      张可安全删除，
+                      {orphanImages.filter(item => !item.inDisk && item.inDB).length}{' '}
+                      张数据库记录异常，
+                      {orphanImages.filter(item => !item.inDisk && !item.inDB).length} 张数据不一致
+                      ）
+                    </span>
+                  )}
+                  。支持预览与多选删除。
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   {orphanImages.map(item => (
@@ -286,11 +342,11 @@ export const Component: FC = () => {
                         </span>
                       </Checkbox>
                       <div className="mt-1 flex w-full flex-wrap items-center gap-1">
-                        <Tag color={item.inDisk ? 'green' : 'default'}>
-                          磁盘{item.inDisk ? '✓' : '×'}
+                        <Tag color={item.inDisk ? 'green' : 'red'}>
+                          {item.inDisk ? '磁盘存在' : '磁盘缺失'}
                         </Tag>
-                        <Tag color={item.inDB ? 'blue' : 'default'}>
-                          数据库{item.inDB ? '✓' : '×'}
+                        <Tag color={item.inDB ? 'blue' : 'orange'}>
+                          {item.inDB ? '数据库存在' : '数据库缺失'}
                         </Tag>
                       </div>
                       {item.inDisk ? (

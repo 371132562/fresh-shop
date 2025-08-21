@@ -1,22 +1,18 @@
-import {
-  BarChartOutlined,
-  HistoryOutlined,
-  TeamOutlined,
-  TrophyOutlined,
-  UserOutlined
-} from '@ant-design/icons'
-import { Button, Card, Col, Divider, Modal, Row, Statistic, Table } from 'antd'
-import type { ColumnsType } from 'antd/es/table'
+import { TrophyOutlined } from '@ant-design/icons'
+import { Button, Card, Col, Modal, Row, Table } from 'antd'
 import dayjs from 'dayjs'
 import type { MergedGroupBuyOverviewDetailParams } from 'fresh-shop-backend/types/dto'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import ConsumptionDetailModal from '@/components/ConsumptionDetailModal'
+import {
+  CustomerLoyaltyCard,
+  CustomerStatsCard,
+  GroupBuyHistoryCard,
+  RegionalSalesCard
+} from '@/components/SalesDataAnalysis'
 import useAnalysisStore from '@/stores/analysisStore'
 import useCustomerStore from '@/stores/customerStore'
-
-import PurchaseFrequencyChart from './components/PurchaseFrequencyChart'
-import RegionalSalesChart from './components/RegionalSalesChart'
 
 type MergedGroupBuyDetailModalProps = {
   visible: boolean
@@ -53,18 +49,9 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   const resetMergedGroupBuyOverviewDetail = useAnalysisStore(
     state => state.resetMergedGroupBuyOverviewDetail
   )
+  const resetSupplierOverviewDetail = useAnalysisStore(state => state.resetSupplierOverviewDetail)
   const handleFrequencyClick = useAnalysisStore(state => state.handleFrequencyClick)
   const handleRegionalClick = useAnalysisStore(state => state.handleRegionalClick)
-
-  // 当模态框打开且有参数时，获取详情数据
-  useEffect(() => {
-    if (visible && params) {
-      getMergedGroupBuyOverviewDetail(params)
-    } else if (!visible) {
-      // 当模态框关闭时，清理数据
-      resetMergedGroupBuyOverviewDetail()
-    }
-  }, [visible, params, getMergedGroupBuyOverviewDetail, resetMergedGroupBuyOverviewDetail])
   const customerListData = useAnalysisStore(state => state.customerListData)
   const customerListLoading = useAnalysisStore(state => state.customerListLoading)
   const customerListTitle = useAnalysisStore(state => state.customerListTitle)
@@ -76,65 +63,25 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   const consumptionDetailLoading = useCustomerStore(state => state.consumptionDetailLoading)
   const resetConsumptionDetail = useCustomerStore(state => state.resetConsumptionDetail)
 
-  // 处理团购单详情跳转
-  const handleGroupBuyDetailClick = useCallback((groupBuyId: string) => {
-    // 在新标签页中打开团购单详情页面
-    window.open(`/groupBuy/detail/${groupBuyId}`, '_blank')
-  }, [])
-  // 客户购买次数分布表格列定义
-  const purchaseFrequencyColumns: ColumnsType<{
-    key: number
-    frequency: number
-    count: number
-  }> = [
-    {
-      title: '购买次数',
-      dataIndex: 'frequency',
-      key: 'frequency',
-      render: (frequency: number) => <span>{frequency}次</span>
-    },
-    {
-      title: '客户数量',
-      dataIndex: 'count',
-      key: 'count',
-      render: (count: number, { frequency }) => (
-        <span
-          className="cursor-pointer font-medium text-blue-600 hover:text-blue-800"
-          onClick={() => handleFrequencyClick(frequency)}
-        >
-          {count}人
-        </span>
-      )
+  // 当模态框打开且有参数时，获取详情数据
+  useEffect(() => {
+    if (visible && params) {
+      // 清理供货商详情数据，避免状态冲突
+      resetSupplierOverviewDetail()
+      getMergedGroupBuyOverviewDetail(params)
+    } else if (!visible) {
+      // 当模态框关闭时，清理数据
+      resetMergedGroupBuyOverviewDetail()
     }
-  ]
+  }, [
+    visible,
+    params,
+    getMergedGroupBuyOverviewDetail,
+    resetMergedGroupBuyOverviewDetail,
+    resetSupplierOverviewDetail
+  ])
 
-  // 地域销售分析表格列定义
-  const regionalSalesColumns: ColumnsType<{
-    key: number
-    addressName: string
-    addressId: string
-    customerCount: number
-  }> = [
-    {
-      title: '地址',
-      dataIndex: 'addressName',
-      key: 'addressName',
-      render: (addressName: string) => <span>{addressName || '未知地址'}</span>
-    },
-    {
-      title: '客户数量',
-      dataIndex: 'customerCount',
-      key: 'customerCount',
-      render: (count: number, record) => (
-        <span
-          className="cursor-pointer font-medium text-blue-600 hover:text-blue-800"
-          onClick={() => handleRegionalClick(record.addressId, record.addressName)}
-        >
-          {count}人
-        </span>
-      )
-    }
-  ]
+  // 转换团购发起历史数据为公共组件需要的格式
 
   return (
     <Modal
@@ -153,7 +100,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
           <div>加载中...</div>
         </div>
       ) : mergedGroupBuyOverviewDetail ? (
-        <div className="!space-y-4">
+        <div className="!space-y-2">
           {/* 团购单基本信息 */}
           <Card
             title={
@@ -309,263 +256,33 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
           </Card>
 
           {/* 团购发起历史 */}
-          <Card
-            title={
-              <div className="flex h-12 items-center gap-2">
-                <HistoryOutlined className="text-indigo-500" />
-                <span className="text-lg font-medium">团购发起历史</span>
-              </div>
-            }
-            size="small"
-          >
-            {mergedGroupBuyOverviewDetail.groupBuyLaunchHistory &&
-            mergedGroupBuyOverviewDetail.groupBuyLaunchHistory.length > 0 ? (
-              <div className="space-y-4">
-                {/* 发起历史统计 */}
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Statistic
-                      title="平均每次订单数"
-                      value={
-                        mergedGroupBuyOverviewDetail.groupBuyLaunchHistory.reduce(
-                          (sum, item) => sum + item.orderCount,
-                          0
-                        ) / mergedGroupBuyOverviewDetail.groupBuyLaunchHistory.length
-                      }
-                      precision={1}
-                      suffix="单"
-                      valueStyle={{ color: '#52c41a' }}
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <Statistic
-                      title="最近发起时间"
-                      value={dayjs(
-                        mergedGroupBuyOverviewDetail.groupBuyLaunchHistory[0]?.launchDate
-                      ).format('YYYY-MM-DD')}
-                      valueStyle={{ color: '#722ed1' }}
-                    />
-                  </Col>
-                </Row>
-
-                <Divider
-                  orientation="left"
-                  orientationMargin="0"
-                >
-                  <span className="text-sm text-gray-600">详细发起记录</span>
-                </Divider>
-
-                {/* 发起历史表格 */}
-                <Table
-                  columns={[
-                    {
-                      title: '发起时间',
-                      dataIndex: 'launchDate',
-                      key: 'launchDate',
-                      render: (date: Date, record) => (
-                        <div
-                          className="flex cursor-pointer items-center gap-2 text-blue-500 transition-colors hover:text-blue-600"
-                          onClick={() => handleGroupBuyDetailClick(record.groupBuyId)}
-                          title="点击查看团购单详情"
-                        >
-                          {dayjs(date).format('YYYY-MM-DD')}
-                        </div>
-                      ),
-                      defaultSortOrder: 'descend' as const
-                    },
-                    {
-                      title: '订单数量',
-                      dataIndex: 'orderCount',
-                      key: 'orderCount',
-                      render: (count: number) => (
-                        <span className="font-medium text-green-600">{count}单</span>
-                      )
-                    },
-                    {
-                      title: '销售额',
-                      dataIndex: 'revenue',
-                      key: 'revenue',
-                      render: (revenue: number) => (
-                        <span className="font-medium text-emerald-600">¥{revenue.toFixed(2)}</span>
-                      )
-                    },
-                    {
-                      title: '利润',
-                      dataIndex: 'profit',
-                      key: 'profit',
-                      render: (profit: number) => (
-                        <span className="font-medium text-red-500">¥{profit.toFixed(2)}</span>
-                      )
-                    },
-                    {
-                      title: '利润率',
-                      key: 'profitMargin',
-                      render: (_, record) => {
-                        const margin =
-                          record.revenue > 0 ? (record.profit / record.revenue) * 100 : 0
-                        return (
-                          <span
-                            className={`font-medium ${margin >= 0 ? 'text-blue-600' : 'text-red-500'}`}
-                          >
-                            {margin.toFixed(1)}%
-                          </span>
-                        )
-                      }
-                    }
-                  ]}
-                  dataSource={mergedGroupBuyOverviewDetail.groupBuyLaunchHistory.map(
-                    (item, index) => ({
-                      key: index,
-                      ...item
-                    })
-                  )}
-                  pagination={false}
-                  size="small"
-                  className="mt-2"
-                />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-8">
-                <div className="text-gray-500">暂无发起历史记录</div>
-              </div>
-            )}
-          </Card>
+          <GroupBuyHistoryCard
+            groupBuyHistory={mergedGroupBuyOverviewDetail?.groupBuyLaunchHistory || []}
+            title="团购历史"
+          />
 
           {/* 客户统计信息 */}
-          <Card
-            title={
-              <div className="flex h-12 items-center gap-2">
-                <UserOutlined className="text-green-500" />
-                <span className="text-lg font-medium">客户统计</span>
-              </div>
-            }
-            size="small"
-          >
-            <Row gutter={16}>
-              <Col span={8}>
-                <Statistic
-                  title="参与客户数"
-                  value={mergedGroupBuyOverviewDetail.uniqueCustomerCount}
-                  suffix="人"
-                  valueStyle={{ color: '#722ed1' }}
-                />
-              </Col>
-              <Col span={8}>
-                <Statistic
-                  title="平均客单价"
-                  value={mergedGroupBuyOverviewDetail.averageCustomerOrderValue}
-                  precision={2}
-                  prefix="¥"
-                  valueStyle={{ color: '#eb2f96' }}
-                />
-              </Col>
-              <Col span={8}>
-                <Statistic
-                  title="退款订单数"
-                  value={mergedGroupBuyOverviewDetail.totalRefundedOrderCount}
-                  suffix="单"
-                  valueStyle={{ color: '#fa8c16' }}
-                />
-              </Col>
-            </Row>
-          </Card>
+          <CustomerStatsCard
+            uniqueCustomerCount={mergedGroupBuyOverviewDetail.uniqueCustomerCount}
+            averageCustomerOrderValue={mergedGroupBuyOverviewDetail.averageCustomerOrderValue}
+            title="客户统计"
+          />
 
-          {/* 多次购买客户分析 */}
-          <Card
-            title={
-              <div className="flex h-12 items-center gap-2">
-                <TeamOutlined className="text-purple-500" />
-                <span className="text-lg font-medium">客户忠诚度分析</span>
-              </div>
-            }
-            size="small"
-          >
-            <Row gutter={16}>
-              <Col span={12}>
-                <Statistic
-                  title="多次购买客户数"
-                  value={mergedGroupBuyOverviewDetail.multiPurchaseCustomerCount}
-                  suffix="人"
-                  valueStyle={{ color: '#52c41a' }}
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title="多次购买客户占比"
-                  value={mergedGroupBuyOverviewDetail.multiPurchaseCustomerRatio}
-                  precision={1}
-                  suffix="%"
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Col>
-            </Row>
-
-            <Divider
-              orientation="left"
-              orientationMargin="0"
-            >
-              <span className="text-sm text-gray-600">客户购买次数分布</span>
-            </Divider>
-
-            {/* 购买次数分布图表和表格 */}
-            <Row gutter={16}>
-              <Col span={12}>
-                <PurchaseFrequencyChart
-                  data={mergedGroupBuyOverviewDetail.customerPurchaseFrequency}
-                  onFrequencyClick={handleFrequencyClick}
-                />
-              </Col>
-              <Col span={12}>
-                <Table
-                  columns={purchaseFrequencyColumns}
-                  dataSource={mergedGroupBuyOverviewDetail.customerPurchaseFrequency.map(
-                    (item, index) => ({
-                      key: index,
-                      frequency: item.frequency,
-                      count: item.count
-                    })
-                  )}
-                  pagination={false}
-                  size="small"
-                  className="mt-2"
-                />
-              </Col>
-            </Row>
-          </Card>
+          {/* 客户忠诚度分析 */}
+          <CustomerLoyaltyCard
+            multiPurchaseCustomerCount={mergedGroupBuyOverviewDetail.multiPurchaseCustomerCount}
+            multiPurchaseCustomerRatio={mergedGroupBuyOverviewDetail.multiPurchaseCustomerRatio}
+            customerPurchaseFrequency={mergedGroupBuyOverviewDetail.customerPurchaseFrequency}
+            onFrequencyClick={handleFrequencyClick}
+            title="客户忠诚度分析"
+          />
 
           {/* 地域销售分析 */}
-          <Card
-            title={
-              <div className="flex h-12 items-center gap-2">
-                <BarChartOutlined className="text-orange-500" />
-                <span className="text-lg font-medium">地域销售分析</span>
-              </div>
-            }
-            size="small"
-          >
-            {/* 地域销售分布图表和表格 */}
-            <Row gutter={16}>
-              <Col span={12}>
-                <RegionalSalesChart
-                  data={mergedGroupBuyOverviewDetail.regionalSales}
-                  onRegionalClick={handleRegionalClick}
-                />
-              </Col>
-              <Col span={12}>
-                <Table
-                  columns={regionalSalesColumns}
-                  dataSource={mergedGroupBuyOverviewDetail.regionalSales.map((item, index) => ({
-                    key: index,
-                    addressId: item.addressId,
-                    addressName: item.addressName,
-                    customerCount: item.customerCount
-                  }))}
-                  pagination={false}
-                  size="small"
-                />
-              </Col>
-            </Row>
-          </Card>
+          <RegionalSalesCard
+            regionalSales={mergedGroupBuyOverviewDetail.regionalSales}
+            onRegionalClick={handleRegionalClick}
+            title="地域销售分析"
+          />
         </div>
       ) : (
         <div className="flex items-center justify-center py-8">

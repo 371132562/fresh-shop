@@ -204,27 +204,30 @@ export class GroupBuyService {
       );
     }
 
-    const orderCount = await this.prisma.order.count({
-      where: {
-        groupBuyId: id,
-        delete: 0,
-      },
-    });
+    // 使用事务来确保团购单和关联订单的删除是原子操作
+    const result = await this.prisma.$transaction(async (tx) => {
+      // 先软删除关联的订单
+      await tx.order.updateMany({
+        where: {
+          groupBuyId: id,
+          delete: 0,
+        },
+        data: {
+          delete: 1,
+        },
+      });
 
-    if (orderCount > 0) {
-      throw new BusinessException(
-        ErrorCode.DATA_STILL_REFERENCED,
-        `该团购单下存在关联的订单（${orderCount}条），无法删除。`,
-      );
-    }
+      // 再软删除团购单
+      const deletedGroupBuy = await tx.groupBuy.update({
+        where: {
+          id,
+        },
+        data: {
+          delete: 1,
+        },
+      });
 
-    const deletedGroupBuy = await this.prisma.groupBuy.update({
-      where: {
-        id,
-      },
-      data: {
-        delete: 1,
-      },
+      return deletedGroupBuy;
     });
 
     // 软删除成功后，清理关联的图片
@@ -234,7 +237,7 @@ export class GroupBuyService {
       }
     }
 
-    return deletedGroupBuy;
+    return result;
   }
 
   async listAll() {

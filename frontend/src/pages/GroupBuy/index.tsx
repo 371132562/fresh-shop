@@ -8,7 +8,7 @@ import {
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
-import MergedGroupBuyDetailModal from '@/components/MergedGroupBuyDetailModal'
+import MergedGroupBuyDetailModal from '@/components/SalesDataAnalysis/MergedGroupBuyDetailModal'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import { OrderStatus, OrderStatusMap, OrderStatusOptions } from '@/stores/orderStore.ts'
 import useProductStore from '@/stores/productStore.ts'
@@ -205,7 +205,7 @@ export const Component = () => {
                       ghost
                       onClick={() => handleViewDetail(item)}
                     >
-                      查看销售数据
+                      查看详细数据
                     </Button>
                   </div>
                 }

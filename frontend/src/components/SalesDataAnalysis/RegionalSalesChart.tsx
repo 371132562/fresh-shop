@@ -118,6 +118,16 @@ const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({
 
       chartInstance.setOption(option)
 
+      // 初始绑定点击事件，避免首次渲染时遗漏
+      if (onRegionalClick) {
+        chartInstance.off('click')
+        chartInstance.on('click', (params: any) => {
+          if (params.data && params.data.addressId) {
+            onRegionalClick(params.data.addressId, params.data.addressName)
+          }
+        })
+      }
+
       // 监听容器大小变化
       const resizeObserver = new ResizeObserver(() => {
         chartInstance.resize()
@@ -145,7 +155,7 @@ const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({
         }
       })
     }
-  }, [onRegionalClick])
+  }, [onRegionalClick, data])
 
   return (
     <Card

@@ -99,6 +99,16 @@ const PurchaseFrequencyChart: React.FC<PurchaseFrequencyChartProps> = ({
 
       chartInstance.setOption(option)
 
+      // 初始绑定点击事件，避免首次渲染时遗漏
+      if (onFrequencyClick) {
+        chartInstance.off('click')
+        chartInstance.on('click', (params: any) => {
+          if (params.data && params.data.frequency) {
+            onFrequencyClick(params.data.frequency)
+          }
+        })
+      }
+
       // 监听容器大小变化
       const resizeObserver = new ResizeObserver(() => {
         chartInstance.resize()
@@ -126,7 +136,7 @@ const PurchaseFrequencyChart: React.FC<PurchaseFrequencyChartProps> = ({
         }
       })
     }
-  }, [onFrequencyClick])
+  }, [onFrequencyClick, data])
 
   return (
     <Card

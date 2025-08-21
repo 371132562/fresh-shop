@@ -64,3 +64,8 @@ export const analysisMergedGroupBuyFrequencyCustomersApi =
   '/analysis/mergedGroupBuyFrequencyCustomers'
 export const analysisMergedGroupBuyRegionalCustomersApi =
   '/analysis/mergedGroupBuyRegionalCustomers'
+
+export const analysisSupplierOverviewApi = '/analysis/supplierOverview'
+export const analysisSupplierOverviewDetailApi = '/analysis/supplierOverviewDetail'
+export const analysisSupplierFrequencyCustomersApi = '/analysis/supplierFrequencyCustomers'
+export const analysisSupplierRegionalCustomersApi = '/analysis/supplierRegionalCustomers'

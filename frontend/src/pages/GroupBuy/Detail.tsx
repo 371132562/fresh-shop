@@ -8,7 +8,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
-import MergedGroupBuyDetailModal from '@/components/MergedGroupBuyDetailModal'
+import MergedGroupBuyDetailModal from '@/components/SalesDataAnalysis/MergedGroupBuyDetailModal'
 import Modify from '@/pages/GroupBuy/Modify.tsx'
 import OrderModify from '@/pages/Order/Modify.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
@@ -96,7 +96,66 @@ export const Component = () => {
         message: '成功',
         description: '删除成功'
       })
-      navigate('/groupBuy')
+      navigate(-1)
+    }
+  }
+
+  // 根据是否有订单生成不同的确认提示
+  const getDeleteConfirmTitle = () => {
+    const orderCount = groupBuy?.order?.length || 0
+    if (orderCount === 0) {
+      return <div className="text-lg">确定要删除这个团购单吗？</div>
+    } else {
+      // 统计各个状态的订单数量
+      const statusCounts: Record<string, number> = {}
+      groupBuy?.order?.forEach(order => {
+        const statusLabel = OrderStatusMap[order.status].label
+        statusCounts[statusLabel] = (statusCounts[statusLabel] || 0) + 1
+      })
+
+      return (
+        <div className="space-y-4">
+          {/* 影响范围提示 */}
+          <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-1">
+                <div className="mb-2 text-sm font-medium text-orange-800">
+                  删除此团购单将同时删除以下订单：
+                </div>
+                <div className="space-y-2">
+                  {Object.entries(statusCounts).map(([status, count]) => {
+                    const orderStatus = Object.entries(OrderStatusMap).find(
+                      ([, statusInfo]) => statusInfo.label === status
+                    )?.[0] as OrderStatus
+                    const color = orderStatus ? OrderStatusMap[orderStatus].color : '#666'
+
+                    return (
+                      <div
+                        key={status}
+                        className="flex items-center justify-between rounded-md border border-orange-100 bg-white px-3 py-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Tag
+                            color={color}
+                            className="text-xs"
+                          >
+                            {status}
+                          </Tag>
+                          <span className="text-xs text-gray-500">订单</span>
+                        </div>
+                        <span className="text-sm font-semibold text-orange-700">{count} 个</span>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="mt-3 text-xs text-orange-600">
+                  总计：<span className="font-semibold">{orderCount}</span> 个订单将被删除
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
     }
   }
 
@@ -173,7 +232,7 @@ export const Component = () => {
                 ghost
                 onClick={handleViewDetail}
               >
-                查看销售数据
+                查看详细数据
               </Button>
               <Flex
                 gap="small"
@@ -203,7 +262,7 @@ export const Component = () => {
                   编辑
                 </Button>
                 <Popconfirm
-                  title={<div className="text-lg">确定要删除这个团购单吗？</div>}
+                  title={getDeleteConfirmTitle()}
                   placement="left"
                   onConfirm={confirm}
                   okText="是"
@@ -401,7 +460,18 @@ export const Component = () => {
                   <List.Item.Meta
                     title={
                       <span className="text-base font-medium text-gray-800">
-                        {order?.customer?.name || '无客户信息'}
+                        {order?.customer?.name ? (
+                          <Button
+                            type="link"
+                            style={{ padding: 0, height: 'auto' }}
+                            className="text-base font-medium text-gray-800 hover:text-blue-500"
+                            onClick={() => navigate(`/order/detail/${order.id}`)}
+                          >
+                            {order.customer.name}
+                          </Button>
+                        ) : (
+                          '无客户信息'
+                        )}
                       </span>
                     }
                     description={

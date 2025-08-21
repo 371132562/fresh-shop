@@ -1,0 +1,92 @@
+import { BarChartOutlined } from '@ant-design/icons'
+import { Card, Col, Row, Table } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
+import type { RegionalSalesItem } from 'fresh-shop-backend/types/dto'
+import React from 'react'
+
+import RegionalSalesChart from './RegionalSalesChart'
+
+type RegionalSalesCardProps = {
+  regionalSales: RegionalSalesItem[]
+  onRegionalClick?: (addressId: string, addressName: string) => void
+  title?: string
+}
+
+/**
+ * 地域销售分析公共组件
+ * 展示地域销售分布图表和表格
+ */
+const RegionalSalesCard: React.FC<RegionalSalesCardProps> = ({
+  regionalSales,
+  onRegionalClick,
+  title = '地域销售分析'
+}) => {
+  // 地域销售分析表格列定义
+  const regionalSalesColumns: ColumnsType<RegionalSalesItem & { key: number }> = [
+    {
+      title: '地址',
+      dataIndex: 'addressName',
+      key: 'addressName',
+      render: (addressName: string) => <span>{addressName || '未知地址'}</span>
+    },
+    {
+      title: '客户数量',
+      dataIndex: 'customerCount',
+      key: 'customerCount',
+      render: (count: number, record) => (
+        <span
+          className={`font-medium text-blue-600 ${
+            onRegionalClick ? 'cursor-pointer hover:text-blue-800' : ''
+          }`}
+          onClick={() => onRegionalClick?.(record.addressId, record.addressName)}
+          title={onRegionalClick ? '点击查看该地区客户列表' : ''}
+        >
+          {count}人
+        </span>
+      )
+    }
+  ]
+
+  return (
+    <Card
+      title={
+        <div className="flex h-12 items-center gap-2">
+          <BarChartOutlined className="text-orange-500" />
+          <span className="text-lg font-medium">{title}</span>
+        </div>
+      }
+      size="small"
+      styles={{ header: { background: '#fffbe6' } }}
+    >
+      {regionalSales && regionalSales.length > 0 ? (
+        <Row gutter={16}>
+          <Col span={12}>
+            <RegionalSalesChart
+              data={regionalSales}
+              onRegionalClick={onRegionalClick}
+            />
+          </Col>
+          <Col span={12}>
+            <Table
+              columns={regionalSalesColumns}
+              dataSource={regionalSales.map((item, index) => ({
+                key: index,
+                addressId: item.addressId,
+                addressName: item.addressName,
+                customerCount: item.customerCount
+              }))}
+              pagination={false}
+              size="small"
+            />
+          </Col>
+        </Row>
+      ) : (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-gray-500">暂无地域数据</div>
+        </div>
+      )}
+    </Card>
+  )
+}
+
+export default RegionalSalesCard

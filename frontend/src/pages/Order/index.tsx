@@ -6,6 +6,7 @@ import { NavLink } from 'react-router'
 import useCustomerStore from '@/stores/customerStore.ts'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import useOrderStore, { OrderStatusMap, OrderStatusOptions } from '@/stores/orderStore.ts'
+import { formatDate } from '@/utils'
 
 import Modify from './Modify.tsx'
 
@@ -58,7 +59,7 @@ export const Component = () => {
 
   const resetSearch = () => {
     const resetValues = {
-      status: undefined,
+      statuses: [],
       customerIds: [],
       groupBuyIds: []
     }
@@ -126,6 +127,11 @@ export const Component = () => {
                       <NavLink to={`/groupBuy/detail/${item.groupBuy.id}`}>
                         <div className="mb-1 font-medium text-gray-800">
                           团购单：<span className="text-blue-500">{item.groupBuy.name}</span>
+                          {item.groupBuy.groupBuyStartDate && (
+                            <span className="ml-2 text-sm text-gray-500">
+                              ({'发起时间：' + formatDate(item.groupBuy.groupBuyStartDate)})
+                            </span>
+                          )}
                         </div>
                       </NavLink>
                     )}
@@ -231,21 +237,21 @@ export const Component = () => {
             </Select>
           </Form.Item>
           <Form.Item
-            label="按订单状态搜索(不选择则查询全部)"
-            name="status"
+            label="按订单状态搜索(可多选)"
+            name="statuses"
           >
             <Select
-              showSearch
+              mode="multiple"
               allowClear
-              placeholder="请选择状态"
+              placeholder="请选择订单状态"
             >
-              {OrderStatusOptions.map(item => {
+              {OrderStatusOptions.map(option => {
                 return (
                   <Select.Option
-                    key={item.value}
-                    value={item.value}
+                    key={option.value}
+                    value={option.value}
                   >
-                    {item.label}
+                    <Tag color={option.color}>{option.label}</Tag>
                   </Select.Option>
                 )
               })}

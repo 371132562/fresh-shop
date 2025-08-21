@@ -29,6 +29,17 @@ import {
   MergedGroupBuyRegionalCustomersResult,
   CustomerBasicInfo,
   GroupBuyLaunchHistory,
+  SupplierOverviewParams,
+  SupplierOverviewResult,
+  SupplierOverviewListItem,
+  SupplierOverviewDetailParams,
+  SupplierOverviewDetail,
+  TopProductItem,
+  ProductCategoryStat,
+  SupplierFrequencyCustomersParams,
+  SupplierFrequencyCustomersResult,
+  SupplierRegionalCustomersParams,
+  SupplierRegionalCustomersResult,
 } from '../../../types/dto'; // 导入类型
 
 /**
@@ -744,25 +755,8 @@ export class AnalysisService {
     });
 
     // 2.1 单独查询退款订单数据
-    const refundedOrdersCount = await this.prisma.order.count({
-      where: {
-        delete: 0,
-        status: OrderStatus.REFUNDED,
-        groupBuy: {
-          name: groupBuyName,
-          supplierId: supplierId,
-          delete: 0,
-          // 如果提供了时间参数，则添加时间过滤条件
-          ...(startDate &&
-            endDate && {
-              groupBuyStartDate: {
-                gte: startDate,
-                lte: endDate,
-              },
-            }),
-        },
-      },
-    });
+    // 已迁移到每个团购历史项进行统计
+    // 已移除：详情级别不再返回退款总数，由团购历史中的每条记录提供 refundedOrderCount
 
     if (groupBuysWithOrders.length === 0) {
       // 如果没有找到数据，返回空的详情对象
@@ -776,13 +770,14 @@ export class AnalysisService {
         totalProfit: 0,
         totalProfitMargin: 0,
         totalOrderCount: 0,
-        totalRefundedOrderCount: refundedOrdersCount,
         uniqueCustomerCount: 0,
         averageCustomerOrderValue: 0,
         totalGroupBuyCount: 0,
         customerPurchaseFrequency: [],
         multiPurchaseCustomerCount: 0,
         multiPurchaseCustomerRatio: 0,
+        repeatCustomerCount: 0,
+        repeatCustomerRatio: 0,
         regionalSales: [],
         groupBuyLaunchHistory: [],
       };
@@ -891,10 +886,11 @@ export class AnalysisService {
     // 7. 团购发起历史记录
     const groupBuyLaunchHistory: GroupBuyLaunchHistory[] =
       groupBuysWithOrders.map((groupBuy) => {
-        // 计算该次团购的订单数量和销售额
+        // 计算该次团购的订单数量、客户数量和销售额
         let orderCount = 0;
         let revenue = 0;
         let profit = 0;
+        const customerIds = new Set<string>();
         const units = groupBuy.units as Array<GroupBuyUnit>;
 
         for (const order of groupBuy.order) {
@@ -904,6 +900,7 @@ export class AnalysisService {
             order.status === OrderStatus.COMPLETED
           ) {
             orderCount += 1;
+            customerIds.add(order.customerId);
             const selectedUnit = units.find((unit) => unit.id === order.unitId);
             if (selectedUnit) {
               const orderRevenue = selectedUnit.price * order.quantity;
@@ -915,12 +912,21 @@ export class AnalysisService {
           }
         }
 
+        // 统计该次团购的退款订单数
+        // 注意：退款订单不计入收入/利润，但用于历史项展示
+        const refundedOrderCount = groupBuy.order.filter(
+          (o) => o.status === OrderStatus.REFUNDED,
+        ).length;
+
         return {
           groupBuyId: groupBuy.id,
+          groupBuyName: groupBuy.name,
           launchDate: groupBuy.groupBuyStartDate,
           orderCount,
           revenue,
           profit,
+          customerCount: customerIds.size,
+          refundedOrderCount,
         };
       });
 
@@ -942,13 +948,23 @@ export class AnalysisService {
       totalProfit,
       totalProfitMargin,
       totalOrderCount,
-      totalRefundedOrderCount: refundedOrdersCount,
       uniqueCustomerCount,
       averageCustomerOrderValue,
       totalGroupBuyCount,
       customerPurchaseFrequency,
       multiPurchaseCustomerCount,
       multiPurchaseCustomerRatio,
+      // 对齐供货商详情增加复购指标
+      repeatCustomerCount: Array.from(customerPurchaseCounts.values()).filter(
+        (c) => c > 1,
+      ).length,
+      repeatCustomerRatio:
+        uniqueCustomerCount > 0
+          ? (Array.from(customerPurchaseCounts.values()).filter((c) => c > 1)
+              .length /
+              uniqueCustomerCount) *
+            100
+          : 0,
       regionalSales: regionalSalesResult,
       groupBuyLaunchHistory,
     };
@@ -1128,6 +1144,718 @@ export class AnalysisService {
       addressId,
       addressName,
       customers: Array.from(regionalCustomers.values()),
+    };
+  }
+
+  /**
+   * 获取供货商概况数据
+   * 按供货商维度统计销售、订单、客户等数据，用于供货商概况列表展示
+   *
+   * @param params 查询参数，包含时间范围、分页、搜索、排序等条件
+   * @returns 供货商概况分页结果，包含供货商列表和分页信息
+   *
+   * 统计维度：
+   * - 总销售额：供货商所有团购单的销售总额
+   * - 总利润：供货商所有团购单的利润总额
+   * - 总订单量：供货商所有团购单的订单总数
+   * - 参与客户数：去重后的客户数量
+   * - 团购单数：供货商发起的团购单总数
+   * - 平均利润率：总利润/总销售额的百分比
+   * - 活跃天数：有订单的天数
+   * - 最近订单日期：最后一次订单的时间
+   */
+  async getSupplierOverview(
+    params: SupplierOverviewParams,
+  ): Promise<SupplierOverviewResult> {
+    const {
+      startDate,
+      endDate,
+      page = 1,
+      pageSize = 10,
+      supplierName,
+      sortField = 'totalRevenue',
+      sortOrder = 'desc',
+    } = params;
+
+    // 1. 构建供货商查询条件
+    // 基础条件：只查询未删除的供货商
+    // 可选条件：按供货商名称模糊搜索
+    const whereCondition = {
+      delete: 0, // 只查询未删除的供货商
+      ...(supplierName && {
+        name: {
+          contains: supplierName, // 按供货商名称模糊匹配
+        },
+      }),
+    };
+
+    // 2. 获取所有供货商及其团购单和订单数据
+    // 查询策略：一次性获取所有需要的数据，避免N+1查询问题
+    // 包含关系：供货商 -> 团购单 -> 订单
+    const suppliersWithData = await this.prisma.supplier.findMany({
+      where: whereCondition,
+      include: {
+        groupBuy: {
+          where: {
+            delete: 0, // 只查询未删除的团购单
+            // 时间过滤：如果提供了时间参数，则只查询指定时间范围内的团购单
+            ...(startDate &&
+              endDate && {
+                groupBuyStartDate: {
+                  gte: startDate, // 团购发起时间 >= 开始时间
+                  lte: endDate, // 团购发起时间 <= 结束时间
+                },
+              }),
+          },
+          include: {
+            order: {
+              where: {
+                delete: 0, // 只查询未删除的订单
+                status: {
+                  in: [OrderStatus.PAID, OrderStatus.COMPLETED], // 只统计已付款和已完成的订单
+                },
+              },
+              select: {
+                quantity: true, // 购买数量
+                unitId: true, // 规格ID
+                customerId: true, // 客户ID
+                createdAt: true, // 订单创建时间
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // 3. 计算每个供货商的统计数据
+    // 遍历每个供货商，聚合其所有团购单和订单的数据
+    const supplierStats: SupplierOverviewListItem[] = [];
+
+    for (const supplier of suppliersWithData) {
+      // 初始化数据结构和统计变量
+      const units = new Map<string, GroupBuyUnit>(); // 存储团购规格信息，用于计算价格和利润
+      const uniqueCustomerIds = new Set<string>(); // 去重客户ID，用于统计参与客户数
+      let totalRevenue = 0; // 总销售额
+      let totalProfit = 0; // 总利润
+      let totalOrderCount = 0; // 总订单量
+
+      // 遍历该供货商的所有团购单
+      for (const groupBuy of supplier.groupBuy) {
+        const groupBuyUnits = groupBuy.units as Array<GroupBuyUnit>;
+
+        // 将团购单的规格信息添加到units Map中
+        // 规格信息包含价格和成本价，用于计算销售额和利润
+        for (const unit of groupBuyUnits) {
+          units.set(unit.id, unit);
+        }
+
+        // 遍历该团购单的所有订单，计算各项统计数据
+        for (const order of groupBuy.order) {
+          const unit = units.get(order.unitId);
+          if (unit) {
+            // 计算单个订单的销售额和利润
+            const orderRevenue = unit.price * order.quantity; // 销售额 = 单价 × 数量
+            const orderProfit = (unit.price - unit.costPrice) * order.quantity; // 利润 = (单价 - 成本价) × 数量
+
+            // 累加到供货商总统计中
+            totalRevenue += orderRevenue;
+            totalProfit += orderProfit;
+            totalOrderCount++;
+            uniqueCustomerIds.add(order.customerId); // 添加客户ID到去重集合
+          }
+        }
+      }
+
+      // 计算平均利润率：总利润 / 总销售额 × 100%
+      const averageProfitMargin =
+        totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+
+      // 构建供货商统计结果对象
+      supplierStats.push({
+        supplierId: supplier.id,
+        supplierName: supplier.name,
+        totalRevenue, // 总销售额
+        totalProfit, // 总利润
+        totalOrderCount, // 总订单量
+        uniqueCustomerCount: uniqueCustomerIds.size, // 参与客户数（去重）
+        totalGroupBuyCount: supplier.groupBuy.length, // 团购单数
+        averageProfitMargin, // 平均利润率
+      });
+    }
+
+    // 4. 排序处理
+    // 根据指定的排序字段和排序方向对供货商列表进行排序
+    supplierStats.sort((a, b) => {
+      let aValue: number;
+      let bValue: number;
+
+      // 根据排序字段获取对应的数值进行比较
+      switch (sortField) {
+        case 'totalRevenue': // 按总销售额排序
+          aValue = a.totalRevenue;
+          bValue = b.totalRevenue;
+          break;
+        case 'totalProfit': // 按总利润排序
+          aValue = a.totalProfit;
+          bValue = b.totalProfit;
+          break;
+        case 'totalOrderCount': // 按总订单量排序
+          aValue = a.totalOrderCount;
+          bValue = b.totalOrderCount;
+          break;
+        case 'uniqueCustomerCount': // 按参与客户数排序
+          aValue = a.uniqueCustomerCount;
+          bValue = b.uniqueCustomerCount;
+          break;
+        case 'totalGroupBuyCount': // 按团购单数排序
+          aValue = a.totalGroupBuyCount;
+          bValue = b.totalGroupBuyCount;
+          break;
+        case 'averageProfitMargin': // 按平均利润率排序
+          aValue = a.averageProfitMargin;
+          bValue = b.averageProfitMargin;
+          break;
+        default: // 默认按总销售额排序
+          aValue = a.totalRevenue;
+          bValue = b.totalRevenue;
+      }
+
+      // 根据排序方向返回比较结果
+      return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
+    });
+
+    // 5. 分页处理
+    // 计算分页的起始和结束索引，返回指定页的数据
+    const startIndex = (page - 1) * pageSize; // 起始索引
+    const endIndex = startIndex + pageSize; // 结束索引
+    const paginatedList = supplierStats.slice(startIndex, endIndex); // 截取指定页的数据
+
+    return {
+      list: paginatedList,
+      total: supplierStats.length,
+      page,
+      pageSize,
+    };
+  }
+
+  /**
+   * 获取供货商概况详情数据
+   * 获取特定供货商的详细统计分析数据，用于供货商详情页面展示
+   *
+   * @param params 查询参数，包含供货商ID和时间范围
+   * @returns 供货商详情数据，包含多维度分析结果
+   *
+   * 分析维度：
+   * - 核心业绩指标：销售额、利润、利润率、订单量等
+   * - 客户分析：参与客户数、平均客单价、复购客户分析
+   * - 团购分析：团购单数、平均团购表现
+   * - 产品分析：热销产品排行、产品分类统计
+   * - 地域分析：不同地区的销售分布
+   * - 团购历史：详细的团购发起记录
+   */
+  async getSupplierOverviewDetail(
+    params: SupplierOverviewDetailParams,
+  ): Promise<SupplierOverviewDetail> {
+    const { supplierId, startDate, endDate } = params;
+
+    // 1. 获取供货商基本信息
+    // 首先验证供货商是否存在，如果不存在则抛出错误
+    const supplier = await this.prisma.supplier.findUnique({
+      where: { id: supplierId },
+    });
+
+    if (!supplier) {
+      throw new Error('供货商不存在');
+    }
+
+    // 2. 获取供货商的所有团购单及其订单数据
+    // 查询策略：一次性获取所有需要的数据，包含产品、分类、客户、地址等关联信息
+    // 包含关系：团购单 -> 产品 -> 产品分类，团购单 -> 订单 -> 客户 -> 客户地址
+    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
+      where: {
+        supplierId, // 指定供货商ID
+        delete: 0, // 只查询未删除的团购单
+        // 时间过滤：如果提供了时间参数，则只查询指定时间范围内的团购单
+        // 如果没有提供时间参数，则查询该供货商的全部数据
+        ...(startDate &&
+          endDate && {
+            groupBuyStartDate: {
+              gte: startDate, // 团购发起时间 >= 开始时间
+              lte: endDate, // 团购发起时间 <= 结束时间
+            },
+          }),
+      },
+      include: {
+        product: {
+          include: {
+            productType: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        order: {
+          where: {
+            delete: 0,
+            status: {
+              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+            },
+          },
+          select: {
+            quantity: true,
+            unitId: true,
+            customerId: true,
+            createdAt: true,
+            status: true,
+            customer: {
+              select: {
+                customerAddress: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // 3. 初始化统计数据结构和变量
+    // 使用Map和Set进行高效的数据聚合和去重操作
+    const units = new Map<string, GroupBuyUnit>(); // 存储团购规格信息
+    const uniqueCustomerIds = new Set<string>(); // 去重客户ID集合
+    const repeatCustomerIds = new Set<string>(); // 复购客户ID集合
+    const customerPurchaseCounts = new Map<string, number>(); // 客户购买次数统计Map
+    const productStats = new Map<string, TopProductItem>(); // 商品统计Map
+    const categoryStats = new Map<string, ProductCategoryStat>(); // 分类统计Map
+    const regionalStats = new Map<
+      string,
+      { addressId: string; addressName: string; customerIds: Set<string> }
+    >(); // 地域统计Map，使用Set去重客户
+    const groupBuyHistory: GroupBuyLaunchHistory[] = []; // 团购历史记录数组
+    // 为分类统计维护去重的商品ID集合，用于准确计算 productCount
+    const categoryProductIds = new Map<string, Set<string>>();
+
+    // 核心统计变量
+    let totalRevenue = 0; // 总销售额
+    let totalProfit = 0; // 总利润
+    let totalOrderCount = 0; // 总订单量
+    // 退款订单数（与合并团购统计保持一致统计口径）
+    // 已移除：详情级别不再返回退款总数，由团购历史中的每条记录提供 refundedOrderCount
+
+    // 4. 遍历所有团购单，计算统计数据
+    // 对每个团购单进行详细分析，计算各项统计指标
+    for (const groupBuy of groupBuysWithOrders) {
+      const groupBuyUnits = groupBuy.units as Array<GroupBuyUnit>; // 获取团购规格信息
+      const groupBuyCustomerIds = new Set<string>(); // 该团购单的客户ID集合
+      let groupBuyRevenue = 0; // 该团购单的销售额
+      let groupBuyProfit = 0; // 该团购单的利润
+      let groupBuyOrderCount = 0; // 该团购单的订单数
+
+      // 将团购单的规格信息添加到units Map中
+      // 规格信息包含价格和成本价，用于后续计算销售额和利润
+      for (const unit of groupBuyUnits) {
+        units.set(unit.id, unit);
+      }
+
+      // 遍历该团购单的所有订单，计算各项统计数据
+      for (const order of groupBuy.order) {
+        const unit = units.get(order.unitId);
+        if (unit) {
+          // 计算单个订单的销售额和利润
+          const orderRevenue = unit.price * order.quantity; // 销售额 = 单价 × 数量
+          const orderProfit = (unit.price - unit.costPrice) * order.quantity; // 利润 = (单价 - 成本价) × 数量
+
+          // 累加到总体统计中
+          totalRevenue += orderRevenue;
+          totalProfit += orderProfit;
+          totalOrderCount++;
+          // 累加到当前团购单统计中
+          groupBuyRevenue += orderRevenue;
+          groupBuyProfit += orderProfit;
+          groupBuyOrderCount++;
+
+          // 添加客户ID到去重集合中
+          uniqueCustomerIds.add(order.customerId); // 总体客户去重
+          groupBuyCustomerIds.add(order.customerId); // 当前团购单客户去重
+
+          // 统计客户购买次数
+          const currentCount =
+            customerPurchaseCounts.get(order.customerId) || 0;
+          customerPurchaseCounts.set(order.customerId, currentCount + 1);
+
+          // 统计商品数据
+          const productKey = groupBuy.product.id;
+          if (!productStats.has(productKey)) {
+            productStats.set(productKey, {
+              productId: groupBuy.product.id,
+              productName: groupBuy.product.name,
+              totalRevenue: 0,
+              totalProfit: 0,
+              orderCount: 0,
+              groupBuyCount: 0,
+            });
+          }
+          const productStat = productStats.get(productKey)!;
+          productStat.totalRevenue += orderRevenue;
+          productStat.totalProfit += orderProfit;
+          productStat.orderCount++;
+
+          // 统计分类数据
+          const categoryKey = groupBuy.product.productType.id;
+          if (!categoryStats.has(categoryKey)) {
+            categoryStats.set(categoryKey, {
+              categoryId: groupBuy.product.productType.id,
+              categoryName: groupBuy.product.productType.name,
+              totalRevenue: 0,
+              totalProfit: 0,
+              orderCount: 0,
+              productCount: 0,
+              groupBuyCount: 0,
+            });
+          }
+          const categoryStat = categoryStats.get(categoryKey)!;
+          categoryStat.totalRevenue += orderRevenue;
+          categoryStat.totalProfit += orderProfit;
+          categoryStat.orderCount++;
+
+          // 记录分类下出现过的商品ID（用于去重统计商品数量）
+          if (!categoryProductIds.has(categoryKey)) {
+            categoryProductIds.set(categoryKey, new Set<string>());
+          }
+          categoryProductIds.get(categoryKey)!.add(groupBuy.product.id);
+
+          // 统计地域数据
+          const addressId = order.customer.customerAddress?.id;
+          const addressName =
+            order.customer.customerAddress?.name || '未知地址';
+          if (addressId) {
+            if (!regionalStats.has(addressId)) {
+              regionalStats.set(addressId, {
+                addressId,
+                addressName,
+                customerIds: new Set<string>(),
+              });
+            }
+            const regionalStat = regionalStats.get(addressId)!;
+            regionalStat.customerIds.add(order.customerId);
+          }
+        }
+      }
+
+      // 该团购单结束后，将其计入对应产品与分类的团购单数量
+      const productKey = groupBuy.product.id;
+      const productStat = productStats.get(productKey);
+      if (productStat) {
+        productStat.groupBuyCount += 1;
+      }
+      const categoryKey = groupBuy.product.productType.id;
+      const categoryStat = categoryStats.get(categoryKey);
+      if (categoryStat) {
+        categoryStat.groupBuyCount += 1;
+      }
+
+      // 添加团购历史记录
+      if (groupBuyOrderCount > 0) {
+        groupBuyHistory.push({
+          groupBuyId: groupBuy.id,
+          groupBuyName: groupBuy.name,
+          launchDate: groupBuy.groupBuyStartDate,
+          orderCount: groupBuyOrderCount,
+          revenue: groupBuyRevenue,
+          profit: groupBuyProfit,
+          customerCount: groupBuyCustomerIds.size,
+          refundedOrderCount: await this.prisma.order.count({
+            where: {
+              delete: 0,
+              status: OrderStatus.REFUNDED,
+              groupBuyId: groupBuy.id,
+              ...(startDate && endDate
+                ? {
+                    groupBuy: {
+                      groupBuyStartDate: {
+                        gte: startDate,
+                        lte: endDate,
+                      },
+                    },
+                  }
+                : {}),
+            },
+          }),
+        });
+      }
+    }
+
+    // 5. 计算复购客户和多次购买客户统计
+    const customerOrderCounts = new Map<string, number>();
+    for (const groupBuy of groupBuysWithOrders) {
+      for (const order of groupBuy.order) {
+        const count = customerOrderCounts.get(order.customerId) || 0;
+        customerOrderCounts.set(order.customerId, count + 1);
+      }
+    }
+    for (const [customerId, count] of customerOrderCounts) {
+      if (count > 1) {
+        repeatCustomerIds.add(customerId);
+      }
+    }
+
+    // 6. 多次购买客户指标（保留供概况统计使用）
+    const multiPurchaseCustomerCount = repeatCustomerIds.size;
+    const multiPurchaseCustomerRatio =
+      uniqueCustomerIds.size > 0
+        ? (multiPurchaseCustomerCount / uniqueCustomerIds.size) * 100
+        : 0;
+
+    // 7. 取消产品统计中的客户数计算（已移除 customerCount 字段）
+    // 8. 计算分类统计中的商品数（同一商品ID只计算一次）
+    for (const [categoryKey, stat] of categoryStats.entries()) {
+      const ids = categoryProductIds.get(categoryKey);
+      stat.productCount = ids ? ids.size : 0;
+    }
+
+    // 9. 计算各种比率和平均值
+    const averageProfitMargin =
+      totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+    const averageCustomerOrderValue =
+      uniqueCustomerIds.size > 0 ? totalRevenue / uniqueCustomerIds.size : 0;
+    const repeatCustomerCount = repeatCustomerIds.size;
+    const repeatCustomerRatio =
+      uniqueCustomerIds.size > 0
+        ? (repeatCustomerCount / uniqueCustomerIds.size) * 100
+        : 0;
+    const totalGroupBuyCount = groupBuysWithOrders.length;
+    const averageGroupBuyRevenue =
+      totalGroupBuyCount > 0 ? totalRevenue / totalGroupBuyCount : 0;
+
+    // 9. 计算客户购买次数分布统计
+    const purchaseFrequencyMap = new Map<number, number>();
+    for (const count of customerPurchaseCounts.values()) {
+      const currentFreq = purchaseFrequencyMap.get(count) || 0;
+      purchaseFrequencyMap.set(count, currentFreq + 1);
+    }
+
+    const customerPurchaseFrequency: CustomerPurchaseFrequency[] = Array.from(
+      purchaseFrequencyMap.entries(),
+    )
+      .map(([purchaseCount, customerCount]) => ({
+        frequency: purchaseCount,
+        count: customerCount,
+      }))
+      .sort((a, b) => b.frequency - a.frequency); // 按购买次数从高到低排序
+
+    // 10. 排序和限制数量
+    const topProducts = Array.from(productStats.values())
+      .sort((a, b) => b.totalRevenue - a.totalRevenue)
+      .slice(0, 10);
+
+    const productCategoryStats = Array.from(categoryStats.values()).sort(
+      (a, b) => b.totalRevenue - a.totalRevenue,
+    );
+
+    const regionalSales: RegionalSalesItem[] = Array.from(
+      regionalStats.values(),
+    )
+      .map((stat) => ({
+        addressId: stat.addressId,
+        addressName: stat.addressName,
+        customerCount: stat.customerIds.size, // 使用Set的size属性获取去重后的客户数量
+      }))
+      .sort((a, b) => b.customerCount - a.customerCount);
+
+    // 按时间排序团购历史
+    groupBuyHistory.sort(
+      (a, b) =>
+        new Date(b.launchDate).getTime() - new Date(a.launchDate).getTime(),
+    );
+
+    return {
+      supplierId: supplier.id,
+      supplierName: supplier.name,
+      startDate,
+      endDate,
+      totalRevenue,
+      totalProfit,
+      averageProfitMargin,
+      totalOrderCount,
+      uniqueCustomerCount: uniqueCustomerIds.size,
+      averageCustomerOrderValue,
+      repeatCustomerCount,
+      repeatCustomerRatio,
+      customerPurchaseFrequency,
+      multiPurchaseCustomerCount,
+      multiPurchaseCustomerRatio,
+      totalGroupBuyCount,
+      averageGroupBuyRevenue,
+      topProducts,
+      productCategoryStats,
+      regionalSales,
+      groupBuyHistory,
+    };
+  }
+
+  /**
+   * 获取供货商特定购买频次的客户列表
+   * 查询指定供货商下特定购买频次的客户信息
+   *
+   * @param params 查询参数，包含供货商ID、购买频次和时间范围
+   * @returns 客户基本信息列表
+   */
+  async getSupplierFrequencyCustomers(
+    params: SupplierFrequencyCustomersParams,
+  ): Promise<SupplierFrequencyCustomersResult> {
+    const { supplierId, frequency, startDate, endDate } = params;
+
+    // 构建时间过滤条件
+    const timeFilter =
+      startDate && endDate
+        ? {
+            groupBuyStartDate: {
+              gte: startDate,
+              lte: endDate,
+            },
+          }
+        : {};
+
+    // 查询指定供货商的所有团购单及其订单
+    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
+      where: {
+        supplierId,
+        delete: 0,
+        ...timeFilter,
+      },
+      include: {
+        order: {
+          where: {
+            status: {
+              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+            },
+            delete: 0,
+          },
+          select: {
+            customerId: true,
+            customer: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // 统计每个客户的购买次数
+    const customerPurchaseCounts = new Map<string, number>();
+    for (const groupBuy of groupBuysWithOrders) {
+      for (const order of groupBuy.order) {
+        const customerId = order.customerId;
+        const currentCount = customerPurchaseCounts.get(customerId) || 0;
+        customerPurchaseCounts.set(customerId, currentCount + 1);
+      }
+    }
+
+    // 筛选出购买次数等于指定频次的客户
+    const targetCustomers: CustomerBasicInfo[] = [];
+    for (const [customerId, count] of customerPurchaseCounts.entries()) {
+      if (count === frequency) {
+        // 查找客户信息
+        for (const groupBuy of groupBuysWithOrders) {
+          for (const order of groupBuy.order) {
+            if (order.customerId === customerId) {
+              targetCustomers.push({
+                customerId: order.customer.id,
+                customerName: order.customer.name,
+              });
+              break; // 找到客户信息后跳出内层循环
+            }
+          }
+          if (targetCustomers.some((c) => c.customerId === customerId)) {
+            break; // 如果已经添加了这个客户，跳出外层循环
+          }
+        }
+      }
+    }
+
+    return {
+      customers: targetCustomers,
+    };
+  }
+
+  /**
+   * 获取供货商特定区域的客户列表
+   * 查询指定供货商下特定地址的客户信息
+   *
+   * @param params 查询参数，包含供货商ID、地址ID和时间范围
+   * @returns 客户基本信息列表
+   */
+  async getSupplierRegionalCustomers(
+    params: SupplierRegionalCustomersParams,
+  ): Promise<SupplierRegionalCustomersResult> {
+    const { supplierId, addressId, startDate, endDate } = params;
+
+    // 构建时间过滤条件
+    const timeFilter =
+      startDate && endDate
+        ? {
+            groupBuyStartDate: {
+              gte: startDate,
+              lte: endDate,
+            },
+          }
+        : {};
+
+    // 查询指定供货商的所有团购单及其订单
+    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
+      where: {
+        supplierId,
+        delete: 0,
+        ...timeFilter,
+      },
+      select: {
+        order: {
+          where: {
+            status: {
+              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+            },
+            delete: 0,
+          },
+          select: {
+            customerId: true,
+            customer: {
+              select: {
+                id: true,
+                name: true,
+                customerAddressId: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // 筛选出指定地址的客户（去重）
+    const targetCustomers = new Map<string, CustomerBasicInfo>();
+    for (const groupBuy of groupBuysWithOrders) {
+      for (const order of groupBuy.order) {
+        if (order.customer.customerAddressId === addressId) {
+          const customerId = order.customerId;
+          if (!targetCustomers.has(customerId)) {
+            targetCustomers.set(customerId, {
+              customerId: order.customer.id,
+              customerName: order.customer.name,
+            });
+          }
+        }
+      }
+    }
+
+    return {
+      customers: Array.from(targetCustomers.values()),
     };
   }
 }
