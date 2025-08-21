@@ -97,6 +97,7 @@ type AnalysisStore = {
   customerListLoading: boolean
   customerListTitle: string
   customerListVisible: boolean
+  customerListShowPurchaseCount: boolean
   setCustomerListData: (data: CustomerBasicInfo[]) => void
   setCustomerListLoading: (loading: boolean) => void
   setCustomerListTitle: (title: string) => void
@@ -104,7 +105,7 @@ type AnalysisStore = {
   resetCustomerList: () => void
 
   // 处理购买频次点击事件
-  handleFrequencyClick: (frequency: number) => Promise<void>
+  handleFrequencyClick: (minFrequency: number, maxFrequency?: number | null) => Promise<void>
 
   // 处理地域点击事件
   handleRegionalClick: (addressId: string, addressName: string) => Promise<void>
@@ -300,6 +301,7 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
   customerListLoading: false,
   customerListTitle: '',
   customerListVisible: false,
+  customerListShowPurchaseCount: false,
   setCustomerListData: (data: CustomerBasicInfo[]) => {
     set({ customerListData: data })
   },
@@ -317,23 +319,31 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
       customerListData: [],
       customerListLoading: false,
       customerListTitle: '',
-      customerListVisible: false
+      customerListVisible: false,
+      customerListShowPurchaseCount: false
     })
   },
 
   // 处理购买频次点击事件
-  handleFrequencyClick: async (frequency: number) => {
+  handleFrequencyClick: async (minFrequency: number, maxFrequency?: number | null) => {
     const state = get()
     const detail = state.mergedGroupBuyOverviewDetail
     const supplierDetail = state.supplierOverviewDetail
 
     if (!detail && !supplierDetail) return
 
+    const titleLabel = (() => {
+      if (maxFrequency == null) return `购买${minFrequency}次及以上 的客户列表`
+      if (minFrequency === maxFrequency) return `购买${minFrequency}次 的客户列表`
+      return `购买${minFrequency}-${maxFrequency}次 的客户列表`
+    })()
+
     set({
-      customerListTitle: `购买${frequency}次 的客户列表`,
+      customerListTitle: titleLabel,
       customerListLoading: true,
       customerListData: [],
-      customerListVisible: true
+      customerListVisible: true,
+      customerListShowPurchaseCount: true
     })
 
     // 根据当前详情类型调用不同的接口
@@ -342,7 +352,8 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
       await state.getMergedGroupBuyFrequencyCustomers({
         groupBuyName: detail.groupBuyName,
         supplierId: detail.supplierId,
-        frequency,
+        minFrequency,
+        maxFrequency: maxFrequency ?? undefined,
         startDate: detail.startDate,
         endDate: detail.endDate
       })
@@ -350,7 +361,8 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
       // 供货商详情
       await state.getSupplierFrequencyCustomers({
         supplierId: supplierDetail.supplierId,
-        frequency,
+        minFrequency,
+        maxFrequency: maxFrequency ?? undefined,
         startDate: supplierDetail.startDate,
         endDate: supplierDetail.endDate
       })
@@ -369,7 +381,8 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
       customerListTitle: `${addressName} 地址的客户列表`,
       customerListLoading: true,
       customerListData: [],
-      customerListVisible: true
+      customerListVisible: true,
+      customerListShowPurchaseCount: false
     })
 
     // 根据当前详情类型调用不同的接口

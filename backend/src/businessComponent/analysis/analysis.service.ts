@@ -853,14 +853,75 @@ export class AnalysisService {
       purchaseFrequencyMap.set(count, currentFreq + 1);
     }
 
-    const customerPurchaseFrequency: CustomerPurchaseFrequency[] = Array.from(
-      purchaseFrequencyMap.entries(),
-    )
-      .map(([purchaseCount, customerCount]) => ({
-        frequency: purchaseCount,
-        count: customerCount,
-      }))
-      .sort((a, b) => b.frequency - a.frequency); // 按购买次数从高到低排序
+    // 根据团购单数量动态规划分桶：
+    // - >=20: 1,2,3,4, 5-9, 10-19, 20+
+    // - >=10: 1,2,3,4, 5-9, 10+
+    // - >=5:  1,2,3,4, 5+
+    // - 其他: 1..totalGroupBuyCount（逐一列出）
+    const buildBuckets = (
+      gbCount: number,
+    ): Array<{ min: number; max?: number | null }> => {
+      if (gbCount >= 20) {
+        return [
+          { min: 1, max: 1 },
+          { min: 2, max: 2 },
+          { min: 3, max: 3 },
+          { min: 4, max: 4 },
+          { min: 5, max: 9 },
+          { min: 10, max: 19 },
+          { min: 20, max: null },
+        ];
+      }
+      if (gbCount >= 10) {
+        return [
+          { min: 1, max: 1 },
+          { min: 2, max: 2 },
+          { min: 3, max: 3 },
+          { min: 4, max: 4 },
+          { min: 5, max: 9 },
+          { min: 10, max: null },
+        ];
+      }
+      if (gbCount >= 5) {
+        return [
+          { min: 1, max: 1 },
+          { min: 2, max: 2 },
+          { min: 3, max: 3 },
+          { min: 4, max: 4 },
+          { min: 5, max: null },
+        ];
+      }
+      // gbCount < 5 的情况，逐一列出存在的次数
+      const buckets: Array<{ min: number; max?: number | null }> = [];
+      for (let i = 1; i <= Math.max(1, gbCount); i += 1) {
+        buckets.push({ min: i, max: i });
+      }
+      return buckets;
+    };
+
+    const buckets = buildBuckets(totalGroupBuyCount);
+
+    const customerPurchaseFrequency: CustomerPurchaseFrequency[] = buckets
+      .map((bucket) => {
+        const { min, max } = bucket;
+        let sum = 0;
+        for (const [
+          purchaseCount,
+          customerCount,
+        ] of purchaseFrequencyMap.entries()) {
+          if (max == null) {
+            if (purchaseCount >= min) sum += customerCount;
+          } else if (purchaseCount >= min && purchaseCount <= max) {
+            sum += customerCount;
+          }
+        }
+        return {
+          minFrequency: min,
+          maxFrequency: max ?? null,
+          count: sum,
+        };
+      })
+      .filter((b) => b.count > 0);
 
     // 5. 多次购买客户统计
     const multiPurchaseCustomerCount = Array.from(
@@ -976,7 +1037,15 @@ export class AnalysisService {
   async getMergedGroupBuyFrequencyCustomers(
     params: MergedGroupBuyFrequencyCustomersParams,
   ): Promise<MergedGroupBuyFrequencyCustomersResult> {
-    const { groupBuyName, supplierId, frequency, startDate, endDate } = params;
+    const {
+      groupBuyName,
+      supplierId,
+      frequency,
+      minFrequency,
+      maxFrequency,
+      startDate,
+      endDate,
+    } = params;
 
     // 1. 构建查询条件
     const whereCondition = {
@@ -1046,14 +1115,18 @@ export class AnalysisService {
       }
     }
 
-    // 4. 筛选出指定购买频次的客户
+    // 4. 筛选出指定购买频次（或范围）的客户
+    const minF = minFrequency ?? frequency ?? 0;
+    const maxF = maxFrequency ?? frequency ?? Number.POSITIVE_INFINITY;
+
     const filteredCustomers = Array.from(customerPurchaseCounts.values())
-      .filter((item) => item.count === frequency)
-      .map((item) => item.customer);
+      .filter((item) => item.count >= minF && item.count <= maxF)
+      .map((item) => ({ ...item.customer, purchaseCount: item.count }));
 
     return {
       groupBuyName,
-      frequency,
+      // 保留 frequency 字段用于兼容（取 frequency 或 minF）
+      frequency: frequency ?? minF,
       customers: filteredCustomers,
     };
   }
@@ -1639,14 +1712,70 @@ export class AnalysisService {
       purchaseFrequencyMap.set(count, currentFreq + 1);
     }
 
-    const customerPurchaseFrequency: CustomerPurchaseFrequency[] = Array.from(
-      purchaseFrequencyMap.entries(),
-    )
-      .map(([purchaseCount, customerCount]) => ({
-        frequency: purchaseCount,
-        count: customerCount,
-      }))
-      .sort((a, b) => b.frequency - a.frequency); // 按购买次数从高到低排序
+    // 根据团购单数量动态规划分桶（使用供货商的团购单数）
+    const buildBuckets = (
+      gbCount: number,
+    ): Array<{ min: number; max?: number | null }> => {
+      if (gbCount >= 20) {
+        return [
+          { min: 1, max: 1 },
+          { min: 2, max: 2 },
+          { min: 3, max: 3 },
+          { min: 4, max: 4 },
+          { min: 5, max: 9 },
+          { min: 10, max: 19 },
+          { min: 20, max: null },
+        ];
+      }
+      if (gbCount >= 10) {
+        return [
+          { min: 1, max: 1 },
+          { min: 2, max: 2 },
+          { min: 3, max: 3 },
+          { min: 4, max: 4 },
+          { min: 5, max: 9 },
+          { min: 10, max: null },
+        ];
+      }
+      if (gbCount >= 5) {
+        return [
+          { min: 1, max: 1 },
+          { min: 2, max: 2 },
+          { min: 3, max: 3 },
+          { min: 4, max: 4 },
+          { min: 5, max: null },
+        ];
+      }
+      const buckets: Array<{ min: number; max?: number | null }> = [];
+      for (let i = 1; i <= Math.max(1, gbCount); i += 1) {
+        buckets.push({ min: i, max: i });
+      }
+      return buckets;
+    };
+
+    const buckets = buildBuckets(totalGroupBuyCount);
+
+    const customerPurchaseFrequency: CustomerPurchaseFrequency[] = buckets
+      .map((bucket) => {
+        const { min, max } = bucket;
+        let sum = 0;
+        for (const [
+          purchaseCount,
+          customerCount,
+        ] of purchaseFrequencyMap.entries()) {
+          if (max == null) {
+            if (purchaseCount >= min) sum += customerCount;
+          } else if (purchaseCount >= min && purchaseCount <= max) {
+            sum += customerCount;
+          }
+        }
+        return {
+          minFrequency: min,
+          maxFrequency: max ?? null,
+          count: sum,
+        };
+      })
+      .filter((b) => b.count > 0);
 
     // 10. 排序和限制数量
     const topProducts = Array.from(productStats.values())
@@ -1708,7 +1837,14 @@ export class AnalysisService {
   async getSupplierFrequencyCustomers(
     params: SupplierFrequencyCustomersParams,
   ): Promise<SupplierFrequencyCustomersResult> {
-    const { supplierId, frequency, startDate, endDate } = params;
+    const {
+      supplierId,
+      frequency,
+      minFrequency,
+      maxFrequency,
+      startDate,
+      endDate,
+    } = params;
 
     // 构建时间过滤条件
     const timeFilter =
@@ -1759,10 +1895,13 @@ export class AnalysisService {
       }
     }
 
-    // 筛选出购买次数等于指定频次的客户
+    // 筛选出购买次数在范围内的客户
+    const minF = minFrequency ?? frequency ?? 0;
+    const maxF = maxFrequency ?? frequency ?? Number.POSITIVE_INFINITY;
+
     const targetCustomers: CustomerBasicInfo[] = [];
     for (const [customerId, count] of customerPurchaseCounts.entries()) {
-      if (count === frequency) {
+      if (count >= minF && count <= maxF) {
         // 查找客户信息
         for (const groupBuy of groupBuysWithOrders) {
           for (const order of groupBuy.order) {
@@ -1770,6 +1909,7 @@ export class AnalysisService {
               targetCustomers.push({
                 customerId: order.customer.id,
                 customerName: order.customer.name,
+                purchaseCount: count,
               });
               break; // 找到客户信息后跳出内层循环
             }

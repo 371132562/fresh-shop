@@ -10,7 +10,7 @@ type CustomerLoyaltyCardProps = {
   multiPurchaseCustomerCount: number
   multiPurchaseCustomerRatio: number
   customerPurchaseFrequency: CustomerPurchaseFrequency[]
-  onFrequencyClick?: (frequency: number) => void
+  onFrequencyClick?: (minFrequency: number, maxFrequency?: number | null) => void
   title?: string
 }
 
@@ -25,13 +25,21 @@ const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
   onFrequencyClick,
   title = '客户忠诚度分析'
 }) => {
+  const formatLabel = (min: number, max?: number | null) => {
+    if (max == null) return `${min}次及以上`
+    if (min === max) return `${min}次`
+    return `${min}-${max}次`
+  }
+
   // 客户购买次数分布表格列定义
   const purchaseFrequencyColumns: ColumnsType<CustomerPurchaseFrequency & { key: number }> = [
     {
       title: '购买次数',
-      dataIndex: 'frequency',
-      key: 'frequency',
-      render: (frequency: number) => <span>{frequency}次</span>
+      dataIndex: 'minFrequency',
+      key: 'frequencyRange',
+      render: (_: number, record) => (
+        <span>{formatLabel(record.minFrequency, record.maxFrequency ?? null)}</span>
+      )
     },
     {
       title: '客户数量',
@@ -39,11 +47,9 @@ const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
       key: 'count',
       render: (count: number, record) => (
         <span
-          className={`font-medium text-blue-600 ${
-            onFrequencyClick ? 'cursor-pointer hover:text-blue-800' : ''
-          }`}
-          onClick={() => onFrequencyClick?.(record.frequency)}
-          title={onFrequencyClick ? '点击查看该频次客户列表' : ''}
+          className={`font-medium text-blue-600 ${onFrequencyClick ? 'cursor-pointer hover:text-blue-800' : ''}`}
+          onClick={() => onFrequencyClick?.(record.minFrequency, record.maxFrequency ?? null)}
+          title={onFrequencyClick ? '点击查看该频次范围客户列表' : ''}
         >
           {count}人
         </span>
@@ -102,7 +108,8 @@ const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
             columns={purchaseFrequencyColumns}
             dataSource={customerPurchaseFrequency.map((item, index) => ({
               key: index,
-              frequency: item.frequency,
+              minFrequency: item.minFrequency,
+              maxFrequency: item.maxFrequency ?? null,
               count: item.count
             }))}
             pagination={false}

@@ -324,8 +324,9 @@ export type CustomerRankResult = {
  * 用于统计客户的购买次数分布情况
  */
 export type CustomerPurchaseFrequency = {
-  frequency: number; // 购买次数（如1, 2, 3等）
-  count: number; // 该频次的客户数量
+  minFrequency: number; // 该分组的最小购买次数（含）
+  maxFrequency?: number | null; // 该分组的最大购买次数（含）；为 null/undefined 表示无上限（如20+）
+  count: number; // 该频次范围内的客户数量
 };
 
 // ===================================================================
@@ -561,7 +562,9 @@ export type MergedGroupBuyOverviewDetail = {
 export type MergedGroupBuyFrequencyCustomersParams = {
   groupBuyName: string; // 团购名称
   supplierId: string; // 供货商ID
-  frequency: number; // 购买频次
+  frequency?: number; // （兼容）精确购买频次
+  minFrequency?: number; // 频次范围最小值（含）
+  maxFrequency?: number; // 频次范围最大值（含，可选）
   startDate?: Date; // 统计开始时间（可选）
   endDate?: Date; // 统计结束时间（可选）
 };
@@ -585,6 +588,7 @@ export type MergedGroupBuyRegionalCustomersParams = {
 export type CustomerBasicInfo = {
   customerId: string; // 客户ID
   customerName: string; // 客户名称
+  purchaseCount?: number; // 客户在当前查询维度下的购买次数（仅频次列表查询时返回）
 };
 
 /**
@@ -944,7 +948,9 @@ export type SupplierOverviewDetail = {
  */
 export type SupplierFrequencyCustomersParams = {
   supplierId: string; // 供货商ID
-  frequency: number; // 购买频次
+  frequency?: number; // （兼容）精确购买频次
+  minFrequency?: number; // 频次范围最小值（含）
+  maxFrequency?: number; // 频次范围最大值（含，可选）
   startDate?: Date; // 统计开始时间（可选）
   endDate?: Date; // 统计结束时间（可选）
 };

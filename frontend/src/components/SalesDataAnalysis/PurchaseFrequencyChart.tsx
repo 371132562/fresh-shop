@@ -4,11 +4,12 @@ import { useEffect, useRef } from 'react'
 
 type PurchaseFrequencyChartProps = {
   data: Array<{
-    frequency: number
+    minFrequency: number
+    maxFrequency?: number | null
     count: number
   }>
   loading?: boolean
-  onFrequencyClick?: (frequency: number) => void
+  onFrequencyClick?: (minFrequency: number, maxFrequency?: number | null) => void
 }
 
 /**
@@ -35,10 +36,17 @@ const PurchaseFrequencyChart: React.FC<PurchaseFrequencyChartProps> = ({
       chartInstanceRef.current = chartInstance
 
       // 转换数据格式为echarts需要的格式
+      const formatLabel = (min: number, max?: number | null) => {
+        if (max == null) return `${min}次及以上`
+        if (min === max) return `${min}次`
+        return `${min}-${max}次`
+      }
+
       const chartData = data.map(item => ({
-        name: `${item.frequency}次`,
+        name: formatLabel(item.minFrequency, item.maxFrequency ?? null),
         value: item.count,
-        frequency: item.frequency
+        frequencyMin: item.minFrequency,
+        frequencyMax: item.maxFrequency ?? null
       }))
 
       const option = {
@@ -103,8 +111,8 @@ const PurchaseFrequencyChart: React.FC<PurchaseFrequencyChartProps> = ({
       if (onFrequencyClick) {
         chartInstance.off('click')
         chartInstance.on('click', (params: any) => {
-          if (params.data && params.data.frequency) {
-            onFrequencyClick(params.data.frequency)
+          if (params.data && typeof params.data.frequencyMin === 'number') {
+            onFrequencyClick(params.data.frequencyMin, params.data.frequencyMax)
           }
         })
       }
@@ -131,8 +139,8 @@ const PurchaseFrequencyChart: React.FC<PurchaseFrequencyChartProps> = ({
 
       // 添加新的点击事件
       chartInstanceRef.current.on('click', (params: any) => {
-        if (params.data && params.data.frequency) {
-          onFrequencyClick(params.data.frequency)
+        if (params.data && typeof params.data.frequencyMin === 'number') {
+          onFrequencyClick(params.data.frequencyMin, params.data.frequencyMax)
         }
       })
     }

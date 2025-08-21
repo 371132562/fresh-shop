@@ -1,10 +1,9 @@
 import { TrophyOutlined } from '@ant-design/icons'
-import { Button, Card, Col, Modal, Row, Table } from 'antd'
+import { Card, Col, Modal, Row } from 'antd'
 import dayjs from 'dayjs'
 import type { SupplierOverviewDetailParams } from 'fresh-shop-backend/types/dto'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 
-import ConsumptionDetailModal from '@/components/ConsumptionDetailModal'
 import {
   CustomerLoyaltyCard,
   CustomerStatsCard,
@@ -12,8 +11,8 @@ import {
   ProductAnalysisCard,
   RegionalSalesCard
 } from '@/components/SalesDataAnalysis'
+import CustomerListModal from '@/components/SalesDataAnalysis/CustomerListModal'
 import useAnalysisStore from '@/stores/analysisStore'
-import useCustomerStore from '@/stores/customerStore'
 
 type SupplierDetailModalProps = {
   visible: boolean
@@ -33,11 +32,6 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
   width = 1000
 }: SupplierDetailModalProps) => {
   // 客户列表模态框状态
-  const customerListVisible = useAnalysisStore(state => state.customerListVisible)
-  const setCustomerListVisible = useAnalysisStore(state => state.setCustomerListVisible)
-
-  // 消费详情模态框状态
-  const [consumptionDetailVisible, setConsumptionDetailVisible] = useState(false)
 
   // 从 Zustand store 中获取分析数据的方法和状态
   const getSupplierOverviewDetail = useAnalysisStore(state => state.getSupplierOverviewDetail)
@@ -51,16 +45,6 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
   )
   const handleFrequencyClick = useAnalysisStore(state => state.handleFrequencyClick)
   const handleRegionalClick = useAnalysisStore(state => state.handleRegionalClick)
-  const customerListData = useAnalysisStore(state => state.customerListData)
-  const customerListLoading = useAnalysisStore(state => state.customerListLoading)
-  const customerListTitle = useAnalysisStore(state => state.customerListTitle)
-  const resetCustomerList = useAnalysisStore(state => state.resetCustomerList)
-
-  // 从 Zustand store 中获取客户数据的方法和状态
-  const getConsumptionDetail = useCustomerStore(state => state.getConsumptionDetail)
-  const consumptionDetail = useCustomerStore(state => state.consumptionDetail)
-  const consumptionDetailLoading = useCustomerStore(state => state.consumptionDetailLoading)
-  const resetConsumptionDetail = useCustomerStore(state => state.resetConsumptionDetail)
 
   // 当模态框打开且有参数时，获取详情数据
   useEffect(() => {
@@ -275,62 +259,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
         </div>
       )}
 
-      {/* 客户列表模态框 */}
-      <Modal
-        title={customerListTitle}
-        open={customerListVisible}
-        onCancel={() => {
-          setCustomerListVisible(false)
-          resetCustomerList()
-        }}
-        footer={null}
-        width={600}
-      >
-        <Table
-          columns={[
-            {
-              title: '客户姓名',
-              dataIndex: 'customerName',
-              key: 'customerName'
-            },
-            {
-              title: '操作',
-              key: 'action',
-              render: (_, record) => (
-                <Button
-                  type="primary"
-                  ghost
-                  onClick={() => {
-                    getConsumptionDetail(record.customerId)
-                    setConsumptionDetailVisible(true)
-                  }}
-                >
-                  查看客户全部消费详情
-                </Button>
-              )
-            }
-          ]}
-          dataSource={customerListData.map((customer, index) => ({
-            key: index,
-            customerId: customer.customerId,
-            customerName: customer.customerName
-          }))}
-          loading={customerListLoading}
-          pagination={false}
-          size="middle"
-        />
-      </Modal>
-
-      {/* 消费详情模态框 */}
-      <ConsumptionDetailModal
-        visible={consumptionDetailVisible}
-        onClose={() => {
-          setConsumptionDetailVisible(false)
-          resetConsumptionDetail()
-        }}
-        consumptionDetail={consumptionDetail}
-        loading={consumptionDetailLoading}
-      />
+      <CustomerListModal />
     </Modal>
   )
 }
