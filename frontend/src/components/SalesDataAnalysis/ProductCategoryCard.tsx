@@ -82,7 +82,7 @@ const ProductCategoryCard: React.FC<ProductCategoryCardProps> = ({
               const profit = item.totalProfit || 0
               const orders = item.orderCount || 0
               const products = item.productCount || 0
-              const groupBuys = (item as any).groupBuyCount || 0
+              const groupBuys = item.groupBuyCount || 0
               const margin = revenue > 0 ? (profit / revenue) * 100 : 0
 
               const base = percentMetric === 'revenue' ? totals.totalRevenue : totals.totalProfit
