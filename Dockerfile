@@ -30,7 +30,7 @@ COPY backend ./backend
 # 安装所有项目的依赖（使用 pnpm workspace）
 # 切换到monorepo根目录执行 install，确保所有子项目依赖被安装
 RUN pnpm install --frozen-lockfile
-RUN pnpm approve-builds
+RUN pnpm approve-builds && a
 
 # --- 后端构建步骤 (在 builder 阶段完成) ---
 WORKDIR /app/backend
