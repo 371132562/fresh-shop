@@ -56,13 +56,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
       // 当模态框关闭时，清理数据
       resetSupplierOverviewDetail()
     }
-  }, [
-    visible,
-    params,
-    getSupplierOverviewDetail,
-    resetSupplierOverviewDetail,
-    resetMergedGroupBuyOverviewDetail
-  ])
+  }, [visible, params])
 
   return (
     <Modal

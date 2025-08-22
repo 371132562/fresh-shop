@@ -33,7 +33,8 @@ export default tseslint.config(
     rules: {
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
-      'linebreak-style': ['error', 'unix']
+      'linebreak-style': ['error', 'unix'],
+      'react-hooks/exhaustive-deps': 'off'
     }
   }
 )

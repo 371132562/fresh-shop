@@ -57,13 +57,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
       // 当模态框关闭时，清理数据
       resetMergedGroupBuyOverviewDetail()
     }
-  }, [
-    visible,
-    params,
-    getMergedGroupBuyOverviewDetail,
-    resetMergedGroupBuyOverviewDetail,
-    resetSupplierOverviewDetail
-  ])
+  }, [visible, params])
 
   // 转换团购发起历史数据为公共组件需要的格式
 
