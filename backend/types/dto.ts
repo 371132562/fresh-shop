@@ -842,6 +842,8 @@ export type TopProductItem = {
   // 产品基本信息
   productId: string; // 产品唯一标识
   productName: string; // 产品名称
+  categoryId?: string; // 分类唯一标识（可选，便于前端展示分类）
+  categoryName?: string; // 分类名称（可选，便于前端展示分类）
 
   // 销售表现指标
   totalRevenue: number; // 总销售额（元）

@@ -93,7 +93,6 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
               return (
                 <List.Item className="px-2 py-2">
                   <div className="flex w-full items-start gap-3">
-                    {/* 排名圆形徽标 */}
                     <div className="pt-1">
                       <Badge color={margin >= 30 ? 'green' : margin >= 15 ? 'blue' : 'volcano'} />
                     </div>
@@ -108,6 +107,11 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                         >
                           <div className="truncate text-base font-medium text-gray-800">
                             {item.productName}
+                            {item.categoryName ? (
+                              <span className="ml-1 text-sm text-gray-500">
+                                ({item.categoryName})
+                              </span>
+                            ) : null}
                           </div>
                         </Tooltip>
                         <div

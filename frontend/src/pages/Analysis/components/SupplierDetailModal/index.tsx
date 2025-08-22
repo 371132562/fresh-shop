@@ -1,5 +1,6 @@
 import { TrophyOutlined } from '@ant-design/icons'
-import { Card, Col, Modal, Row } from 'antd'
+import { QuestionCircleOutlined } from '@ant-design/icons'
+import { Card, Col, Modal, Row, Tooltip } from 'antd'
 import dayjs from 'dayjs'
 import type { SupplierOverviewDetailParams } from 'fresh-shop-backend/types/dto'
 import React, { useEffect } from 'react'
@@ -61,7 +62,27 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
 
   return (
     <Modal
-      title="供货商详细数据"
+      title={
+        <div className="flex items-center gap-2">
+          <span>供货商详细数据</span>
+          <Tooltip
+            title={
+              <div style={{ maxWidth: 360, lineHeight: 1.6 }}>
+                <div>
+                  <b>统计范围：</b>
+                  按当前选择的时间；未选择则统计全部时间。只计算已支付或已完成的订单，范围为该供货商名下的所有团购单。
+                </div>
+                <div>
+                  <b>结果展示：</b>
+                  这里会展示该供货商的销售额、利润、利润率、订单量、团购单数量；热销商品与品类；团购开展历史；客户数量与平均下单金额；老客复购情况；以及不同地区的销售情况。
+                </div>
+              </div>
+            }
+          >
+            <QuestionCircleOutlined className="text-gray-400" />
+          </Tooltip>
+        </div>
+      }
       open={visible}
       onCancel={onClose}
       footer={null}

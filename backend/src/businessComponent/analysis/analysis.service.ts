@@ -1567,6 +1567,8 @@ export class AnalysisService {
             productStats.set(productKey, {
               productId: groupBuy.product.id,
               productName: groupBuy.product.name,
+              categoryId: groupBuy.product.productType.id,
+              categoryName: groupBuy.product.productType.name,
               totalRevenue: 0,
               totalProfit: 0,
               orderCount: 0,

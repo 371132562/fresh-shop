@@ -1,5 +1,6 @@
 import { TrophyOutlined } from '@ant-design/icons'
-import { Card, Col, Modal, Row } from 'antd'
+import { QuestionCircleOutlined } from '@ant-design/icons'
+import { Card, Col, Modal, Row, Tooltip } from 'antd'
 import dayjs from 'dayjs'
 import type { MergedGroupBuyOverviewDetailParams } from 'fresh-shop-backend/types/dto'
 import React, { useEffect } from 'react'
@@ -64,7 +65,27 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
 
   return (
     <Modal
-      title="团购单（合并同名）详细数据"
+      title={
+        <div className="flex items-center gap-2">
+          <span>团购单（合并同名）详细数据</span>
+          <Tooltip
+            title={
+              <div style={{ maxWidth: 360, lineHeight: 1.6 }}>
+                <div>
+                  <b>统计范围：</b>
+                  按当前选择的时间；未选择则统计全部时间。只计算已支付或已完成的订单，范围为同一供货商下所有同名团购单的合并结果。
+                </div>
+                <div>
+                  <b>结果展示：</b>
+                  这里会展示该团购主题的总销售额、利润、利润率、订单量、发起次数；团购开展历史；参与客户数量与平均下单金额；老客复购情况；以及不同地区的销售情况。
+                </div>
+              </div>
+            }
+          >
+            <QuestionCircleOutlined className="text-gray-400" />
+          </Tooltip>
+        </div>
+      }
       open={visible}
       onCancel={onClose}
       footer={null}
