@@ -32,13 +32,6 @@ export const Component = () => {
     setCalendarValue([dayjs().subtract(days, 'day').toDate(), dayjs().toDate()])
   }
 
-  useEffect(() => {
-    getCount({
-      startDate: calendarValue[0],
-      endDate: calendarValue[1]
-    })
-  }, [calendarValue])
-
   // 根据选中的视图动态调用对应的排行榜接口
   useEffect(() => {
     const params = {
@@ -47,6 +40,9 @@ export const Component = () => {
     }
 
     switch (activeViewKey) {
+      case 'overview':
+        getCount(params)
+        break
       case 'group-buy-rankings':
         getGroupBuyRank(params)
         break
@@ -55,9 +51,6 @@ export const Component = () => {
         break
       case 'supplier-rankings':
         getSupplierRank(params)
-        break
-      case 'overview':
-        // 整体概况页面的数据已在上面的useEffect中处理
         break
       case 'merged-group-buy-overview':
         getMergedGroupBuyOverview({
