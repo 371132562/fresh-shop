@@ -32,7 +32,6 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
 
   const orderStats = useOrderStore(state => state.orderStats)
   const getOrderStats = useOrderStore(state => state.getOrderStats)
-  const refreshOrderStats = useOrderStore(state => state.refreshOrderStats)
   const updateOrder = useOrderStore(state => state.updateOrder)
 
   // 组件挂载时获取订单统计数据
@@ -47,7 +46,7 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
   const handleFloatButtonClick = () => {
     setModalVisible(true)
     // 点击时刷新数据
-    refreshOrderStats()
+    getOrderStats()
   }
 
   // 处理订单条目点击，跳转到团购单详情页
@@ -74,7 +73,7 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
           description: `订单状态已更新为：${OrderStatusMap[nextStatus].label}`
         })
         // 重新获取订单统计数据
-        await refreshOrderStats()
+        await getOrderStats()
       } else {
         notification.error({
           message: '失败',

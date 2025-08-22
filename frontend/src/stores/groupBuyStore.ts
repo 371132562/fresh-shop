@@ -18,6 +18,8 @@ import {
 } from '@/services/apis.ts'
 import http from '@/services/base.ts'
 
+import useOrderStore from './orderStore'
+
 export type GroupBuyUnit = {
   id: string
   unit: string
@@ -147,6 +149,7 @@ const useGroupBuyStore = create<GroupBuyStore>((set, get) => ({
       return false
     } finally {
       set({ deleteLoading: false })
+      useOrderStore.getState().getOrderStats()
     }
   },
 

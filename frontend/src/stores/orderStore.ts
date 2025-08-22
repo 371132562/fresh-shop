@@ -82,7 +82,6 @@ type OrderStore = {
   // 订单统计相关方法
   getOrderStats: () => Promise<void>
   clearOrderStats: () => void
-  refreshOrderStats: () => Promise<void>
 }
 
 const useOrderStore = create<OrderStore>((set, get) => ({
@@ -171,6 +170,8 @@ const useOrderStore = create<OrderStore>((set, get) => ({
       return false
     } finally {
       set({ deleteLoading: false })
+      // 删除订单后更新订单统计数据
+      get().getOrderStats()
     }
   },
 
@@ -234,9 +235,6 @@ const useOrderStore = create<OrderStore>((set, get) => ({
   },
   clearOrderStats: () => {
     set({ orderStats: null })
-  },
-  refreshOrderStats: async () => {
-    await get().getOrderStats()
   }
 }))
 

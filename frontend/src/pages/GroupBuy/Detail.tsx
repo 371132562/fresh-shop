@@ -32,7 +32,7 @@ export const Component = () => {
   const setGroupBuy = useGroupBuyStore(state => state.setGroupBuy)
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
   const updateOrder = useOrderStore(state => state.updateOrder)
-  const refreshOrderStats = useOrderStore(state => state.refreshOrderStats)
+  const getOrderStats = useOrderStore(state => state.getOrderStats)
 
   // 详情模态框相关状态
 
@@ -198,7 +198,7 @@ export const Component = () => {
           getGroupBuy({ id })
         }
         // 重新获取订单统计数据
-        refreshOrderStats()
+        getOrderStats()
       } else {
         notification.error({
           message: '失败',
