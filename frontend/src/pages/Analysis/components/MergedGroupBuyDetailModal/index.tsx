@@ -254,6 +254,17 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
             customerPurchaseFrequency={mergedGroupBuyOverviewDetail.customerPurchaseFrequency}
             onFrequencyClick={handleFrequencyClick}
             title="客户忠诚度分析"
+            tooltip={
+              <div style={{ maxWidth: 320, lineHeight: 1.5 }}>
+                <div>说明：</div>
+                <div>1）时间：仅统计当前选择的时间范围；若未选择则统计全部时间。</div>
+                <div>2）范围：同一供货商下、全部同名团购单合并计算。</div>
+                <div>3）订单：只计算已支付/已完成的订单。</div>
+                <div>4）去重：同一个客户只统计一次。</div>
+                <div>5）判定：多次购买指有效订单笔数≥2。</div>
+                <div>6）分布：按有效订单次数分段统计，如“3-4次”表示下过3到4单的客户数。</div>
+              </div>
+            }
           />
 
           {/* 地域销售分析 */}

@@ -1,5 +1,5 @@
-import { TeamOutlined } from '@ant-design/icons'
-import { Card, Col, Divider, Row, Statistic, Table } from 'antd'
+import { QuestionCircleOutlined, TeamOutlined } from '@ant-design/icons'
+import { Card, Col, Divider, Row, Statistic, Table, Tooltip } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import type { CustomerPurchaseFrequency } from 'fresh-shop-backend/types/dto'
 import React from 'react'
@@ -12,6 +12,8 @@ type CustomerLoyaltyAnalysisProps = {
   customerPurchaseFrequency: CustomerPurchaseFrequency[]
   onFrequencyClick?: (minFrequency: number, maxFrequency?: number | null) => void
   title?: string
+  // 标题问号提示内容（可选），支持字符串或JSX
+  tooltip?: React.ReactNode
 }
 
 /**
@@ -23,7 +25,8 @@ const CustomerLoyaltyAnalysis: React.FC<CustomerLoyaltyAnalysisProps> = ({
   multiPurchaseCustomerRatio,
   customerPurchaseFrequency,
   onFrequencyClick,
-  title = '客户忠诚度分析'
+  title = '客户忠诚度分析',
+  tooltip
 }) => {
   const formatLabel = (min: number, max?: number | null) => {
     if (max == null) return `${min}次及以上`
@@ -63,6 +66,14 @@ const CustomerLoyaltyAnalysis: React.FC<CustomerLoyaltyAnalysisProps> = ({
         <div className="flex h-12 items-center gap-2">
           <TeamOutlined className="text-purple-500" />
           <span className="text-lg font-medium">{title}</span>
+          {tooltip ? (
+            <Tooltip
+              title={tooltip}
+              placement="right"
+            >
+              <QuestionCircleOutlined className="text-gray-400" />
+            </Tooltip>
+          ) : null}
         </div>
       }
       size="small"
