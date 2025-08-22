@@ -6,7 +6,7 @@ import {
   UpOutlined,
   UserOutlined
 } from '@ant-design/icons'
-import { Button, Card, Col, Divider, Modal, Row, Statistic, Tag } from 'antd'
+import { Button, Card, Col, Divider, Modal, Row, Skeleton, Statistic, Tag } from 'antd'
 import dayjs from 'dayjs'
 import React, { useState } from 'react'
 
@@ -66,8 +66,20 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
       destroyOnHidden
     >
       {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <div>加载中...</div>
+        <div className="space-y-3 py-2">
+          <Skeleton
+            active
+            title={{ width: 200 }}
+            paragraph={{ rows: 1 }}
+          />
+          <Skeleton
+            active
+            paragraph={{ rows: 4 }}
+          />
+          <Skeleton
+            active
+            paragraph={{ rows: 8 }}
+          />
         </div>
       ) : consumptionDetail ? (
         <div className="!space-y-4">

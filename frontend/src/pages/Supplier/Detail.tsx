@@ -1,5 +1,5 @@
 import type { PopconfirmProps } from 'antd'
-import { Button, Flex, Image, notification, Popconfirm, Spin } from 'antd'
+import { Button, Flex, Image, notification, Popconfirm, Skeleton, Spin } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
@@ -50,132 +50,140 @@ export const Component = () => {
 
   return (
     <div className="w-full">
-      <Spin
-        spinning={getLoading}
-        size="large"
-        tip="加载中..."
-        className="w-full"
-      >
-        {/* Spin 调整大小和提示 */}
-        {/* 主要信息卡片 */}
-        <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
-          <h3 className="mb-4 flex flex-col justify-between border-b border-gray-100 pb-3 text-xl font-bold text-gray-800">
-            <div className="mb-3"> {supplier?.name || '加载中...'}</div>
-            <div className="flex items-center justify-between">
-              <Button
-                type="primary"
-                ghost
-                onClick={() => setDetailModalVisible(true)}
-              >
-                查看详细数据
-              </Button>
-              <Flex
-                gap="small"
-                wrap
-                justify="end"
-              >
+      {getLoading ? (
+        <div className="space-y-4">
+          <Skeleton
+            active
+            title={{ width: 160 }}
+            paragraph={{ rows: 2 }}
+          />
+          <Skeleton
+            active
+            paragraph={{ rows: 6 }}
+          />
+        </div>
+      ) : (
+        <>
+          {/* 主要信息卡片 */}
+          <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
+            <h3 className="mb-4 flex flex-col justify-between border-b border-gray-100 pb-3 text-xl font-bold text-gray-800">
+              <div className="mb-3"> {supplier?.name}</div>
+              <div className="flex items-center justify-between">
                 <Button
-                  color="primary"
-                  variant="outlined"
-                  onClick={() => setVisible(true)}
+                  type="primary"
+                  ghost
+                  onClick={() => setDetailModalVisible(true)}
                 >
-                  编辑
+                  查看详细数据
                 </Button>
-                <Popconfirm
-                  title={<div className="text-lg">确定要删除这个供货商吗？</div>}
-                  placement="left"
-                  onConfirm={confirm}
-                  okText="是"
-                  cancelText="否"
-                  okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
-                  cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
+                <Flex
+                  gap="small"
+                  wrap
+                  justify="end"
                 >
                   <Button
-                    color="danger"
-                    variant="solid"
+                    color="primary"
+                    variant="outlined"
+                    onClick={() => setVisible(true)}
                   >
-                    删除
+                    编辑
                   </Button>
-                </Popconfirm>
-              </Flex>
-            </div>
-          </h3>
-
-          {/* 信息列表 */}
-          <div className="space-y-3">
-            {/* 联系电话 */}
-            <div className="flex items-start text-base">
-              <span className="w-20 flex-shrink-0 font-medium text-gray-500">联系电话：</span>
-              <span className="word-break-all flex-grow break-words text-gray-700">
-                {supplier?.phone || <span className="italic text-gray-400">无</span>}
-              </span>
-            </div>
-
-            {/* 微信 */}
-            <div className="flex items-start text-base">
-              <span className="w-20 flex-shrink-0 font-medium text-gray-500">微信：</span>
-              <span className="word-break-all flex-grow break-words text-gray-700">
-                {supplier?.wechat || <span className="italic text-gray-400">无</span>}
-              </span>
-            </div>
-
-            {/* 备注 */}
-            <div className="flex items-start text-base">
-              <span className="w-20 flex-shrink-0 font-medium text-gray-500">备注：</span>
-              <span className="word-break-all flex-grow break-words text-gray-700">
-                {supplier?.description || <span className="italic text-gray-400">无</span>}
-              </span>
-            </div>
-
-            {/* 评价 */}
-            <div className="flex items-start text-base">
-              <span className="w-20 flex-shrink-0 font-medium text-gray-500">评价：</span>
-              <span className="word-break-all flex-grow break-words text-gray-700">
-                {supplier?.rating || <span className="italic text-gray-400">无</span>}
-              </span>
-            </div>
-          </div>
-        </div>
-        {/* 图片展示区卡片 */}
-        {images.length > 0 && (
-          <div className="rounded-lg bg-white p-4 shadow-sm">
-            <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
-              相关图片
-            </h3>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-              {/* 更灵活的响应式网格布局 */}
-              <Image.PreviewGroup>
-                {/* 使用 PreviewGroup 允许图片预览 */}
-                {images.map((image, index) => (
-                  <div
-                    key={index}
-                    className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-gray-100"
+                  <Popconfirm
+                    title={<div className="text-lg">确定要删除这个供货商吗？</div>}
+                    placement="left"
+                    onConfirm={confirm}
+                    okText="是"
+                    cancelText="否"
+                    okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
+                    cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
                   >
-                    <Image
-                      src={image}
-                      alt={`供货商图片 ${index + 1}`}
-                      className="h-full w-full object-cover" // 图片覆盖整个区域
-                      fallback="/placeholder.svg" // 自定义加载失败的占位符
-                      placeholder={
-                        <div className="flex h-full w-full items-center justify-center bg-gray-200">
-                          <Spin size="small" /> {/* 图片加载时的菊花图 */}
-                        </div>
-                      }
-                    />
-                  </div>
-                ))}
-              </Image.PreviewGroup>
+                    <Button
+                      color="danger"
+                      variant="solid"
+                    >
+                      删除
+                    </Button>
+                  </Popconfirm>
+                </Flex>
+              </div>
+            </h3>
+
+            {/* 信息列表 */}
+            <div className="space-y-3">
+              {/* 联系电话 */}
+              <div className="flex items-start text-base">
+                <span className="w-20 flex-shrink-0 font-medium text-gray-500">联系电话：</span>
+                <span className="word-break-all flex-grow break-words text-gray-700">
+                  {supplier?.phone || <span className="italic text-gray-400">无</span>}
+                </span>
+              </div>
+
+              {/* 微信 */}
+              <div className="flex items-start text-base">
+                <span className="w-20 flex-shrink-0 font-medium text-gray-500">微信：</span>
+                <span className="word-break-all flex-grow break-words text-gray-700">
+                  {supplier?.wechat || <span className="italic text-gray-400">无</span>}
+                </span>
+              </div>
+
+              {/* 备注 */}
+              <div className="flex items-start text-base">
+                <span className="w-20 flex-shrink-0 font-medium text-gray-500">备注：</span>
+                <span className="word-break-all flex-grow break-words text-gray-700">
+                  {supplier?.description || <span className="italic text-gray-400">无</span>}
+                </span>
+              </div>
+
+              {/* 评价 */}
+              <div className="flex items-start text-base">
+                <span className="w-20 flex-shrink-0 font-medium text-gray-500">评价：</span>
+                <span className="word-break-all flex-grow break-words text-gray-700">
+                  {supplier?.rating || <span className="italic text-gray-400">无</span>}
+                </span>
+              </div>
             </div>
           </div>
-        )}
-        {/* 如果没有数据，显示提示 */}
-        {!getLoading && !supplier?.id && (
-          <div className="py-8 text-center text-gray-500">
-            <p className="mb-2">暂无供货商信息。</p>
-            <p className="text-sm">请检查ID或稍后重试。</p>
-          </div>
-        )}
-      </Spin>
+          {/* 图片展示区卡片 */}
+          {images.length > 0 && (
+            <div className="rounded-lg bg-white p-4 shadow-sm">
+              <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
+                相关图片
+              </h3>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                {/* 更灵活的响应式网格布局 */}
+                <Image.PreviewGroup>
+                  {/* 使用 PreviewGroup 允许图片预览 */}
+                  {images.map((image, index) => (
+                    <div
+                      key={index}
+                      className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-gray-100"
+                    >
+                      <Image
+                        src={image}
+                        alt={`供货商图片 ${index + 1}`}
+                        className="h-full w-full object-cover" // 图片覆盖整个区域
+                        fallback="/placeholder.svg" // 自定义加载失败的占位符
+                        placeholder={
+                          <div className="flex h-full w-full items-center justify-center bg-gray-200">
+                            <Spin size="small" /> {/* 图片加载时的菊花图 */}
+                          </div>
+                        }
+                      />
+                    </div>
+                  ))}
+                </Image.PreviewGroup>
+              </div>
+            </div>
+          )}
+          {/* 如果没有数据，显示提示 */}
+          {!getLoading && !supplier?.id && (
+            <div className="py-8 text-center text-gray-500">
+              <p className="mb-2">暂无供货商信息。</p>
+              <p className="text-sm">请检查ID或稍后重试。</p>
+            </div>
+          )}
+        </>
+      )}
       {visible && (
         <Modify
           id={id}

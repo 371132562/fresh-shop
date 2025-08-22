@@ -1,6 +1,6 @@
 import { TrophyOutlined } from '@ant-design/icons'
 import { QuestionCircleOutlined } from '@ant-design/icons'
-import { Card, Col, Modal, Row, Tooltip } from 'antd'
+import { Card, Col, Modal, Row, Skeleton, Tooltip } from 'antd'
 import dayjs from 'dayjs'
 import type { MergedGroupBuyOverviewDetailParams } from 'fresh-shop-backend/types/dto'
 import React, { useEffect } from 'react'
@@ -90,8 +90,20 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
       }}
     >
       {mergedGroupBuyOverviewDetailLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div>加载中...</div>
+        <div className="space-y-3 py-2">
+          <Skeleton
+            active
+            title={{ width: 200 }}
+            paragraph={{ rows: 1 }}
+          />
+          <Skeleton
+            active
+            paragraph={{ rows: 4 }}
+          />
+          <Skeleton
+            active
+            paragraph={{ rows: 6 }}
+          />
         </div>
       ) : mergedGroupBuyOverviewDetail ? (
         <div className="!space-y-2">
