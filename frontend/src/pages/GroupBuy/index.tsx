@@ -8,7 +8,7 @@ import {
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
-import MergedGroupBuyDetailModal from '@/components/SalesDataAnalysis/MergedGroupBuyDetailModal'
+import MergedGroupBuyDetailModal from '@/pages/Analysis/components/MergedGroupBuyDetailModal'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import { OrderStatus, OrderStatusMap, OrderStatusOptions } from '@/stores/orderStore.ts'
 import useProductStore from '@/stores/productStore.ts'

@@ -4,15 +4,16 @@ import dayjs from 'dayjs'
 import type { SupplierOverviewDetailParams } from 'fresh-shop-backend/types/dto'
 import React, { useEffect } from 'react'
 
-import {
-  CustomerLoyaltyCard,
-  CustomerStatsCard,
-  GroupBuyHistoryCard,
-  ProductAnalysisCard,
-  RegionalSalesCard
-} from '@/components/SalesDataAnalysis'
-import CustomerListModal from '@/components/SalesDataAnalysis/CustomerListModal'
 import useAnalysisStore from '@/stores/analysisStore'
+
+import {
+  CustomerLoyaltyAnalysis,
+  CustomerStatsAnalysis,
+  GroupBuyHistoryAnalysis,
+  ProductAnalysis,
+  RegionalSalesAnalysis
+} from '../'
+import CustomerListModal from '../CustomerAnalysis/CustomerListModal'
 
 type SupplierDetailModalProps = {
   visible: boolean
@@ -212,27 +213,27 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
           </Card>
 
           {/* 商品分析 */}
-          <ProductAnalysisCard
+          <ProductAnalysis
             topProducts={supplierOverviewDetail.topProducts}
             productCategoryStats={supplierOverviewDetail.productCategoryStats}
             title="商品分析"
           />
 
           {/* 团购历史 */}
-          <GroupBuyHistoryCard
+          <GroupBuyHistoryAnalysis
             groupBuyHistory={supplierOverviewDetail.groupBuyHistory}
             title="团购历史"
           />
 
           {/* 客户统计信息 */}
-          <CustomerStatsCard
+          <CustomerStatsAnalysis
             uniqueCustomerCount={supplierOverviewDetail.uniqueCustomerCount}
             averageCustomerOrderValue={supplierOverviewDetail.averageCustomerOrderValue}
             title="客户统计"
           />
 
           {/* 客户忠诚度分析 */}
-          <CustomerLoyaltyCard
+          <CustomerLoyaltyAnalysis
             multiPurchaseCustomerCount={supplierOverviewDetail.multiPurchaseCustomerCount}
             multiPurchaseCustomerRatio={supplierOverviewDetail.multiPurchaseCustomerRatio}
             customerPurchaseFrequency={supplierOverviewDetail.customerPurchaseFrequency}
@@ -241,7 +242,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
           />
 
           {/* 地域销售分析 */}
-          <RegionalSalesCard
+          <RegionalSalesAnalysis
             regionalSales={supplierOverviewDetail.regionalSales}
             onRegionalClick={handleRegionalClick}
             title="地域销售分析"

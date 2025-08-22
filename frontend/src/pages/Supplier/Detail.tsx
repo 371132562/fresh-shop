@@ -3,7 +3,7 @@ import { Button, Flex, Image, notification, Popconfirm, Spin } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
-import SupplierDetailModal from '@/components/SalesDataAnalysis/SupplierDetailModal'
+import SupplierDetailModal from '@/pages/Analysis/components/SupplierDetailModal'
 import Modify from '@/pages/Supplier/Modify.tsx'
 import useSupplierStore from '@/stores/supplierStore.ts'
 import { buildImageUrl } from '@/utils'

@@ -6,7 +6,7 @@ import React from 'react'
 
 import PurchaseFrequencyChart from './PurchaseFrequencyChart'
 
-type CustomerLoyaltyCardProps = {
+type CustomerLoyaltyAnalysisProps = {
   multiPurchaseCustomerCount: number
   multiPurchaseCustomerRatio: number
   customerPurchaseFrequency: CustomerPurchaseFrequency[]
@@ -15,10 +15,10 @@ type CustomerLoyaltyCardProps = {
 }
 
 /**
- * 客户忠诚度分析公共组件
+ * 客户忠诚度分析组件
  * 展示多次购买客户统计和购买次数分布
  */
-const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
+const CustomerLoyaltyAnalysis: React.FC<CustomerLoyaltyAnalysisProps> = ({
   multiPurchaseCustomerCount,
   multiPurchaseCustomerRatio,
   customerPurchaseFrequency,
@@ -122,4 +122,4 @@ const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
   )
 }
 
-export default CustomerLoyaltyCard
+export default CustomerLoyaltyAnalysis

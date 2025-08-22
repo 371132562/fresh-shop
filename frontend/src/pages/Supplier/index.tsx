@@ -4,7 +4,7 @@ import type { SupplierListItem } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
-import SupplierDetailModal from '@/components/SalesDataAnalysis/SupplierDetailModal'
+import SupplierDetailModal from '@/pages/Analysis/components/SupplierDetailModal'
 import useSupplierStore from '@/stores/supplierStore.ts'
 import { validatePhoneNumber } from '@/utils'
 

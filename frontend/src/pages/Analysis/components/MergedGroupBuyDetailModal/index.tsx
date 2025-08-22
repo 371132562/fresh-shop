@@ -4,14 +4,15 @@ import dayjs from 'dayjs'
 import type { MergedGroupBuyOverviewDetailParams } from 'fresh-shop-backend/types/dto'
 import React, { useEffect } from 'react'
 
-import {
-  CustomerLoyaltyCard,
-  CustomerStatsCard,
-  GroupBuyHistoryCard,
-  RegionalSalesCard
-} from '@/components/SalesDataAnalysis'
-import CustomerListModal from '@/components/SalesDataAnalysis/CustomerListModal'
 import useAnalysisStore from '@/stores/analysisStore'
+
+import {
+  CustomerLoyaltyAnalysis,
+  CustomerStatsAnalysis,
+  GroupBuyHistoryAnalysis,
+  RegionalSalesAnalysis
+} from '../'
+import CustomerListModal from '../CustomerAnalysis/CustomerListModal'
 
 type MergedGroupBuyDetailModalProps = {
   visible: boolean
@@ -234,20 +235,20 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
           </Card>
 
           {/* 团购发起历史 */}
-          <GroupBuyHistoryCard
+          <GroupBuyHistoryAnalysis
             groupBuyHistory={mergedGroupBuyOverviewDetail?.groupBuyLaunchHistory || []}
             title="团购历史"
           />
 
           {/* 客户统计信息 */}
-          <CustomerStatsCard
+          <CustomerStatsAnalysis
             uniqueCustomerCount={mergedGroupBuyOverviewDetail.uniqueCustomerCount}
             averageCustomerOrderValue={mergedGroupBuyOverviewDetail.averageCustomerOrderValue}
             title="客户统计"
           />
 
           {/* 客户忠诚度分析 */}
-          <CustomerLoyaltyCard
+          <CustomerLoyaltyAnalysis
             multiPurchaseCustomerCount={mergedGroupBuyOverviewDetail.multiPurchaseCustomerCount}
             multiPurchaseCustomerRatio={mergedGroupBuyOverviewDetail.multiPurchaseCustomerRatio}
             customerPurchaseFrequency={mergedGroupBuyOverviewDetail.customerPurchaseFrequency}
@@ -256,7 +257,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
           />
 
           {/* 地域销售分析 */}
-          <RegionalSalesCard
+          <RegionalSalesAnalysis
             regionalSales={mergedGroupBuyOverviewDetail.regionalSales}
             onRegionalClick={handleRegionalClick}
             title="地域销售分析"

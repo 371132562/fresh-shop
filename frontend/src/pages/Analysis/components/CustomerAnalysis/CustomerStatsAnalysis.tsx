@@ -2,17 +2,17 @@ import { UserOutlined } from '@ant-design/icons'
 import { Card, Col, Row, Statistic } from 'antd'
 import React from 'react'
 
-type CustomerStatsCardProps = {
+type CustomerStatsAnalysisProps = {
   uniqueCustomerCount: number
   averageCustomerOrderValue: number
   title?: string
 }
 
 /**
- * 客户统计公共组件
+ * 客户统计分析组件
  * 展示基础客户统计信息
  */
-const CustomerStatsCard: React.FC<CustomerStatsCardProps> = ({
+const CustomerStatsAnalysis: React.FC<CustomerStatsAnalysisProps> = ({
   uniqueCustomerCount,
   averageCustomerOrderValue,
   title = '客户统计'
@@ -51,4 +51,4 @@ const CustomerStatsCard: React.FC<CustomerStatsCardProps> = ({
   )
 }
 
-export default CustomerStatsCard
+export default CustomerStatsAnalysis

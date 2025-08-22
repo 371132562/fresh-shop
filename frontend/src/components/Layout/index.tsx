@@ -17,7 +17,7 @@ import { useOutlet } from 'react-router'
 import { NavLink } from 'react-router'
 
 import ErrorPage from '@/components/Error'
-import OrderStatsButton from '@/components/OrderStatsFloatButton'
+import OrderStatsButton from '@/components/OrderStatsButton'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import { buildImageUrl } from '@/utils'
 
@@ -161,7 +161,7 @@ export const Component: FC = () => {
       >
         {/* 头部：固定顶部，深色背景，居中，有阴影，顶部圆角 */}
         <header className="sticky top-0 z-10 rounded-b-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-1 shadow-md">
-          <div className="flex items-center justify-between">
+          <div className="relative flex h-16 items-center">
             {/* 左侧按钮组：菜单和订单统计 */}
             <div className="flex items-center space-x-2">
               <div
@@ -174,13 +174,13 @@ export const Component: FC = () => {
               </div>
               <OrderStatsButton className="cursor-pointer rounded-full p-2 text-white transition duration-200 active:bg-blue-600/50" />
             </div>
-            {/* 标题：居中，白色字体，更粗的字体 */}
-            <p className="flex h-16 items-center justify-center text-2xl font-bold tracking-wide text-white">
+            {/* 标题：绝对定位居中，白色字体，更粗的字体 */}
+            <p className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl font-bold tracking-wide text-white">
               团购管理平台
             </p>
-            {/* 占位符，保持flex布局两端对齐 */}
+            {/* 右侧设置按钮 */}
             <div
-              className="cursor-pointer rounded-full p-2 text-white transition duration-200 active:bg-blue-600/50"
+              className="absolute right-0 cursor-pointer rounded-full p-2 text-white transition duration-200 active:bg-blue-600/50"
               onClick={() => {
                 setSettingOpen(true)
               }}

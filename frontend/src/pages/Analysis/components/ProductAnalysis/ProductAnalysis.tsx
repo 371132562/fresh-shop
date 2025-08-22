@@ -3,10 +3,10 @@ import { Card, Col, Row } from 'antd'
 import type { ProductCategoryStat, TopProductItem } from 'fresh-shop-backend/types/dto'
 import React from 'react'
 
-import ProductCategoryCard from './ProductCategoryCard'
-import TopProductsCard from './TopProductsCard'
+import ProductCategoryAnalysis from './ProductCategoryAnalysis'
+import TopProductsAnalysis from './TopProductsAnalysis'
 
-type ProductAnalysisCardProps = {
+type ProductAnalysisProps = {
   topProducts: TopProductItem[]
   productCategoryStats: ProductCategoryStat[]
   title?: string
@@ -17,7 +17,7 @@ type ProductAnalysisCardProps = {
  * 商品分析综合组件
  * 展示热销产品排行和产品分类统计
  */
-const ProductAnalysisCard: React.FC<ProductAnalysisCardProps> = ({
+const ProductAnalysis: React.FC<ProductAnalysisProps> = ({
   topProducts,
   productCategoryStats,
   title = '商品分析',
@@ -37,14 +37,14 @@ const ProductAnalysisCard: React.FC<ProductAnalysisCardProps> = ({
     >
       <Row gutter={16}>
         <Col span={12}>
-          <TopProductsCard
+          <TopProductsAnalysis
             data={topProducts}
             title="热销商品排行"
             loading={loading}
           />
         </Col>
         <Col span={12}>
-          <ProductCategoryCard
+          <ProductCategoryAnalysis
             data={productCategoryStats}
             title="商品分类统计"
             loading={loading}
@@ -55,4 +55,4 @@ const ProductAnalysisCard: React.FC<ProductAnalysisCardProps> = ({
   )
 }
 
-export default ProductAnalysisCard
+export default ProductAnalysis

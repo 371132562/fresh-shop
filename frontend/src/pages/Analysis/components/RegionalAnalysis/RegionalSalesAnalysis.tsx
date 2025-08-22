@@ -6,17 +6,17 @@ import React from 'react'
 
 import RegionalSalesChart from './RegionalSalesChart'
 
-type RegionalSalesCardProps = {
+type RegionalSalesAnalysisProps = {
   regionalSales: RegionalSalesItem[]
   onRegionalClick?: (addressId: string, addressName: string) => void
   title?: string
 }
 
 /**
- * 地域销售分析公共组件
+ * 地域销售分析组件
  * 展示地域销售分布图表和表格
  */
-const RegionalSalesCard: React.FC<RegionalSalesCardProps> = ({
+const RegionalSalesAnalysis: React.FC<RegionalSalesAnalysisProps> = ({
   regionalSales,
   onRegionalClick,
   title = '地域销售分析'
@@ -89,4 +89,4 @@ const RegionalSalesCard: React.FC<RegionalSalesCardProps> = ({
   )
 }
 
-export default RegionalSalesCard
+export default RegionalSalesAnalysis

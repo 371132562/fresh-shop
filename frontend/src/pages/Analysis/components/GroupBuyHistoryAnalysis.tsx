@@ -5,16 +5,16 @@ import dayjs from 'dayjs'
 import type { GroupBuyLaunchHistory } from 'fresh-shop-backend/types/dto'
 import React, { useState } from 'react'
 
-type GroupBuyHistoryCardProps = {
+type GroupBuyHistoryAnalysisProps = {
   groupBuyHistory: GroupBuyLaunchHistory[]
   title?: string
 }
 
 /**
- * 团购发起历史公共组件
+ * 团购发起历史分析组件
  * 展示团购发起历史统计和详细记录
  */
-const GroupBuyHistoryCard: React.FC<GroupBuyHistoryCardProps> = ({
+const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
   groupBuyHistory,
   title = '团购历史'
 }) => {
@@ -212,4 +212,4 @@ const GroupBuyHistoryCard: React.FC<GroupBuyHistoryCardProps> = ({
   )
 }
 
-export default GroupBuyHistoryCard
+export default GroupBuyHistoryAnalysis

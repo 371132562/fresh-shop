@@ -8,8 +8,9 @@ import type {
 } from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
 
-import SupplierDetailModal from '@/components/SalesDataAnalysis/SupplierDetailModal'
 import useAnalysisStore from '@/stores/analysisStore'
+
+import SupplierDetailModal from './SupplierDetailModal'
 
 type SupplierOverviewProps = {
   startDate: Date

@@ -8,7 +8,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
-import MergedGroupBuyDetailModal from '@/components/SalesDataAnalysis/MergedGroupBuyDetailModal'
+import MergedGroupBuyDetailModal from '@/pages/Analysis/components/MergedGroupBuyDetailModal'
 import Modify from '@/pages/GroupBuy/Modify.tsx'
 import OrderModify from '@/pages/Order/Modify.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'

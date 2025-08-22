@@ -8,9 +8,10 @@ import type {
 } from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
 
-import MergedGroupBuyDetailModal from '@/components/SalesDataAnalysis/MergedGroupBuyDetailModal'
 import useAnalysisStore from '@/stores/analysisStore'
 import useSupplierStore from '@/stores/supplierStore'
+
+import MergedGroupBuyDetailModal from './MergedGroupBuyDetailModal'
 
 type MergedGroupBuyOverviewProps = {
   startDate: Date
