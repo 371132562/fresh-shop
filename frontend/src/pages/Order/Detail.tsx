@@ -104,6 +104,13 @@ export const Component = () => {
                 wrap
                 justify="end"
               >
+                <Button
+                  color="primary"
+                  variant="outlined"
+                  onClick={() => setVisible(true)}
+                >
+                  编辑
+                </Button>
                 {order?.status === OrderStatus.COMPLETED && (
                   <Popconfirm
                     title={<div className="text-lg">确定要退款这个订单吗？</div>}
@@ -122,13 +129,6 @@ export const Component = () => {
                     </Button>
                   </Popconfirm>
                 )}
-                <Button
-                  color="primary"
-                  variant="outlined"
-                  onClick={() => setVisible(true)}
-                >
-                  编辑
-                </Button>
                 <Popconfirm
                   title={<div className="text-lg">确定要删除这个订单吗？</div>}
                   onConfirm={confirm}
