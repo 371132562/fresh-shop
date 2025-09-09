@@ -1,5 +1,5 @@
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
-import { Button, FloatButton, Form, List, Modal, Select, Tag } from 'antd'
+import { Button, FloatButton, Form, List, Modal, Popconfirm, Select, Tag } from 'antd'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
@@ -26,6 +26,10 @@ export const Component = () => {
   const allGroupBuy = useGroupBuyStore(state => state.allGroupBuy)
   const getAllGroupBuy = useGroupBuyStore(state => state.getAllGroupBuy)
   const getAllGroupBuyLoading = useGroupBuyStore(state => state.getAllGroupBuyLoading)
+  const updateOrder = useOrderStore(state => state.updateOrder)
+  const canUpdateOrderStatus = useOrderStore(state => state.canUpdateOrderStatus)
+  const getNextOrderStatusLabel = useOrderStore(state => state.getNextOrderStatusLabel)
+  const handleUpdateOrderStatus = useOrderStore(state => state.handleUpdateOrderStatus)
 
   useEffect(() => {
     getAllCustomer()
@@ -68,7 +72,7 @@ export const Component = () => {
     handleCancel()
   }
 
-  const filterOption = (input: string, option: any) => {
+  const filterOption = (input: string, option?: { children?: string }) => {
     return (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
   }
 
@@ -105,47 +109,85 @@ export const Component = () => {
             }
           }}
           dataSource={ordersList}
-          renderItem={item => (
-            <List.Item>
-              <List.Item.Meta
-                title={
-                  <NavLink to={`/order/detail/${item.id}`}>
-                    <Button
-                      type="link"
-                      style={{ padding: 0 }}
-                    >
-                      <span className="text-lg">{item.customer.name}</span>
-                      <Tag color={OrderStatusMap[item.status].color}>
-                        {OrderStatusMap[item.status].label}
-                      </Tag>
-                    </Button>
-                  </NavLink>
+          renderItem={item => {
+            const nextStatusLabel = getNextOrderStatusLabel(item.status)
+            const canUpdate = canUpdateOrderStatus(item.status)
+
+            return (
+              <List.Item
+                actions={
+                  canUpdate
+                    ? [
+                        <Popconfirm
+                          key="update-status"
+                          title={
+                            <div className="text-lg">
+                              确定要将订单状态变更为{' '}
+                              <span className="text-blue-500">{nextStatusLabel}</span> 吗？
+                            </div>
+                          }
+                          placement="left"
+                          onConfirm={() =>
+                            handleUpdateOrderStatus(item, updateOrder, () => {
+                              // 更新成功后重新获取订单列表和统计数据
+                              pageChange()
+                            })
+                          }
+                          okText="确定"
+                          cancelText="取消"
+                          okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
+                          cancelButtonProps={{
+                            size: 'large',
+                            color: 'primary',
+                            variant: 'outlined'
+                          }}
+                        >
+                          <Button type="primary">更新状态</Button>
+                        </Popconfirm>
+                      ]
+                    : []
                 }
-                description={
-                  <>
-                    {item.groupBuy?.name && (
-                      <NavLink to={`/groupBuy/detail/${item.groupBuy.id}`}>
-                        <div className="mb-1 font-medium text-gray-800">
-                          团购单：<span className="text-blue-500">{item.groupBuy.name}</span>
-                          {item.groupBuy.groupBuyStartDate && (
-                            <span className="ml-2 text-sm text-gray-500">
-                              ({'发起时间：' + formatDate(item.groupBuy.groupBuyStartDate)})
-                            </span>
-                          )}
+              >
+                <List.Item.Meta
+                  title={
+                    <NavLink to={`/order/detail/${item.id}`}>
+                      <Button
+                        type="link"
+                        style={{ padding: 0 }}
+                      >
+                        <span className="text-lg">{item.customer.name}</span>
+                        <Tag color={OrderStatusMap[item.status].color}>
+                          {OrderStatusMap[item.status].label}
+                        </Tag>
+                      </Button>
+                    </NavLink>
+                  }
+                  description={
+                    <>
+                      {item.groupBuy?.name && (
+                        <NavLink to={`/groupBuy/detail/${item.groupBuy.id}`}>
+                          <div className="mb-1 font-medium text-gray-800">
+                            团购单：<span className="text-blue-500">{item.groupBuy.name}</span>
+                            {item.groupBuy.groupBuyStartDate && (
+                              <span className="ml-2 text-sm text-gray-500">
+                                ({'发起时间：' + formatDate(item.groupBuy.groupBuyStartDate)})
+                              </span>
+                            )}
+                          </div>
+                        </NavLink>
+                      )}
+                      {item.quantity && (
+                        <div className="mt-1 font-medium text-gray-800">
+                          购买数量：<span className="text-blue-500">{item.quantity}</span>
                         </div>
-                      </NavLink>
-                    )}
-                    {item.quantity && (
-                      <div className="mt-1 font-medium text-gray-800">
-                        购买数量：<span className="text-blue-500">{item.quantity}</span>
-                      </div>
-                    )}
-                    {item.description && <div className="text-gray-600">{item.description}</div>}
-                  </>
-                }
-              />
-            </List.Item>
-          )}
+                      )}
+                      {item.description && <div className="text-gray-600">{item.description}</div>}
+                    </>
+                  }
+                />
+              </List.Item>
+            )
+          }}
         />
       </section>
       <FloatButton

@@ -1,3 +1,4 @@
+import { notification } from 'antd'
 import {
   ListByPage,
   Order,
@@ -19,6 +20,20 @@ import {
   orderUpdateApi
 } from '@/services/apis.ts'
 import http from '@/services/base.ts'
+
+// 后端 OrderStatus 类型
+type BackendOrderStatus = 'NOTPAID' | 'PAID' | 'COMPLETED' | 'REFUNDED'
+
+// 将后端 OrderStatus 转换为前端 OrderStatus
+const convertBackendToFrontendStatus = (backendStatus: BackendOrderStatus): OrderStatus => {
+  const statusMap: Record<BackendOrderStatus, OrderStatus> = {
+    NOTPAID: OrderStatus.NOTPAID,
+    PAID: OrderStatus.PAID,
+    COMPLETED: OrderStatus.COMPLETED,
+    REFUNDED: OrderStatus.REFUNDED
+  }
+  return statusMap[backendStatus]
+}
 
 export enum OrderStatus {
   NOTPAID = 'NOTPAID',
@@ -82,6 +97,17 @@ type OrderStore = {
   // 订单统计相关方法
   getOrderStats: () => Promise<void>
   clearOrderStats: () => void
+
+  // 订单状态工具函数
+  getNextOrderStatus: (currentStatus: BackendOrderStatus) => OrderStatus | null
+  canUpdateOrderStatus: (currentStatus: BackendOrderStatus) => boolean
+  getNextOrderStatusLabel: (currentStatus: BackendOrderStatus) => string
+  handleUpdateOrderStatus: (
+    order: Order,
+    updateOrderFn: (data: { id: string; status: OrderStatus }) => Promise<boolean>,
+    onSuccess?: () => void,
+    onError?: () => void
+  ) => Promise<void>
 }
 
 const useOrderStore = create<OrderStore>((set, get) => ({
@@ -141,6 +167,7 @@ const useOrderStore = create<OrderStore>((set, get) => ({
     } finally {
       set({ createLoading: false })
       get().getOrderList(get().pageParams)
+      get().getOrderStats()
     }
   },
 
@@ -156,6 +183,8 @@ const useOrderStore = create<OrderStore>((set, get) => ({
       set({ createLoading: false })
       // get().getOrderList(get().pageParams)
       get().getOrder({ id: data.id })
+      // 更新订单后自动刷新统计数据
+      get().getOrderStats()
     }
   },
 
@@ -235,6 +264,65 @@ const useOrderStore = create<OrderStore>((set, get) => ({
   },
   clearOrderStats: () => {
     set({ orderStats: null })
+  },
+
+  // 订单状态工具函数实现
+  getNextOrderStatus: (currentStatus: BackendOrderStatus): OrderStatus | null => {
+    const frontendStatus = convertBackendToFrontendStatus(currentStatus)
+    const orderStatusValues = Object.values(OrderStatus) as OrderStatus[]
+    const currentIndex = orderStatusValues.findIndex(status => status === frontendStatus)
+
+    if (currentIndex < orderStatusValues.length - 1) {
+      return orderStatusValues[currentIndex + 1]
+    }
+
+    return null
+  },
+
+  canUpdateOrderStatus: (currentStatus: BackendOrderStatus): boolean => {
+    return get().getNextOrderStatus(currentStatus) !== null
+  },
+
+  getNextOrderStatusLabel: (currentStatus: BackendOrderStatus): string => {
+    const nextStatus = get().getNextOrderStatus(currentStatus)
+    return nextStatus ? OrderStatusMap[nextStatus].label : '无'
+  },
+
+  handleUpdateOrderStatus: async (
+    order: Order,
+    updateOrderFn: (data: { id: string; status: OrderStatus }) => Promise<boolean>,
+    onSuccess?: () => void,
+    onError?: () => void
+  ) => {
+    if (!order.id) return
+
+    const nextStatus = get().getNextOrderStatus(order.status as BackendOrderStatus)
+    if (!nextStatus) {
+      notification.info({
+        message: '提示',
+        description: '订单已是最终状态，无法继续修改'
+      })
+      return
+    }
+
+    const res = await updateOrderFn({
+      id: order.id,
+      status: nextStatus
+    })
+
+    if (res) {
+      notification.success({
+        message: '成功',
+        description: `订单状态已更新为：${OrderStatusMap[nextStatus].label}`
+      })
+      onSuccess?.()
+    } else {
+      notification.error({
+        message: '失败',
+        description: '更新订单状态失败'
+      })
+      onError?.()
+    }
   }
 }))
 

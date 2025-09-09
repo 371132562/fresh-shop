@@ -1,18 +1,6 @@
 import { CheckCircleOutlined, ClockCircleOutlined, ShoppingCartOutlined } from '@ant-design/icons'
-import {
-  Badge,
-  Button,
-  Card,
-  Col,
-  Divider,
-  Modal,
-  notification,
-  Popconfirm,
-  Row,
-  Space
-} from 'antd'
+import { Badge, Button, Card, Col, Divider, Modal, Popconfirm, Row, Space } from 'antd'
 import dayjs from 'dayjs'
-import { OrderStatsItem } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -33,6 +21,9 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
   const orderStats = useOrderStore(state => state.orderStats)
   const getOrderStats = useOrderStore(state => state.getOrderStats)
   const updateOrder = useOrderStore(state => state.updateOrder)
+  const canUpdateOrderStatus = useOrderStore(state => state.canUpdateOrderStatus)
+  const getNextOrderStatusLabel = useOrderStore(state => state.getNextOrderStatusLabel)
+  const handleUpdateOrderStatus = useOrderStore(state => state.handleUpdateOrderStatus)
 
   // 组件挂载时获取订单统计数据
   useEffect(() => {
@@ -45,47 +36,12 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
   // 处理悬浮按钮点击
   const handleFloatButtonClick = () => {
     setModalVisible(true)
-    // 点击时刷新数据
-    getOrderStats()
   }
 
   // 处理订单条目点击，跳转到团购单详情页
   const handleOrderClick = (groupBuyId: string) => {
     navigate(`/groupBuy/detail/${groupBuyId}`)
     setModalVisible(false)
-  }
-
-  // 处理订单状态更新
-  const handleUpdateOrderStatus = async (order: OrderStatsItem) => {
-    if (!order.id) return
-    // 统一使用前端 OrderStatus 类型，避免类型不兼容
-    const orderStatusValues = Object.values(OrderStatus) as OrderStatus[]
-    const currentIndex = orderStatusValues.findIndex(status => status === order.status)
-    if (currentIndex < orderStatusValues.length - 1) {
-      const nextStatus = orderStatusValues[currentIndex + 1]
-      const res = await updateOrder({
-        id: order.id,
-        status: nextStatus
-      })
-      if (res) {
-        notification.success({
-          message: '成功',
-          description: `订单状态已更新为：${OrderStatusMap[nextStatus].label}`
-        })
-        // 重新获取订单统计数据
-        await getOrderStats()
-      } else {
-        notification.error({
-          message: '失败',
-          description: '更新订单状态失败'
-        })
-      }
-    } else {
-      notification.info({
-        message: '提示',
-        description: '订单已是最终状态，无法继续修改'
-      })
-    }
   }
 
   // 如果没有待处理订单，不显示悬浮按钮
@@ -122,8 +78,9 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
         onCancel={() => setModalVisible(false)}
         footer={null}
         width={800}
-        centered
-        className="!top-5"
+        style={{
+          top: 20
+        }}
       >
         <Space
           direction="vertical"
@@ -187,46 +144,40 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="rounded-xl bg-orange-500 px-2 py-1 text-xs font-medium text-white">
+                            <div
+                              className="rounded-xl px-2 py-1 text-xs font-medium text-white"
+                              style={{ backgroundColor: OrderStatusMap[OrderStatus.NOTPAID].color }}
+                            >
                               待付款
                             </div>
-                            {(() => {
-                              const orderStatusValues = Object.values(OrderStatus) as OrderStatus[]
-                              const currentIndex = orderStatusValues.findIndex(
-                                status => status === order.status
-                              )
-                              const nextStatusLabel =
-                                currentIndex < orderStatusValues.length - 1
-                                  ? OrderStatusMap[orderStatusValues[currentIndex + 1]].label
-                                  : '无'
-                              return (
-                                <Popconfirm
-                                  title={
-                                    <div className="text-lg">
-                                      确定要将订单状态变更为{' '}
-                                      <span className="text-blue-500">{nextStatusLabel}</span> 吗？
-                                    </div>
-                                  }
-                                  onConfirm={e => {
-                                    e?.stopPropagation()
-                                    handleUpdateOrderStatus(order)
-                                  }}
-                                  onCancel={e => e?.stopPropagation()}
-                                  okText="确定"
-                                  cancelText="取消"
-                                  disabled={currentIndex === orderStatusValues.length - 1}
+                            {canUpdateOrderStatus(order.status) && (
+                              <Popconfirm
+                                title={
+                                  <div className="text-lg">
+                                    确定要将订单状态变更为{' '}
+                                    <span className="text-blue-500">
+                                      {getNextOrderStatusLabel(order.status)}
+                                    </span>{' '}
+                                    吗？
+                                  </div>
+                                }
+                                onConfirm={e => {
+                                  e?.stopPropagation()
+                                  handleUpdateOrderStatus(order, updateOrder)
+                                }}
+                                onCancel={e => e?.stopPropagation()}
+                                okText="确定"
+                                cancelText="取消"
+                              >
+                                <Button
+                                  type="primary"
+                                  size="small"
+                                  onClick={e => e.stopPropagation()}
                                 >
-                                  <Button
-                                    type="primary"
-                                    size="small"
-                                    disabled={currentIndex === orderStatusValues.length - 1}
-                                    onClick={e => e.stopPropagation()}
-                                  >
-                                    更新状态
-                                  </Button>
-                                </Popconfirm>
-                              )
-                            })()}
+                                  更新状态
+                                </Button>
+                              </Popconfirm>
+                            )}
                           </div>
                         </div>
                       </Card>
@@ -267,41 +218,40 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="rounded-xl bg-green-500 px-2 py-1 text-xs font-medium text-white">
-                              待完成
+                            <div
+                              className="rounded-xl px-2 py-1 text-xs font-medium text-white"
+                              style={{ backgroundColor: OrderStatusMap[OrderStatus.PAID].color }}
+                            >
+                              已付款待完成
                             </div>
-                            {(() => {
-                              const orderStatusValues = Object.values(OrderStatus) as OrderStatus[]
-                              const currentIndex = orderStatusValues.findIndex(
-                                status => status === order.status
-                              )
-                              const nextStatusLabel =
-                                currentIndex < orderStatusValues.length - 1
-                                  ? OrderStatusMap[orderStatusValues[currentIndex + 1]].label
-                                  : '无'
-                              return (
-                                <Popconfirm
-                                  title={`确定要将订单状态变更为 ${nextStatusLabel} 吗？`}
-                                  onConfirm={e => {
-                                    e?.stopPropagation()
-                                    handleUpdateOrderStatus(order)
-                                  }}
-                                  onCancel={e => e?.stopPropagation()}
-                                  okText="确定"
-                                  cancelText="取消"
-                                  disabled={currentIndex === orderStatusValues.length - 1}
+                            {canUpdateOrderStatus(order.status) && (
+                              <Popconfirm
+                                title={
+                                  <div className="text-lg">
+                                    确定要将订单状态变更为{' '}
+                                    <span className="text-blue-500">
+                                      {getNextOrderStatusLabel(order.status)}
+                                    </span>{' '}
+                                    吗？
+                                  </div>
+                                }
+                                onConfirm={e => {
+                                  e?.stopPropagation()
+                                  handleUpdateOrderStatus(order, updateOrder)
+                                }}
+                                onCancel={e => e?.stopPropagation()}
+                                okText="确定"
+                                cancelText="取消"
+                              >
+                                <Button
+                                  type="primary"
+                                  size="small"
+                                  onClick={e => e.stopPropagation()}
                                 >
-                                  <Button
-                                    type="primary"
-                                    size="small"
-                                    disabled={currentIndex === orderStatusValues.length - 1}
-                                    onClick={e => e.stopPropagation()}
-                                  >
-                                    更新状态
-                                  </Button>
-                                </Popconfirm>
-                              )
-                            })()}
+                                  更新状态
+                                </Button>
+                              </Popconfirm>
+                            )}
                           </div>
                         </div>
                       </Card>

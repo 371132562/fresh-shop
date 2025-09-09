@@ -22,6 +22,10 @@ export const Component = () => {
   const setOrder = useOrderStore(state => state.setOrder)
   const refundOrder = useOrderStore(state => state.refundOrder)
   const refundLoading = useOrderStore(state => state.refundLoading)
+  const updateOrder = useOrderStore(state => state.updateOrder)
+  const canUpdateOrderStatus = useOrderStore(state => state.canUpdateOrderStatus)
+  const getNextOrderStatusLabel = useOrderStore(state => state.getNextOrderStatusLabel)
+  const handleUpdateOrderStatus = useOrderStore(state => state.handleUpdateOrderStatus)
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
 
   const unit = useMemo(() => {
@@ -104,6 +108,38 @@ export const Component = () => {
                 wrap
                 justify="end"
               >
+                {order && canUpdateOrderStatus(order.status) && (
+                  <Popconfirm
+                    title={
+                      <div className="text-lg">
+                        确定要将订单状态变更为{' '}
+                        <span className="text-blue-500">
+                          {getNextOrderStatusLabel(order.status)}
+                        </span>{' '}
+                        吗？
+                      </div>
+                    }
+                    placement="left"
+                    onConfirm={() =>
+                      handleUpdateOrderStatus(order, updateOrder, () => {
+                        // 更新成功后重新获取订单详情和统计数据
+                        if (id) {
+                          getOrder({ id })
+                        }
+                      })
+                    }
+                    okText="确定"
+                    cancelText="取消"
+                    okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
+                    cancelButtonProps={{
+                      size: 'large',
+                      color: 'primary',
+                      variant: 'outlined'
+                    }}
+                  >
+                    <Button type="primary">更新状态</Button>
+                  </Popconfirm>
+                )}
                 <Button
                   color="primary"
                   variant="outlined"

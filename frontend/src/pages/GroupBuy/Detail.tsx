@@ -32,7 +32,9 @@ export const Component = () => {
   const setGroupBuy = useGroupBuyStore(state => state.setGroupBuy)
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
   const updateOrder = useOrderStore(state => state.updateOrder)
-  const getOrderStats = useOrderStore(state => state.getOrderStats)
+  const getNextOrderStatus = useOrderStore(state => state.getNextOrderStatus)
+  const canUpdateOrderStatus = useOrderStore(state => state.canUpdateOrderStatus)
+  const getNextOrderStatusLabel = useOrderStore(state => state.getNextOrderStatusLabel)
 
   // 详情模态框相关状态
 
@@ -179,36 +181,37 @@ export const Component = () => {
   }
 
   const handleUpdateOrderStatus = async (order: Order) => {
-    if (!order.id) return
-    // 统一使用前端 OrderStatus 类型，避免类型不兼容
-    const orderStatusValues = Object.values(OrderStatus) as OrderStatus[]
-    const currentIndex = orderStatusValues.findIndex(status => status === order.status)
-    if (currentIndex < orderStatusValues.length - 1) {
-      const nextStatus = orderStatusValues[currentIndex + 1]
-      const res = await updateOrder({
-        id: order.id,
-        status: nextStatus
-      })
-      if (res) {
-        notification.success({
-          message: '成功',
-          description: `订单状态已更新为：${OrderStatusMap[nextStatus].label}`
-        })
-        if (id) {
-          getGroupBuy({ id })
-        }
-        // 重新获取订单统计数据
-        getOrderStats()
-      } else {
-        notification.error({
-          message: '失败',
-          description: '更新订单状态失败'
-        })
-      }
-    } else {
+    const nextStatus = getNextOrderStatus(order.status)
+    if (!nextStatus) {
       notification.info({
         message: '提示',
         description: '订单已是最终状态，无法继续修改'
+      })
+      return
+    }
+
+    const res = await updateOrder({
+      id: order.id,
+      status: nextStatus
+    })
+
+    if (res) {
+      notification.success({
+        message: '成功',
+        description: `订单状态已更新为：${OrderStatusMap[nextStatus].label}`
+      })
+
+      // 直接更新本地状态，避免重新获取整个团购数据
+      if (groupBuy && groupBuy.order) {
+        const updatedOrders = groupBuy.order.map(o =>
+          o.id === order.id ? { ...o, status: nextStatus } : o
+        )
+        setGroupBuy({ ...groupBuy, order: updatedOrders })
+      }
+    } else {
+      notification.error({
+        message: '失败',
+        description: '更新订单状态失败'
       })
     }
   }
@@ -434,40 +437,38 @@ export const Component = () => {
                 const unit = (groupBuy?.units as GroupBuyUnit[])?.find(
                   item => item.id === order.unitId
                 )
-                const orderStatusValues = Object.values(OrderStatus) as OrderStatus[]
-                const currentIndex = orderStatusValues.findIndex(status => status === order.status)
-                const nextStatusLabel =
-                  currentIndex < orderStatusValues.length - 1
-                    ? OrderStatusMap[orderStatusValues[currentIndex + 1]].label
-                    : '无'
+                const nextStatusLabel = getNextOrderStatusLabel(order.status)
+                const canUpdate = canUpdateOrderStatus(order.status)
 
                 return (
                   <List.Item
-                    actions={[
-                      <Popconfirm
-                        key="update-status"
-                        title={
-                          <div className="text-lg">
-                            确定要将订单状态变更为{' '}
-                            <span className="text-blue-500">{nextStatusLabel}</span> 吗？
-                          </div>
-                        }
-                        placement="left"
-                        onConfirm={() => handleUpdateOrderStatus(order)}
-                        okText="确定"
-                        cancelText="取消"
-                        disabled={currentIndex === orderStatusValues.length - 1}
-                        okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
-                        cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
-                      >
-                        <Button
-                          type="primary"
-                          disabled={currentIndex === orderStatusValues.length - 1}
-                        >
-                          更新状态
-                        </Button>
-                      </Popconfirm>
-                    ]}
+                    actions={
+                      canUpdate
+                        ? [
+                            <Popconfirm
+                              key="update-status"
+                              title={
+                                <div className="text-lg">
+                                  确定要将订单状态变更为{' '}
+                                  <span className="text-blue-500">{nextStatusLabel}</span> 吗？
+                                </div>
+                              }
+                              placement="left"
+                              onConfirm={() => handleUpdateOrderStatus(order)}
+                              okText="确定"
+                              cancelText="取消"
+                              okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
+                              cancelButtonProps={{
+                                size: 'large',
+                                color: 'primary',
+                                variant: 'outlined'
+                              }}
+                            >
+                              <Button type="primary">更新状态</Button>
+                            </Popconfirm>
+                          ]
+                        : []
+                    }
                   >
                     <List.Item.Meta
                       title={
