@@ -6,7 +6,7 @@ import type {
 } from 'fresh-shop-backend/types/dto'
 import { useMemo, useState } from 'react'
 
-import ConsumptionDetailModal from '@/components/ConsumptionDetailModal'
+import ConsumptionDetailModal from '@/pages/Customer/components/ConsumptionDetailModal'
 import useAnalysisStore from '@/stores/analysisStore'
 import useCustomerStore from '@/stores/customerStore'
 

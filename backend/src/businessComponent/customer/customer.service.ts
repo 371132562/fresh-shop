@@ -34,7 +34,10 @@ export class CustomerService {
           in: [OrderStatus.PAID, OrderStatus.COMPLETED],
         },
       },
-      include: {
+      select: {
+        quantity: true,
+        unitId: true,
+        partialRefundAmount: true, // 添加部分退款金额字段
         groupBuy: {
           include: {
             product: true,
@@ -50,11 +53,13 @@ export class CustomerService {
         orderCount: 0,
         totalAmount: 0,
         averagePricePerOrder: 0,
+        totalPartialRefundAmount: 0,
         topProducts: [],
       };
     }
 
     let totalAmount = 0;
+    let totalPartialRefundAmount = 0;
     const productCounts: Record<
       string,
       {
@@ -67,6 +72,7 @@ export class CustomerService {
             unitName: string;
             count: number;
             totalAmount: number;
+            totalPartialRefundAmount: number;
             latestGroupBuyStartDate: Date;
           }
         >;
@@ -77,8 +83,11 @@ export class CustomerService {
       const units = order.groupBuy.units as GroupBuyUnit[];
       const unit = units.find((u) => u.id === order.unitId);
       if (unit) {
-        const orderAmount = unit.price * order.quantity;
+        const originalAmount = unit.price * order.quantity;
+        const partialRefundAmount = order.partialRefundAmount || 0;
+        const orderAmount = originalAmount - partialRefundAmount;
         totalAmount += orderAmount;
+        totalPartialRefundAmount += partialRefundAmount;
 
         // 统计团购数据的key
         const groupBuyKey = `${order.groupBuy.name}-${unit.unit}`;
@@ -102,6 +111,7 @@ export class CustomerService {
             unitName: unit.unit,
             count: 0,
             totalAmount: 0,
+            totalPartialRefundAmount: 0,
             latestGroupBuyStartDate: order.groupBuy.groupBuyStartDate,
           };
         } else {
@@ -123,6 +133,9 @@ export class CustomerService {
         productCounts[order.groupBuy.productId].groupBuys[
           groupBuyKey
         ].totalAmount += orderAmount;
+        productCounts[order.groupBuy.productId].groupBuys[
+          groupBuyKey
+        ].totalPartialRefundAmount += partialRefundAmount;
       }
     }
 
@@ -231,6 +244,7 @@ export class CustomerService {
       orderCount,
       totalAmount,
       averagePricePerOrder,
+      totalPartialRefundAmount,
       topProducts,
     };
   }
@@ -350,7 +364,10 @@ export class CustomerService {
                 in: [OrderStatus.PAID, OrderStatus.COMPLETED],
               },
             },
-            include: {
+            select: {
+              quantity: true,
+              unitId: true,
+              partialRefundAmount: true, // 添加部分退款金额字段
               groupBuy: {
                 select: {
                   units: true,
@@ -359,13 +376,14 @@ export class CustomerService {
             },
           });
 
-          // 计算总金额
+          // 计算总金额（扣除部分退款）
           let totalAmount = 0;
           orders.forEach((order) => {
             const units = order.groupBuy.units as GroupBuyUnit[];
             const unit = units.find((u) => u.id === order.unitId);
             if (unit) {
-              totalAmount += unit.price * order.quantity;
+              const originalAmount = unit.price * order.quantity;
+              totalAmount += originalAmount - (order.partialRefundAmount || 0);
             }
           });
 
@@ -449,7 +467,10 @@ export class CustomerService {
                 in: [OrderStatus.PAID, OrderStatus.COMPLETED],
               },
             },
-            include: {
+            select: {
+              quantity: true,
+              unitId: true,
+              partialRefundAmount: true,
               groupBuy: {
                 select: {
                   units: true,
@@ -463,7 +484,10 @@ export class CustomerService {
             const units = order.groupBuy.units as GroupBuyUnit[];
             const unit = units.find((u) => u.id === order.unitId);
             if (unit) {
-              totalAmount += unit.price * order.quantity;
+              const originalAmount = unit.price * order.quantity;
+              const partialRefundAmount = order.partialRefundAmount || 0;
+              const orderAmount = originalAmount - partialRefundAmount;
+              totalAmount += orderAmount;
             }
           });
 

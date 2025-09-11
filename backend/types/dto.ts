@@ -262,8 +262,9 @@ export type CustomerListItem = Customer & {
 export type CustomerConsumptionDetailDto = {
   customerName: string; // 客户名称
   orderCount: number; // 订单数量
-  totalAmount: number; // 订单总额
+  totalAmount: number; // 订单总额（已扣除部分退款）
   averagePricePerOrder: number; // 每单平均价格
+  totalPartialRefundAmount: number; // 总部分退款金额
   topProducts: {
     productId: string; // 商品ID
     productName: string; // 商品名称
@@ -273,7 +274,8 @@ export type CustomerConsumptionDetailDto = {
       groupBuyName: string; // 团购名称
       unitName: string; // 规格名称
       count: number; // 购买数量
-      totalAmount: number; // 该团购规格的总消费金额
+      totalAmount: number; // 该团购规格的总消费金额（已扣除部分退款）
+      totalPartialRefundAmount: number; // 该团购规格的总部分退款金额
       latestGroupBuyStartDate: Date; // 最近一次团购发起时间
     }[]; // 该商品下的团购单列表
   }[]; // 购买最多的商品及其团购详情
@@ -367,6 +369,10 @@ export type GroupBuyListItem = GroupBuy & {
   supplier: Supplier; // 供货商信息
   product: Product; // 商品信息
   orderStats: GroupBuyOrderStats; // 订单统计
+  partialRefundStats: {
+    partialRefundAmount: number; // 部分退款总金额（仅统计已付款和已完成订单）
+    totalAmount: number; // 订单总金额（仅统计已付款和已完成订单）
+  };
 };
 
 /**
@@ -522,8 +528,9 @@ export type GroupBuyLaunchHistory = {
   groupBuyId: string; // 团购单ID
   launchDate: Date; // 发起时间
   orderCount: number; // 该次发起的订单数量
-  revenue: number; // 该次发起的销售额
-  profit: number; // 该次发起的利润
+  revenue: number; // 该次发起的销售额（已扣除部分退款）
+  profit: number; // 该次发起的利润（已扣除部分退款）
+  partialRefundAmount: number; // 该次发起的部分退款金额
   groupBuyName: string; // 团购名称
   customerCount: number; // 该次发起的客户数
   refundedOrderCount: number; // 该次发起的退款订单数
@@ -539,8 +546,9 @@ export type MergedGroupBuyOverviewDetail = {
   supplierName: string; // 供货商名称
   startDate?: Date; // 统计开始时间（可选）
   endDate?: Date; // 统计结束时间（可选）
-  totalRevenue: number; // 总销售额
-  totalProfit: number; // 总利润
+  totalRevenue: number; // 总销售额（已扣除部分退款）
+  totalProfit: number; // 总利润（已扣除部分退款）
+  totalPartialRefundAmount: number; // 总部分退款金额
   totalProfitMargin: number; // 总利润率
   totalOrderCount: number; // 总订单量
   uniqueCustomerCount: number; // 总参与客户数（去重）
@@ -648,6 +656,16 @@ export type OrderDetail = Order & {
     groupBuyStartDate: Date; // 团购发起时间
     units: GroupBuyUnit[]; // 团购规格列表
   }; // 团购基本信息
+};
+
+/**
+ * 部分退款请求参数
+ * 用于处理订单的部分退款操作
+ */
+export type PartialRefundParams = {
+  orderId: string; // 订单ID
+  refundAmount: number; // 退款金额
+  reason?: string; // 退款原因（可选）
 };
 
 /**
@@ -888,8 +906,9 @@ export type SupplierGroupBuyHistory = {
   groupBuyName: string; // 团购名称
   launchDate: Date; // 发起时间
   orderCount: number; // 该次团购的订单数量
-  revenue: number; // 该次团购的销售额
-  profit: number; // 该次团购的利润
+  revenue: number; // 该次团购的销售额（已扣除部分退款）
+  profit: number; // 该次团购的利润（已扣除部分退款）
+  partialRefundAmount: number; // 该次团购的部分退款金额
   customerCount: number; // 该次团购的客户数
   refundedOrderCount: number; // 该次团购的退款订单数
 };
@@ -915,8 +934,9 @@ export type SupplierOverviewDetail = {
   endDate?: Date; // 统计结束时间（可选）
 
   // 核心业绩指标
-  totalRevenue: number; // 总销售额
-  totalProfit: number; // 总利润
+  totalRevenue: number; // 总销售额（已扣除部分退款）
+  totalProfit: number; // 总利润（已扣除部分退款）
+  totalPartialRefundAmount: number; // 总部分退款金额
   averageProfitMargin: number; // 平均利润率
   totalOrderCount: number; // 总订单量
 

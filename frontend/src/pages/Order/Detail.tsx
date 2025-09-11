@@ -3,6 +3,7 @@ import { Button, Flex, notification, Popconfirm, Skeleton } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 
+import { PartialRefundButton } from '@/pages/Order/components/PartialRefundModal.tsx'
 import Modify from '@/pages/Order/Modify.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
@@ -147,6 +148,19 @@ export const Component = () => {
                 >
                   编辑
                 </Button>
+                {order && (
+                  <PartialRefundButton
+                    orderId={order.id}
+                    orderTotalAmount={unit ? unit.price * order.quantity : 0}
+                    currentRefundAmount={order.partialRefundAmount || 0}
+                    orderStatus={order.status}
+                    onSuccess={() => {
+                      if (id) {
+                        getOrder({ id })
+                      }
+                    }}
+                  />
+                )}
                 {order?.status === OrderStatus.COMPLETED && (
                   <Popconfirm
                     title={<div className="text-lg">确定要退款这个订单吗？</div>}
@@ -225,6 +239,23 @@ export const Component = () => {
                   {order?.quantity || <span className="italic text-gray-400">无</span>}
                 </span>
               </div>
+
+              {/* 部分退款 */}
+              {order?.partialRefundAmount &&
+                order.partialRefundAmount > 0 &&
+                order.status !== 'REFUNDED' && (
+                  <div className="flex items-start text-base">
+                    <span className="w-20 flex-shrink-0 font-medium text-gray-500">部分退款：</span>
+                    <span className="word-break-all flex-grow break-words">
+                      <span className="font-bold text-orange-600">
+                        ¥{order.partialRefundAmount.toFixed(2)}
+                      </span>
+                      <span className="font-bold text-blue-500">
+                        /¥{(unit ? unit.price * order.quantity : 0).toFixed(2)}
+                      </span>
+                    </span>
+                  </div>
+                )}
 
               {/* 备注 */}
               <div className="flex items-start text-base">

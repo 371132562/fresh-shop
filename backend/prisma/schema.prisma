@@ -116,18 +116,19 @@ enum OrderStatus {
 
 // 订单
 model Order {
-  id          String      @id @default(uuid())
-  customerId  String
-  customer    Customer    @relation(fields: [customerId], references: [id])
-  groupBuyId  String
-  groupBuy    GroupBuy    @relation(fields: [groupBuyId], references: [id])
-  unitId      String
-  quantity    Int // 购买份数
-  description String? //备注
-  status      OrderStatus @default(NOTPAID) // 订单状态
-  delete      Int         @default(0)
-  createdAt   DateTime    @default(now()) // 创建时间
-  updatedAt   DateTime    @updatedAt // 最后更新时间
+  id                  String      @id @default(uuid())
+  customerId          String
+  customer            Customer    @relation(fields: [customerId], references: [id])
+  groupBuyId          String
+  groupBuy            GroupBuy    @relation(fields: [groupBuyId], references: [id])
+  unitId              String
+  quantity            Int // 购买份数
+  description         String? //备注
+  status              OrderStatus @default(NOTPAID) // 订单状态
+  partialRefundAmount Float       @default(0) // 部分退款金额，默认0
+  delete              Int         @default(0)
+  createdAt           DateTime    @default(now()) // 创建时间
+  updatedAt           DateTime    @updatedAt // 最后更新时间
 
   @@index([id, delete])
   @@index([customerId, delete])

@@ -89,6 +89,14 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       )
     },
     {
+      title: '部分退款金额',
+      dataIndex: 'partialRefundAmount',
+      key: 'partialRefundAmount',
+      render: (amount: number) => (
+        <span className="font-medium text-orange-500">¥{(amount || 0).toFixed(2)}</span>
+      )
+    },
+    {
       title: '退款订单数',
       dataIndex: 'refundedOrderCount',
       key: 'refundedOrderCount',
@@ -111,6 +119,10 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
   // 计算统计指标
   const totalRevenue = groupBuyHistory.reduce((sum, item) => sum + item.revenue, 0)
   const totalProfit = groupBuyHistory.reduce((sum, item) => sum + item.profit, 0)
+  const totalPartialRefundAmount = groupBuyHistory.reduce(
+    (sum, item) => sum + (item.partialRefundAmount || 0),
+    0
+  )
   const totalOrderCount = groupBuyHistory.reduce((sum, item) => sum + item.orderCount, 0)
   const totalRefundedOrderCount = groupBuyHistory.reduce(
     (sum, item) => sum + (item.refundedOrderCount || 0),
@@ -136,7 +148,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
         <div className="space-y-2">
           {/* 团购历史统计 */}
           <Row gutter={16}>
-            <Col span={6}>
+            <Col span={5}>
               <Statistic
                 title="平均团购销售额"
                 value={averageRevenue}
@@ -145,7 +157,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
                 valueStyle={{ color: '#52c41a' }}
               />
             </Col>
-            <Col span={6}>
+            <Col span={5}>
               <Statistic
                 title="平均团购利润"
                 value={averageProfit}
@@ -154,7 +166,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
                 valueStyle={{ color: '#fa8c16' }}
               />
             </Col>
-            <Col span={6}>
+            <Col span={5}>
               <Statistic
                 title="平均团购订单数"
                 value={averageOrderCount}
@@ -163,7 +175,16 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
                 valueStyle={{ color: '#722ed1' }}
               />
             </Col>
-            <Col span={6}>
+            <Col span={5}>
+              <Statistic
+                title="部分退款金额"
+                value={totalPartialRefundAmount}
+                precision={2}
+                prefix="¥"
+                valueStyle={{ color: '#fa541c' }}
+              />
+            </Col>
+            <Col span={4}>
               <Statistic
                 title="退款订单数"
                 value={totalRefundedOrderCount}

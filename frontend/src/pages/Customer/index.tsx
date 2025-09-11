@@ -3,11 +3,11 @@ import { Button, FloatButton, Form, Input, List, Modal, Select, Tag } from 'antd
 import type { CustomerSortField, SortOrder } from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
 
-import ConsumptionDetailModal from '@/components/ConsumptionDetailModal'
 import useCustomerAddressStore from '@/stores/customerAddressStore.ts'
 import useCustomerStore from '@/stores/customerStore.ts'
 import { validatePhoneNumber } from '@/utils'
 
+import ConsumptionDetailModal from './components/ConsumptionDetailModal'
 import Modify from './Modify.tsx'
 
 export const Component = () => {

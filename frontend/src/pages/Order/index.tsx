@@ -8,6 +8,7 @@ import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import useOrderStore, { OrderStatusMap, OrderStatusOptions } from '@/stores/orderStore.ts'
 import { formatDate } from '@/utils'
 
+import { PartialRefundButton } from './components/PartialRefundModal.tsx'
 import Modify from './Modify.tsx'
 
 export const Component = () => {
@@ -113,41 +114,58 @@ export const Component = () => {
             const nextStatusLabel = getNextOrderStatusLabel(item.status)
             const canUpdate = canUpdateOrderStatus(item.status)
 
+            // 计算订单总金额
+            const units = (item.groupBuy?.units as Array<{ id: string; price: number }>) || []
+            const selectedUnit = units.find(unit => unit.id === item.unitId)
+            const itemTotalAmount = selectedUnit ? selectedUnit.price * item.quantity : 0
+
+            const actions = []
+
+            if (canUpdate) {
+              actions.push(
+                <Popconfirm
+                  key="update-status"
+                  title={
+                    <div className="text-lg">
+                      确定要将订单状态变更为{' '}
+                      <span className="text-blue-500">{nextStatusLabel}</span> 吗？
+                    </div>
+                  }
+                  placement="left"
+                  onConfirm={() =>
+                    handleUpdateOrderStatus(item, updateOrder, () => {
+                      // 更新成功后重新获取订单列表和统计数据
+                      pageChange()
+                    })
+                  }
+                  okText="确定"
+                  cancelText="取消"
+                  okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
+                  cancelButtonProps={{
+                    size: 'large',
+                    color: 'primary',
+                    variant: 'outlined'
+                  }}
+                >
+                  <Button type="primary">更新状态</Button>
+                </Popconfirm>
+              )
+            }
+
+            // 添加部分退款按钮
+            actions.push(
+              <PartialRefundButton
+                key="partial-refund"
+                orderId={item.id}
+                orderTotalAmount={itemTotalAmount}
+                currentRefundAmount={item.partialRefundAmount || 0}
+                orderStatus={item.status}
+                onSuccess={() => pageChange()}
+              />
+            )
+
             return (
-              <List.Item
-                actions={
-                  canUpdate
-                    ? [
-                        <Popconfirm
-                          key="update-status"
-                          title={
-                            <div className="text-lg">
-                              确定要将订单状态变更为{' '}
-                              <span className="text-blue-500">{nextStatusLabel}</span> 吗？
-                            </div>
-                          }
-                          placement="left"
-                          onConfirm={() =>
-                            handleUpdateOrderStatus(item, updateOrder, () => {
-                              // 更新成功后重新获取订单列表和统计数据
-                              pageChange()
-                            })
-                          }
-                          okText="确定"
-                          cancelText="取消"
-                          okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
-                          cancelButtonProps={{
-                            size: 'large',
-                            color: 'primary',
-                            variant: 'outlined'
-                          }}
-                        >
-                          <Button type="primary">更新状态</Button>
-                        </Popconfirm>
-                      ]
-                    : []
-                }
-              >
+              <List.Item actions={actions}>
                 <List.Item.Meta
                   title={
                     <NavLink to={`/order/detail/${item.id}`}>
@@ -179,6 +197,15 @@ export const Component = () => {
                       {item.quantity && (
                         <div className="mt-1 font-medium text-gray-800">
                           购买数量：<span className="text-blue-500">{item.quantity}</span>
+                        </div>
+                      )}
+                      {item.partialRefundAmount > 0 && item.status !== 'REFUNDED' && (
+                        <div className="mt-1 font-medium text-gray-800">
+                          部分退款：
+                          <span className="text-orange-600">
+                            ¥{item.partialRefundAmount.toFixed(2)}
+                          </span>
+                          <span className="text-blue-500">/¥{itemTotalAmount.toFixed(2)}</span>
                         </div>
                       )}
                       {item.description && <div className="text-gray-600">{item.description}</div>}

@@ -49,6 +49,7 @@ import {
 interface SelectedOrder {
   quantity: number;
   unitId: string;
+  partialRefundAmount: number;
 }
 
 @Injectable()
@@ -95,6 +96,7 @@ export class AnalysisService {
           select: {
             quantity: true,
             unitId: true,
+            partialRefundAmount: true, // 添加部分退款金额字段
           },
         },
       },
@@ -124,7 +126,9 @@ export class AnalysisService {
       );
 
       // 遍历当前团购单下的所有订单，计算订单总数、销售额、利润及订单趋势
-      for (const order of groupBuy.order as SelectedOrder[]) {
+      for (const order of groupBuy.order as (SelectedOrder & {
+        partialRefundAmount: number;
+      })[]) {
         orderCount++; // 每找到一个订单就计数
 
         // 统计每日订单趋势：根据关联团购单的发起日期计数
@@ -137,22 +141,29 @@ export class AnalysisService {
         const selectedUnit = units.find((unit) => unit.id === order.unitId);
 
         if (selectedUnit) {
-          const salesAmount = selectedUnit.price * order.quantity;
-          const profitAmount =
+          const originalSalesAmount = selectedUnit.price * order.quantity;
+          const originalProfitAmount =
             (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
 
-          totalPrice += salesAmount;
-          totalProfit += profitAmount;
+          // 计算扣除部分退款后的实际销售额和利润
+          // 部分退款会减少销售额，同时按比例减少利润
+          const refundRatio = order.partialRefundAmount / originalSalesAmount;
+          const actualSalesAmount =
+            originalSalesAmount - order.partialRefundAmount;
+          const actualProfitAmount = originalProfitAmount * (1 - refundRatio);
+
+          totalPrice += actualSalesAmount;
+          totalProfit += actualProfitAmount;
 
           // 统计每日销售额趋势
           priceTrendMap.set(
             orderDate,
-            (priceTrendMap.get(orderDate) || 0) + salesAmount,
+            (priceTrendMap.get(orderDate) || 0) + actualSalesAmount,
           );
           // 统计每日利润趋势
           profitTrendMap.set(
             orderDate,
-            (profitTrendMap.get(orderDate) || 0) + profitAmount,
+            (profitTrendMap.get(orderDate) || 0) + actualProfitAmount,
           );
         }
       }
@@ -232,6 +243,7 @@ export class AnalysisService {
           select: {
             quantity: true,
             unitId: true,
+            partialRefundAmount: true, // 添加部分退款金额字段
           },
         },
       },
@@ -246,14 +258,21 @@ export class AnalysisService {
       for (const order of gb.order as Array<{
         quantity: number;
         unitId: string;
+        partialRefundAmount: number;
       }>) {
         const selectedUnit = units.find((unit) => unit.id === order.unitId);
         if (selectedUnit) {
-          const sale = selectedUnit.price * order.quantity;
-          const profit =
+          const originalSale = selectedUnit.price * order.quantity;
+          const originalProfit =
             (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
-          totalSales += sale;
-          totalProfit += profit;
+
+          // 计算扣除部分退款后的实际销售额和利润
+          const refundRatio = order.partialRefundAmount / originalSale;
+          const actualSale = originalSale - order.partialRefundAmount;
+          const actualProfit = originalProfit * (1 - refundRatio);
+
+          totalSales += actualSale;
+          totalProfit += actualProfit;
         }
       }
 
@@ -294,18 +313,24 @@ export class AnalysisService {
     const { startDate, endDate } = params;
 
     // 获取指定时间范围内的订单及其关联客户信息
+    // 根据团购发起时间进行过滤，而不是订单创建时间
     const orders = await this.prisma.order.findMany({
       where: {
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
-        },
         delete: 0,
         status: {
           in: [OrderStatus.PAID, OrderStatus.COMPLETED],
         },
+        groupBuy: {
+          groupBuyStartDate: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
       },
-      include: {
+      select: {
+        quantity: true,
+        unitId: true,
+        partialRefundAmount: true, // 添加部分退款金额字段
         customer: {
           select: {
             id: true,
@@ -341,11 +366,12 @@ export class AnalysisService {
       const customerPhone = order.customer.phone || '';
       const units = order.groupBuy.units as Array<GroupBuyUnit>;
 
-      // 计算订单金额
+      // 计算订单金额（扣除部分退款）
       let orderAmount = 0;
       const selectedUnit = units.find((unit) => unit.id === order.unitId);
       if (selectedUnit) {
-        orderAmount = selectedUnit.price * order.quantity;
+        const originalAmount = selectedUnit.price * order.quantity;
+        orderAmount = originalAmount - (order.partialRefundAmount || 0);
       }
 
       if (customerData.has(customerId)) {
@@ -426,6 +452,7 @@ export class AnalysisService {
           select: {
             quantity: true,
             unitId: true,
+            partialRefundAmount: true, // 添加部分退款金额字段
           },
         },
       },
@@ -457,14 +484,21 @@ export class AnalysisService {
       for (const order of gb.order as Array<{
         quantity: number;
         unitId: string;
+        partialRefundAmount: number;
       }>) {
         const selectedUnit = units.find((unit) => unit.id === order.unitId);
         if (selectedUnit) {
-          const sale = selectedUnit.price * order.quantity;
-          const profit =
+          const originalSale = selectedUnit.price * order.quantity;
+          const originalProfit =
             (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
-          totalSales += sale;
-          totalProfit += profit;
+
+          // 计算扣除部分退款后的实际销售额和利润
+          const refundRatio = order.partialRefundAmount / originalSale;
+          const actualSale = originalSale - order.partialRefundAmount;
+          const actualProfit = originalProfit * (1 - refundRatio);
+
+          totalSales += actualSale;
+          totalProfit += actualProfit;
         }
       }
 
@@ -743,7 +777,12 @@ export class AnalysisService {
           where: {
             delete: 0,
           },
-          include: {
+          select: {
+            quantity: true,
+            unitId: true,
+            customerId: true,
+            status: true,
+            partialRefundAmount: true,
             customer: {
               include: {
                 customerAddress: true,
@@ -768,6 +807,7 @@ export class AnalysisService {
         endDate,
         totalRevenue: 0,
         totalProfit: 0,
+        totalPartialRefundAmount: 0,
         totalProfitMargin: 0,
         totalOrderCount: 0,
         uniqueCustomerCount: 0,
@@ -786,6 +826,7 @@ export class AnalysisService {
     // 2. 聚合数据计算
     let totalRevenue = 0;
     let totalProfit = 0;
+    let totalPartialRefundAmount = 0;
     let totalOrderCount = 0;
     const uniqueCustomerIds = new Set<string>();
     const customerPurchaseCounts = new Map<string, number>();
@@ -810,12 +851,19 @@ export class AnalysisService {
           // 根据unitId找到对应的规格信息
           const selectedUnit = units.find((unit) => unit.id === order.unitId);
           if (selectedUnit) {
-            const revenue = selectedUnit.price * order.quantity;
-            const profit =
+            // 计算扣除部分退款后的实际销售额和利润
+            const originalRevenue = selectedUnit.price * order.quantity;
+            const originalProfit =
               (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+            const partialRefundAmount = order.partialRefundAmount || 0;
+
+            const refundRatio = partialRefundAmount / originalRevenue;
+            const revenue = originalRevenue - partialRefundAmount;
+            const profit = originalProfit * (1 - refundRatio);
 
             totalRevenue += revenue;
             totalProfit += profit;
+            totalPartialRefundAmount += partialRefundAmount;
             totalOrderCount += 1;
             uniqueCustomerIds.add(order.customerId);
 
@@ -951,6 +999,7 @@ export class AnalysisService {
         let orderCount = 0;
         let revenue = 0;
         let profit = 0;
+        let partialRefundAmount = 0;
         const customerIds = new Set<string>();
         const units = groupBuy.units as Array<GroupBuyUnit>;
 
@@ -964,11 +1013,19 @@ export class AnalysisService {
             customerIds.add(order.customerId);
             const selectedUnit = units.find((unit) => unit.id === order.unitId);
             if (selectedUnit) {
-              const orderRevenue = selectedUnit.price * order.quantity;
-              const orderProfit =
+              // 计算扣除部分退款后的实际销售额和利润
+              const originalRevenue = selectedUnit.price * order.quantity;
+              const originalProfit =
                 (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+              const orderPartialRefundAmount = order.partialRefundAmount || 0;
+
+              const refundRatio = orderPartialRefundAmount / originalRevenue;
+              const orderRevenue = originalRevenue - orderPartialRefundAmount;
+              const orderProfit = originalProfit * (1 - refundRatio);
+
               revenue += orderRevenue;
               profit += orderProfit;
+              partialRefundAmount += orderPartialRefundAmount;
             }
           }
         }
@@ -986,6 +1043,7 @@ export class AnalysisService {
           orderCount,
           revenue,
           profit,
+          partialRefundAmount,
           customerCount: customerIds.size,
           refundedOrderCount,
         };
@@ -1007,6 +1065,7 @@ export class AnalysisService {
       endDate,
       totalRevenue,
       totalProfit,
+      totalPartialRefundAmount,
       totalProfitMargin,
       totalOrderCount,
       uniqueCustomerCount,
@@ -1293,6 +1352,7 @@ export class AnalysisService {
                 unitId: true, // 规格ID
                 customerId: true, // 客户ID
                 createdAt: true, // 订单创建时间
+                partialRefundAmount: true, // 部分退款金额
               },
             },
           },
@@ -1326,9 +1386,17 @@ export class AnalysisService {
         for (const order of groupBuy.order) {
           const unit = units.get(order.unitId);
           if (unit) {
-            // 计算单个订单的销售额和利润
-            const orderRevenue = unit.price * order.quantity; // 销售额 = 单价 × 数量
-            const orderProfit = (unit.price - unit.costPrice) * order.quantity; // 利润 = (单价 - 成本价) × 数量
+            // 计算单个订单的销售额和利润（扣除部分退款）
+            const originalRevenue = unit.price * order.quantity; // 原始销售额 = 单价 × 数量
+            const originalProfit =
+              (unit.price - unit.costPrice) * order.quantity; // 原始利润 = (单价 - 成本价) × 数量
+
+            // 计算扣除部分退款后的实际销售额和利润
+            const refundRatio =
+              (order.partialRefundAmount || 0) / originalRevenue;
+            const orderRevenue =
+              originalRevenue - (order.partialRefundAmount || 0);
+            const orderProfit = originalProfit * (1 - refundRatio);
 
             // 累加到供货商总统计中
             totalRevenue += orderRevenue;
@@ -1482,6 +1550,7 @@ export class AnalysisService {
             customerId: true,
             createdAt: true,
             status: true,
+            partialRefundAmount: true,
             customer: {
               select: {
                 customerAddress: {
@@ -1516,6 +1585,7 @@ export class AnalysisService {
     // 核心统计变量
     let totalRevenue = 0; // 总销售额
     let totalProfit = 0; // 总利润
+    let totalPartialRefundAmount = 0; // 总部分退款金额
     let totalOrderCount = 0; // 总订单量
     // 退款订单数（与合并团购统计保持一致统计口径）
     // 已移除：详情级别不再返回退款总数，由团购历史中的每条记录提供 refundedOrderCount
@@ -1527,6 +1597,7 @@ export class AnalysisService {
       const groupBuyCustomerIds = new Set<string>(); // 该团购单的客户ID集合
       let groupBuyRevenue = 0; // 该团购单的销售额
       let groupBuyProfit = 0; // 该团购单的利润
+      let groupBuyPartialRefundAmount = 0; // 该团购单的部分退款金额
       let groupBuyOrderCount = 0; // 该团购单的订单数
 
       // 将团购单的规格信息添加到units Map中
@@ -1539,17 +1610,25 @@ export class AnalysisService {
       for (const order of groupBuy.order) {
         const unit = units.get(order.unitId);
         if (unit) {
-          // 计算单个订单的销售额和利润
-          const orderRevenue = unit.price * order.quantity; // 销售额 = 单价 × 数量
-          const orderProfit = (unit.price - unit.costPrice) * order.quantity; // 利润 = (单价 - 成本价) × 数量
+          // 计算单个订单的销售额和利润（扣除部分退款）
+          const originalRevenue = unit.price * order.quantity; // 原始销售额 = 单价 × 数量
+          const originalProfit = (unit.price - unit.costPrice) * order.quantity; // 原始利润 = (单价 - 成本价) × 数量
+          const partialRefundAmount = order.partialRefundAmount || 0; // 部分退款金额
+
+          // 计算扣除部分退款后的实际销售额和利润
+          const refundRatio = partialRefundAmount / originalRevenue;
+          const orderRevenue = originalRevenue - partialRefundAmount;
+          const orderProfit = originalProfit * (1 - refundRatio);
 
           // 累加到总体统计中
           totalRevenue += orderRevenue;
           totalProfit += orderProfit;
+          totalPartialRefundAmount += partialRefundAmount;
           totalOrderCount++;
           // 累加到当前团购单统计中
           groupBuyRevenue += orderRevenue;
           groupBuyProfit += orderProfit;
+          groupBuyPartialRefundAmount += partialRefundAmount;
           groupBuyOrderCount++;
 
           // 添加客户ID到去重集合中
@@ -1643,6 +1722,7 @@ export class AnalysisService {
           orderCount: groupBuyOrderCount,
           revenue: groupBuyRevenue,
           profit: groupBuyProfit,
+          partialRefundAmount: groupBuyPartialRefundAmount,
           customerCount: groupBuyCustomerIds.size,
           refundedOrderCount: await this.prisma.order.count({
             where: {
@@ -1811,6 +1891,7 @@ export class AnalysisService {
       endDate,
       totalRevenue,
       totalProfit,
+      totalPartialRefundAmount,
       averageProfitMargin,
       totalOrderCount,
       uniqueCustomerCount: uniqueCustomerIds.size,

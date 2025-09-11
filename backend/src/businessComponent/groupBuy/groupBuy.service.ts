@@ -8,6 +8,7 @@ import {
   GroupBuyPageParams,
   ListByPage,
   GroupBuyOrderStats,
+  GroupBuyListItem,
 } from '../../../types/dto';
 import { UploadService } from 'src/upload/upload.service';
 
@@ -34,7 +35,7 @@ export class GroupBuyService {
 
   async list(
     data: GroupBuyPageParams,
-  ): Promise<ListByPage<(GroupBuy & { orderStats: GroupBuyOrderStats })[]>> {
+  ): Promise<ListByPage<GroupBuyListItem[]>> {
     const {
       page,
       pageSize,
@@ -143,6 +144,74 @@ export class GroupBuyService {
       }
     });
 
+    // 计算部分退款统计（仅统计已付款和已完成的订单）
+    const partialRefundStats = await this.prisma.order.groupBy({
+      by: ['groupBuyId'],
+      where: {
+        groupBuyId: {
+          in: groupBuyIds,
+        },
+        status: {
+          in: ['PAID', 'COMPLETED'], // 仅统计已付款和已完成的订单
+        },
+        delete: 0,
+      },
+      _sum: {
+        partialRefundAmount: true,
+      },
+    });
+
+    // 计算订单总金额（仅统计已付款和已完成的订单）
+    const orderAmountStats = await this.prisma.order.findMany({
+      where: {
+        groupBuyId: {
+          in: groupBuyIds,
+        },
+        status: {
+          in: ['PAID', 'COMPLETED'], // 仅统计已付款和已完成的订单
+        },
+        delete: 0,
+      },
+      select: {
+        groupBuyId: true,
+        quantity: true,
+        unitId: true,
+        groupBuy: {
+          select: {
+            units: true,
+          },
+        },
+      },
+    });
+
+    // 计算每个团购的总金额
+    const totalAmountMap = new Map<string, number>();
+    orderAmountStats.forEach((order) => {
+      const units = order.groupBuy.units as Array<{
+        id: string;
+        price: number;
+      }>;
+      const unit = units.find((u) => u.id === order.unitId);
+      if (unit) {
+        const orderTotal = unit.price * order.quantity;
+        const currentTotal = totalAmountMap.get(order.groupBuyId) || 0;
+        totalAmountMap.set(order.groupBuyId, currentTotal + orderTotal);
+      }
+    });
+
+    const partialRefundStatsMap = new Map<
+      string,
+      { partialRefundAmount: number; totalAmount: number }
+    >();
+    partialRefundStats.forEach((stat) => {
+      const { groupBuyId, _sum } = stat;
+      const totalAmount = totalAmountMap.get(groupBuyId) || 0;
+      partialRefundStatsMap.set(groupBuyId, {
+        partialRefundAmount: _sum.partialRefundAmount || 0,
+        totalAmount: totalAmount,
+      });
+    });
+
     const groupBuysWithStats = groupBuys.map((gb) => {
       const stats = statsMap.get(gb.id) || {
         orderCount: 0,
@@ -151,9 +220,14 @@ export class GroupBuyService {
         COMPLETED: 0,
         REFUNDED: 0,
       };
+      const partialRefundStats = partialRefundStatsMap.get(gb.id) || {
+        partialRefundAmount: 0,
+        totalAmount: 0,
+      };
       return {
         ...gb,
         orderStats: stats,
+        partialRefundStats: partialRefundStats,
       };
     });
 

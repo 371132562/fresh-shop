@@ -4,7 +4,8 @@ import {
   Order,
   OrderDetail,
   OrderPageParams,
-  OrderStatsResult
+  OrderStatsResult,
+  PartialRefundParams
 } from 'fresh-shop-backend/types/dto.ts'
 import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
@@ -15,6 +16,7 @@ import {
   orderDetailApi,
   orderListAllApi,
   orderListApi,
+  orderPartialRefundApi,
   orderRefundApi,
   orderStatsApi,
   orderUpdateApi
@@ -90,6 +92,9 @@ type OrderStore = {
 
   refundLoading: boolean
   refundOrder: (data: OrderId) => Promise<boolean>
+
+  partialRefundLoading: boolean
+  partialRefundOrder: (data: PartialRefundParams) => Promise<boolean>
 
   // 订单统计相关状态
   orderStats: OrderStatsResult | null
@@ -247,6 +252,20 @@ const useOrderStore = create<OrderStore>((set, get) => ({
     } finally {
       set({ refundLoading: false })
       get().getOrder(data)
+    }
+  },
+
+  partialRefundLoading: false,
+  partialRefundOrder: async (data: PartialRefundParams) => {
+    try {
+      set({ partialRefundLoading: true })
+      await http.post(orderPartialRefundApi, data)
+      return true
+    } catch (err) {
+      console.error(err)
+      return false
+    } finally {
+      set({ partialRefundLoading: false })
     }
   },
 

@@ -1,7 +1,7 @@
 import { Button, Modal, Table } from 'antd'
 import React, { useState } from 'react'
 
-import ConsumptionDetailModal from '@/components/ConsumptionDetailModal'
+import ConsumptionDetailModal from '@/pages/Customer/components/ConsumptionDetailModal'
 import useAnalysisStore from '@/stores/analysisStore'
 import useCustomerStore from '@/stores/customerStore'
 

@@ -48,6 +48,7 @@ export const orderDetailApi = '/order/detail'
 export const orderListApi = '/order/list'
 export const orderListAllApi = '/order/listAll'
 export const orderRefundApi = '/order/refund'
+export const orderPartialRefundApi = '/order/partialRefund'
 export const orderStatsApi = '/order/stats'
 
 export const globalSettingUpsertApi = '/globalSetting/upsert'

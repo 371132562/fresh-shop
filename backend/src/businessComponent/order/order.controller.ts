@@ -2,7 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Prisma } from '@prisma/client';
 
-import { OrderPageParams } from '../../../types/dto';
+import { OrderPageParams, PartialRefundParams } from '../../../types/dto';
 
 @Controller('order')
 export class OrderController {
@@ -41,6 +41,11 @@ export class OrderController {
   @Post('refund')
   refund(@Body('id') id: string) {
     return this.orderService.refund(id);
+  }
+
+  @Post('partialRefund')
+  partialRefund(@Body() data: PartialRefundParams) {
+    return this.orderService.partialRefund(data);
   }
 
   @Post('stats')

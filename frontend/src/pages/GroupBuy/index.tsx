@@ -180,7 +180,18 @@ export const Component = () => {
                           商品：<span className="text-blue-500">{item.product.name}</span>
                         </div>
                       )}
-                      <div className="mt-1 flex items-center font-medium text-gray-800">
+                      {item.partialRefundStats.partialRefundAmount > 0 && (
+                        <div className="font-medium text-gray-800">
+                          部分退款：
+                          <span className="text-orange-600">
+                            ¥{item.partialRefundStats.partialRefundAmount.toFixed(2)}
+                          </span>
+                          <span className="text-blue-500">
+                            /¥{item.partialRefundStats.totalAmount.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="my-1 flex items-center font-medium text-gray-800">
                         <Tag className="ml-2">订单数量：{item.orderStats.orderCount}</Tag>
                         {Object.entries(item.orderStats)
                           .filter(([key]) => key !== 'orderCount')

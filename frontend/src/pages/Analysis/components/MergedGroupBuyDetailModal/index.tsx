@@ -1,4 +1,4 @@
-import { TrophyOutlined } from '@ant-design/icons'
+import { InfoCircleOutlined, TrophyOutlined } from '@ant-design/icons'
 import { QuestionCircleOutlined } from '@ant-design/icons'
 import { Card, Col, Modal, Row, Skeleton, Tooltip } from 'antd'
 import dayjs from 'dayjs'
@@ -146,7 +146,12 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-sm font-medium text-gray-600">总销售额</div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm font-medium text-gray-600">总销售额</span>
+                          <Tooltip title="已扣除部分退款金额">
+                            <InfoCircleOutlined className="text-blue-500" />
+                          </Tooltip>
+                        </div>
                         <div className="mt-1 text-xl font-bold text-emerald-600">
                           ¥{mergedGroupBuyOverviewDetail.totalRevenue.toFixed(2)}
                         </div>
@@ -166,7 +171,12 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-sm font-medium text-gray-600">总利润</div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm font-medium text-gray-600">总利润</span>
+                          <Tooltip title="已扣除部分退款金额">
+                            <InfoCircleOutlined className="text-blue-500" />
+                          </Tooltip>
+                        </div>
                         <div className="mt-1 text-xl font-bold text-red-500">
                           ¥{mergedGroupBuyOverviewDetail.totalProfit.toFixed(2)}
                         </div>

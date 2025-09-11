@@ -10,6 +10,7 @@ import { useNavigate, useParams } from 'react-router'
 
 import MergedGroupBuyDetailModal from '@/pages/Analysis/components/MergedGroupBuyDetailModal'
 import Modify from '@/pages/GroupBuy/Modify.tsx'
+import { PartialRefundButton } from '@/pages/Order/components/PartialRefundModal.tsx'
 import OrderModify from '@/pages/Order/Modify.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import useGroupBuyStore, { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
@@ -440,36 +441,55 @@ export const Component = () => {
                 const nextStatusLabel = getNextOrderStatusLabel(order.status)
                 const canUpdate = canUpdateOrderStatus(order.status)
 
+                // 计算订单总金额
+                const orderTotalAmount = unit ? unit.price * order.quantity : 0
+
+                const actions = []
+
+                if (canUpdate) {
+                  actions.push(
+                    <Popconfirm
+                      key="update-status"
+                      title={
+                        <div className="text-lg">
+                          确定要将订单状态变更为{' '}
+                          <span className="text-blue-500">{nextStatusLabel}</span> 吗？
+                        </div>
+                      }
+                      placement="left"
+                      onConfirm={() => handleUpdateOrderStatus(order)}
+                      okText="确定"
+                      cancelText="取消"
+                      okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
+                      cancelButtonProps={{
+                        size: 'large',
+                        color: 'primary',
+                        variant: 'outlined'
+                      }}
+                    >
+                      <Button type="primary">更新状态</Button>
+                    </Popconfirm>
+                  )
+                  // 添加部分退款按钮
+                  actions.push(
+                    <PartialRefundButton
+                      key="partial-refund"
+                      orderId={order.id}
+                      orderTotalAmount={orderTotalAmount}
+                      currentRefundAmount={order.partialRefundAmount || 0}
+                      orderStatus={order.status}
+                      onSuccess={() => {
+                        // 重新获取团购详情
+                        if (id) {
+                          getGroupBuy({ id })
+                        }
+                      }}
+                    />
+                  )
+                }
+
                 return (
-                  <List.Item
-                    actions={
-                      canUpdate
-                        ? [
-                            <Popconfirm
-                              key="update-status"
-                              title={
-                                <div className="text-lg">
-                                  确定要将订单状态变更为{' '}
-                                  <span className="text-blue-500">{nextStatusLabel}</span> 吗？
-                                </div>
-                              }
-                              placement="left"
-                              onConfirm={() => handleUpdateOrderStatus(order)}
-                              okText="确定"
-                              cancelText="取消"
-                              okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
-                              cancelButtonProps={{
-                                size: 'large',
-                                color: 'primary',
-                                variant: 'outlined'
-                              }}
-                            >
-                              <Button type="primary">更新状态</Button>
-                            </Popconfirm>
-                          ]
-                        : []
-                    }
-                  >
+                  <List.Item actions={actions}>
                     <List.Item.Meta
                       title={
                         <span className="text-base font-medium text-gray-800">
@@ -509,6 +529,19 @@ export const Component = () => {
                               </Tag>
                             </span>
                           </p>
+                          {order.partialRefundAmount > 0 && order.status !== 'REFUNDED' && (
+                            <p className="flex items-center">
+                              <span className="w-20 flex-shrink-0 text-gray-600">部分退款:</span>
+                              <span className="flex-grow">
+                                <span className="text-orange-600">
+                                  ¥{order.partialRefundAmount.toFixed(2)}
+                                </span>
+                                <span className="text-gray-600">
+                                  /¥{orderTotalAmount.toFixed(2)}
+                                </span>
+                              </span>
+                            </p>
+                          )}
                         </div>
                       }
                     />

@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Order, OrderStatus, Prisma } from '@prisma/client';
 
-import { OrderPageParams, ListByPage } from '../../../types/dto';
+import {
+  OrderPageParams,
+  ListByPage,
+  PartialRefundParams,
+} from '../../../types/dto';
 
 @Injectable()
 export class OrderService {
@@ -60,6 +64,7 @@ export class OrderService {
               id: true,
               name: true,
               groupBuyStartDate: true,
+              units: true,
             },
           },
         },
@@ -124,6 +129,77 @@ export class OrderService {
       },
       data: {
         status: OrderStatus.REFUNDED,
+      },
+    });
+  }
+
+  /**
+   * 处理订单部分退款
+   * @param params 部分退款参数
+   * @returns 操作结果
+   */
+  async partialRefund(params: PartialRefundParams) {
+    const { orderId, refundAmount } = params;
+
+    // 获取订单信息
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        groupBuy: {
+          select: {
+            units: true,
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new Error('订单不存在');
+    }
+
+    // 检查订单状态，只有已付款或已完成的订单才能进行部分退款
+    if (
+      order.status !== OrderStatus.PAID &&
+      order.status !== OrderStatus.COMPLETED
+    ) {
+      throw new Error('只有已付款或已完成的订单才能进行部分退款');
+    }
+
+    // 计算订单总金额
+    const units = order.groupBuy.units as Array<{
+      id: string;
+      unit: string;
+      price: number;
+      costPrice: number;
+    }>;
+    const selectedUnit = units.find((unit) => unit.id === order.unitId);
+
+    if (!selectedUnit) {
+      throw new Error('找不到对应的商品规格');
+    }
+
+    const totalAmount = selectedUnit.price * order.quantity;
+    const currentRefundAmount = order.partialRefundAmount || 0;
+    const maxRefundAmount = totalAmount - currentRefundAmount;
+
+    // 检查退款金额是否有效
+    if (refundAmount <= 0) {
+      throw new Error('退款金额必须大于0');
+    }
+
+    if (refundAmount > maxRefundAmount) {
+      throw new Error(`退款金额不能超过剩余可退款金额 ${maxRefundAmount} 元`);
+    }
+
+    // 更新订单的部分退款金额
+    const newRefundAmount = currentRefundAmount + refundAmount;
+
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        partialRefundAmount: newRefundAmount,
+        // 如果退款金额等于总金额，则将订单状态改为已退款
+        ...(newRefundAmount >= totalAmount && { status: OrderStatus.REFUNDED }),
       },
     });
   }
