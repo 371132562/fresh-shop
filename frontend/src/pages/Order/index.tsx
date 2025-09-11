@@ -150,19 +150,18 @@ export const Component = () => {
                   <Button type="primary">更新状态</Button>
                 </Popconfirm>
               )
+              // 添加部分退款按钮
+              actions.push(
+                <PartialRefundButton
+                  key="partial-refund"
+                  orderId={item.id}
+                  orderTotalAmount={itemTotalAmount}
+                  currentRefundAmount={item.partialRefundAmount || 0}
+                  orderStatus={item.status}
+                  onSuccess={() => pageChange()}
+                />
+              )
             }
-
-            // 添加部分退款按钮
-            actions.push(
-              <PartialRefundButton
-                key="partial-refund"
-                orderId={item.id}
-                orderTotalAmount={itemTotalAmount}
-                currentRefundAmount={item.partialRefundAmount || 0}
-                orderStatus={item.status}
-                onSuccess={() => pageChange()}
-              />
-            )
 
             return (
               <List.Item actions={actions}>

@@ -148,7 +148,7 @@ export const Component = () => {
                 >
                   编辑
                 </Button>
-                {order && (
+                {order && order?.status !== OrderStatus.REFUNDED && (
                   <PartialRefundButton
                     orderId={order.id}
                     orderTotalAmount={unit ? unit.price * order.quantity : 0}
