@@ -18,6 +18,7 @@ import { NavLink } from 'react-router'
 
 import ErrorPage from '@/components/Error'
 import OrderStatsButton from '@/components/OrderStatsButton'
+import type { OrphanImageItem } from '@/services/common.ts'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import { buildImageUrl } from '@/utils'
 
@@ -89,29 +90,70 @@ export const Component: FC = () => {
     const ok = await scanOrphans()
     if (ok) {
       setSelectedFilenames([])
-      // 根据扫描结果给出友好的交互提示
-      if (orphanImages.length === 0) {
-        notification.success({
-          message: '扫描完成',
-          description: '未发现孤立图片，系统运行良好！'
-        })
-      } else {
-        // 统计不同类型的孤立图片
-        const diskOnly = orphanImages.filter(item => item.inDisk && !item.inDB).length
-        const dbOnly = orphanImages.filter(item => !item.inDisk && item.inDB).length
-        const neither = orphanImages.filter(item => !item.inDisk && !item.inDB).length
+      // 使用 setTimeout 确保状态更新后再检查
+      setTimeout(() => {
+        const currentOrphanImages = useGlobalSettingStore.getState().orphanImages
+        // 根据扫描结果给出友好的交互提示
+        if (currentOrphanImages.length === 0) {
+          notification.success({
+            message: '扫描完成',
+            description: '未发现孤立图片，系统运行良好！'
+          })
+        } else {
+          // 统计不同类型的孤立图片
+          const diskOnly = currentOrphanImages.filter(
+            (item: OrphanImageItem) => item.inDisk && !item.inDB
+          ).length
+          const dbOnly = currentOrphanImages.filter(
+            (item: OrphanImageItem) => !item.inDisk && item.inDB
+          ).length
+          const neither = currentOrphanImages.filter(
+            (item: OrphanImageItem) => !item.inDisk && !item.inDB
+          ).length
+          const bothButOrphan = currentOrphanImages.filter(
+            (item: OrphanImageItem) => item.inDisk && item.inDB
+          ).length
 
-        let description = `发现 ${orphanImages.length} 张孤立图片：`
-        if (diskOnly > 0) description += `\n• ${diskOnly} 张仅存在于磁盘（可安全删除）`
-        if (dbOnly > 0) description += `\n• ${dbOnly} 张仅存在于数据库（记录异常）`
-        if (neither > 0) description += `\n• ${neither} 张既不在磁盘也不在数据库（数据不一致）`
+          const description = (
+            <div className="space-y-2">
+              <div className="font-medium text-blue-600">
+                发现 {currentOrphanImages.length} 张孤立图片（未被供应商或团购单引用）
+              </div>
+              <div className="space-y-1 text-sm">
+                {bothButOrphan > 0 && (
+                  <div className="flex items-center gap-2 text-green-600">
+                    <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                    <span>{bothButOrphan} 张在磁盘和数据库中但未被引用（可安全删除）</span>
+                  </div>
+                )}
+                {diskOnly > 0 && (
+                  <div className="flex items-center gap-2 text-orange-600">
+                    <span className="h-2 w-2 rounded-full bg-orange-500"></span>
+                    <span>{diskOnly} 张仅存在于磁盘（可安全删除）</span>
+                  </div>
+                )}
+                {dbOnly > 0 && (
+                  <div className="flex items-center gap-2 text-red-600">
+                    <span className="h-2 w-2 rounded-full bg-red-500"></span>
+                    <span>{dbOnly} 张仅存在于数据库（记录异常）</span>
+                  </div>
+                )}
+                {neither > 0 && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <span className="h-2 w-2 rounded-full bg-gray-500"></span>
+                    <span>{neither} 张既不在磁盘也不在数据库（数据不一致）</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
 
-        notification.info({
-          message: '扫描完成',
-          description,
-          duration: 5 // 延长显示时间，让用户有足够时间阅读详细信息
-        })
-      }
+          notification.info({
+            message: '扫描完成',
+            description
+          })
+        }
+      }, 0)
     } else {
       notification.error({
         message: '扫描失败',
@@ -309,19 +351,64 @@ export const Component: FC = () => {
                     删除所选
                   </Button>
                 </div>
-                <div className="text-sm text-gray-500">
-                  共 {orphanImages.length} 张候选图片
-                  {orphanImages.length > 0 && (
-                    <span>
-                      （{orphanImages.filter(item => item.inDisk && !item.inDB).length}{' '}
-                      张可安全删除，
-                      {orphanImages.filter(item => !item.inDisk && item.inDB).length}{' '}
-                      张数据库记录异常，
-                      {orphanImages.filter(item => !item.inDisk && !item.inDB).length} 张数据不一致
-                      ）
-                    </span>
+                <div className="text-sm text-gray-600">
+                  {orphanImages.length === 0 ? (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <span className="text-lg">✓</span>
+                      <span>未发现孤立图片，系统运行良好</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-blue-600">
+                        <span className="font-medium">共 {orphanImages.length} 张候选图片</span>
+                      </div>
+                      <div className="space-y-1">
+                        {(() => {
+                          const safeDelete = orphanImages.filter(
+                            item => item.inDisk && item.inDB
+                          ).length
+                          const diskOnly = orphanImages.filter(
+                            item => item.inDisk && !item.inDB
+                          ).length
+                          const dbOnly = orphanImages.filter(
+                            item => !item.inDisk && item.inDB
+                          ).length
+                          const inconsistent = orphanImages.filter(
+                            item => !item.inDisk && !item.inDB
+                          ).length
+
+                          return (
+                            <>
+                              {safeDelete > 0 && (
+                                <div className="flex items-center gap-2 text-green-600">
+                                  <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                                  <span>{safeDelete} 张可安全删除（未被引用）</span>
+                                </div>
+                              )}
+                              {diskOnly > 0 && (
+                                <div className="flex items-center gap-2 text-orange-600">
+                                  <span className="h-2 w-2 rounded-full bg-orange-500"></span>
+                                  <span>{diskOnly} 张仅磁盘存在</span>
+                                </div>
+                              )}
+                              {dbOnly > 0 && (
+                                <div className="flex items-center gap-2 text-red-600">
+                                  <span className="h-2 w-2 rounded-full bg-red-500"></span>
+                                  <span>{dbOnly} 张数据库记录异常</span>
+                                </div>
+                              )}
+                              {inconsistent > 0 && (
+                                <div className="flex items-center gap-2 text-gray-600">
+                                  <span className="h-2 w-2 rounded-full bg-gray-500"></span>
+                                  <span>{inconsistent} 张数据不一致</span>
+                                </div>
+                              )}
+                            </>
+                          )
+                        })()}
+                      </div>
+                    </div>
                   )}
-                  。支持预览与多选删除。
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   {orphanImages.map(item => (

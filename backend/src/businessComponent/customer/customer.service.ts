@@ -54,7 +54,7 @@ export class CustomerService {
         totalAmount: 0,
         averagePricePerOrder: 0,
         totalPartialRefundAmount: 0,
-        topProducts: [],
+        productConsumptionRanks: [],
       };
     }
 
@@ -141,35 +141,33 @@ export class CustomerService {
 
     const averagePricePerOrder = totalAmount / orderCount;
 
-    // 找到全局最新的团购时间（用于标识最新消费）
-    // 先找到所有商品中最新的团购发起时间，如果发起时间相同则对比创建时间
+    // 找到全局最新的团购发起时间（用于标识最新消费）
     let globalLatestDate: Date | null = null;
-    let globalLatestCreatedAt: Date | null = null;
-
-    // 获取所有团购的发起时间和创建时间用于比较
-    const allGroupBuyDates: Array<{ startDate: Date; createdAt: Date }> = [];
-
     for (const order of orders) {
-      allGroupBuyDates.push({
-        startDate: order.groupBuy.groupBuyStartDate,
-        createdAt: order.groupBuy.createdAt,
-      });
-    }
+      const startDate = order.groupBuy.groupBuyStartDate;
 
-    // 找到全局最新的团购（优先按发起时间，发起时间相同则按创建时间）
-    for (const { startDate, createdAt } of allGroupBuyDates) {
-      if (
-        !globalLatestDate ||
-        startDate > globalLatestDate ||
-        (startDate.getTime() === globalLatestDate.getTime() &&
-          (!globalLatestCreatedAt || createdAt > globalLatestCreatedAt))
-      ) {
+      if (!globalLatestDate || startDate > globalLatestDate) {
         globalLatestDate = startDate;
-        globalLatestCreatedAt = createdAt;
       }
     }
 
-    const topProducts = Object.entries(productCounts)
+    // 当存在多个同一天的团购时，再细分比较创建时间，找出该天中最新创建的时间
+    let globalLatestCreatedAt: Date | null = null;
+    if (globalLatestDate) {
+      for (const order of orders) {
+        if (
+          order.groupBuy.groupBuyStartDate.getTime() ===
+          globalLatestDate.getTime()
+        ) {
+          const createdAt = order.groupBuy.createdAt;
+          if (!globalLatestCreatedAt || createdAt > globalLatestCreatedAt) {
+            globalLatestCreatedAt = createdAt;
+          }
+        }
+      }
+    }
+
+    const productConsumptionRanks = Object.entries(productCounts)
       .sort(([, a], [, b]) => {
         // 计算每个商品的总消费金额
         const totalAmountA = Object.values(a.groupBuys).reduce(
@@ -183,53 +181,57 @@ export class CustomerService {
         // 按照总消费金额从高到低排序
         return totalAmountB - totalAmountA;
       })
-      .slice(0, 5)
       .map(([productId, { name, count, groupBuys }]) => {
-        // 找到该商品中最新的团购时间和创建时间
+        // 找到该商品中最新的团购发起时间
         let productLatestDate: Date | null = null;
-        let productLatestCreatedAt: Date | null = null;
 
-        // 从该商品的所有团购中找到最新的
+        // 从该商品的所有团购中找到最新的发起时间
         const productGroupBuys = Object.values(groupBuys);
         for (const gb of productGroupBuys) {
-          // 需要从原始订单中找到对应的创建时间
-          const matchingOrders = orders.filter(
-            (order) =>
-              order.groupBuy.name === gb.groupBuyName &&
-              order.groupBuy.groupBuyStartDate.getTime() ===
-                gb.latestGroupBuyStartDate.getTime(),
-          );
+          const startDate = gb.latestGroupBuyStartDate;
 
-          for (const order of matchingOrders) {
-            const startDate = order.groupBuy.groupBuyStartDate;
-            const createdAt = order.groupBuy.createdAt;
-
-            if (
-              !productLatestDate ||
-              startDate > productLatestDate ||
-              (startDate.getTime() === productLatestDate.getTime() &&
-                (!productLatestCreatedAt || createdAt > productLatestCreatedAt))
-            ) {
-              productLatestDate = startDate;
-              productLatestCreatedAt = createdAt;
-            }
+          if (!productLatestDate || startDate > productLatestDate) {
+            productLatestDate = startDate;
           }
         }
 
-        // 判断当前商品是否包含最新消费
-        const isLatestConsumption =
-          productLatestDate &&
-          globalLatestDate &&
-          globalLatestCreatedAt &&
-          productLatestCreatedAt &&
-          productLatestDate.getTime() === globalLatestDate.getTime() &&
-          productLatestCreatedAt.getTime() === globalLatestCreatedAt.getTime();
+        // 基于发起时间进行初次判定
+        let isLatestConsumption =
+          !!productLatestDate &&
+          !!globalLatestDate &&
+          productLatestDate.getTime() === globalLatestDate.getTime();
+
+        // 当发起时间相同可能存在多个“最新”，此时使用创建时间做二次细分
+        if (isLatestConsumption && globalLatestCreatedAt && productLatestDate) {
+          let productLatestCreatedAt: Date | null = null;
+          // 在该商品、该发起日期下找到创建时间的最大值
+          for (const order of orders) {
+            if (
+              order.groupBuy.productId === productId &&
+              order.groupBuy.groupBuyStartDate.getTime() ===
+                productLatestDate.getTime()
+            ) {
+              const createdAt = order.groupBuy.createdAt;
+              if (
+                !productLatestCreatedAt ||
+                createdAt > productLatestCreatedAt
+              ) {
+                productLatestCreatedAt = createdAt;
+              }
+            }
+          }
+
+          isLatestConsumption =
+            !!productLatestCreatedAt &&
+            productLatestCreatedAt.getTime() ===
+              globalLatestCreatedAt.getTime();
+        }
 
         return {
           productId,
           productName: name,
           count,
-          isLatestConsumption: !!isLatestConsumption,
+          isLatestConsumption,
           groupBuys: Object.values(groupBuys).sort((a, b) => {
             // 按照最近参与时间倒序排列（最新的在前）
             const dateA = new Date(a.latestGroupBuyStartDate);
@@ -245,7 +247,7 @@ export class CustomerService {
       totalAmount,
       averagePricePerOrder,
       totalPartialRefundAmount,
-      topProducts,
+      productConsumptionRanks,
     };
   }
 

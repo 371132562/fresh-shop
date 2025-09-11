@@ -265,7 +265,7 @@ export type CustomerConsumptionDetailDto = {
   totalAmount: number; // 订单总额（已扣除部分退款）
   averagePricePerOrder: number; // 每单平均价格
   totalPartialRefundAmount: number; // 总部分退款金额
-  topProducts: {
+  productConsumptionRanks: {
     productId: string; // 商品ID
     productName: string; // 商品名称
     count: number; // 购买次数
@@ -278,7 +278,7 @@ export type CustomerConsumptionDetailDto = {
       totalPartialRefundAmount: number; // 该团购规格的总部分退款金额
       latestGroupBuyStartDate: Date; // 最近一次团购发起时间
     }[]; // 该商品下的团购单列表
-  }[]; // 购买最多的商品及其团购详情
+  }[]; // 客户的商品消费排行（完整）
 };
 
 /**
