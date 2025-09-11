@@ -665,7 +665,6 @@ export type OrderDetail = Order & {
 export type PartialRefundParams = {
   orderId: string; // 订单ID
   refundAmount: number; // 退款金额
-  reason?: string; // 退款原因（可选）
 };
 
 /**

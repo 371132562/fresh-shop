@@ -1,4 +1,4 @@
-import { Button, Form, Input, InputNumber, Modal, notification } from 'antd'
+import { Button, Form, InputNumber, Modal, notification } from 'antd'
 import { PartialRefundParams } from 'fresh-shop-backend/types/dto.ts'
 import { useState } from 'react'
 
@@ -48,8 +48,7 @@ const PartialRefundModal = ({
 
       const params: PartialRefundParams = {
         orderId,
-        refundAmount: values.refundAmount,
-        reason: values.reason || undefined
+        refundAmount: values.refundAmount
       }
 
       const success = await partialRefundOrder(params)
@@ -170,18 +169,6 @@ const PartialRefundModal = ({
               precision={2}
               className="w-full"
               addonBefore="￥"
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="退款原因"
-            name="reason"
-          >
-            <Input.TextArea
-              placeholder="请输入退款原因（可选）"
-              rows={3}
-              maxLength={200}
-              showCount
             />
           </Form.Item>
         </Form>
