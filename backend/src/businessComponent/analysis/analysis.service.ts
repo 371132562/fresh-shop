@@ -1719,13 +1719,44 @@ export class AnalysisService {
         const partialRefundAmount = order.partialRefundAmount || 0;
 
         if (order.status === OrderStatus.REFUNDED) {
-          // 全额退款：收入为0，利润为-成本；不计入订单量及客户/商品/分类/地域统计
+          // 全额退款：收入为0，利润为-成本；不计入订单量及客户/地域统计
           const refundedCost = unit.costPrice * order.quantity;
           totalProfit += -refundedCost;
-          // 同步计入当前团购历史项的利润（体现最终损益）
           groupBuyProfit += -refundedCost;
-          // totalRevenue += 0;
-          // 不累计 partialRefundAmount（对展示无意义）
+
+          // 同步将负成本计入商品与分类的利润（不增加订单量/商品数量）
+          const productKey = groupBuy.product.id;
+          if (!productStats.has(productKey)) {
+            productStats.set(productKey, {
+              productId: groupBuy.product.id,
+              productName: groupBuy.product.name,
+              categoryId: groupBuy.product.productType.id,
+              categoryName: groupBuy.product.productType.name,
+              totalRevenue: 0,
+              totalProfit: 0,
+              orderCount: 0,
+              groupBuyCount: 0,
+            });
+          }
+          const productStatRefund = productStats.get(productKey)!;
+          // revenue 加 0；利润计入负成本
+          productStatRefund.totalProfit += -refundedCost;
+
+          const categoryKey = groupBuy.product.productType.id;
+          if (!categoryStats.has(categoryKey)) {
+            categoryStats.set(categoryKey, {
+              categoryId: groupBuy.product.productType.id,
+              categoryName: groupBuy.product.productType.name,
+              totalRevenue: 0,
+              totalProfit: 0,
+              orderCount: 0,
+              productCount: 0,
+              groupBuyCount: 0,
+            });
+          }
+          const categoryStatRefund = categoryStats.get(categoryKey)!;
+          categoryStatRefund.totalProfit += -refundedCost;
+
           continue;
         }
 
