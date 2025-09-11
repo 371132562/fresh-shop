@@ -1640,7 +1640,11 @@ export class AnalysisService {
           where: {
             delete: 0,
             status: {
-              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+              in: [
+                OrderStatus.PAID,
+                OrderStatus.COMPLETED,
+                OrderStatus.REFUNDED,
+              ],
             },
           },
           select: {
@@ -1708,94 +1712,102 @@ export class AnalysisService {
       // 遍历该团购单的所有订单，计算各项统计数据
       for (const order of groupBuy.order) {
         const unit = units.get(order.unitId);
-        if (unit) {
-          // 计算单个订单的销售额和利润（扣除部分退款）
-          const originalRevenue = unit.price * order.quantity; // 原始销售额 = 单价 × 数量
-          const originalProfit = (unit.price - unit.costPrice) * order.quantity; // 原始利润 = (单价 - 成本价) × 数量
-          const partialRefundAmount = order.partialRefundAmount || 0; // 部分退款金额
+        if (!unit) continue;
 
-          // 仅退款不退货：部分退款按绝对额扣利润（此处为PAID/COMPLETED分支）
-          const orderRevenue = originalRevenue - partialRefundAmount;
-          const orderProfit = originalProfit - partialRefundAmount;
+        const originalRevenue = unit.price * order.quantity;
+        const originalProfit = (unit.price - unit.costPrice) * order.quantity;
+        const partialRefundAmount = order.partialRefundAmount || 0;
 
-          // 累加到总体统计中
-          totalRevenue += orderRevenue;
-          totalProfit += orderProfit;
-          totalPartialRefundAmount += partialRefundAmount;
-          totalOrderCount++;
-          // 累加到当前团购单统计中
-          groupBuyRevenue += orderRevenue;
-          groupBuyProfit += orderProfit;
-          groupBuyPartialRefundAmount += partialRefundAmount;
-          groupBuyOrderCount++;
+        if (order.status === OrderStatus.REFUNDED) {
+          // 全额退款：收入为0，利润为-成本；不计入订单量及客户/商品/分类/地域统计
+          const refundedCost = unit.costPrice * order.quantity;
+          totalProfit += -refundedCost;
+          // 同步计入当前团购历史项的利润（体现最终损益）
+          groupBuyProfit += -refundedCost;
+          // totalRevenue += 0;
+          // 不累计 partialRefundAmount（对展示无意义）
+          continue;
+        }
 
-          // 添加客户ID到去重集合中
-          uniqueCustomerIds.add(order.customerId); // 总体客户去重
-          groupBuyCustomerIds.add(order.customerId); // 当前团购单客户去重
+        // 已支付/已完成：仅退款不退货，部分退款按绝对额扣利润
+        const orderRevenue = originalRevenue - partialRefundAmount;
+        const orderProfit = originalProfit - partialRefundAmount;
 
-          // 统计客户购买次数
-          const currentCount =
-            customerPurchaseCounts.get(order.customerId) || 0;
-          customerPurchaseCounts.set(order.customerId, currentCount + 1);
+        // 累加到总体统计中
+        totalRevenue += orderRevenue;
+        totalProfit += orderProfit;
+        totalPartialRefundAmount += partialRefundAmount;
+        totalOrderCount++;
+        // 累加到当前团购单统计中
+        groupBuyRevenue += orderRevenue;
+        groupBuyProfit += orderProfit;
+        groupBuyPartialRefundAmount += partialRefundAmount;
+        groupBuyOrderCount++;
 
-          // 统计商品数据
-          const productKey = groupBuy.product.id;
-          if (!productStats.has(productKey)) {
-            productStats.set(productKey, {
-              productId: groupBuy.product.id,
-              productName: groupBuy.product.name,
-              categoryId: groupBuy.product.productType.id,
-              categoryName: groupBuy.product.productType.name,
-              totalRevenue: 0,
-              totalProfit: 0,
-              orderCount: 0,
-              groupBuyCount: 0,
+        // 添加客户ID到去重集合中
+        uniqueCustomerIds.add(order.customerId);
+        groupBuyCustomerIds.add(order.customerId);
+
+        // 统计客户购买次数
+        const currentCount = customerPurchaseCounts.get(order.customerId) || 0;
+        customerPurchaseCounts.set(order.customerId, currentCount + 1);
+
+        // 统计商品数据
+        const productKey = groupBuy.product.id;
+        if (!productStats.has(productKey)) {
+          productStats.set(productKey, {
+            productId: groupBuy.product.id,
+            productName: groupBuy.product.name,
+            categoryId: groupBuy.product.productType.id,
+            categoryName: groupBuy.product.productType.name,
+            totalRevenue: 0,
+            totalProfit: 0,
+            orderCount: 0,
+            groupBuyCount: 0,
+          });
+        }
+        const productStat = productStats.get(productKey)!;
+        productStat.totalRevenue += orderRevenue;
+        productStat.totalProfit += orderProfit;
+        productStat.orderCount++;
+
+        // 统计分类数据
+        const categoryKey = groupBuy.product.productType.id;
+        if (!categoryStats.has(categoryKey)) {
+          categoryStats.set(categoryKey, {
+            categoryId: groupBuy.product.productType.id,
+            categoryName: groupBuy.product.productType.name,
+            totalRevenue: 0,
+            totalProfit: 0,
+            orderCount: 0,
+            productCount: 0,
+            groupBuyCount: 0,
+          });
+        }
+        const categoryStat = categoryStats.get(categoryKey)!;
+        categoryStat.totalRevenue += orderRevenue;
+        categoryStat.totalProfit += orderProfit;
+        categoryStat.orderCount++;
+
+        // 记录分类下出现过的商品ID（用于去重统计商品数量）
+        if (!categoryProductIds.has(categoryKey)) {
+          categoryProductIds.set(categoryKey, new Set<string>());
+        }
+        categoryProductIds.get(categoryKey)!.add(groupBuy.product.id);
+
+        // 统计地域数据
+        const addressId = order.customer.customerAddress?.id;
+        const addressName = order.customer.customerAddress?.name || '未知地址';
+        if (addressId) {
+          if (!regionalStats.has(addressId)) {
+            regionalStats.set(addressId, {
+              addressId,
+              addressName,
+              customerIds: new Set<string>(),
             });
           }
-          const productStat = productStats.get(productKey)!;
-          productStat.totalRevenue += orderRevenue;
-          productStat.totalProfit += orderProfit;
-          productStat.orderCount++;
-
-          // 统计分类数据
-          const categoryKey = groupBuy.product.productType.id;
-          if (!categoryStats.has(categoryKey)) {
-            categoryStats.set(categoryKey, {
-              categoryId: groupBuy.product.productType.id,
-              categoryName: groupBuy.product.productType.name,
-              totalRevenue: 0,
-              totalProfit: 0,
-              orderCount: 0,
-              productCount: 0,
-              groupBuyCount: 0,
-            });
-          }
-          const categoryStat = categoryStats.get(categoryKey)!;
-          categoryStat.totalRevenue += orderRevenue;
-          categoryStat.totalProfit += orderProfit;
-          categoryStat.orderCount++;
-
-          // 记录分类下出现过的商品ID（用于去重统计商品数量）
-          if (!categoryProductIds.has(categoryKey)) {
-            categoryProductIds.set(categoryKey, new Set<string>());
-          }
-          categoryProductIds.get(categoryKey)!.add(groupBuy.product.id);
-
-          // 统计地域数据
-          const addressId = order.customer.customerAddress?.id;
-          const addressName =
-            order.customer.customerAddress?.name || '未知地址';
-          if (addressId) {
-            if (!regionalStats.has(addressId)) {
-              regionalStats.set(addressId, {
-                addressId,
-                addressName,
-                customerIds: new Set<string>(),
-              });
-            }
-            const regionalStat = regionalStats.get(addressId)!;
-            regionalStat.customerIds.add(order.customerId);
-          }
+          const regionalStat = regionalStats.get(addressId)!;
+          regionalStat.customerIds.add(order.customerId);
         }
       }
 
