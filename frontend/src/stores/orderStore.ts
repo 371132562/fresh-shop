@@ -58,6 +58,13 @@ export const OrderStatusOptions = Object.entries(OrderStatusMap).map(([value, co
   color: content.color
 }))
 
+// UI 伪状态：部分退款（非已退款且部分退款金额>0）
+export const PSEUDO_STATUS_PARTIAL_REFUND = 'PARTIAL_REFUND'
+export const ExtendedOrderStatusOptions = [
+  ...OrderStatusOptions,
+  { value: PSEUDO_STATUS_PARTIAL_REFUND, label: '部分退款', color: '#fa8c16' }
+]
+
 type OrderCreate = Omit<Order, 'id' | 'delete' | 'createdAt' | 'updatedAt'>
 
 type OrderId = Pick<Order, 'id'>
@@ -134,7 +141,14 @@ const useOrderStore = create<OrderStore>((set, get) => ({
   getOrderList: async (data = get().pageParams) => {
     try {
       set({ listLoading: true })
-      const res: ResponseBody<ListByPage<OrderDetail[]>> = await http.post(orderListApi, data)
+      const payload: Record<string, unknown> = { ...data }
+      // 将伪状态映射为 hasPartialRefund 标志，并从真实 statuses 中剔除
+      const statuses = payload.statuses as string[] | undefined
+      if (Array.isArray(statuses) && statuses.includes(PSEUDO_STATUS_PARTIAL_REFUND)) {
+        payload.hasPartialRefund = true
+        payload.statuses = statuses.filter((s: string) => s !== PSEUDO_STATUS_PARTIAL_REFUND)
+      }
+      const res: ResponseBody<ListByPage<OrderDetail[]>> = await http.post(orderListApi, payload)
       if (res.data.page > res.data.totalPages && res.data.totalPages) {
         get().setPageParams({ page: res.data.totalPages || 1 })
         return

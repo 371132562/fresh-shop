@@ -1,10 +1,10 @@
+import { GroupBuyPageParams, ListByPage } from 'fresh-shop-backend/types/dto.ts'
 import {
   AllGroupBuyItem,
   GroupBuy,
   GroupBuyDetail,
   GroupBuyListItem
 } from 'fresh-shop-backend/types/dto.ts'
-import { GroupBuyPageParams, ListByPage } from 'fresh-shop-backend/types/dto.ts'
 import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
 
@@ -17,6 +17,7 @@ import {
   groupBuyUpdateApi
 } from '@/services/apis.ts'
 import http from '@/services/base.ts'
+import { PSEUDO_STATUS_PARTIAL_REFUND } from '@/stores/orderStore.ts'
 
 import useOrderStore from './orderStore'
 
@@ -79,9 +80,18 @@ const useGroupBuyStore = create<GroupBuyStore>((set, get) => ({
   getGroupBuyList: async (data = get().pageParams) => {
     try {
       set({ listLoading: true })
+      const payload: Record<string, unknown> = { ...data }
+      // 将伪状态映射为 hasPartialRefund，并从真实 orderStatuses 中剔除
+      const orderStatuses = payload.orderStatuses as string[] | undefined
+      if (Array.isArray(orderStatuses) && orderStatuses.includes(PSEUDO_STATUS_PARTIAL_REFUND)) {
+        payload.hasPartialRefund = true
+        payload.orderStatuses = orderStatuses.filter(
+          (s: string) => s !== PSEUDO_STATUS_PARTIAL_REFUND
+        )
+      }
       const res: ResponseBody<ListByPage<GroupBuyListItem[]>> = await http.post(
         groupBuyListApi,
-        data
+        payload
       )
       if (res.data.page > res.data.totalPages && res.data.totalPages) {
         get().setPageParams({ page: res.data.totalPages || 1 })

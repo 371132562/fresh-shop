@@ -5,7 +5,11 @@ import { NavLink } from 'react-router'
 
 import useCustomerStore from '@/stores/customerStore.ts'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
-import useOrderStore, { OrderStatusMap, OrderStatusOptions } from '@/stores/orderStore.ts'
+import useOrderStore, {
+  ExtendedOrderStatusOptions,
+  OrderStatusMap,
+  OrderStatusOptions
+} from '@/stores/orderStore.ts'
 import { formatDate } from '@/utils'
 
 import { PartialRefundButton } from './components/PartialRefundModal.tsx'
@@ -313,7 +317,7 @@ export const Component = () => {
               allowClear
               placeholder="请选择订单状态"
             >
-              {OrderStatusOptions.map(option => {
+              {(ExtendedOrderStatusOptions || OrderStatusOptions).map(option => {
                 return (
                   <Select.Option
                     key={option.value}

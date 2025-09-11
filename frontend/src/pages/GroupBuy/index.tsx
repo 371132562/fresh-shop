@@ -10,7 +10,12 @@ import { NavLink } from 'react-router'
 
 import MergedGroupBuyDetailModal from '@/pages/Analysis/components/MergedGroupBuyDetailModal'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
-import { OrderStatus, OrderStatusMap, OrderStatusOptions } from '@/stores/orderStore.ts'
+import {
+  ExtendedOrderStatusOptions,
+  OrderStatus,
+  OrderStatusMap,
+  OrderStatusOptions
+} from '@/stores/orderStore.ts'
 import useProductStore from '@/stores/productStore.ts'
 import useSupplierStore from '@/stores/supplierStore.ts'
 import { formatDate } from '@/utils'
@@ -337,7 +342,7 @@ export const Component = () => {
               allowClear
               placeholder="请选择订单状态"
             >
-              {OrderStatusOptions.map(option => {
+              {(ExtendedOrderStatusOptions || OrderStatusOptions).map(option => {
                 return (
                   <Select.Option
                     key={option.value}

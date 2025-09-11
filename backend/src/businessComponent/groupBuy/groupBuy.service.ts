@@ -45,6 +45,7 @@ export class GroupBuyService {
       supplierIds,
       productIds,
       orderStatuses,
+      hasPartialRefund,
     } = data;
     const skip = (page - 1) * pageSize; // 计算要跳过的记录数
 
@@ -85,6 +86,17 @@ export class GroupBuyService {
             in: orderStatuses,
           },
           delete: 0,
+        },
+      };
+    }
+
+    // 伪状态：部分退款（非已退款且部分退款金额>0）
+    if (hasPartialRefund) {
+      where.order = {
+        some: {
+          delete: 0,
+          partialRefundAmount: { gt: 0 },
+          status: { not: 'REFUNDED' },
         },
       };
     }

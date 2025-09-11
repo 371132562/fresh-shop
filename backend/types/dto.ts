@@ -347,6 +347,7 @@ export type GroupBuyPageParams = CommonPageParams & {
   supplierIds: Supplier['id'][]; // 供货商ID数组（精确匹配）
   productIds: Product['id'][]; // 商品ID数组（精确匹配）
   orderStatuses: OrderStatus[]; // 订单状态数组（精确匹配）
+  hasPartialRefund?: boolean; // 是否筛选包含部分退款（非已退款且部分退款金额>0）的订单
 };
 
 /**
@@ -642,6 +643,7 @@ export type OrderPageParams = CommonPageParams & {
   customerIds: Customer['id'][]; // 客户ID数组（精确匹配）
   groupBuyIds: GroupBuy['id'][]; // 团购ID数组（精确匹配）
   statuses: OrderStatus[]; // 订单状态数组（精确匹配）
+  hasPartialRefund?: boolean; // 是否筛选部分退款（非已退款且部分退款金额>0）
 };
 
 /**

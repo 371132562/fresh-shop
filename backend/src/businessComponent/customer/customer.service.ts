@@ -31,13 +31,14 @@ export class CustomerService {
         customerId: id,
         delete: 0,
         status: {
-          in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+          in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
         },
       },
       select: {
         quantity: true,
         unitId: true,
-        partialRefundAmount: true, // 添加部分退款金额字段
+        partialRefundAmount: true, // 部分退款金额
+        status: true,
         groupBuy: {
           include: {
             product: true,
@@ -85,7 +86,11 @@ export class CustomerService {
       if (unit) {
         const originalAmount = unit.price * order.quantity;
         const partialRefundAmount = order.partialRefundAmount || 0;
-        const orderAmount = originalAmount - partialRefundAmount;
+        // 客户消费额：已退款订单不计入消费额（收入为0）；部分退款按绝对额扣减
+        const orderAmount =
+          order.status === OrderStatus.REFUNDED
+            ? 0
+            : originalAmount - partialRefundAmount;
         totalAmount += orderAmount;
         totalPartialRefundAmount += partialRefundAmount;
 
@@ -363,13 +368,18 @@ export class CustomerService {
               customerId: customer.id,
               delete: 0,
               status: {
-                in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+                in: [
+                  OrderStatus.PAID,
+                  OrderStatus.COMPLETED,
+                  OrderStatus.REFUNDED,
+                ],
               },
             },
             select: {
               quantity: true,
               unitId: true,
-              partialRefundAmount: true, // 添加部分退款金额字段
+              partialRefundAmount: true,
+              status: true,
               groupBuy: {
                 select: {
                   units: true,
@@ -378,14 +388,18 @@ export class CustomerService {
             },
           });
 
-          // 计算总金额（扣除部分退款）
+          // 计算总金额（扣除部分退款；已退款订单不计入消费额）
           let totalAmount = 0;
           orders.forEach((order) => {
             const units = order.groupBuy.units as GroupBuyUnit[];
             const unit = units.find((u) => u.id === order.unitId);
             if (unit) {
               const originalAmount = unit.price * order.quantity;
-              totalAmount += originalAmount - (order.partialRefundAmount || 0);
+              const partial = order.partialRefundAmount || 0;
+              totalAmount +=
+                order.status === OrderStatus.REFUNDED
+                  ? 0
+                  : originalAmount - partial;
             }
           });
 
@@ -466,13 +480,18 @@ export class CustomerService {
               customerId: customer.id,
               delete: 0,
               status: {
-                in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+                in: [
+                  OrderStatus.PAID,
+                  OrderStatus.COMPLETED,
+                  OrderStatus.REFUNDED,
+                ],
               },
             },
             select: {
               quantity: true,
               unitId: true,
               partialRefundAmount: true,
+              status: true,
               groupBuy: {
                 select: {
                   units: true,
@@ -488,7 +507,10 @@ export class CustomerService {
             if (unit) {
               const originalAmount = unit.price * order.quantity;
               const partialRefundAmount = order.partialRefundAmount || 0;
-              const orderAmount = originalAmount - partialRefundAmount;
+              const orderAmount =
+                order.status === OrderStatus.REFUNDED
+                  ? 0
+                  : originalAmount - partialRefundAmount;
               totalAmount += orderAmount;
             }
           });

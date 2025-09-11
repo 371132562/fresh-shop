@@ -47,7 +47,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       defaultSortOrder: 'descend' as const
     },
     {
-      title: '团购名称',
+      title: '团购',
       dataIndex: 'groupBuyName',
       key: 'groupBuyName',
       render: (name: string, record) => (
@@ -61,13 +61,13 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       )
     },
     {
-      title: '订单数量',
+      title: '订单量',
       dataIndex: 'orderCount',
       key: 'orderCount',
       render: (count: number) => <span className="font-medium text-green-600">{count}单</span>
     },
     {
-      title: '客户数量',
+      title: '客户量',
       dataIndex: 'customerCount',
       key: 'customerCount',
       render: (count: number) => <span className="font-medium text-purple-600">{count}人</span>
@@ -89,7 +89,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       )
     },
     {
-      title: '部分退款金额',
+      title: '部分退款',
       dataIndex: 'partialRefundAmount',
       key: 'partialRefundAmount',
       render: (amount: number) => (
@@ -97,7 +97,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       )
     },
     {
-      title: '退款订单数',
+      title: '退款订单',
       dataIndex: 'refundedOrderCount',
       key: 'refundedOrderCount',
       render: (count: number) => <span className="font-medium text-orange-500">{count}单</span>

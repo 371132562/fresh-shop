@@ -24,7 +24,14 @@ export class OrderService {
   }
 
   async list(data: OrderPageParams): Promise<ListByPage<Order[]>> {
-    const { page, pageSize, customerIds, groupBuyIds, statuses } = data;
+    const {
+      page,
+      pageSize,
+      customerIds,
+      groupBuyIds,
+      statuses,
+      hasPartialRefund,
+    } = data;
     const skip = (page - 1) * pageSize; // 计算要跳过的记录数
 
     const where: Prisma.OrderWhereInput = {
@@ -47,6 +54,20 @@ export class OrderService {
       where.status = {
         in: statuses,
       };
+    }
+
+    // 伪状态：部分退款（非已退款且部分退款金额>0）
+    if (hasPartialRefund) {
+      const existingAnd = Array.isArray(where.AND)
+        ? where.AND
+        : where.AND
+          ? [where.AND]
+          : [];
+      where.AND = [
+        ...existingAnd,
+        { partialRefundAmount: { gt: 0 } },
+        { status: { not: OrderStatus.REFUNDED } },
+      ];
     }
 
     const [orders, totalCount] = await this.prisma.$transaction([

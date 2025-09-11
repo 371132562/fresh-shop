@@ -89,7 +89,11 @@ export class AnalysisService {
         order: {
           where: {
             status: {
-              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+              in: [
+                OrderStatus.PAID,
+                OrderStatus.COMPLETED,
+                OrderStatus.REFUNDED,
+              ],
             },
             delete: 0, // 确保订单未被删除
           },
@@ -97,6 +101,7 @@ export class AnalysisService {
             quantity: true,
             unitId: true,
             partialRefundAmount: true, // 添加部分退款金额字段
+            status: true,
           },
         },
       },
@@ -128,6 +133,7 @@ export class AnalysisService {
       // 遍历当前团购单下的所有订单，计算订单总数、销售额、利润及订单趋势
       for (const order of groupBuy.order as (SelectedOrder & {
         partialRefundAmount: number;
+        status: OrderStatus;
       })[]) {
         orderCount++; // 每找到一个订单就计数
 
@@ -144,13 +150,20 @@ export class AnalysisService {
           const originalSalesAmount = selectedUnit.price * order.quantity;
           const originalProfitAmount =
             (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+          const originalCostAmount = selectedUnit.costPrice * order.quantity;
 
-          // 计算扣除部分退款后的实际销售额和利润
-          // 部分退款会减少销售额，同时按比例减少利润
-          const refundRatio = order.partialRefundAmount / originalSalesAmount;
-          const actualSalesAmount =
-            originalSalesAmount - order.partialRefundAmount;
-          const actualProfitAmount = originalProfitAmount * (1 - refundRatio);
+          let actualSalesAmount = 0;
+          let actualProfitAmount = 0;
+          if (order.status === OrderStatus.REFUNDED) {
+            // 全额退款：收入为0，利润为-成本
+            actualSalesAmount = 0;
+            actualProfitAmount = -originalCostAmount;
+          } else {
+            // 部分退款：仅退款不退货
+            const partial = order.partialRefundAmount || 0;
+            actualSalesAmount = originalSalesAmount - partial;
+            actualProfitAmount = originalProfitAmount - partial;
+          }
 
           totalPrice += actualSalesAmount;
           totalProfit += actualProfitAmount;
@@ -237,13 +250,18 @@ export class AnalysisService {
           where: {
             delete: 0,
             status: {
-              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+              in: [
+                OrderStatus.PAID,
+                OrderStatus.COMPLETED,
+                OrderStatus.REFUNDED,
+              ],
             },
           },
           select: {
             quantity: true,
             unitId: true,
-            partialRefundAmount: true, // 添加部分退款金额字段
+            partialRefundAmount: true,
+            status: true,
           },
         },
       },
@@ -259,17 +277,25 @@ export class AnalysisService {
         quantity: number;
         unitId: string;
         partialRefundAmount: number;
+        status: OrderStatus;
       }>) {
         const selectedUnit = units.find((unit) => unit.id === order.unitId);
         if (selectedUnit) {
           const originalSale = selectedUnit.price * order.quantity;
           const originalProfit =
             (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+          const originalCost = selectedUnit.costPrice * order.quantity;
 
-          // 计算扣除部分退款后的实际销售额和利润
-          const refundRatio = order.partialRefundAmount / originalSale;
-          const actualSale = originalSale - order.partialRefundAmount;
-          const actualProfit = originalProfit * (1 - refundRatio);
+          let actualSale = 0;
+          let actualProfit = 0;
+          if (order.status === OrderStatus.REFUNDED) {
+            actualSale = 0;
+            actualProfit = -originalCost;
+          } else {
+            const partial = order.partialRefundAmount || 0;
+            actualSale = originalSale - partial;
+            actualProfit = originalProfit - partial;
+          }
 
           totalSales += actualSale;
           totalProfit += actualProfit;
@@ -279,7 +305,8 @@ export class AnalysisService {
       return {
         id: gb.id,
         name: gb.name,
-        orderCount: gb.order.length,
+        orderCount: gb.order.filter((o) => o.status !== OrderStatus.REFUNDED)
+          .length,
         totalSales,
         totalProfit,
         groupBuyStartDate: gb.groupBuyStartDate,
@@ -446,13 +473,18 @@ export class AnalysisService {
           where: {
             delete: 0,
             status: {
-              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+              in: [
+                OrderStatus.PAID,
+                OrderStatus.COMPLETED,
+                OrderStatus.REFUNDED,
+              ],
             },
           },
           select: {
             quantity: true,
             unitId: true,
-            partialRefundAmount: true, // 添加部分退款金额字段
+            partialRefundAmount: true,
+            status: true,
           },
         },
       },
@@ -485,17 +517,25 @@ export class AnalysisService {
         quantity: number;
         unitId: string;
         partialRefundAmount: number;
+        status: OrderStatus;
       }>) {
         const selectedUnit = units.find((unit) => unit.id === order.unitId);
         if (selectedUnit) {
           const originalSale = selectedUnit.price * order.quantity;
           const originalProfit =
             (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+          const originalCost = selectedUnit.costPrice * order.quantity;
 
-          // 计算扣除部分退款后的实际销售额和利润
-          const refundRatio = order.partialRefundAmount / originalSale;
-          const actualSale = originalSale - order.partialRefundAmount;
-          const actualProfit = originalProfit * (1 - refundRatio);
+          let actualSale = 0;
+          let actualProfit = 0;
+          if (order.status === OrderStatus.REFUNDED) {
+            actualSale = 0;
+            actualProfit = -originalCost;
+          } else {
+            const partial = order.partialRefundAmount || 0;
+            actualSale = originalSale - partial;
+            actualProfit = originalProfit - partial;
+          }
 
           totalSales += actualSale;
           totalProfit += actualProfit;
@@ -594,13 +634,19 @@ export class AnalysisService {
           where: {
             delete: 0,
             status: {
-              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+              in: [
+                OrderStatus.PAID,
+                OrderStatus.COMPLETED,
+                OrderStatus.REFUNDED,
+              ],
             },
           },
           select: {
             quantity: true,
             unitId: true,
             customerId: true,
+            status: true,
+            partialRefundAmount: true,
           },
         },
       },
@@ -652,17 +698,34 @@ export class AnalysisService {
         quantity: number;
         unitId: string;
         customerId: string;
+        partialRefundAmount?: number;
+        status: OrderStatus;
       }>) {
         // 根据unitId找到对应的规格信息
         const selectedUnit = units.find((unit) => unit.id === order.unitId);
         if (selectedUnit) {
-          const revenue = selectedUnit.price * order.quantity;
-          const profit =
+          const originalRevenue = selectedUnit.price * order.quantity;
+          const originalProfit =
             (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+          const originalCost = selectedUnit.costPrice * order.quantity;
+          const partialRefundAmount = order.partialRefundAmount || 0;
 
+          const revenue =
+            order.status === OrderStatus.REFUNDED
+              ? 0
+              : originalRevenue - partialRefundAmount;
+          const profit =
+            order.status === OrderStatus.REFUNDED
+              ? -originalCost
+              : originalProfit - partialRefundAmount;
           mergedData.totalRevenue += revenue;
           mergedData.totalProfit += profit;
-          mergedData.totalOrderCount += 1;
+          if (
+            order.status === OrderStatus.PAID ||
+            order.status === OrderStatus.COMPLETED
+          ) {
+            mergedData.totalOrderCount += 1;
+          }
           mergedData.uniqueCustomerIds.add(order.customerId);
           mergedData.totalQuantity += order.quantity;
         }
@@ -843,28 +906,41 @@ export class AnalysisService {
 
       // 遍历当前团购单的所有订单（只统计已支付和已完成的订单）
       for (const order of groupBuy.order) {
-        // 只处理已支付和已完成的订单进行收入和利润统计
+        // 收入与利润统计：包含已支付、已完成、已退款
         if (
           order.status === OrderStatus.PAID ||
-          order.status === OrderStatus.COMPLETED
+          order.status === OrderStatus.COMPLETED ||
+          order.status === OrderStatus.REFUNDED
         ) {
           // 根据unitId找到对应的规格信息
           const selectedUnit = units.find((unit) => unit.id === order.unitId);
           if (selectedUnit) {
-            // 计算扣除部分退款后的实际销售额和利润
+            // 仅退款不退货：部分退款按绝对值扣利润；全额退款利润为-成本
             const originalRevenue = selectedUnit.price * order.quantity;
             const originalProfit =
               (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
+            const originalCost = selectedUnit.costPrice * order.quantity;
             const partialRefundAmount = order.partialRefundAmount || 0;
 
-            const refundRatio = partialRefundAmount / originalRevenue;
-            const revenue = originalRevenue - partialRefundAmount;
-            const profit = originalProfit * (1 - refundRatio);
+            const revenue =
+              order.status === OrderStatus.REFUNDED
+                ? 0
+                : originalRevenue - partialRefundAmount;
+            const profit =
+              order.status === OrderStatus.REFUNDED
+                ? -originalCost
+                : originalProfit - partialRefundAmount;
 
             totalRevenue += revenue;
             totalProfit += profit;
             totalPartialRefundAmount += partialRefundAmount;
-            totalOrderCount += 1;
+            // 订单量统计：仅统计已支付与已完成
+            if (
+              order.status === OrderStatus.PAID ||
+              order.status === OrderStatus.COMPLETED
+            ) {
+              totalOrderCount += 1;
+            }
             uniqueCustomerIds.add(order.customerId);
 
             // 统计客户购买次数
@@ -1013,19 +1089,28 @@ export class AnalysisService {
             customerIds.add(order.customerId);
             const selectedUnit = units.find((unit) => unit.id === order.unitId);
             if (selectedUnit) {
-              // 计算扣除部分退款后的实际销售额和利润
+              // 部分退款按绝对值扣利润；全额退款不计入此分支（因未计入订单量）
               const originalRevenue = selectedUnit.price * order.quantity;
               const originalProfit =
                 (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
               const orderPartialRefundAmount = order.partialRefundAmount || 0;
 
-              const refundRatio = orderPartialRefundAmount / originalRevenue;
               const orderRevenue = originalRevenue - orderPartialRefundAmount;
-              const orderProfit = originalProfit * (1 - refundRatio);
+              const orderProfit = originalProfit - orderPartialRefundAmount;
 
               revenue += orderRevenue;
               profit += orderProfit;
               partialRefundAmount += orderPartialRefundAmount;
+            }
+          }
+          // 已退款订单：收入为0、利润为-成本，计入损益但不计入订单量
+          else if (order.status === OrderStatus.REFUNDED) {
+            const selectedUnit = units.find((unit) => unit.id === order.unitId);
+            if (selectedUnit) {
+              const originalCost = selectedUnit.costPrice * order.quantity;
+              profit += -originalCost;
+              // revenue 加 0
+              // partialRefundAmount 在此无需增加，明细展示仍以已支付/完成订单为准
             }
           }
         }
@@ -1344,7 +1429,11 @@ export class AnalysisService {
               where: {
                 delete: 0, // 只查询未删除的订单
                 status: {
-                  in: [OrderStatus.PAID, OrderStatus.COMPLETED], // 只统计已付款和已完成的订单
+                  in: [
+                    OrderStatus.PAID,
+                    OrderStatus.COMPLETED,
+                    OrderStatus.REFUNDED,
+                  ],
                 },
               },
               select: {
@@ -1353,6 +1442,7 @@ export class AnalysisService {
                 customerId: true, // 客户ID
                 createdAt: true, // 订单创建时间
                 partialRefundAmount: true, // 部分退款金额
+                status: true,
               },
             },
           },
@@ -1386,22 +1476,31 @@ export class AnalysisService {
         for (const order of groupBuy.order) {
           const unit = units.get(order.unitId);
           if (unit) {
-            // 计算单个订单的销售额和利润（扣除部分退款）
-            const originalRevenue = unit.price * order.quantity; // 原始销售额 = 单价 × 数量
+            // 仅退款不退货规则
+            const originalRevenue = unit.price * order.quantity;
             const originalProfit =
-              (unit.price - unit.costPrice) * order.quantity; // 原始利润 = (单价 - 成本价) × 数量
+              (unit.price - unit.costPrice) * order.quantity;
+            const originalCost = unit.costPrice * order.quantity;
 
-            // 计算扣除部分退款后的实际销售额和利润
-            const refundRatio =
-              (order.partialRefundAmount || 0) / originalRevenue;
+            const partial = order.partialRefundAmount || 0;
             const orderRevenue =
-              originalRevenue - (order.partialRefundAmount || 0);
-            const orderProfit = originalProfit * (1 - refundRatio);
+              order.status === OrderStatus.REFUNDED
+                ? 0
+                : originalRevenue - partial;
+            const orderProfit =
+              order.status === OrderStatus.REFUNDED
+                ? -originalCost
+                : originalProfit - partial;
 
             // 累加到供货商总统计中
             totalRevenue += orderRevenue;
             totalProfit += orderProfit;
-            totalOrderCount++;
+            if (
+              order.status === OrderStatus.PAID ||
+              order.status === OrderStatus.COMPLETED
+            ) {
+              totalOrderCount++;
+            }
             uniqueCustomerIds.add(order.customerId); // 添加客户ID到去重集合
           }
         }
@@ -1615,10 +1714,9 @@ export class AnalysisService {
           const originalProfit = (unit.price - unit.costPrice) * order.quantity; // 原始利润 = (单价 - 成本价) × 数量
           const partialRefundAmount = order.partialRefundAmount || 0; // 部分退款金额
 
-          // 计算扣除部分退款后的实际销售额和利润
-          const refundRatio = partialRefundAmount / originalRevenue;
+          // 仅退款不退货：部分退款按绝对额扣利润（此处为PAID/COMPLETED分支）
           const orderRevenue = originalRevenue - partialRefundAmount;
-          const orderProfit = originalProfit * (1 - refundRatio);
+          const orderProfit = originalProfit - partialRefundAmount;
 
           // 累加到总体统计中
           totalRevenue += orderRevenue;
