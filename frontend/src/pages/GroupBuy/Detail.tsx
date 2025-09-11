@@ -478,10 +478,18 @@ export const Component = () => {
                       orderTotalAmount={orderTotalAmount}
                       currentRefundAmount={order.partialRefundAmount || 0}
                       orderStatus={order.status}
-                      onSuccess={() => {
-                        // 重新获取团购详情
-                        if (id) {
-                          getGroupBuy({ id })
+                      onSuccess={(refundAmount: number) => {
+                        // 局部更新：仅更新该订单的部分退款金额，避免滚动位置丢失
+                        if (groupBuy && groupBuy.order) {
+                          const updatedOrders = groupBuy.order.map(o =>
+                            o.id === order.id
+                              ? {
+                                  ...o,
+                                  partialRefundAmount: (o.partialRefundAmount || 0) + refundAmount
+                                }
+                              : o
+                          )
+                          setGroupBuy({ ...groupBuy, order: updatedOrders })
                         }
                       }}
                     />

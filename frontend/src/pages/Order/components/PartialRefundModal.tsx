@@ -7,7 +7,7 @@ import useOrderStore from '@/stores/orderStore.ts'
 type PartialRefundModalProps = {
   visible: boolean
   onClose: () => void
-  onSuccess?: () => void
+  onSuccess?: (refundAmount: number) => void
   orderId: string
   orderTotalAmount: number
   currentRefundAmount?: number
@@ -19,7 +19,7 @@ type PartialRefundButtonProps = {
   orderTotalAmount: number
   currentRefundAmount?: number
   orderStatus: string
-  onSuccess?: () => void
+  onSuccess?: (refundAmount: number) => void
   children?: React.ReactNode
 }
 
@@ -60,7 +60,7 @@ const PartialRefundModal = ({
         })
         form.resetFields()
         onClose()
-        onSuccess?.()
+        onSuccess?.(values.refundAmount)
       } else {
         notification.error({
           message: '失败',
@@ -198,9 +198,9 @@ const PartialRefundButton = ({
     setModalVisible(false)
   }
 
-  const handleSuccess = () => {
+  const handleSuccess = (refundAmount: number) => {
     setModalVisible(false)
-    onSuccess?.()
+    onSuccess?.(refundAmount)
   }
 
   return (
