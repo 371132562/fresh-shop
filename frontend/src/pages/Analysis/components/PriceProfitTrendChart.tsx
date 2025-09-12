@@ -67,9 +67,10 @@ export const PriceProfitTrendChart = () => {
         data: ['销售额', sensitive ? '' : '利润']
       },
       grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
+        left: '2%',
+        right: '2%',
+        bottom: '0%',
+        top: '12%',
         containLabel: true
       },
       xAxis: {

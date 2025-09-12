@@ -46,9 +46,10 @@ export const GroupBuyOrderTrendChart = () => {
         data: ['团购单', '订单']
       },
       grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
+        left: '2%',
+        right: '2%',
+        bottom: '0%',
+        top: '12%',
         containLabel: true
       },
       xAxis: {
