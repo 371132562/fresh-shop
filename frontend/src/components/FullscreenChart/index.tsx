@@ -9,6 +9,7 @@ type FullscreenChartProps = {
   option: EChartsOption
   height?: string
   className?: string
+  onChartClick?: (params: echarts.ECElementEvent) => void
 }
 
 /**
@@ -19,99 +20,67 @@ export const FullscreenChart = ({
   title,
   option,
   height = '300px',
-  className = ''
+  className = '',
+  onChartClick
 }: FullscreenChartProps) => {
   const chartRef = useRef<HTMLDivElement>(null)
   const fullscreenChartRef = useRef<HTMLDivElement>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [chartInstance, setChartInstance] = useState<echarts.ECharts | null>(null)
-  const [fullscreenChartInstance, setFullscreenChartInstance] = useState<echarts.ECharts | null>(
-    null
-  )
   const [isHovered, setIsHovered] = useState(false)
 
-  // 初始化图表
+  // 主图表实例管理
   useEffect(() => {
-    if (chartRef.current && !chartInstance) {
-      const instance = echarts.init(chartRef.current)
-      setChartInstance(instance)
-    }
-  }, [chartInstance])
+    if (!chartRef.current) return
 
-  // 更新图表配置
-  useEffect(() => {
-    if (chartInstance && option) {
+    const chartInstance = echarts.init(chartRef.current)
+
+    // 设置图表配置
+    if (option) {
       chartInstance.setOption(option, true)
     }
-  }, [chartInstance, option])
 
-  // 处理全屏图表初始化和配置
-  useEffect(() => {
-    if (isFullscreen && fullscreenChartRef.current) {
-      // 销毁之前的实例
-      if (fullscreenChartInstance) {
-        fullscreenChartInstance.dispose()
-      }
-
-      // 创建新的全屏图表实例
-      const instance = echarts.init(fullscreenChartRef.current)
-      setFullscreenChartInstance(instance)
-
-      // 设置图表配置
-      if (option) {
-        instance.setOption(option, true)
-      }
-
-      // 调整大小
-      setTimeout(() => {
-        instance.resize()
-      }, 100)
-    }
-  }, [isFullscreen, option])
-
-  // 处理窗口大小变化
-  useEffect(() => {
-    const handleResize = () => {
-      if (chartInstance) {
-        chartInstance.resize()
-      }
-      if (fullscreenChartInstance) {
-        fullscreenChartInstance.resize()
-      }
+    // 添加点击事件监听
+    if (onChartClick) {
+      chartInstance.on('click', onChartClick)
     }
 
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [chartInstance, fullscreenChartInstance])
+    // 监听容器大小变化
+    const resizeObserver = new ResizeObserver(() => {
+      chartInstance.resize()
+    })
+    resizeObserver.observe(chartRef.current)
 
-  // 打开全屏
-  const openFullscreen = () => {
-    setIsFullscreen(true)
-  }
-
-  // 关闭全屏
-  const closeFullscreen = () => {
-    setIsFullscreen(false)
-    // 关闭全屏后重新渲染原图表，防止变白
-    if (chartInstance && option) {
-      setTimeout(() => {
-        chartInstance.setOption(option, true)
-        chartInstance.resize()
-      }, 100)
-    }
-  }
-
-  // 清理图表实例
-  useEffect(() => {
     return () => {
-      if (chartInstance) {
-        chartInstance.dispose()
-      }
-      if (fullscreenChartInstance) {
-        fullscreenChartInstance.dispose()
-      }
+      chartInstance.dispose()
+      resizeObserver.disconnect()
     }
-  }, [chartInstance, fullscreenChartInstance])
+  }, [option, onChartClick])
+
+  // 全屏图表实例管理
+  useEffect(() => {
+    if (!isFullscreen || !fullscreenChartRef.current) return
+
+    const fullscreenInstance = echarts.init(fullscreenChartRef.current)
+
+    // 深拷贝option，确保完全独立
+    const fullscreenOption = JSON.parse(JSON.stringify(option))
+    fullscreenInstance.setOption(fullscreenOption, true)
+
+    // 添加点击事件监听
+    if (onChartClick) {
+      fullscreenInstance.on('click', onChartClick)
+    }
+
+    // 延迟调整大小，确保DOM完全渲染
+    const timer = setTimeout(() => {
+      fullscreenInstance.resize()
+    }, 0)
+
+    return () => {
+      clearTimeout(timer)
+      fullscreenInstance.dispose()
+    }
+  }, [isFullscreen, option, onChartClick])
 
   return (
     <>
@@ -134,7 +103,7 @@ export const FullscreenChart = ({
             color="primary"
             variant="outlined"
             icon={<FullscreenOutlined />}
-            onClick={openFullscreen}
+            onClick={() => setIsFullscreen(true)}
             className={`absolute right-2 top-2 z-10 transition-all duration-200 ${
               isHovered ? 'opacity-100' : 'pointer-events-none opacity-0'
             }`}
@@ -159,9 +128,10 @@ export const FullscreenChart = ({
       <Modal
         title={title}
         open={isFullscreen}
-        onCancel={closeFullscreen}
+        onCancel={() => setIsFullscreen(false)}
         footer={null}
         width="95vw"
+        zIndex={1000}
         style={{
           top: 20,
           maxWidth: '95vw',

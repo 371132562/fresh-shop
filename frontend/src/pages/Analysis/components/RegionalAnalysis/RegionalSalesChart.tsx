@@ -18,7 +18,11 @@ type RegionalSalesChartProps = {
  * 地域销售分析柱状图组件
  * 展示不同地区的客户数量分布
  */
-const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({ data, loading }) => {
+const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({
+  data,
+  loading,
+  onRegionalClick
+}) => {
   const option = useMemo(() => {
     if (!data || data.length === 0) return {}
 
@@ -115,6 +119,11 @@ const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({ data, loading }
         title="地域销售分布图"
         option={option}
         height="250px"
+        onChartClick={params => {
+          if (onRegionalClick && params.data && (params.data as any).addressId) {
+            onRegionalClick((params.data as any).addressId, (params.data as any).addressName)
+          }
+        }}
       />
     </Card>
   )

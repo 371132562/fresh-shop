@@ -17,7 +17,11 @@ type PurchaseFrequencyChartProps = {
  * 客户购买次数分布饼图组件
  * 展示不同购买次数的客户分布情况
  */
-const PurchaseFrequencyChart: React.FC<PurchaseFrequencyChartProps> = ({ data, loading }) => {
+const PurchaseFrequencyChart: React.FC<PurchaseFrequencyChartProps> = ({
+  data,
+  loading,
+  onFrequencyClick
+}) => {
   const option = useMemo(() => {
     if (!data || data.length === 0) return {}
 
@@ -103,6 +107,15 @@ const PurchaseFrequencyChart: React.FC<PurchaseFrequencyChartProps> = ({ data, l
         title="购买次数分布图"
         option={option}
         height="250px"
+        onChartClick={params => {
+          if (
+            onFrequencyClick &&
+            params.data &&
+            typeof (params.data as any).frequencyMin === 'number'
+          ) {
+            onFrequencyClick((params.data as any).frequencyMin, (params.data as any).frequencyMax)
+          }
+        }}
       />
     </Card>
   )
