@@ -63,6 +63,9 @@ export class AnalysisService {
    * @returns {Promise<AnalysisCountResult>} 包含各项统计结果和趋势数据的 Promise。
    */
   async count(data: AnalysisCountParams): Promise<AnalysisCountResult> {
+    // 货币相关计算统一做两位小数精度处理，避免二进制浮点误差
+    const round2 = (value: number): number =>
+      Math.round((value + Number.EPSILON) * 100) / 100;
     const { startDate, endDate } = data;
 
     // 1. 统计在指定日期范围内"发起"的团购数 (基于 groupBuyStartDate)
@@ -156,10 +159,15 @@ export class AnalysisService {
         const selectedUnit = units.find((unit) => unit.id === order.unitId);
 
         if (selectedUnit) {
-          const originalSalesAmount = selectedUnit.price * order.quantity;
-          const originalProfitAmount =
-            (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
-          const originalCostAmount = selectedUnit.costPrice * order.quantity;
+          const originalSalesAmount = round2(
+            selectedUnit.price * order.quantity,
+          );
+          const originalProfitAmount = round2(
+            (selectedUnit.price - selectedUnit.costPrice) * order.quantity,
+          );
+          const originalCostAmount = round2(
+            selectedUnit.costPrice * order.quantity,
+          );
 
           let actualSalesAmount = 0;
           let actualProfitAmount = 0;
@@ -169,23 +177,23 @@ export class AnalysisService {
             actualProfitAmount = -originalCostAmount;
           } else {
             // 部分退款：仅退款不退货
-            const partial = order.partialRefundAmount || 0;
-            actualSalesAmount = originalSalesAmount - partial;
-            actualProfitAmount = originalProfitAmount - partial;
+            const partial = round2(order.partialRefundAmount || 0);
+            actualSalesAmount = round2(originalSalesAmount - partial);
+            actualProfitAmount = round2(originalProfitAmount - partial);
           }
 
-          totalPrice += actualSalesAmount;
-          totalProfit += actualProfitAmount;
+          totalPrice = round2(totalPrice + actualSalesAmount);
+          totalProfit = round2(totalProfit + actualProfitAmount);
 
           // 统计每日销售额趋势
           priceTrendMap.set(
             orderDate,
-            (priceTrendMap.get(orderDate) || 0) + actualSalesAmount,
+            round2((priceTrendMap.get(orderDate) || 0) + actualSalesAmount),
           );
           // 统计每日利润趋势
           profitTrendMap.set(
             orderDate,
-            (profitTrendMap.get(orderDate) || 0) + actualProfitAmount,
+            round2((profitTrendMap.get(orderDate) || 0) + actualProfitAmount),
           );
         }
       }
@@ -196,6 +204,12 @@ export class AnalysisService {
     const orderTrend: { date: Date; count: number }[] = [];
     const priceTrend: { date: Date; count: number }[] = [];
     const profitTrend: { date: Date; count: number }[] = [];
+
+    // 对应的累计趋势序列
+    const cumulativeGroupBuyTrend: { date: Date; count: number }[] = [];
+    const cumulativeOrderTrend: { date: Date; count: number }[] = [];
+    const cumulativePriceTrend: { date: Date; count: number }[] = [];
+    const cumulativeProfitTrend: { date: Date; count: number }[] = [];
 
     // 如果没有提供时间参数，则只返回有数据的日期
     if (!startDate || !endDate) {
@@ -208,48 +222,68 @@ export class AnalysisService {
 
       // 按日期排序并生成趋势数据
       const sortedDates = Array.from(allDates).sort();
+      let cumulativeGroupBuy = 0;
+      let cumulativeOrder = 0;
+      let cumulativePrice = 0;
+      let cumulativeProfit = 0;
       for (const dateStr of sortedDates) {
         const date = dayjs(dateStr).toDate();
-        groupBuyTrend.push({
-          date,
-          count: groupBuyTrendMap.get(dateStr) || 0,
-        });
-        orderTrend.push({
-          date,
-          count: orderTrendMap.get(dateStr) || 0,
-        });
-        priceTrend.push({
-          date,
-          count: priceTrendMap.get(dateStr) || 0,
-        });
-        profitTrend.push({
-          date,
-          count: profitTrendMap.get(dateStr) || 0,
-        });
+        const gb = groupBuyTrendMap.get(dateStr) || 0;
+        const od = orderTrendMap.get(dateStr) || 0;
+        const pr = round2(priceTrendMap.get(dateStr) || 0);
+        const pf = round2(profitTrendMap.get(dateStr) || 0);
+        groupBuyTrend.push({ date, count: gb });
+        orderTrend.push({ date, count: od });
+        priceTrend.push({ date, count: pr });
+        profitTrend.push({ date, count: pf });
+
+        cumulativeGroupBuy += gb;
+        cumulativeOrder += od;
+        cumulativePrice = round2(cumulativePrice + pr);
+        cumulativeProfit = round2(cumulativeProfit + pf);
+        cumulativeGroupBuyTrend.push({ date, count: cumulativeGroupBuy });
+        cumulativeOrderTrend.push({ date, count: cumulativeOrder });
+        cumulativePriceTrend.push({ date, count: cumulativePrice });
+        cumulativeProfitTrend.push({ date, count: cumulativeProfit });
       }
     } else {
-      // 原有逻辑：遍历从 startDate 到 endDate 的每一天，填充趋势数据
+      // 遍历从 startDate 到 endDate 的每一天，填充趋势数据
       let currentDate = dayjs(startDate).startOf('day');
       const endDay = dayjs(endDate).startOf('day');
+      let cumulativeGroupBuy = 0;
+      let cumulativeOrder = 0;
+      let cumulativePrice = 0;
+      let cumulativeProfit = 0;
       while (currentDate.isSameOrBefore(endDay, 'day')) {
         const dateString = currentDate.format('YYYY-MM-DD');
-        groupBuyTrend.push({
+        const gb = groupBuyTrendMap.get(dateString) || 0;
+        const od = orderTrendMap.get(dateString) || 0;
+        const pr = round2(priceTrendMap.get(dateString) || 0);
+        const pf = round2(profitTrendMap.get(dateString) || 0);
+        groupBuyTrend.push({ date: currentDate.toDate(), count: gb });
+        orderTrend.push({ date: currentDate.toDate(), count: od });
+        priceTrend.push({ date: currentDate.toDate(), count: pr });
+        profitTrend.push({ date: currentDate.toDate(), count: pf });
+
+        cumulativeGroupBuy += gb;
+        cumulativeOrder += od;
+        cumulativePrice = round2(cumulativePrice + pr);
+        cumulativeProfit = round2(cumulativeProfit + pf);
+        cumulativeGroupBuyTrend.push({
           date: currentDate.toDate(),
-          count: groupBuyTrendMap.get(dateString) || 0,
+          count: cumulativeGroupBuy,
         });
-        orderTrend.push({
+        cumulativeOrderTrend.push({
           date: currentDate.toDate(),
-          count: orderTrendMap.get(dateString) || 0,
+          count: cumulativeOrder,
         });
-        priceTrend.push({
-          // 填充销售额趋势
+        cumulativePriceTrend.push({
           date: currentDate.toDate(),
-          count: priceTrendMap.get(dateString) || 0,
+          count: cumulativePrice,
         });
-        profitTrend.push({
-          // 填充利润趋势
+        cumulativeProfitTrend.push({
           date: currentDate.toDate(),
-          count: profitTrendMap.get(dateString) || 0,
+          count: cumulativeProfit,
         });
         currentDate = currentDate.add(1, 'day');
       }
@@ -265,6 +299,10 @@ export class AnalysisService {
       orderTrend,
       priceTrend,
       profitTrend,
+      cumulativeGroupBuyTrend,
+      cumulativeOrderTrend,
+      cumulativePriceTrend,
+      cumulativeProfitTrend,
     };
   }
 

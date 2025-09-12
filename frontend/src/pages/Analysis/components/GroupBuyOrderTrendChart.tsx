@@ -1,7 +1,7 @@
-import { Card } from 'antd'
+import { Card, Checkbox } from 'antd'
 import dayjs from 'dayjs'
 import type { AnalysisCountResult } from 'fresh-shop-backend/types/dto'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import { FullscreenChart } from '@/components/FullscreenChart'
 import useAnalysisStore from '@/stores/analysisStore'
@@ -10,10 +10,16 @@ export const GroupBuyOrderTrendChart = () => {
   const getCountLoading = useAnalysisStore(state => state.getCountLoading)
   const groupBuyTrend = useAnalysisStore(state => state.count.groupBuyTrend)
   const orderTrend = useAnalysisStore(state => state.count.orderTrend)
+  const cumulativeGroupBuyTrend = useAnalysisStore(state => state.count.cumulativeGroupBuyTrend)
+  const cumulativeOrderTrend = useAnalysisStore(state => state.count.cumulativeOrderTrend)
+  const isAllData = useAnalysisStore(state => state.isAllData)
+  const [showCumulative, setShowCumulative] = useState(false)
 
   const option = useMemo(() => {
-    const safeGroupBuyTrend = groupBuyTrend || []
-    const safeOrderTrend = orderTrend || []
+    const usingGroupBuyTrend = isAllData && showCumulative ? cumulativeGroupBuyTrend : groupBuyTrend
+    const usingOrderTrend = isAllData && showCumulative ? cumulativeOrderTrend : orderTrend
+    const safeGroupBuyTrend = usingGroupBuyTrend || []
+    const safeOrderTrend = usingOrderTrend || []
 
     const dates = safeGroupBuyTrend.map((item: AnalysisCountResult['groupBuyTrend'][number]) =>
       dayjs(item.date).format('MM-DD')
@@ -70,13 +76,29 @@ export const GroupBuyOrderTrendChart = () => {
         }
       ]
     }
-  }, [groupBuyTrend, orderTrend])
+  }, [
+    groupBuyTrend,
+    orderTrend,
+    cumulativeGroupBuyTrend,
+    cumulativeOrderTrend,
+    isAllData,
+    showCumulative
+  ])
 
   return (
     <Card
-      size="small"
       loading={getCountLoading}
       title="团购单和订单趋势"
+      extra={
+        isAllData ? (
+          <Checkbox
+            checked={showCumulative}
+            onChange={e => setShowCumulative(e.target.checked)}
+          >
+            累计趋势
+          </Checkbox>
+        ) : null
+      }
     >
       <FullscreenChart
         title="团购单和订单趋势"

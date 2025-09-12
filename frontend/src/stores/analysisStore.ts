@@ -46,6 +46,10 @@ type AnalysisStore = {
   getCount: (data: AnalysisCountParams) => Promise<void>
   getCountLoading: boolean
 
+  // 全部数据模式标记（用于前端展示控制）
+  isAllData: boolean
+  setIsAllData: (flag: boolean) => void
+
   // 团购单排行榜数据
   groupBuyRank: GroupBuyRankResult
   getGroupBuyRank: (data: AnalysisCountParams) => Promise<void>
@@ -141,8 +145,14 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
     groupBuyTrend: [],
     orderTrend: [],
     priceTrend: [],
-    profitTrend: []
+    profitTrend: [],
+    cumulativeGroupBuyTrend: [],
+    cumulativeOrderTrend: [],
+    cumulativePriceTrend: [],
+    cumulativeProfitTrend: []
   },
+  isAllData: false,
+  setIsAllData: flag => set({ isAllData: flag }),
   getCount: async data => {
     try {
       set({ getCountLoading: true })

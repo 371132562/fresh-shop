@@ -23,6 +23,7 @@ export const Component = () => {
   const [isAllData, setIsAllData] = useState(false) // 是否查询全部数据
 
   const getCount = useAnalysisStore(state => state.getCount)
+  const setIsAllDataInStore = useAnalysisStore(state => state.setIsAllData)
   const getGroupBuyRank = useAnalysisStore(state => state.getGroupBuyRank)
   const getCustomerRank = useAnalysisStore(state => state.getCustomerRank)
   const getSupplierRank = useAnalysisStore(state => state.getSupplierRank)
@@ -47,10 +48,12 @@ export const Component = () => {
   const changeDateRange = (days: number) => {
     setCalendarValue([dayjs().subtract(days, 'day').toDate(), dayjs().toDate()])
     setIsAllData(false) // 选择具体天数时取消全部数据模式
+    setIsAllDataInStore(false)
   }
 
   const changeToAllData = () => {
     setIsAllData(true)
+    setIsAllDataInStore(true)
   }
 
   // 根据选中的视图动态调用对应的排行榜接口

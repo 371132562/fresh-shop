@@ -739,6 +739,27 @@ export type AnalysisCountResult = {
     date: Date; // 日期
     count: number; // 利润
   }[]; // 利润趋势
+
+  // 累计趋势数据（用于在“全部”时间范围下切换展示）
+  cumulativeGroupBuyTrend: {
+    date: Date; // 日期
+    count: number; // 累计团购数量
+  }[];
+
+  cumulativeOrderTrend: {
+    date: Date; // 日期
+    count: number; // 累计订单数量
+  }[];
+
+  cumulativePriceTrend: {
+    date: Date; // 日期
+    count: number; // 累计销售额
+  }[];
+
+  cumulativeProfitTrend: {
+    date: Date; // 日期
+    count: number; // 累计利润
+  }[];
 };
 
 // ===================================================================

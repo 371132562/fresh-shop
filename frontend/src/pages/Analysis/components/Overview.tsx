@@ -21,6 +21,7 @@ export const Overview = () => {
       end={value as number}
       separator=","
       duration={1.2}
+      decimals={2}
     />
   )
 

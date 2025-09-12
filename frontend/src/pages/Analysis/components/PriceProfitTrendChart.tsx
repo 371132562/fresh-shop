@@ -1,7 +1,7 @@
-import { Card } from 'antd'
+import { Card, Checkbox } from 'antd'
 import dayjs from 'dayjs'
 import type { AnalysisCountResult } from 'fresh-shop-backend/types/dto'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import { FullscreenChart } from '@/components/FullscreenChart'
 import useAnalysisStore from '@/stores/analysisStore'
@@ -11,11 +11,17 @@ export const PriceProfitTrendChart = () => {
   const getCountLoading = useAnalysisStore(state => state.getCountLoading)
   const priceTrend = useAnalysisStore(state => state.count.priceTrend)
   const profitTrend = useAnalysisStore(state => state.count.profitTrend)
+  const cumulativePriceTrend = useAnalysisStore(state => state.count.cumulativePriceTrend)
+  const cumulativeProfitTrend = useAnalysisStore(state => state.count.cumulativeProfitTrend)
   const sensitive = useGlobalSettingStore(state => state.globalSetting?.value?.sensitive)
+  const isAllData = useAnalysisStore(state => state.isAllData)
+  const [showCumulative, setShowCumulative] = useState(false)
 
   const option = useMemo(() => {
-    const safePriceTrend = priceTrend || []
-    const safeProfitTrend = profitTrend || []
+    const usingPriceTrend = isAllData && showCumulative ? cumulativePriceTrend : priceTrend
+    const usingProfitTrend = isAllData && showCumulative ? cumulativeProfitTrend : profitTrend
+    const safePriceTrend = usingPriceTrend || []
+    const safeProfitTrend = usingProfitTrend || []
 
     const dates = safePriceTrend.map((item: AnalysisCountResult['priceTrend'][number]) =>
       dayjs(item.date).format('MM-DD')
@@ -76,13 +82,30 @@ export const PriceProfitTrendChart = () => {
       },
       series
     }
-  }, [priceTrend, profitTrend, sensitive])
+  }, [
+    priceTrend,
+    profitTrend,
+    cumulativePriceTrend,
+    cumulativeProfitTrend,
+    sensitive,
+    isAllData,
+    showCumulative
+  ])
 
   return (
     <Card
-      size="small"
       loading={getCountLoading}
       title="销售额和利润趋势"
+      extra={
+        isAllData ? (
+          <Checkbox
+            checked={showCumulative}
+            onChange={e => setShowCumulative(e.target.checked)}
+          >
+            累计趋势
+          </Checkbox>
+        ) : null
+      }
     >
       <FullscreenChart
         title="销售额和利润趋势"
