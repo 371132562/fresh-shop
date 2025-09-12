@@ -38,7 +38,13 @@ export const Overview = () => {
           <Statistic
             title="团购单量"
             value={groupBuyCount}
-            formatter={formatter}
+            formatter={val => (
+              <CountUp
+                end={val as number}
+                separator=","
+                duration={1.2}
+              />
+            )}
           />
         </Card>
       </Col>
@@ -50,7 +56,13 @@ export const Overview = () => {
           <Statistic
             title="订单量"
             value={orderCount}
-            formatter={formatter}
+            formatter={val => (
+              <CountUp
+                end={val as number}
+                separator=","
+                duration={1.2}
+              />
+            )}
           />
         </Card>
       </Col>
