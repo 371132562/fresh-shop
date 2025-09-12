@@ -65,24 +65,33 @@ export class AnalysisService {
   async count(data: AnalysisCountParams): Promise<AnalysisCountResult> {
     const { startDate, endDate } = data;
 
-    // 1. 统计在指定日期范围内“发起”的团购数 (基于 groupBuyStartDate)
+    // 1. 统计在指定日期范围内"发起"的团购数 (基于 groupBuyStartDate)
+    // 如果没有提供时间参数，则查询全部数据
     const groupBuyCount = await this.prisma.groupBuy.count({
       where: {
-        groupBuyStartDate: {
-          gte: startDate,
-          lte: endDate,
-        },
+        ...(startDate && endDate
+          ? {
+              groupBuyStartDate: {
+                gte: startDate,
+                lte: endDate,
+              },
+            }
+          : {}),
         delete: 0, // 确保只统计未删除的团购单
       },
     });
 
-    // 2. 查询在指定日期范围内“发起”的团购单，并包含其所有已完成且未删除的订单
+    // 2. 查询在指定日期范围内"发起"的团购单，并包含其所有已完成且未删除的订单
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: {
-        groupBuyStartDate: {
-          gte: startDate,
-          lte: endDate,
-        },
+        ...(startDate && endDate
+          ? {
+              groupBuyStartDate: {
+                gte: startDate,
+                lte: endDate,
+              },
+            }
+          : {}),
         delete: 0,
       },
       include: {
@@ -188,31 +197,62 @@ export class AnalysisService {
     const priceTrend: { date: Date; count: number }[] = [];
     const profitTrend: { date: Date; count: number }[] = [];
 
-    let currentDate = dayjs(startDate).startOf('day');
-    const endDay = dayjs(endDate).startOf('day');
+    // 如果没有提供时间参数，则只返回有数据的日期
+    if (!startDate || !endDate) {
+      // 收集所有有数据的日期
+      const allDates = new Set<string>();
+      groupBuyTrendMap.forEach((_, date) => allDates.add(date));
+      orderTrendMap.forEach((_, date) => allDates.add(date));
+      priceTrendMap.forEach((_, date) => allDates.add(date));
+      profitTrendMap.forEach((_, date) => allDates.add(date));
 
-    // 遍历从 startDate 到 endDate 的每一天，填充趋势数据
-    while (currentDate.isSameOrBefore(endDay, 'day')) {
-      const dateString = currentDate.format('YYYY-MM-DD');
-      groupBuyTrend.push({
-        date: currentDate.toDate(),
-        count: groupBuyTrendMap.get(dateString) || 0,
-      });
-      orderTrend.push({
-        date: currentDate.toDate(),
-        count: orderTrendMap.get(dateString) || 0,
-      });
-      priceTrend.push({
-        // 填充销售额趋势
-        date: currentDate.toDate(),
-        count: priceTrendMap.get(dateString) || 0,
-      });
-      profitTrend.push({
-        // 填充利润趋势
-        date: currentDate.toDate(),
-        count: profitTrendMap.get(dateString) || 0,
-      });
-      currentDate = currentDate.add(1, 'day');
+      // 按日期排序并生成趋势数据
+      const sortedDates = Array.from(allDates).sort();
+      for (const dateStr of sortedDates) {
+        const date = dayjs(dateStr).toDate();
+        groupBuyTrend.push({
+          date,
+          count: groupBuyTrendMap.get(dateStr) || 0,
+        });
+        orderTrend.push({
+          date,
+          count: orderTrendMap.get(dateStr) || 0,
+        });
+        priceTrend.push({
+          date,
+          count: priceTrendMap.get(dateStr) || 0,
+        });
+        profitTrend.push({
+          date,
+          count: profitTrendMap.get(dateStr) || 0,
+        });
+      }
+    } else {
+      // 原有逻辑：遍历从 startDate 到 endDate 的每一天，填充趋势数据
+      let currentDate = dayjs(startDate).startOf('day');
+      const endDay = dayjs(endDate).startOf('day');
+      while (currentDate.isSameOrBefore(endDay, 'day')) {
+        const dateString = currentDate.format('YYYY-MM-DD');
+        groupBuyTrend.push({
+          date: currentDate.toDate(),
+          count: groupBuyTrendMap.get(dateString) || 0,
+        });
+        orderTrend.push({
+          date: currentDate.toDate(),
+          count: orderTrendMap.get(dateString) || 0,
+        });
+        priceTrend.push({
+          // 填充销售额趋势
+          date: currentDate.toDate(),
+          count: priceTrendMap.get(dateString) || 0,
+        });
+        profitTrend.push({
+          // 填充利润趋势
+          date: currentDate.toDate(),
+          count: profitTrendMap.get(dateString) || 0,
+        });
+        currentDate = currentDate.add(1, 'day');
+      }
     }
 
     // 返回所有统计结果
@@ -239,10 +279,14 @@ export class AnalysisService {
     // 获取指定时间范围内的团购单及其关联订单
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: {
-        groupBuyStartDate: {
-          gte: startDate,
-          lte: endDate,
-        },
+        ...(startDate && endDate
+          ? {
+              groupBuyStartDate: {
+                gte: startDate,
+                lte: endDate,
+              },
+            }
+          : {}),
         delete: 0,
       },
       include: {
@@ -348,10 +392,14 @@ export class AnalysisService {
           in: [OrderStatus.PAID, OrderStatus.COMPLETED],
         },
         groupBuy: {
-          groupBuyStartDate: {
-            gte: startDate,
-            lte: endDate,
-          },
+          ...(startDate && endDate
+            ? {
+                groupBuyStartDate: {
+                  gte: startDate,
+                  lte: endDate,
+                },
+              }
+            : {}),
         },
       },
       select: {
@@ -456,10 +504,14 @@ export class AnalysisService {
     // 获取指定时间范围内的团购单及其关联订单和供应商信息
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: {
-        groupBuyStartDate: {
-          gte: startDate,
-          lte: endDate,
-        },
+        ...(startDate && endDate
+          ? {
+              groupBuyStartDate: {
+                gte: startDate,
+                lte: endDate,
+              },
+            }
+          : {}),
         delete: 0,
       },
       include: {

@@ -10,12 +10,13 @@ import { useEffect, useState } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore'
 import useSupplierStore from '@/stores/supplierStore'
+import { getProfitColor } from '@/utils/profitColor'
 
 import MergedGroupBuyDetailModal from './MergedGroupBuyDetailModal'
 
 type MergedGroupBuyOverviewProps = {
-  startDate: Date
-  endDate: Date
+  startDate?: Date
+  endDate?: Date
 }
 
 /**
@@ -241,7 +242,9 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
                       </div>
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-500">总利润</span>
-                        <span className="text-lg font-semibold text-blue-600">
+                        <span
+                          className={`text-lg font-semibold ${getProfitColor(item.totalProfit)}`}
+                        >
                           ¥{item.totalProfit.toFixed(2)}
                         </span>
                       </div>

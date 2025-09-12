@@ -5,6 +5,8 @@ import dayjs from 'dayjs'
 import type { GroupBuyLaunchHistory } from 'fresh-shop-backend/types/dto'
 import React, { useState } from 'react'
 
+import { getProfitColor, getProfitMarginColor } from '@/utils/profitColor'
+
 type GroupBuyHistoryAnalysisProps = {
   groupBuyHistory: GroupBuyLaunchHistory[]
   title?: string
@@ -85,7 +87,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       dataIndex: 'profit',
       key: 'profit',
       render: (profit: number) => (
-        <span className="font-medium text-red-500">¥{profit.toFixed(2)}</span>
+        <span className={`font-medium ${getProfitColor(profit)}`}>¥{profit.toFixed(2)}</span>
       )
     },
     {
@@ -108,7 +110,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       render: (_, record) => {
         const margin = record.revenue > 0 ? (record.profit / record.revenue) * 100 : 0
         return (
-          <span className={`font-medium ${margin >= 0 ? 'text-blue-600' : 'text-red-500'}`}>
+          <span className={`font-medium ${getProfitMarginColor(margin)}`}>
             {margin.toFixed(1)}%
           </span>
         )

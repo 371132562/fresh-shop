@@ -7,6 +7,7 @@ import type {
 import { useMemo } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore'
+import { getProfitColor } from '@/utils/profitColor'
 
 export const SupplierRankings = () => {
   const getSupplierRankLoading = useAnalysisStore(state => state.getSupplierRankLoading)
@@ -95,7 +96,10 @@ export const SupplierRankings = () => {
                 }
                 description={
                   <div>
-                    利润: <span className="text-blue-500">¥{item.totalProfit.toFixed(2)}</span>
+                    利润:{' '}
+                    <span className={getProfitColor(item.totalProfit)}>
+                      ¥{item.totalProfit.toFixed(2)}
+                    </span>
                   </div>
                 }
               />

@@ -9,12 +9,13 @@ import type {
 import { useEffect, useState } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore'
+import { getProfitColor, getProfitMarginColor } from '@/utils/profitColor'
 
 import SupplierDetailModal from './SupplierDetailModal'
 
 type SupplierOverviewProps = {
-  startDate: Date
-  endDate: Date
+  startDate?: Date
+  endDate?: Date
 }
 
 /**
@@ -219,13 +220,17 @@ export const SupplierOverview = ({ startDate, endDate }: SupplierOverviewProps) 
                       </div>
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-500">总利润</span>
-                        <span className="text-lg font-semibold text-blue-600">
+                        <span
+                          className={`text-lg font-semibold ${getProfitColor(item.totalProfit)}`}
+                        >
                           ¥{item.totalProfit.toFixed(2)}
                         </span>
                       </div>
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-500">平均利润率</span>
-                        <span className="text-lg font-semibold text-red-600">
+                        <span
+                          className={`text-lg font-semibold ${getProfitMarginColor(item.averageProfitMargin)}`}
+                        >
                           {item.averageProfitMargin.toFixed(1)}%
                         </span>
                       </div>

@@ -8,6 +8,7 @@ import type {
 import { useMemo } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore'
+import { getProfitColor } from '@/utils/profitColor'
 
 export const GroupBuyRankings = () => {
   const getGroupBuyRankLoading = useAnalysisStore(state => state.getGroupBuyRankLoading)
@@ -108,7 +109,10 @@ export const GroupBuyRankings = () => {
                 }
                 description={
                   <div>
-                    利润: <span className="text-blue-500">¥{item.totalProfit.toFixed(2)}</span>
+                    利润:{' '}
+                    <span className={getProfitColor(item.totalProfit)}>
+                      ¥{item.totalProfit.toFixed(2)}
+                    </span>
                   </div>
                 }
               />

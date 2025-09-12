@@ -6,6 +6,13 @@ import type { MergedGroupBuyOverviewDetailParams } from 'fresh-shop-backend/type
 import React, { useEffect } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore'
+import {
+  getProfitBgColor,
+  getProfitColor,
+  getProfitIcon,
+  getProfitIconColor,
+  getProfitMarginColor
+} from '@/utils/profitColor'
 
 import {
   CustomerLoyaltyAnalysis,
@@ -177,12 +184,20 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                             <InfoCircleOutlined className="text-blue-500" />
                           </Tooltip>
                         </div>
-                        <div className="mt-1 text-xl font-bold text-red-500">
+                        <div
+                          className={`mt-1 text-xl font-bold ${getProfitColor(mergedGroupBuyOverviewDetail.totalProfit)}`}
+                        >
                           ¥{mergedGroupBuyOverviewDetail.totalProfit.toFixed(2)}
                         </div>
                       </div>
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                        <span className="text-xl text-red-500">📈</span>
+                      <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(mergedGroupBuyOverviewDetail.totalProfit)}`}
+                      >
+                        <span
+                          className={`text-xl ${getProfitIconColor(mergedGroupBuyOverviewDetail.totalProfit)}`}
+                        >
+                          {getProfitIcon(mergedGroupBuyOverviewDetail.totalProfit)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -197,12 +212,20 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-600">利润率</div>
-                        <div className="mt-1 text-xl font-bold text-blue-500">
+                        <div
+                          className={`mt-1 text-xl font-bold ${getProfitMarginColor(mergedGroupBuyOverviewDetail.totalProfitMargin)}`}
+                        >
                           {mergedGroupBuyOverviewDetail.totalProfitMargin.toFixed(1)}%
                         </div>
                       </div>
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                        <span className="text-xl text-blue-500">📊</span>
+                      <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(mergedGroupBuyOverviewDetail.totalProfitMargin)}`}
+                      >
+                        <span
+                          className={`text-xl ${getProfitIconColor(mergedGroupBuyOverviewDetail.totalProfitMargin)}`}
+                        >
+                          📊
+                        </span>
                       </div>
                     </div>
                   </div>

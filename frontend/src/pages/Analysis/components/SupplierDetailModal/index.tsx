@@ -6,6 +6,13 @@ import type { SupplierOverviewDetailParams } from 'fresh-shop-backend/types/dto'
 import React, { useEffect } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore'
+import {
+  getProfitBgColor,
+  getProfitColor,
+  getProfitIcon,
+  getProfitIconColor,
+  getProfitMarginColor
+} from '@/utils/profitColor'
 
 import {
   CustomerLoyaltyAnalysis,
@@ -175,12 +182,20 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                             <InfoCircleOutlined className="text-blue-500" />
                           </Tooltip>
                         </div>
-                        <div className="mt-1 text-xl font-bold text-red-500">
+                        <div
+                          className={`mt-1 text-xl font-bold ${getProfitColor(supplierOverviewDetail.totalProfit)}`}
+                        >
                           ¥{supplierOverviewDetail.totalProfit.toFixed(2)}
                         </div>
                       </div>
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                        <span className="text-xl text-red-500">📈</span>
+                      <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(supplierOverviewDetail.totalProfit)}`}
+                      >
+                        <span
+                          className={`text-xl ${getProfitIconColor(supplierOverviewDetail.totalProfit)}`}
+                        >
+                          {getProfitIcon(supplierOverviewDetail.totalProfit)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -195,12 +210,20 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-600">平均利润率</div>
-                        <div className="mt-1 text-xl font-bold text-blue-500">
+                        <div
+                          className={`mt-1 text-xl font-bold ${getProfitMarginColor(supplierOverviewDetail.averageProfitMargin)}`}
+                        >
                           {supplierOverviewDetail.averageProfitMargin.toFixed(1)}%
                         </div>
                       </div>
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                        <span className="text-xl text-blue-500">📊</span>
+                      <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(supplierOverviewDetail.averageProfitMargin)}`}
+                      >
+                        <span
+                          className={`text-xl ${getProfitIconColor(supplierOverviewDetail.averageProfitMargin)}`}
+                        >
+                          📊
+                        </span>
                       </div>
                     </div>
                   </div>

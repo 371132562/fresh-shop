@@ -704,8 +704,8 @@ export type OrderStatsResult = {
  * 用于指定统计分析的时间范围
  */
 export type AnalysisCountParams = {
-  startDate: Date; // 统计开始时间
-  endDate: Date; // 统计结束时间
+  startDate?: Date; // 统计开始时间（可选，支持无时间参数查询全部数据）
+  endDate?: Date; // 统计结束时间（可选，支持无时间参数查询全部数据）
 };
 
 /**
