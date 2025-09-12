@@ -202,7 +202,7 @@ export const Component = () => {
           <div className="rounded-lg border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
             <div className="flex items-center justify-center gap-2">
               <CalendarOutlined className="text-lg text-blue-500" />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-base font-medium text-gray-700">
                 {isAllData
                   ? '当前统计范围：全部历史数据'
                   : `当前统计范围：${dayjs(calendarValue[0]).format('YYYY-MM-DD')} 至 ${dayjs(calendarValue[1]).format('YYYY-MM-DD')}`}
