@@ -20,6 +20,7 @@ export const Overview = () => {
     <CountUp
       end={value as number}
       separator=","
+      duration={1.2}
     />
   )
 
