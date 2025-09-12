@@ -29,6 +29,21 @@ export const Component = () => {
   const getMergedGroupBuyOverview = useAnalysisStore(state => state.getMergedGroupBuyOverview)
   const getSupplierOverview = useAnalysisStore(state => state.getSupplierOverview)
 
+  // 自定义日期是否被选中（不为全部，且选择了时间，但不匹配任何预设快捷天数）
+  const presetDays = [7, 14, 30, 90, 180, 360]
+  const matchesAnyPreset =
+    !isAllData &&
+    !!calendarValue[0] &&
+    !!calendarValue[1] &&
+    presetDays.some(
+      d =>
+        dayjs().subtract(d, 'day').isSame(dayjs(calendarValue[0]), 'day') &&
+        dayjs().isSame(dayjs(calendarValue[1]), 'day')
+    )
+
+  const isCustomSelected =
+    !isAllData && !!calendarValue[0] && !!calendarValue[1] && !matchesAnyPreset
+
   const changeDateRange = (days: number) => {
     setCalendarValue([dayjs().subtract(days, 'day').toDate(), dayjs().toDate()])
     setIsAllData(false) // 选择具体天数时取消全部数据模式
@@ -122,25 +137,27 @@ export const Component = () => {
         gutter={[8, 8]}
       >
         <Col span={24}>
-          <Button
-            size="large"
-            className="h-12 w-full rounded-xl font-medium shadow-lg transition-all duration-300 hover:shadow-xl"
-            onClick={() => setCalendarVisible(true)}
-            type="primary"
-            icon={<CalendarOutlined />}
-            iconPosition="start"
-          >
-            自定义日期范围
-          </Button>
-        </Col>
-        <Col span={24}>
-          <div className="text-center text-sm text-gray-500">
-            点击上方按钮自定义日期范围，或选择下方快捷时间
-          </div>
-        </Col>
-        <Col span={24}>
-          <div className="rounded-xl bg-gray-50 p-3">
-            <div className="mb-1 text-center text-sm font-medium text-gray-600">快捷时间选择</div>
+          <div className="rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <div className="text-base font-semibold text-gray-800">时间筛选</div>
+                <div className="text-base text-gray-600">选择快捷时间或点击右侧按钮自定义范围</div>
+              </div>
+              <Button
+                size="large"
+                onClick={() => setCalendarVisible(true)}
+                type={isCustomSelected ? 'primary' : 'default'}
+                className={
+                  isCustomSelected
+                    ? '!scale-105 !transform !border-blue-600 !bg-blue-600 !text-white !shadow-2xl !ring-4 !ring-blue-200'
+                    : ''
+                }
+                icon={<CalendarOutlined />}
+                iconPosition="start"
+              >
+                自定义日期
+              </Button>
+            </div>
             <div className="flex flex-wrap justify-center gap-3">
               {[
                 { days: 7, label: '7天', short: '7D', icon: <ClockCircleOutlined /> },
@@ -164,21 +181,14 @@ export const Component = () => {
                     key={isAll ? 'all' : days}
                     onClick={isAll ? changeToAllData : () => changeDateRange(days!)}
                     className={`group relative flex min-w-[70px] flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 px-4 py-3 text-sm font-medium transition-all duration-300 ${
-                      isAll
-                        ? isSelected
-                          ? 'scale-105 transform border-purple-700 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-2xl ring-4 ring-purple-200'
-                          : 'border-purple-500 bg-gradient-to-br from-purple-500 to-pink-500 text-white hover:scale-105 hover:border-purple-600 hover:from-purple-600 hover:to-pink-600 hover:shadow-lg'
-                        : isSelected
-                          ? 'scale-105 transform border-blue-600 bg-blue-600 text-white shadow-2xl ring-4 ring-blue-200'
-                          : 'border-gray-200 bg-white text-gray-600 hover:scale-105 hover:border-blue-300 hover:text-blue-600 hover:shadow-lg'
+                      isSelected
+                        ? 'scale-105 transform border-blue-600 bg-blue-600 text-white shadow-2xl ring-4 ring-blue-200'
+                        : 'border-gray-200 bg-white text-gray-600 hover:scale-105 hover:border-blue-300 hover:text-blue-600 hover:shadow-lg'
                     }`}
                   >
                     <div className="text-lg">{icon}</div>
                     <span className="hidden text-xs font-semibold sm:inline">{label}</span>
                     <span className="text-xs font-semibold sm:hidden">{short}</span>
-                    {isSelected && (
-                      <div className="absolute inset-0 animate-pulse rounded-xl bg-gradient-to-br from-white to-transparent opacity-20"></div>
-                    )}
                   </button>
                 )
               })}
