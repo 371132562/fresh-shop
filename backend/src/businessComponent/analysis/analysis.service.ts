@@ -63,12 +63,25 @@ export class AnalysisService {
    * @returns {Promise<AnalysisCountResult>} 包含各项统计结果和趋势数据的 Promise。
    */
   async count(data: AnalysisCountParams): Promise<AnalysisCountResult> {
-    // 货币相关计算统一做两位小数精度处理，避免二进制浮点误差
+    // ================================================================
+    // 金额精度统一处理
+    // 说明：
+    // - 所有与金额相关的计算（销售额、利润、部分退款）均在“每一步”做两位小数的舍入。
+    // - 原因：JavaScript 的二进制浮点运算会产生 0.1 + 0.2 = 0.30000000000000004 之类的误差，
+    //   若在流水累计、分桶聚合、累计趋势等多次相加过程中不及时规整，误差会被放大并出现在前端。
+    // - 策略：采用 round2 对每笔订单的金额、每日累计、总计累计等节点统一保留两位小数，避免尾差。
+    // - 若未来需要更严格的货币精度（如分单位或大数精度），可替换为十进制库（big.js/decimal.js）。
+    // ================================================================
     const round2 = (value: number): number =>
       Math.round((value + Number.EPSILON) * 100) / 100;
     const { startDate, endDate } = data;
 
-    // 1. 统计在指定日期范围内"发起"的团购数 (基于 groupBuyStartDate)
+    // ================================================================
+    // 1) 统计在指定日期范围内“发起”的团购总数（基于 groupBuyStartDate）
+    // 说明：
+    // - 若未传入 startDate/endDate，则视为统计全部历史数据。
+    // - 所有统计均排除逻辑删除的数据（delete = 0）。
+    // ================================================================
     // 如果没有提供时间参数，则查询全部数据
     const groupBuyCount = await this.prisma.groupBuy.count({
       where: {
@@ -84,7 +97,16 @@ export class AnalysisService {
       },
     });
 
-    // 2. 查询在指定日期范围内"发起"的团购单，并包含其所有已完成且未删除的订单
+    // ================================================================
+    // 2) 查询指定时间范围内“发起”的团购单及其订单（含已付/完成/退款）
+    // 说明：
+    // - 用于计算：订单总数、总销售额、总利润，以及每日趋势（团购数/订单数/销售额/利润）。
+    // - 团购维度：按“团购发起日期”归档到每日（即趋势的横轴日期来自团购的发起日）。
+    // - 订单维度：仅统计 delete=0，状态在 [PAID, COMPLETED, REFUNDED] 的订单。
+    // - 金额口径：
+    //   * 已退款订单：收入 0，利润 = -成本（视为损益扣减）。
+    //   * 部分退款：收入、利润均减去部分退款金额。
+    // ================================================================
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: {
         ...(startDate && endDate
@@ -119,21 +141,28 @@ export class AnalysisService {
       },
     });
 
-    let orderCount = 0; // 发起的订单总数 (这些订单关联的团购单在指定日期内发起)
-    let totalPrice = 0; // 总销售额
-    let totalProfit = 0; // 总利润
+    // ------------------------------------------------
+    // 运行中累计指标（总量）
+    // ------------------------------------------------
+    let orderCount = 0; // 发起的订单总数（注：关联团购单在指定日期内发起）
+    let totalPrice = 0; // 总销售额（两位小数）
+    let totalProfit = 0; // 总利润（两位小数）
 
-    // 用于统计每日趋势的数据结构：日期字符串到数量的映射
+    // ------------------------------------------------
+    // 用于构建每日趋势的映射（按“YYYY-MM-DD”当天聚合）
+    // ------------------------------------------------
     const groupBuyTrendMap = new Map<string, number>();
     const orderTrendMap = new Map<string, number>();
     const priceTrendMap = new Map<string, number>();
     const profitTrendMap = new Map<string, number>();
 
-    // 遍历筛选出的团购单，计算其关联订单的总数、总销售额和总利润
+    // ------------------------------------------------
+    // 遍历团购单与其订单，累加总量，并按“团购发起日期”填充当日趋势
+    // ------------------------------------------------
     for (const groupBuy of groupBuysWithOrders) {
       const units = groupBuy.units as Array<GroupBuyUnit>;
 
-      // 统计每日团购趋势：根据团购发起日期计数
+      // 统计每日“团购数”趋势：根据团购发起日期计数
       const groupBuyDate = dayjs(groupBuy.groupBuyStartDate).format(
         'YYYY-MM-DD',
       );
@@ -142,11 +171,16 @@ export class AnalysisService {
         (groupBuyTrendMap.get(groupBuyDate) || 0) + 1,
       );
 
-      // 遍历当前团购单下的所有订单，计算订单总数、销售额、利润及订单趋势
+      // 遍历该团购下的订单：
+      // - 累加订单总量
+      // - 按发起日期统计订单趋势
+      // - 计算金额（收入/利润），并填充销售额/利润的每日趋势
       for (const order of groupBuy.order as (SelectedOrder & {
         partialRefundAmount: number;
         status: OrderStatus;
       })[]) {
+        // 步骤：订单计数
+        // 口径：与团购发起日关联的订单总量，不剔除 REFUNDED（用于金额规则与趋势对齐）
         orderCount++; // 每找到一个订单就计数
 
         // 统计每日订单趋势：根据关联团购单的发起日期计数
@@ -156,9 +190,11 @@ export class AnalysisService {
         orderTrendMap.set(orderDate, (orderTrendMap.get(orderDate) || 0) + 1);
 
         // 根据订单的 unitId 查找对应的团购规格，计算销售额和利润
+        // 步骤：通过 unitId 定位订单对应规格，用于金额计算
         const selectedUnit = units.find((unit) => unit.id === order.unitId);
 
         if (selectedUnit) {
+          // 步骤：原始金额计算（未考虑退款）
           const originalSalesAmount = round2(
             selectedUnit.price * order.quantity,
           );
@@ -171,6 +207,7 @@ export class AnalysisService {
 
           let actualSalesAmount = 0;
           let actualProfitAmount = 0;
+          // 分支：根据订单状态应用退款口径
           if (order.status === OrderStatus.REFUNDED) {
             // 全额退款：收入为0，利润为-成本
             actualSalesAmount = 0;
@@ -185,12 +222,12 @@ export class AnalysisService {
           totalPrice = round2(totalPrice + actualSalesAmount);
           totalProfit = round2(totalProfit + actualProfitAmount);
 
-          // 统计每日销售额趋势
+          // 映射更新：统计每日销售额趋势（按团购发起日）
           priceTrendMap.set(
             orderDate,
             round2((priceTrendMap.get(orderDate) || 0) + actualSalesAmount),
           );
-          // 统计每日利润趋势
+          // 映射更新：统计每日利润趋势（按团购发起日）
           profitTrendMap.set(
             orderDate,
             round2((profitTrendMap.get(orderDate) || 0) + actualProfitAmount),
@@ -199,13 +236,22 @@ export class AnalysisService {
       }
     }
 
-    // 填充日期范围内的零值，并格式化最终的趋势数据
+    // ================================================================
+    // 3) 构建“每日”趋势序列
+    // 说明：
+    // - 若无时间范围（全部）：仅输出有数据的日期，并按日期升序排列。
+    // - 若有时间范围：从 startDate 到 endDate 逐日填充，缺失日期补 0。
+    // - 输出四条“每日趋势”序列：团购数、订单数、销售额、利润。
+    // - 注意：此处仅构建“每日趋势”，不做分桶合并；分桶仅在“累计趋势”阶段处理。
+    // ================================================================
     const groupBuyTrend: { date: Date; count: number }[] = [];
     const orderTrend: { date: Date; count: number }[] = [];
     const priceTrend: { date: Date; count: number }[] = [];
     const profitTrend: { date: Date; count: number }[] = [];
 
-    // 对应的累计趋势序列
+    // ------------------------------------------------
+    // 对应的累计趋势序列（稍后将基于“每日序列”做分桶聚合后再累计）
+    // ------------------------------------------------
     const cumulativeGroupBuyTrend: { date: Date; count: number }[] = [];
     const cumulativeOrderTrend: { date: Date; count: number }[] = [];
     const cumulativePriceTrend: { date: Date; count: number }[] = [];
@@ -232,11 +278,13 @@ export class AnalysisService {
         const od = orderTrendMap.get(dateStr) || 0;
         const pr = round2(priceTrendMap.get(dateStr) || 0);
         const pf = round2(profitTrendMap.get(dateStr) || 0);
+        // 步骤：推入“每日趋势”四条序列
         groupBuyTrend.push({ date, count: gb });
         orderTrend.push({ date, count: od });
         priceTrend.push({ date, count: pr });
         profitTrend.push({ date, count: pf });
 
+        // 步骤：计算“累计趋势”（逐日累加）；金额统一 round2
         cumulativeGroupBuy += gb;
         cumulativeOrder += od;
         cumulativePrice = round2(cumulativePrice + pr);
@@ -260,11 +308,13 @@ export class AnalysisService {
         const od = orderTrendMap.get(dateString) || 0;
         const pr = round2(priceTrendMap.get(dateString) || 0);
         const pf = round2(profitTrendMap.get(dateString) || 0);
+        // 步骤：按天补零，确保横轴连续
         groupBuyTrend.push({ date: currentDate.toDate(), count: gb });
         orderTrend.push({ date: currentDate.toDate(), count: od });
         priceTrend.push({ date: currentDate.toDate(), count: pr });
         profitTrend.push({ date: currentDate.toDate(), count: pf });
 
+        // 步骤：同步构建累计曲线（逐日累加）
         cumulativeGroupBuy += gb;
         cumulativeOrder += od;
         cumulativePrice = round2(cumulativePrice + pr);
@@ -289,7 +339,128 @@ export class AnalysisService {
       }
     }
 
-    // 返回所有统计结果
+    // ================================================================
+    // 4) 动态聚合（仅用于累计趋势）
+    // 说明：
+    // - 问题：当日期跨度较大（数百天），若横轴逐日渲染，点位过多影响阅读与性能。
+    // - 策略：仅对“累计趋势”进行分桶聚合（每日趋势保持原始粒度，便于观察每日波动）。
+    // - 分桶规则：依据起止日期差动态选择桶大小（1/3/7/14/30 天）。
+    // - 聚合原则：
+    //   * 同一桶内的每日数量做“求和”。
+    //   * 该桶的日期取桶内“最后一天”，以贴近该段终点。
+    //   * 聚合完成后，再基于聚合后的序列重建累计曲线。
+    // ================================================================
+    const pickBucketSize = (
+      first: Date | undefined,
+      last: Date | undefined,
+    ): number => {
+      if (!first || !last) return 1;
+      const diffDays = Math.max(1, dayjs(last).diff(dayjs(first), 'day') + 1);
+      if (diffDays <= 90) return 1; // 日
+      if (diffDays <= 180) return 3; // 3天
+      if (diffDays <= 365) return 7; // 周
+      if (diffDays <= 730) return 14; // 2周
+      return 30; // 月（约）
+    };
+
+    const aggregateByBucket = (
+      series: { date: Date; count: number }[],
+      bucketSize: number,
+    ): { date: Date; count: number }[] => {
+      if (bucketSize <= 1 || series.length === 0) return series;
+      const sorted = [...series].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      );
+      const firstDate = dayjs(sorted[0].date).startOf('day');
+      const bucketIndexToSum = new Map<number, number>();
+      const bucketIndexToLastDate = new Map<number, Date>();
+      for (const item of sorted) {
+        const daysSinceStart = dayjs(item.date)
+          .startOf('day')
+          .diff(firstDate, 'day');
+        const bucketIndex = Math.floor(daysSinceStart / bucketSize);
+        // 分桶：同一桶内做求和聚合
+        const prev = bucketIndexToSum.get(bucketIndex) || 0;
+        bucketIndexToSum.set(bucketIndex, round2(prev + item.count));
+        // 使用分桶内的最后一天用于图表展示（更贴近该段的终点）
+        const currentDay = dayjs(item.date).startOf('day');
+        const candidateEnd = currentDay.toDate();
+        const existing = bucketIndexToLastDate.get(bucketIndex);
+        if (!existing || dayjs(candidateEnd).isAfter(existing)) {
+          bucketIndexToLastDate.set(bucketIndex, candidateEnd);
+        }
+      }
+      const result: { date: Date; count: number }[] = [];
+      const indices = Array.from(bucketIndexToSum.keys()).sort((a, b) => a - b);
+      for (const idx of indices) {
+        result.push({
+          date: bucketIndexToLastDate.get(idx)!,
+          count: bucketIndexToSum.get(idx) || 0,
+        });
+      }
+      return result;
+    };
+
+    // ------------------------------------------------
+    // 基于聚合后的“每日序列”重建累计曲线
+    // ------------------------------------------------
+    const rebuildCumulative = (series: { date: Date; count: number }[]) => {
+      const res: { date: Date; count: number }[] = [];
+      let acc = 0;
+      for (const item of series) {
+        // 步骤：顺序累计，金额两位小数
+        acc = round2(acc + item.count);
+        res.push({ date: item.date, count: acc });
+      }
+      return res;
+    };
+
+    // ------------------------------------------------
+    // 计算原始序列的第一天与最后一天（用于选择分桶大小）
+    // 注：若四条每日序列均为空，则不做分桶。
+    // ------------------------------------------------
+    const allDatesForRange: Date[] = [];
+    if (groupBuyTrend.length > 0) {
+      allDatesForRange.push(
+        groupBuyTrend[0].date,
+        groupBuyTrend[groupBuyTrend.length - 1].date,
+      );
+    } else if (orderTrend.length > 0) {
+      allDatesForRange.push(
+        orderTrend[0].date,
+        orderTrend[orderTrend.length - 1].date,
+      );
+    } else if (priceTrend.length > 0) {
+      allDatesForRange.push(
+        priceTrend[0].date,
+        priceTrend[priceTrend.length - 1].date,
+      );
+    } else if (profitTrend.length > 0) {
+      allDatesForRange.push(
+        profitTrend[0].date,
+        profitTrend[profitTrend.length - 1].date,
+      );
+    }
+    const first = allDatesForRange.length ? allDatesForRange[0] : undefined;
+    const last = allDatesForRange.length ? allDatesForRange[1] : undefined;
+    const bucketSize = pickBucketSize(first, last);
+
+    const aggGroupBuyTrend = aggregateByBucket(groupBuyTrend, bucketSize);
+    const aggOrderTrend = aggregateByBucket(orderTrend, bucketSize);
+    const aggPriceTrend = aggregateByBucket(priceTrend, bucketSize);
+    const aggProfitTrend = aggregateByBucket(profitTrend, bucketSize);
+
+    const aggCumulativeGroupBuyTrend = rebuildCumulative(aggGroupBuyTrend);
+    const aggCumulativeOrderTrend = rebuildCumulative(aggOrderTrend);
+    const aggCumulativePriceTrend = rebuildCumulative(aggPriceTrend);
+    const aggCumulativeProfitTrend = rebuildCumulative(aggProfitTrend);
+
+    // ================================================================
+    // 5) 返回所有统计结果
+    // 说明：
+    // - 每日趋势：保持原始逐日粒度（用于未勾选“累计趋势”的场景）。
+    // - 累计趋势：使用分桶后的序列重建（用于勾选“累计趋势”，降低横轴点位）。
+    // ================================================================
     return {
       groupBuyCount,
       orderCount,
@@ -299,10 +470,10 @@ export class AnalysisService {
       orderTrend,
       priceTrend,
       profitTrend,
-      cumulativeGroupBuyTrend,
-      cumulativeOrderTrend,
-      cumulativePriceTrend,
-      cumulativeProfitTrend,
+      cumulativeGroupBuyTrend: aggCumulativeGroupBuyTrend,
+      cumulativeOrderTrend: aggCumulativeOrderTrend,
+      cumulativePriceTrend: aggCumulativePriceTrend,
+      cumulativeProfitTrend: aggCumulativeProfitTrend,
     };
   }
 
@@ -312,9 +483,24 @@ export class AnalysisService {
   async getGroupBuyRank(
     params: AnalysisCountParams,
   ): Promise<GroupBuyRankResult> {
+    // ================================================================
+    // 接口：获取团购单排行（按团购维度聚合）
+    // 目标：返回三类排行榜（订单量、销售额、利润），各取 Top10
+    // 时间口径：按“团购发起时间”过滤（groupBuyStartDate）
+    // 订单口径：delete=0 且状态在 [PAID, COMPLETED, REFUNDED]
+    // 金额口径：
+    //   - 已退款订单：收入=0，利润=-成本
+    //   - 部分退款：收入、利润均减去部分退款金额
+    // 流程：
+    //   1) 拉取指定时间内的团购单及订单
+    //   2) 计算每个团购单的 totalSales/totalProfit/orderCount
+    //   3) 按不同指标排序取前10，组装返回
+    // 精度：沿用 round2 逻辑，保证金额两位小数
+    // ================================================================
     const { startDate, endDate } = params;
 
     // 获取指定时间范围内的团购单及其关联订单
+    // 步骤：拉取团购及订单（按发起时间过滤）
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: {
         ...(startDate && endDate
@@ -350,6 +536,7 @@ export class AnalysisService {
     });
 
     // 计算每个团购单的统计数据
+    // 步骤：按团购维度累加金额与订单
     const groupBuysWithStats = groupBuysWithOrders.map((gb) => {
       let totalSales = 0;
       let totalProfit = 0;
@@ -363,6 +550,7 @@ export class AnalysisService {
       }>) {
         const selectedUnit = units.find((unit) => unit.id === order.unitId);
         if (selectedUnit) {
+          // 原始金额计算
           const originalSale = selectedUnit.price * order.quantity;
           const originalProfit =
             (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
@@ -370,6 +558,7 @@ export class AnalysisService {
 
           let actualSale = 0;
           let actualProfit = 0;
+          // 分支：退款/部分退款规则
           if (order.status === OrderStatus.REFUNDED) {
             actualSale = 0;
             actualProfit = -originalCost;
@@ -379,6 +568,7 @@ export class AnalysisService {
             actualProfit = originalProfit - partial;
           }
 
+          // 汇总：团购维度累计
           totalSales += actualSale;
           totalProfit += actualProfit;
         }
@@ -387,6 +577,7 @@ export class AnalysisService {
       return {
         id: gb.id,
         name: gb.name,
+        // 指标：订单量不计 REFUNDED
         orderCount: gb.order.filter((o) => o.status !== OrderStatus.REFUNDED)
           .length,
         totalSales,
@@ -395,7 +586,7 @@ export class AnalysisService {
       };
     });
 
-    // 生成排行榜
+    // 排序取 Top10：订单量/销售额/利润
     const groupBuyRankByOrderCount = [...groupBuysWithStats]
       .sort((a, b) => b.orderCount - a.orderCount)
       .slice(0, 10);
@@ -419,10 +610,23 @@ export class AnalysisService {
   async getCustomerRank(
     params: AnalysisCountParams,
   ): Promise<CustomerRankResult> {
+    // ================================================================
+    // 接口：获取客户排行（按客户维度聚合）
+    // 目标：返回三类排行榜（订单量、总消费额、平均订单额），各取 Top10
+    // 时间口径：按团购发起时间过滤
+    // 订单口径：delete=0 且状态在 [PAID, COMPLETED]
+    // 金额口径：订单金额 = 单价*数量 - 部分退款
+    // 流程：
+    //   1) 取订单（含客户信息、团购规格）
+    //   2) 按客户聚合：订单量、总消费额
+    //   3) 派生平均订单额 = 总消费额/订单量
+    //   4) 各维度排序取 Top10
+    // ================================================================
     const { startDate, endDate } = params;
 
     // 获取指定时间范围内的订单及其关联客户信息
     // 根据团购发起时间进行过滤，而不是订单创建时间
+    // 步骤：获取订单（限制状态，按团购发起时间过滤）
     const orders = await this.prisma.order.findMany({
       where: {
         delete: 0,
@@ -460,6 +664,7 @@ export class AnalysisService {
     });
 
     // 按客户合并订单数据
+    // 映射构建：按客户ID聚合订单量与消费额
     const customerData = new Map<
       string,
       {
@@ -479,7 +684,7 @@ export class AnalysisService {
       const customerPhone = order.customer.phone || '';
       const units = order.groupBuy.units as Array<GroupBuyUnit>;
 
-      // 计算订单金额（扣除部分退款）
+      // 金额计算：单价*数量 - 部分退款
       let orderAmount = 0;
       const selectedUnit = units.find((unit) => unit.id === order.unitId);
       if (selectedUnit) {
@@ -487,6 +692,7 @@ export class AnalysisService {
         orderAmount = originalAmount - (order.partialRefundAmount || 0);
       }
 
+      // 映射更新：累计客户的订单量与总消费额
       if (customerData.has(customerId)) {
         const existing = customerData.get(customerId)!;
         existing.orderCount += 1;
@@ -502,7 +708,7 @@ export class AnalysisService {
       }
     }
 
-    // 计算平均订单金额并转换为数组
+    // 派生指标：平均订单额 = 总消费额 / 订单量
     const customersArray = Array.from(customerData.values()).map(
       (customer) => ({
         ...customer,
@@ -513,7 +719,7 @@ export class AnalysisService {
       }),
     );
 
-    // 生成排行榜
+    // 排序取 Top10：订单量/总消费额/平均订单额
     const customerRankByOrderCount = [...customersArray]
       .sort((a, b) => b.orderCount - a.orderCount)
       .slice(0, 10);
@@ -537,9 +743,21 @@ export class AnalysisService {
   async getSupplierRank(
     params: AnalysisCountParams,
   ): Promise<SupplierRankResult> {
+    // ================================================================
+    // 接口：获取供货商排行（按供货商维度聚合）
+    // 目标：返回三类排行榜（订单量、总销售额、总利润），各取 Top10
+    // 时间口径：按团购发起时间过滤
+    // 订单口径：delete=0 且状态在 [PAID, COMPLETED, REFUNDED]
+    // 金额口径：同上（退款=负成本，部分退款直减）
+    // 流程：
+    //   1) 拉取供货商相关团购及其订单
+    //   2) 按供货商聚合：订单量、销售额、利润
+    //   3) 生成三类排行榜并返回
+    // ================================================================
     const { startDate, endDate } = params;
 
     // 获取指定时间范围内的团购单及其关联订单和供应商信息
+    // 步骤：获取团购及订单与供应商信息
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: {
         ...(startDate && endDate
@@ -581,6 +799,7 @@ export class AnalysisService {
     });
 
     // 按供应商合并数据
+    // 映射构建：按供应商ID聚合指标
     const supplierData = new Map<
       string,
       {
@@ -601,7 +820,7 @@ export class AnalysisService {
 
       let totalSales = 0;
       let totalProfit = 0;
-      const orderCount = gb.order.length;
+      const orderCount = gb.order.length; // 订单条数（含退款，用于一致性排序口径）
 
       for (const order of gb.order as Array<{
         quantity: number;
@@ -611,6 +830,7 @@ export class AnalysisService {
       }>) {
         const selectedUnit = units.find((unit) => unit.id === order.unitId);
         if (selectedUnit) {
+          // 原始金额
           const originalSale = selectedUnit.price * order.quantity;
           const originalProfit =
             (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
@@ -618,6 +838,7 @@ export class AnalysisService {
 
           let actualSale = 0;
           let actualProfit = 0;
+          // 分支：退款/部分退款
           if (order.status === OrderStatus.REFUNDED) {
             actualSale = 0;
             actualProfit = -originalCost;
@@ -627,6 +848,7 @@ export class AnalysisService {
             actualProfit = originalProfit - partial;
           }
 
+          // 汇总：供应商维度累计
           totalSales += actualSale;
           totalProfit += actualProfit;
         }
@@ -650,7 +872,7 @@ export class AnalysisService {
 
     const suppliersArray = Array.from(supplierData.values());
 
-    // 生成排行榜
+    // 排序取 Top10：订单量/销售额/利润
     const supplierRankByOrderCount = [...suppliersArray]
       .sort((a, b) => b.orderCount - a.orderCount)
       .slice(0, 10);
@@ -675,6 +897,19 @@ export class AnalysisService {
   async getMergedGroupBuyOverview(
     params: MergedGroupBuyOverviewParams,
   ): Promise<MergedGroupBuyOverviewResult> {
+    // ================================================================
+    // 接口：团购单（按名称合并）概况列表
+    // 目标：将同名团购按供货商ID合并，统计销售额、利润、订单量、客户数等，并支持分页排序
+    // 过滤：delete=0；可选 groupBuyName 模糊、supplierIds 精确、时间范围 groupBuyStartDate
+    // 订单口径：delete=0 且状态在 [PAID, COMPLETED, REFUNDED]
+    // 指标说明：
+    //   - totalRevenue/totalProfit：含退款口径（退款=负成本，部分退款直减）
+    //   - totalOrderCount：仅计 PAID/COMPLETED
+    //   - uniqueCustomerCount：去重客户数
+    //   - totalProfitMargin：totalProfit/totalRevenue * 100
+    //   - averageCustomerOrderValue：totalRevenue/uniqueCustomerCount
+    // 排序：支持多字段（默认为 totalRevenue），并分页返回
+    // ================================================================
     const {
       startDate,
       endDate,
@@ -711,6 +946,7 @@ export class AnalysisService {
     };
 
     // 2. 获取指定时间范围内的所有团购单及其订单数据
+    // 步骤：获取团购单 + 供应商 + 订单（限制状态）
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: whereCondition,
       include: {
@@ -743,6 +979,7 @@ export class AnalysisService {
     });
 
     // 2. 按团购单名称和供货商ID进行分组聚合
+    // 映射构建：以“团购名称|供应商ID”为唯一键聚合
     const mergedDataMap = new Map<
       string,
       {
@@ -783,7 +1020,7 @@ export class AnalysisService {
 
       const mergedData = mergedDataMap.get(uniqueKey)!;
 
-      // 遍历当前团购单的所有订单
+      // 遍历订单：累加金额、订单量、客户去重、数量
       for (const order of groupBuy.order as Array<{
         quantity: number;
         unitId: string;
@@ -794,12 +1031,14 @@ export class AnalysisService {
         // 根据unitId找到对应的规格信息
         const selectedUnit = units.find((unit) => unit.id === order.unitId);
         if (selectedUnit) {
+          // 原始金额
           const originalRevenue = selectedUnit.price * order.quantity;
           const originalProfit =
             (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
           const originalCost = selectedUnit.costPrice * order.quantity;
           const partialRefundAmount = order.partialRefundAmount || 0;
 
+          // 分支：退款/部分退款
           const revenue =
             order.status === OrderStatus.REFUNDED
               ? 0
@@ -808,15 +1047,19 @@ export class AnalysisService {
             order.status === OrderStatus.REFUNDED
               ? -originalCost
               : originalProfit - partialRefundAmount;
+          // 映射更新：金额口径
           mergedData.totalRevenue += revenue;
           mergedData.totalProfit += profit;
           if (
             order.status === OrderStatus.PAID ||
             order.status === OrderStatus.COMPLETED
           ) {
+            // 指标：订单量仅计 PAID/COMPLETED
             mergedData.totalOrderCount += 1;
           }
+          // 客户去重：加入集合
           mergedData.uniqueCustomerIds.add(order.customerId);
+          // 数量汇总：总购买数量
           mergedData.totalQuantity += order.quantity;
         }
       }
@@ -846,6 +1089,7 @@ export class AnalysisService {
     });
 
     // 4. 根据指定字段和排序方式进行排序
+    // 排序：根据字段与方向
     mergedDataArray.sort((a, b) => {
       let aValue: number;
       let bValue: number;
@@ -903,6 +1147,16 @@ export class AnalysisService {
   async getMergedGroupBuyOverviewDetail(
     params: MergedGroupBuyOverviewDetailParams,
   ): Promise<MergedGroupBuyOverviewDetail> {
+    // ================================================================
+    // 接口：团购单（按名称合并）概况详情
+    // 目标：针对某个团购名称 + 供货商，输出多维度指标（核心业绩、客户分析、地域分析、历史记录等）
+    // 过滤：delete=0；可选时间范围 groupBuyStartDate
+    // 订单口径：delete=0；金额含退款口径，订单量仅计已付/完成
+    // 主要步骤：
+    //   1) 拉取目标团购及订单，按规则累计 revenue/profit/partialRefund/orderCount 等
+    //   2) 统计客户分布（购买次数分桶）、地域分布、历史发起记录（含退款数）
+    //   3) 计算各类派生指标：利润率、客单价、复购率等
+    // ================================================================
     const { groupBuyName, supplierId, startDate, endDate } = params;
 
     // 1. 构建查询条件
@@ -921,6 +1175,7 @@ export class AnalysisService {
     };
 
     // 2. 查询指定名称的团购单及其订单数据（包含所有状态的订单）
+    // 步骤：获取目标团购（包含产品、供应商、订单、客户地址）
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: whereCondition,
       include: {
@@ -977,6 +1232,7 @@ export class AnalysisService {
     }
 
     // 2. 聚合数据计算
+    // 聚合容器：核心业绩、客户、地域
     let totalRevenue = 0;
     let totalProfit = 0;
     let totalPartialRefundAmount = 0;
@@ -989,12 +1245,12 @@ export class AnalysisService {
     for (const groupBuy of groupBuysWithOrders) {
       const units = groupBuy.units as Array<GroupBuyUnit>;
 
-      // 收集供货商名称
+      // 收集供货商名称（用于详情抬头展示）
       if (groupBuy.supplier && groupBuy.supplier.name) {
         supplierNamesSet.add(groupBuy.supplier.name);
       }
 
-      // 遍历当前团购单的所有订单（只统计已支付和已完成的订单）
+      // 遍历当前团购单的所有订单
       for (const order of groupBuy.order) {
         // 收入与利润统计：包含已支付、已完成、已退款
         if (
@@ -1021,6 +1277,7 @@ export class AnalysisService {
                 ? -originalCost
                 : originalProfit - partialRefundAmount;
 
+            // 累加：合计金额与部分退款
             totalRevenue += revenue;
             totalProfit += profit;
             totalPartialRefundAmount += partialRefundAmount;
@@ -1031,6 +1288,7 @@ export class AnalysisService {
             ) {
               totalOrderCount += 1;
             }
+            // 客户去重
             uniqueCustomerIds.add(order.customerId);
 
             // 统计客户购买次数
@@ -1159,6 +1417,7 @@ export class AnalysisService {
     });
 
     // 7. 团购发起历史记录
+    // 历史记录：逐次团购的订单/金额/退款统计
     const groupBuyLaunchHistory: GroupBuyLaunchHistory[] =
       groupBuysWithOrders.map((groupBuy) => {
         // 计算该次团购的订单数量、客户数量和销售额
@@ -1271,6 +1530,15 @@ export class AnalysisService {
   async getMergedGroupBuyFrequencyCustomers(
     params: MergedGroupBuyFrequencyCustomersParams,
   ): Promise<MergedGroupBuyFrequencyCustomersResult> {
+    // ================================================================
+    // 接口：获取特定购买频次的客户列表（团购合并维度）
+    // 目标：在某团购名称 + 供货商 + 可选时间范围内，筛选购买次数在指定频次/范围内的客户
+    // 订单口径：delete=0 且状态在 [PAID, COMPLETED]
+    // 逻辑：
+    //   1) 取订单并按客户计数
+    //   2) 应用 frequency 或 (minFrequency, maxFrequency) 过滤
+    //   3) 返回客户基本信息及其购买次数（purchaseCount）
+    // ================================================================
     const {
       groupBuyName,
       supplierId,
@@ -1297,6 +1565,7 @@ export class AnalysisService {
     };
 
     // 2. 查询指定名称的团购单及其订单数据
+    // 步骤：目标团购订单（仅已付/完成）
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: whereCondition,
       include: {
@@ -1321,6 +1590,7 @@ export class AnalysisService {
     });
 
     // 3. 统计每个客户的购买次数
+    // 映射构建：客户->购买次数
     const customerPurchaseCounts = new Map<
       string,
       {
@@ -1353,6 +1623,7 @@ export class AnalysisService {
     const minF = minFrequency ?? frequency ?? 0;
     const maxF = maxFrequency ?? frequency ?? Number.POSITIVE_INFINITY;
 
+    // 筛选：固定频次或范围[minF, maxF]
     const filteredCustomers = Array.from(customerPurchaseCounts.values())
       .filter((item) => item.count >= minF && item.count <= maxF)
       .map((item) => ({ ...item.customer, purchaseCount: item.count }));
@@ -1371,6 +1642,14 @@ export class AnalysisService {
   async getMergedGroupBuyRegionalCustomers(
     params: MergedGroupBuyRegionalCustomersParams,
   ): Promise<MergedGroupBuyRegionalCustomersResult> {
+    // ================================================================
+    // 接口：获取特定区域的客户列表（团购合并维度）
+    // 目标：在某团购名称 + 供货商 + 可选时间范围内，筛选出属于指定地址的客户（去重）
+    // 订单口径：delete=0 且状态在 [PAID, COMPLETED]
+    // 流程：
+    //   1) 拉取订单，过滤地址ID
+    //   2) 客户去重后返回客户列表，并补充地址名称
+    // ================================================================
     const { groupBuyName, supplierId, addressId, startDate, endDate } = params;
 
     // 1. 构建查询条件
@@ -1389,6 +1668,7 @@ export class AnalysisService {
     };
 
     // 2. 查询指定名称的团购单及其订单数据
+    // 步骤：目标团购订单（仅已付/完成），含客户地址
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: whereCondition,
       include: {
@@ -1474,6 +1754,13 @@ export class AnalysisService {
   async getSupplierOverview(
     params: SupplierOverviewParams,
   ): Promise<SupplierOverviewResult> {
+    // ================================================================
+    // 接口：供货商概况列表（按供货商维度）
+    // 目标：聚合供货商在指定时间范围内的业绩指标，支持搜索、排序与分页
+    // 过滤：供应商 delete=0；团购 delete=0；时间范围按 groupBuyStartDate
+    // 订单口径：delete=0 且状态在 [PAID, COMPLETED, REFUNDED]
+    // 指标：总销售额、总利润、总订单量、参与客户数、团购单数、平均利润率
+    // ================================================================
     const {
       startDate,
       endDate,
@@ -1499,6 +1786,7 @@ export class AnalysisService {
     // 2. 获取所有供货商及其团购单和订单数据
     // 查询策略：一次性获取所有需要的数据，避免N+1查询问题
     // 包含关系：供货商 -> 团购单 -> 订单
+    // 步骤：获取供应商 -> 团购 -> 订单
     const suppliersWithData = await this.prisma.supplier.findMany({
       where: whereCondition,
       include: {
@@ -1615,6 +1903,7 @@ export class AnalysisService {
 
     // 4. 排序处理
     // 根据指定的排序字段和排序方向对供货商列表进行排序
+    // 排序：根据指定字段
     supplierStats.sort((a, b) => {
       let aValue: number;
       let bValue: number;
@@ -1686,6 +1975,13 @@ export class AnalysisService {
   async getSupplierOverviewDetail(
     params: SupplierOverviewDetailParams,
   ): Promise<SupplierOverviewDetail> {
+    // ================================================================
+    // 接口：供货商概况详情（按供货商维度）
+    // 目标：输出该供货商在时间范围内的多维度分析（业绩、客户、产品、分类、地域、历史等）
+    // 过滤：团购 delete=0；可选时间范围 groupBuyStartDate
+    // 订单口径：delete=0 且状态在 [PAID, COMPLETED, REFUNDED]
+    // 指标口径：与合并团购/排行榜保持一致（退款=负成本，部分退款直减；订单量仅计已付/完成）
+    // ================================================================
     const { supplierId, startDate, endDate } = params;
 
     // 1. 获取供货商基本信息
@@ -1701,6 +1997,7 @@ export class AnalysisService {
     // 2. 获取供货商的所有团购单及其订单数据
     // 查询策略：一次性获取所有需要的数据，包含产品、分类、客户、地址等关联信息
     // 包含关系：团购单 -> 产品 -> 产品分类，团购单 -> 订单 -> 客户 -> 客户地址
+    // 步骤：获取供货商的团购 + 产品/分类 + 订单/客户/地址
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: {
         supplierId, // 指定供货商ID
@@ -1873,7 +2170,7 @@ export class AnalysisService {
         const currentCount = customerPurchaseCounts.get(order.customerId) || 0;
         customerPurchaseCounts.set(order.customerId, currentCount + 1);
 
-        // 统计商品数据
+        // 统计商品数据（供货商-产品维度）
         const productKey = groupBuy.product.id;
         if (!productStats.has(productKey)) {
           productStats.set(productKey, {
@@ -1892,7 +2189,7 @@ export class AnalysisService {
         productStat.totalProfit += orderProfit;
         productStat.orderCount++;
 
-        // 统计分类数据
+        // 统计分类数据（供货商-分类维度）
         const categoryKey = groupBuy.product.productType.id;
         if (!categoryStats.has(categoryKey)) {
           categoryStats.set(categoryKey, {
@@ -1916,7 +2213,7 @@ export class AnalysisService {
         }
         categoryProductIds.get(categoryKey)!.add(groupBuy.product.id);
 
-        // 统计地域数据
+        // 统计地域数据（供货商-地址维度，客户去重）
         const addressId = order.customer.customerAddress?.id;
         const addressName = order.customer.customerAddress?.name || '未知地址';
         if (addressId) {
@@ -1944,7 +2241,7 @@ export class AnalysisService {
         categoryStat.groupBuyCount += 1;
       }
 
-      // 添加团购历史记录
+      // 添加团购历史记录（仅统计已付/完成订单口径）
       if (groupBuyOrderCount > 0) {
         groupBuyHistory.push({
           groupBuyId: groupBuy.id,
@@ -2151,6 +2448,15 @@ export class AnalysisService {
   async getSupplierFrequencyCustomers(
     params: SupplierFrequencyCustomersParams,
   ): Promise<SupplierFrequencyCustomersResult> {
+    // ================================================================
+    // 接口：供货商维度获取特定购买频次客户列表
+    // 目标：在某供货商 + 可选时间范围内，筛选出购买次数在指定频次/范围内的客户
+    // 订单口径：delete=0 且状态在 [PAID, COMPLETED]
+    // 流程：
+    //   1) 拉取订单
+    //   2) 按客户聚合购买次数
+    //   3) 按范围过滤并返回客户列表
+    // ================================================================
     const {
       supplierId,
       frequency,
@@ -2172,6 +2478,7 @@ export class AnalysisService {
         : {};
 
     // 查询指定供货商的所有团购单及其订单
+    // 步骤：供货商团购订单（仅已付/完成）
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: {
         supplierId,
@@ -2200,6 +2507,7 @@ export class AnalysisService {
     });
 
     // 统计每个客户的购买次数
+    // 映射构建：客户->购买次数
     const customerPurchaseCounts = new Map<string, number>();
     for (const groupBuy of groupBuysWithOrders) {
       for (const order of groupBuy.order) {
@@ -2250,6 +2558,12 @@ export class AnalysisService {
   async getSupplierRegionalCustomers(
     params: SupplierRegionalCustomersParams,
   ): Promise<SupplierRegionalCustomersResult> {
+    // ================================================================
+    // 接口：供货商维度获取特定区域客户列表
+    // 目标：在某供货商 + 可选时间范围内，筛选属于指定地址的客户（去重）
+    // 订单口径：delete=0 且状态在 [PAID, COMPLETED]
+    // 流程：拉取订单 -> 过滤地址 -> 客户去重 -> 返回客户列表
+    // ================================================================
     const { supplierId, addressId, startDate, endDate } = params;
 
     // 构建时间过滤条件
@@ -2264,6 +2578,7 @@ export class AnalysisService {
         : {};
 
     // 查询指定供货商的所有团购单及其订单
+    // 步骤：供货商团购订单（仅已付/完成）+ 客户地址
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: {
         supplierId,
