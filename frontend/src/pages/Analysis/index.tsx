@@ -158,7 +158,7 @@ export const Component = () => {
                 自定义日期
               </Button>
             </div>
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap justify-center gap-4">
               {[
                 { days: 7, label: '7天', short: '7D', icon: <ClockCircleOutlined /> },
                 { days: 14, label: '14天', short: '14D', icon: <ClockCircleOutlined /> },
