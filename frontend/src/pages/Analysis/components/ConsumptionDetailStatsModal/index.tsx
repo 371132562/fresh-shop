@@ -17,7 +17,7 @@ import React, { useState } from 'react'
 type ProductItem = CustomerConsumptionDetailDto['productConsumptionRanks'][0]
 type GroupBuyItem = ProductItem['groupBuys'][0]
 
-type ConsumptionDetailModalProps = {
+type ConsumptionDetailStatsModalProps = {
   visible: boolean
   onClose: () => void
   consumptionDetail: CustomerConsumptionDetailDto | null
@@ -27,17 +27,17 @@ type ConsumptionDetailModalProps = {
 }
 
 /**
- * 消费详情模态框组件
- * 展示客户的消费详情，包括基础信息、购买商品排行和参团团购排行
+ * 消费详情统计模态框（客户/客户地址通用）
+ * 展示实体的消费详情，包括基础信息、购买商品排行和参团团购排行
  */
-const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
+const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = ({
   visible,
   onClose,
   consumptionDetail,
   loading,
   title = '消费详情',
   width = 900
-}: ConsumptionDetailModalProps) => {
+}: ConsumptionDetailStatsModalProps) => {
   // 展开状态管理 - 记录每个商品的展开状态
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set())
 
@@ -66,7 +66,7 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
             title={
               <div style={{ maxWidth: 400, lineHeight: 1.6 }}>
                 <b>统计说明：</b>
-                展示客户的详细消费数据，包括订单统计、商品购买排行和团购参与情况。数据已扣除部分退款金额。
+                展示详细消费数据，包括订单统计、商品购买排行和团购参与情况。数据已扣除部分退款金额。
               </div>
             }
           >
@@ -102,15 +102,13 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
         </div>
       ) : consumptionDetail ? (
         <div className="!space-y-2">
-          {/* 客户基本信息 */}
+          {/* 基本信息 */}
           <Card
             title={
               <div className="flex h-12 items-center justify-between">
                 <div className="flex items-center gap-2">
                   <TrophyOutlined className="text-blue-500" />
-                  <span className="text-lg font-medium">
-                    客户：{consumptionDetail.customerName}
-                  </span>
+                  <span className="text-lg font-medium">{consumptionDetail.customerName}</span>
                 </div>
                 <span className="text-sm text-orange-500">消费详情统计</span>
               </div>
@@ -489,4 +487,4 @@ const ConsumptionDetailModal: React.FC<ConsumptionDetailModalProps> = ({
   )
 }
 
-export default ConsumptionDetailModal
+export default ConsumptionDetailStatsModal

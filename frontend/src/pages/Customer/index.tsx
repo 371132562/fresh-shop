@@ -3,11 +3,11 @@ import { Button, FloatButton, Form, Input, List, Modal, Select, Tag } from 'antd
 import type { CustomerSortField, SortOrder } from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
 
+import ConsumptionDetailStatsModal from '@/pages/Analysis/components/ConsumptionDetailStatsModal'
 import useCustomerAddressStore from '@/stores/customerAddressStore.ts'
 import useCustomerStore from '@/stores/customerStore.ts'
 import { validatePhoneNumber } from '@/utils'
 
-import ConsumptionDetailModal from './components/ConsumptionDetailModal'
 import Modify from './Modify.tsx'
 
 export const Component = () => {
@@ -216,7 +216,7 @@ export const Component = () => {
         />
       )}
       {/* 消费详情模态框 */}
-      <ConsumptionDetailModal
+      <ConsumptionDetailStatsModal
         visible={consumptionDetailVisible}
         onClose={handleCloseConsumptionDetail}
         consumptionDetail={consumptionDetail}

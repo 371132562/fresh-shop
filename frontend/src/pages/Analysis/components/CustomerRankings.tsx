@@ -6,7 +6,7 @@ import type {
 } from 'fresh-shop-backend/types/dto'
 import { useMemo, useState } from 'react'
 
-import ConsumptionDetailModal from '@/pages/Customer/components/ConsumptionDetailModal'
+import ConsumptionDetailStatsModal from '@/pages/Analysis/components/ConsumptionDetailStatsModal'
 import useAnalysisStore from '@/stores/analysisStore'
 import useCustomerStore from '@/stores/customerStore'
 
@@ -174,7 +174,7 @@ export const CustomerRankings = () => {
       />
 
       {/* 消费详情模态框 */}
-      <ConsumptionDetailModal
+      <ConsumptionDetailStatsModal
         visible={consumptionDetailVisible}
         onClose={handleCloseConsumptionDetail}
         consumptionDetail={consumptionDetail}

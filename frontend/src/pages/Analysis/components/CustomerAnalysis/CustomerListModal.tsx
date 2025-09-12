@@ -1,7 +1,7 @@
 import { Button, Modal, Table } from 'antd'
 import React, { useState } from 'react'
 
-import ConsumptionDetailModal from '@/pages/Customer/components/ConsumptionDetailModal'
+import ConsumptionDetailStatsModal from '@/pages/Analysis/components/ConsumptionDetailStatsModal'
 import useAnalysisStore from '@/stores/analysisStore'
 import useCustomerStore from '@/stores/customerStore'
 
@@ -83,7 +83,7 @@ const CustomerListModal: React.FC = () => {
         />
       </Modal>
 
-      <ConsumptionDetailModal
+      <ConsumptionDetailStatsModal
         visible={consumptionDetailVisible}
         onClose={() => {
           setConsumptionDetailVisible(false)

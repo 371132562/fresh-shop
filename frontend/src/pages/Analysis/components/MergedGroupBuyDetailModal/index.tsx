@@ -1,5 +1,4 @@
-import { InfoCircleOutlined, TrophyOutlined } from '@ant-design/icons'
-import { QuestionCircleOutlined } from '@ant-design/icons'
+import { InfoCircleOutlined, QuestionCircleOutlined, TrophyOutlined } from '@ant-design/icons'
 import { Card, Col, Modal, Row, Skeleton, Tooltip } from 'antd'
 import dayjs from 'dayjs'
 import type { MergedGroupBuyOverviewDetailParams } from 'fresh-shop-backend/types/dto'
@@ -14,13 +13,11 @@ import {
   getProfitMarginColor
 } from '@/utils/profitColor'
 
-import {
-  CustomerLoyaltyAnalysis,
-  CustomerStatsAnalysis,
-  GroupBuyHistoryAnalysis,
-  RegionalSalesAnalysis
-} from '../'
 import CustomerListModal from '../CustomerAnalysis/CustomerListModal'
+import CustomerLoyaltyAnalysis from '../CustomerAnalysis/CustomerLoyaltyAnalysis'
+import CustomerStatsAnalysis from '../CustomerAnalysis/CustomerStatsAnalysis'
+import GroupBuyHistoryAnalysis from '../GroupBuyHistoryAnalysis'
+import RegionalSalesAnalysis from '../RegionalAnalysis/RegionalSalesAnalysis'
 
 type MergedGroupBuyDetailModalProps = {
   visible: boolean
