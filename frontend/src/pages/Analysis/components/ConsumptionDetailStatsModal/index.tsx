@@ -24,6 +24,7 @@ type ConsumptionDetailStatsModalProps = {
   loading?: boolean
   title?: string
   width?: number
+  type?: 'customer' | 'address' // 新增 type 参数区分消费详情类型
 }
 
 /**
@@ -36,7 +37,8 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
   consumptionDetail,
   loading,
   title = '消费详情',
-  width = 900
+  width = 900,
+  type = 'customer'
 }: ConsumptionDetailStatsModalProps) => {
   // 展开状态管理 - 记录每个商品的展开状态
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set())
@@ -64,9 +66,59 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
           <span>{title}</span>
           <Tooltip
             title={
-              <div style={{ maxWidth: 400, lineHeight: 1.6 }}>
+              <div style={{ maxWidth: 500, lineHeight: 1.6 }}>
                 <b>统计说明：</b>
-                展示详细消费数据，包括订单统计、商品购买排行和团购参与情况。数据已扣除部分退款金额。
+                {type === 'customer' ? (
+                  <div>
+                    <div className="mb-2">
+                      <b>客户维度统计：</b>展示单个客户的详细消费数据
+                    </div>
+                    <div className="mb-1">
+                      • <b>订单统计：</b>该客户的所有订单数量、消费总额、平均单价
+                    </div>
+                    <div className="mb-1">
+                      • <b>商品排行：</b>按消费金额排序，显示该客户购买最多的商品
+                    </div>
+                    <div className="mb-1">
+                      • <b>团购详情：</b>每个商品下的具体团购参与情况
+                    </div>
+                    <div className="mb-1">
+                      • <b>最新购买：</b>标记该客户最近一次购买的商品
+                    </div>
+                    <div className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-medium text-blue-700">
+                          数据已扣除部分退款金额，仅统计已付款、已完成、已退款的订单
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="mb-2">
+                      <b>地址维度统计：</b>展示该地址下所有客户的消费数据汇总
+                    </div>
+                    <div className="mb-1">
+                      • <b>订单统计：</b>该地址下所有客户的订单数量、消费总额、平均单价
+                    </div>
+                    <div className="mb-1">
+                      • <b>商品排行：</b>按消费金额排序，显示该地址购买最多的商品
+                    </div>
+                    <div className="mb-1">
+                      • <b>团购详情：</b>每个商品下该地址所有客户的团购参与情况
+                    </div>
+                    <div className="mb-1">
+                      • <b>汇总统计：</b>将同一地址下所有客户的消费数据合并计算
+                    </div>
+                    <div className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-medium text-blue-700">
+                          数据已扣除部分退款金额，仅统计已付款、已完成、已退款的订单
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             }
           >
@@ -110,7 +162,9 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                   <TrophyOutlined className="text-blue-500" />
                   <span className="text-lg font-medium">{consumptionDetail.customerName}</span>
                 </div>
-                <span className="text-sm text-orange-500">消费详情统计</span>
+                <span className="text-sm text-orange-500">
+                  {type === 'address' ? '地址消费详情统计' : '消费详情统计'}
+                </span>
               </div>
             }
             size="small"
@@ -369,7 +423,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                                 <div className="text-lg font-semibold text-gray-800">
                                   {product.productName}
                                 </div>
-                                {isLatestConsumption && (
+                                {isLatestConsumption && type === 'customer' && (
                                   <Tag
                                     color="red"
                                     className="text-xs"

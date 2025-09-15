@@ -25,6 +25,7 @@ export const customerAddressDeleteApi = '/customerAddress/delete'
 export const customerAddressDetailApi = '/customerAddress/detail'
 export const customerAddressListApi = '/customerAddress/list'
 export const customerAddressListAllApi = '/customerAddress/listAll'
+export const customerAddressConsumptionDetailApi = '/customerAddress/consumptionDetail'
 
 export const customerCreateApi = '/customer/create'
 export const customerUpdateApi = '/customer/update'

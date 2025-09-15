@@ -214,11 +214,31 @@ export type ProductPageParams = CommonPageParams & {
 // ===================================================================
 
 /**
+ * 客户地址排序字段枚举
+ * 定义客户地址列表支持的排序字段
+ */
+export type CustomerAddressSortField =
+  | 'createdAt'
+  | 'orderCount'
+  | 'orderTotalAmount';
+
+/**
  * 客户地址分页查询参数
  * 用于客户地址列表的筛选和分页查询
  */
 export type CustomerAddressPageParams = CommonPageParams & {
   name: string; // 地址名称（模糊搜索）
+  sortField?: CustomerAddressSortField; // 排序字段（可选）
+  sortOrder?: SortOrder; // 排序方向（可选）
+};
+
+/**
+ * 客户地址列表项
+ * 扩展基础客户地址信息，包含订单统计
+ */
+export type CustomerAddressListItem = CustomerAddress & {
+  orderCount: number; // 订单数量
+  orderTotalAmount: number; // 订单总额
 };
 
 // ===================================================================
@@ -279,6 +299,32 @@ export type CustomerConsumptionDetailDto = {
       latestGroupBuyStartDate: Date; // 最近一次团购发起时间
     }[]; // 该商品下的团购单列表
   }[]; // 客户的商品消费排行（完整）
+};
+
+/**
+ * 客户地址消费详情
+ * 用于展示客户地址维度的详细消费分析数据
+ */
+export type CustomerAddressConsumptionDetailDto = {
+  addressName: string; // 地址名称
+  orderCount: number; // 订单数量
+  totalAmount: number; // 订单总额（已扣除部分退款）
+  averagePricePerOrder: number; // 每单平均价格
+  totalPartialRefundAmount: number; // 总部分退款金额
+  productConsumptionRanks: {
+    productId: string; // 商品ID
+    productName: string; // 商品名称
+    count: number; // 购买次数
+    isLatestConsumption: boolean; // 是否为最近参团的商品（地址维度固定为false）
+    groupBuys: {
+      groupBuyName: string; // 团购名称
+      unitName: string; // 规格名称
+      count: number; // 购买数量
+      totalAmount: number; // 该团购规格的总消费金额（已扣除部分退款）
+      totalPartialRefundAmount: number; // 该团购规格的总部分退款金额
+      latestGroupBuyStartDate: Date; // 最近一次团购发起时间
+    }[]; // 该商品下的团购单列表
+  }[]; // 地址下所有客户的商品消费排行（完整）
 };
 
 /**

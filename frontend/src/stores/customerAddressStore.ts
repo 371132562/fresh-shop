@@ -1,8 +1,15 @@
-import { CustomerAddress } from 'fresh-shop-backend/types/dto.ts'
+import {
+  CustomerAddress,
+  CustomerAddressConsumptionDetailDto,
+  CustomerAddressListItem,
+  CustomerAddressSortField,
+  SortOrder
+} from 'fresh-shop-backend/types/dto.ts'
 import { CustomerAddressPageParams, ListByPage } from 'fresh-shop-backend/types/dto.ts'
 import { create } from 'zustand'
 
 import {
+  customerAddressConsumptionDetailApi,
   customerAddressCreateApi,
   customerAddressDeleteApi,
   customerAddressDetailApi,
@@ -17,7 +24,7 @@ type CustomerAddressId = Pick<CustomerAddress, 'id'>
 type CustomerAddressCreate = Omit<CustomerAddress, 'id' | 'delete' | 'createdAt' | 'updatedAt'>
 
 type CustomerAddressStore = {
-  customerAddressList: CustomerAddress[]
+  customerAddressList: CustomerAddressListItem[]
   listCount: {
     totalCount: number
     totalPages: number
@@ -45,6 +52,12 @@ type CustomerAddressStore = {
   getAllCustomerAddressLoading: boolean
   getAllCustomerAddress: () => Promise<void>
   allCustomerAddress: CustomerAddress[]
+
+  // 地址消费详情相关
+  consumptionDetailLoading: boolean
+  addressConsumptionDetail: CustomerAddressConsumptionDetailDto | null
+  getAddressConsumptionDetail: (data: CustomerAddressId) => Promise<void>
+  setAddressConsumptionDetail: (data: CustomerAddressConsumptionDetailDto | null) => void
 }
 
 const useCustomerAddressStore = create<CustomerAddressStore>((set, get) => ({
@@ -56,12 +69,17 @@ const useCustomerAddressStore = create<CustomerAddressStore>((set, get) => ({
   pageParams: {
     name: '',
     page: 1,
-    pageSize: 10
+    pageSize: 10,
+    sortField: 'createdAt' as CustomerAddressSortField,
+    sortOrder: 'desc' as SortOrder
   },
   getCustomerAddressList: async (data = get().pageParams) => {
     try {
       set({ listLoading: true })
-      const res = await http.post<ListByPage<CustomerAddress[]>>(customerAddressListApi, data)
+      const res = await http.post<ListByPage<CustomerAddressListItem[]>>(
+        customerAddressListApi,
+        data
+      )
       if (res.data.page > res.data.totalPages && res.data.totalPages) {
         get().setPageParams({ page: res.data.totalPages || 1 })
         return
@@ -162,6 +180,29 @@ const useCustomerAddressStore = create<CustomerAddressStore>((set, get) => ({
     } finally {
       set({ getAllCustomerAddressLoading: false })
     }
+  },
+
+  // 地址消费详情相关
+  consumptionDetailLoading: false,
+  addressConsumptionDetail: null,
+  getAddressConsumptionDetail: async data => {
+    try {
+      set({ consumptionDetailLoading: true })
+      const res = await http.post<CustomerAddressConsumptionDetailDto>(
+        customerAddressConsumptionDetailApi,
+        data
+      )
+      set({ addressConsumptionDetail: res.data })
+    } catch (err) {
+      console.error(err)
+    } finally {
+      set({ consumptionDetailLoading: false })
+    }
+  },
+  setAddressConsumptionDetail: data => {
+    set({
+      addressConsumptionDetail: data
+    })
   }
 }))
 

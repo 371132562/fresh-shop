@@ -39,4 +39,9 @@ export class CustomerAddressController {
   delete(@Body('id') id: string) {
     return this.customerAddressService.delete(id);
   }
+
+  @Post('consumptionDetail')
+  consumptionDetail(@Body('id') id: string) {
+    return this.customerAddressService.getConsumptionDetail(id);
+  }
 }
