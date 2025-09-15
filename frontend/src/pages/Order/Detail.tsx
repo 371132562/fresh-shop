@@ -1,7 +1,7 @@
 import { PopconfirmProps, Tag } from 'antd'
 import { Button, Flex, notification, Popconfirm, Skeleton } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { NavLink, useNavigate, useParams } from 'react-router'
 
 import { PartialRefundButton } from '@/pages/Order/components/PartialRefundModal.tsx'
 import Modify from '@/pages/Order/Modify.tsx'
@@ -213,11 +213,9 @@ export const Component = () => {
                 <span className="w-20 flex-shrink-0 font-medium text-gray-500">团购单：</span>
                 <span className="word-break-all flex-grow break-words text-gray-700">
                   {order?.groupBuy?.name ? (
-                    <Button
-                      type="link"
-                      style={{ padding: 0, height: 'auto' }}
+                    <NavLink
+                      to={`/groupBuy/detail/${order.groupBuy.id}`}
                       className="text-gray-700 hover:text-blue-500"
-                      onClick={() => navigate(`/groupBuy/detail/${order.groupBuy.id}`)}
                     >
                       {order.groupBuy.name}
                       {order.groupBuy.groupBuyStartDate && (
@@ -225,7 +223,7 @@ export const Component = () => {
                           ({'发起时间：' + formatDate(order.groupBuy.groupBuyStartDate)})
                         </span>
                       )}
-                    </Button>
+                    </NavLink>
                   ) : (
                     <span className="italic text-gray-400">无</span>
                   )}

@@ -186,16 +186,20 @@ export const Component = () => {
                   description={
                     <>
                       {item.groupBuy?.name && (
-                        <NavLink to={`/groupBuy/detail/${item.groupBuy.id}`}>
-                          <div className="mb-1 font-medium text-gray-800">
-                            团购单：<span className="text-blue-500">{item.groupBuy.name}</span>
-                            {item.groupBuy.groupBuyStartDate && (
-                              <span className="ml-2 text-sm text-gray-500">
-                                ({'发起时间：' + formatDate(item.groupBuy.groupBuyStartDate)})
-                              </span>
-                            )}
-                          </div>
-                        </NavLink>
+                        <div className="mb-1 font-medium text-gray-800">
+                          团购单：
+                          <NavLink
+                            to={`/groupBuy/detail/${item.groupBuy.id}`}
+                            className="text-blue-500 transition-colors hover:text-blue-600"
+                          >
+                            {item.groupBuy.name}
+                          </NavLink>
+                          {item.groupBuy.groupBuyStartDate && (
+                            <span className="ml-2 text-sm text-gray-500">
+                              ({'发起时间：' + formatDate(item.groupBuy.groupBuyStartDate)})
+                            </span>
+                          )}
+                        </div>
                       )}
                       {item.quantity && (
                         <div className="mt-1 font-medium text-gray-800">

@@ -6,7 +6,7 @@ import {
   Order
 } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { NavLink, useNavigate, useParams } from 'react-router'
 
 import MergedGroupBuyDetailModal from '@/pages/Analysis/components/MergedGroupBuyDetailModal'
 import Modify from '@/pages/GroupBuy/Modify.tsx'
@@ -502,14 +502,12 @@ export const Component = () => {
                       title={
                         <span className="text-base font-medium text-gray-800">
                           {order?.customer?.name ? (
-                            <Button
-                              type="link"
-                              style={{ padding: 0, height: 'auto' }}
+                            <NavLink
+                              to={`/order/detail/${order.id}`}
                               className="text-base font-medium text-gray-800 hover:text-blue-500"
-                              onClick={() => navigate(`/order/detail/${order.id}`)}
                             >
                               {order.customer.name}
-                            </Button>
+                            </NavLink>
                           ) : (
                             '无客户信息'
                           )}

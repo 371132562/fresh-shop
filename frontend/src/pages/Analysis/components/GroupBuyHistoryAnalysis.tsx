@@ -4,6 +4,7 @@ import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import type { GroupBuyLaunchHistory } from 'fresh-shop-backend/types/dto'
 import React, { useState } from 'react'
+import { NavLink } from 'react-router'
 
 import { getProfitColor, getProfitMarginColor } from '@/utils/profitColor'
 
@@ -20,12 +21,6 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
   groupBuyHistory,
   title = '团购历史'
 }) => {
-  // 处理团购单详情跳转
-  const handleGroupBuyDetailClick = (groupBuyId: string) => {
-    // 默认在新标签页中打开团购单详情页面
-    window.open(`/groupBuy/detail/${groupBuyId}`, '_blank')
-  }
-
   // 控制“详细团购记录”展开/收起
   const [isExpanded, setIsExpanded] = useState(false)
   const showToggle = groupBuyHistory.length > 5
@@ -38,13 +33,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       dataIndex: 'launchDate',
       key: 'launchDate',
       render: (date: Date, record) => (
-        <div
-          className="flex cursor-pointer items-center gap-2 text-blue-500 transition-colors hover:text-blue-600"
-          onClick={() => handleGroupBuyDetailClick(record.groupBuyId)}
-          title="点击查看团购单详情"
-        >
-          {dayjs(date).format('YYYY-MM-DD')}
-        </div>
+        <div className="flex items-center gap-2">{dayjs(date).format('YYYY-MM-DD')}</div>
       ),
       defaultSortOrder: 'descend' as const
     },
@@ -53,13 +42,15 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       dataIndex: 'groupBuyName',
       key: 'groupBuyName',
       render: (name: string, record) => (
-        <div
-          className="cursor-pointer text-blue-500 transition-colors hover:text-blue-600"
-          onClick={() => handleGroupBuyDetailClick(record.groupBuyId)}
+        <NavLink
+          to={`/groupBuy/detail/${record.groupBuyId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 transition-colors hover:text-blue-600"
           title="点击查看团购单详情"
         >
           {name}
-        </div>
+        </NavLink>
       )
     },
     {

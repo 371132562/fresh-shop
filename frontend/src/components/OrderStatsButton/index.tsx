@@ -2,7 +2,7 @@ import { CheckCircleOutlined, ClockCircleOutlined, ShoppingCartOutlined } from '
 import { Badge, Button, Card, Col, Divider, Modal, Popconfirm, Row, Space } from 'antd'
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { NavLink } from 'react-router'
 
 import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore'
 
@@ -15,7 +15,6 @@ type OrderStatsButtonProps = {
  * 显示待付款和已付款订单数量，点击可查看详细列表
  */
 const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
-  const navigate = useNavigate()
   const [modalVisible, setModalVisible] = useState(false)
 
   const orderStats = useOrderStore(state => state.orderStats)
@@ -38,11 +37,8 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
     setModalVisible(true)
   }
 
-  // 处理订单条目点击，跳转到团购单详情页
-  const handleOrderClick = (groupBuyId: string) => {
-    navigate(`/groupBuy/detail/${groupBuyId}`)
-    setModalVisible(false)
-  }
+  // 处理关闭弹窗
+  const handleCloseModal = () => setModalVisible(false)
 
   // 如果没有待处理订单，不显示悬浮按钮
   if (!orderStats || totalPendingCount === 0) {
@@ -127,60 +123,74 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
                     size="small"
                   >
                     {orderStats.notPaidOrders.map((order, index) => (
-                      <Card
+                      <NavLink
                         key={index}
-                        onClick={() => handleOrderClick(order.groupBuy.id)}
-                        className="cursor-pointer rounded-lg border border-orange-200 bg-orange-50 transition-all duration-300 hover:shadow-md"
-                        styles={{ body: { padding: '12px 16px' } }}
+                        to={`/groupBuy/detail/${order.groupBuy.id}`}
+                        onClick={handleCloseModal}
+                        className="block"
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="mb-1 text-sm font-semibold text-slate-700">
-                              👤 {order.customer.name}
+                        <Card
+                          className="cursor-pointer rounded-lg border border-orange-200 bg-orange-50 transition-all duration-300 hover:shadow-md"
+                          styles={{ body: { padding: '12px 16px' } }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="mb-1 text-sm font-semibold text-slate-700">
+                                👤 {order.customer.name}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                🛒 {order.groupBuy.name} (
+                                {dayjs(order.groupBuy.groupBuyStartDate).format('MM-DD')})
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-500">
-                              🛒 {order.groupBuy.name} (
-                              {dayjs(order.groupBuy.groupBuyStartDate).format('MM-DD')})
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="rounded-xl px-2 py-1 text-xs font-medium text-white"
-                              style={{ backgroundColor: OrderStatusMap[OrderStatus.NOTPAID].color }}
-                            >
-                              待付款
-                            </div>
-                            {canUpdateOrderStatus(order.status) && (
-                              <Popconfirm
-                                title={
-                                  <div className="text-lg">
-                                    确定要将订单状态变更为{' '}
-                                    <span className="text-blue-500">
-                                      {getNextOrderStatusLabel(order.status)}
-                                    </span>{' '}
-                                    吗？
-                                  </div>
-                                }
-                                onConfirm={e => {
-                                  e?.stopPropagation()
-                                  handleUpdateOrderStatus(order, updateOrder)
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="rounded-xl px-2 py-1 text-xs font-medium text-white"
+                                style={{
+                                  backgroundColor: OrderStatusMap[OrderStatus.NOTPAID].color
                                 }}
-                                onCancel={e => e?.stopPropagation()}
-                                okText="确定"
-                                cancelText="取消"
                               >
-                                <Button
-                                  type="primary"
-                                  size="small"
-                                  onClick={e => e.stopPropagation()}
+                                待付款
+                              </div>
+                              {canUpdateOrderStatus(order.status) && (
+                                <Popconfirm
+                                  title={
+                                    <div className="text-lg">
+                                      确定要将订单状态变更为{' '}
+                                      <span className="text-blue-500">
+                                        {getNextOrderStatusLabel(order.status)}
+                                      </span>{' '}
+                                      吗？
+                                    </div>
+                                  }
+                                  onConfirm={e => {
+                                    e?.preventDefault()
+                                    e?.stopPropagation()
+                                    handleUpdateOrderStatus(order, updateOrder)
+                                  }}
+                                  onCancel={e => {
+                                    e?.preventDefault()
+                                    e?.stopPropagation()
+                                  }}
+                                  okText="确定"
+                                  cancelText="取消"
                                 >
-                                  更新状态
-                                </Button>
-                              </Popconfirm>
-                            )}
+                                  <Button
+                                    type="primary"
+                                    size="small"
+                                    onClick={e => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                    }}
+                                  >
+                                    更新状态
+                                  </Button>
+                                </Popconfirm>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </Card>
+                        </Card>
+                      </NavLink>
                     ))}
                   </Space>
                 </div>
@@ -201,60 +211,74 @@ const OrderStatsButton = ({ className }: OrderStatsButtonProps) => {
                     size="small"
                   >
                     {orderStats.paidOrders.map((order, index) => (
-                      <Card
+                      <NavLink
                         key={index}
-                        onClick={() => handleOrderClick(order.groupBuy.id)}
-                        className="cursor-pointer rounded-lg border border-green-200 bg-green-50 transition-all duration-300"
-                        styles={{ body: { padding: '12px 16px' } }}
+                        to={`/groupBuy/detail/${order.groupBuy.id}`}
+                        onClick={handleCloseModal}
+                        className="block"
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="mb-1 text-sm font-semibold text-slate-700">
-                              👤 {order.customer.name}
+                        <Card
+                          className="cursor-pointer rounded-lg border border-green-200 bg-green-50 transition-all duration-300"
+                          styles={{ body: { padding: '12px 16px' } }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="mb-1 text-sm font-semibold text-slate-700">
+                                👤 {order.customer.name}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                🛒 {order.groupBuy.name} (
+                                {dayjs(order.groupBuy.groupBuyStartDate).format('MM-DD')})
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-500">
-                              🛒 {order.groupBuy.name} (
-                              {dayjs(order.groupBuy.groupBuyStartDate).format('MM-DD')})
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="rounded-xl px-2 py-1 text-xs font-medium text-white"
-                              style={{ backgroundColor: OrderStatusMap[OrderStatus.PAID].color }}
-                            >
-                              已付款待完成
-                            </div>
-                            {canUpdateOrderStatus(order.status) && (
-                              <Popconfirm
-                                title={
-                                  <div className="text-lg">
-                                    确定要将订单状态变更为{' '}
-                                    <span className="text-blue-500">
-                                      {getNextOrderStatusLabel(order.status)}
-                                    </span>{' '}
-                                    吗？
-                                  </div>
-                                }
-                                onConfirm={e => {
-                                  e?.stopPropagation()
-                                  handleUpdateOrderStatus(order, updateOrder)
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="rounded-xl px-2 py-1 text-xs font-medium text-white"
+                                style={{
+                                  backgroundColor: OrderStatusMap[OrderStatus.PAID].color
                                 }}
-                                onCancel={e => e?.stopPropagation()}
-                                okText="确定"
-                                cancelText="取消"
                               >
-                                <Button
-                                  type="primary"
-                                  size="small"
-                                  onClick={e => e.stopPropagation()}
+                                已付款待完成
+                              </div>
+                              {canUpdateOrderStatus(order.status) && (
+                                <Popconfirm
+                                  title={
+                                    <div className="text-lg">
+                                      确定要将订单状态变更为{' '}
+                                      <span className="text-blue-500">
+                                        {getNextOrderStatusLabel(order.status)}
+                                      </span>{' '}
+                                      吗？
+                                    </div>
+                                  }
+                                  onConfirm={e => {
+                                    e?.preventDefault()
+                                    e?.stopPropagation()
+                                    handleUpdateOrderStatus(order, updateOrder)
+                                  }}
+                                  onCancel={e => {
+                                    e?.preventDefault()
+                                    e?.stopPropagation()
+                                  }}
+                                  okText="确定"
+                                  cancelText="取消"
                                 >
-                                  更新状态
-                                </Button>
-                              </Popconfirm>
-                            )}
+                                  <Button
+                                    type="primary"
+                                    size="small"
+                                    onClick={e => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                    }}
+                                  >
+                                    更新状态
+                                  </Button>
+                                </Popconfirm>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </Card>
+                        </Card>
+                      </NavLink>
                     ))}
                   </Space>
                 </div>
