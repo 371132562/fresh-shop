@@ -1,4 +1,4 @@
-import dayjs from 'dayjs'
+// dayjs 相关逻辑已迁移至 '@/utils/day'
 
 // 自定义手机号校验规则
 export const validatePhoneNumber = (_: any, value: string) => {
@@ -16,9 +16,7 @@ export const validatePhoneNumber = (_: any, value: string) => {
 }
 
 // 格式化显示 年-月-日 级别的日期
-export const formatDate = (date: Date) => {
-  return dayjs(date).format('YYYY-MM-DD')
-}
+export { formatDate } from './day'
 
 // 构建图片完整预览地址（统一逻辑）
 // 例：//{host}{VITE_IMAGES_PORT}{VITE_IMAGES_BASE_URL}{filename}

@@ -1,10 +1,10 @@
 import { InfoCircleOutlined, QuestionCircleOutlined, TrophyOutlined } from '@ant-design/icons'
 import { Card, Col, Modal, Row, Skeleton, Tooltip } from 'antd'
-import dayjs from 'dayjs'
 import type { SupplierOverviewDetailParams } from 'fresh-shop-backend/types/dto'
 import React, { useEffect } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore'
+import dayjs from '@/utils/day'
 import {
   getProfitBgColor,
   getProfitColor,

@@ -1,10 +1,10 @@
 import { CheckCircleOutlined, ClockCircleOutlined, ShoppingCartOutlined } from '@ant-design/icons'
 import { Badge, Button, Card, Col, Divider, Modal, Popconfirm, Row, Space } from 'antd'
-import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
 import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore'
+import dayjs from '@/utils/day'
 
 type OrderStatsButtonProps = {
   className?: string

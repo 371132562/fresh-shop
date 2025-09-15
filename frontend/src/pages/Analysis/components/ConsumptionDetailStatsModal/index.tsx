@@ -9,9 +9,10 @@ import {
   UpOutlined
 } from '@ant-design/icons'
 import { Button, Card, Col, Modal, Row, Skeleton, Tag, Tooltip } from 'antd'
-import dayjs from 'dayjs'
 import type { CustomerConsumptionDetailDto } from 'fresh-shop-backend/types/dto'
 import React, { useState } from 'react'
+
+import dayjs from '@/utils/day'
 
 // 定义商品和团购的类型
 type ProductItem = CustomerConsumptionDetailDto['productConsumptionRanks'][0]

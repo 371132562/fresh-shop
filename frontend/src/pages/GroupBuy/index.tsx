@@ -1,6 +1,5 @@
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { Button, DatePicker, FloatButton, Form, Input, List, Modal, Select, Tag } from 'antd'
-import dayjs from 'dayjs'
 import {
   GroupBuyListItem,
   MergedGroupBuyOverviewDetailParams
@@ -19,6 +18,7 @@ import {
 import useProductStore from '@/stores/productStore.ts'
 import useSupplierStore from '@/stores/supplierStore.ts'
 import { formatDate } from '@/utils'
+import dayjs from '@/utils/day'
 
 import Modify from './Modify.tsx'
 const { RangePicker } = DatePicker
@@ -123,7 +123,7 @@ export const Component = () => {
     handleCancel()
   }
 
-  const filterOption = (input: string, option: any) => {
+  const filterOption = (input: string, option?: { children?: string }) => {
     return (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
   }
 

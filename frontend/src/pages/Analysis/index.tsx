@@ -1,10 +1,10 @@
 import { CalendarOutlined, ClockCircleOutlined, HistoryOutlined } from '@ant-design/icons'
 import { Button, Col, Row, Select } from 'antd'
 import { CalendarPicker } from 'antd-mobile'
-import dayjs from 'dayjs'
 import { useState } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore.ts'
+import dayjs from '@/utils/day'
 
 import { CustomerRankings } from './components/CustomerRankings' // 导入客户排行组件
 import { MergedGroupBuyOverview } from './components/MergedGroupBuyOverview'

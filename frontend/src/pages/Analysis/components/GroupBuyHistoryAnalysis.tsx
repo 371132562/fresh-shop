@@ -1,11 +1,11 @@
 import { HistoryOutlined } from '@ant-design/icons'
 import { Button, Card, Col, Divider, Row, Statistic, Table } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import dayjs from 'dayjs'
 import type { GroupBuyLaunchHistory } from 'fresh-shop-backend/types/dto'
 import React, { useState } from 'react'
 import { NavLink } from 'react-router'
 
+import dayjs from '@/utils/day'
 import { getProfitColor, getProfitMarginColor } from '@/utils/profitColor'
 
 type GroupBuyHistoryAnalysisProps = {

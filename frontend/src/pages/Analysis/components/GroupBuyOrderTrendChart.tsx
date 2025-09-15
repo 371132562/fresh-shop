@@ -1,10 +1,10 @@
 import { Card, Checkbox } from 'antd'
-import dayjs from 'dayjs'
 import type { AnalysisCountResult } from 'fresh-shop-backend/types/dto'
 import { useMemo, useState } from 'react'
 
 import { FullscreenChart } from '@/components/FullscreenChart'
 import useAnalysisStore from '@/stores/analysisStore'
+import dayjs from '@/utils/day'
 
 export const GroupBuyOrderTrendChart = () => {
   const getCountLoading = useAnalysisStore(state => state.getCountLoading)

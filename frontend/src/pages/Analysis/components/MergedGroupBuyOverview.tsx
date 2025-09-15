@@ -1,6 +1,5 @@
 import { SearchOutlined } from '@ant-design/icons'
 import { Button, Form, Input, List, Modal, Select } from 'antd'
-import dayjs from 'dayjs'
 import type {
   MergedGroupBuyOverviewDetailParams,
   MergedGroupBuyOverviewListItem,
@@ -11,6 +10,7 @@ import { useEffect, useState } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore'
 import useSupplierStore from '@/stores/supplierStore'
+import dayjs from '@/utils/day'
 import { getProfitColor } from '@/utils/profitColor'
 
 import MergedGroupBuyDetailModal from './MergedGroupBuyDetailModal'

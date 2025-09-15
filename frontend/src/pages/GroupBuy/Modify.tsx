@@ -11,7 +11,6 @@ import {
   Select,
   Space
 } from 'antd'
-import dayjs from 'dayjs'
 import { GroupBuy } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid' // 用于生成单位ID
@@ -21,6 +20,7 @@ import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import useProductStore from '@/stores/productStore.ts'
 import useSupplierStore from '@/stores/supplierStore.ts'
 import { buildImageUrl } from '@/utils'
+import dayjs from '@/utils/day'
 
 interface params {
   visible: boolean
