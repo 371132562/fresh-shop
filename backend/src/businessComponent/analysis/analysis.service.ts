@@ -1047,7 +1047,7 @@ export class AnalysisService {
     }
 
     // 根据团购单数量动态规划分桶：
-    // - >=20: 1,2,3,4, 5-9, 10-19, 20+
+    // - >=20: 1,2,3,4, 5-9, 10-19, 20-39, 40+
     // - >=10: 1,2,3,4, 5-9, 10+
     // - >=5:  1,2,3,4, 5+
     // - 其他: 1..totalGroupBuyCount（逐一列出）
@@ -1062,7 +1062,8 @@ export class AnalysisService {
           { min: 4, max: 4 },
           { min: 5, max: 9 },
           { min: 10, max: 19 },
-          { min: 20, max: null },
+          { min: 20, max: 39 },
+          { min: 40, max: null },
         ];
       }
       if (gbCount >= 10) {
@@ -2073,7 +2074,8 @@ export class AnalysisService {
           { min: 4, max: 4 },
           { min: 5, max: 9 },
           { min: 10, max: 19 },
-          { min: 20, max: null },
+          { min: 20, max: 39 },
+          { min: 40, max: null },
         ];
       }
       if (gbCount >= 10) {
