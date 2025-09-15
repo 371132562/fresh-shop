@@ -15,6 +15,7 @@ services:
     restart: unless-stopped # 保持 Docker 容器的运维状态，除非手动停止
     environment:
       DATABASE_URL: "file:../../db/shop.db" # 这确保了运行时容器内的 DATABASE_URL 环境变量被设置
+      TZ: "Asia/Shanghai" # 设置容器时区为中国标准时间
 
 volumes:
   db: # 定义一个命名卷用于数据库持久化

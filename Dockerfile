@@ -51,6 +51,12 @@ RUN pnpm build
 
 # --- 最终运行阶段 ---
 FROM node:22-alpine AS runner
+
+# 设置时区为中国标准时间
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 WORKDIR /app
 
 # 从 builder 阶段复制必要的文件
