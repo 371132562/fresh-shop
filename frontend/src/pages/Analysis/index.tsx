@@ -2,16 +2,14 @@ import { CalendarOutlined, ClockCircleOutlined, HistoryOutlined } from '@ant-des
 import { Button, Col, Row, Select } from 'antd'
 import { CalendarPicker } from 'antd-mobile'
 import dayjs from 'dayjs'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore.ts'
 
 import { CustomerRankings } from './components/CustomerRankings' // 导入客户排行组件
-import { GroupBuyRankings } from './components/GroupBuyRankings'
 import { MergedGroupBuyOverview } from './components/MergedGroupBuyOverview'
 import { Overview } from './components/Overview'
 import { SupplierOverview } from './components/SupplierOverview'
-import { SupplierRankings } from './components/SupplierRankings'
 
 export const Component = () => {
   const [calendarValue, setCalendarValue] = useState<[Date, Date]>([
@@ -22,13 +20,7 @@ export const Component = () => {
   const [activeViewKey, setActiveViewKey] = useState('overview')
   const [isAllData, setIsAllData] = useState(false) // 是否查询全部数据
 
-  const getCount = useAnalysisStore(state => state.getCount)
   const setIsAllDataInStore = useAnalysisStore(state => state.setIsAllData)
-  const getGroupBuyRank = useAnalysisStore(state => state.getGroupBuyRank)
-  const getCustomerRank = useAnalysisStore(state => state.getCustomerRank)
-  const getSupplierRank = useAnalysisStore(state => state.getSupplierRank)
-  const getMergedGroupBuyOverview = useAnalysisStore(state => state.getMergedGroupBuyOverview)
-  const getSupplierOverview = useAnalysisStore(state => state.getSupplierOverview)
 
   // 自定义日期是否被选中（不为全部，且选择了时间，但不匹配任何预设快捷天数）
   const presetDays = [7, 14, 30, 90, 180, 360]
@@ -56,58 +48,17 @@ export const Component = () => {
     setIsAllDataInStore(true)
   }
 
-  // 根据选中的视图动态调用对应的排行榜接口
-  useEffect(() => {
-    // 如果是全部数据模式，不传递时间参数
-    const params = isAllData
-      ? {}
-      : {
-          startDate: calendarValue[0],
-          endDate: calendarValue[1]
-        }
-
-    switch (activeViewKey) {
-      case 'overview':
-        getCount(params)
-        break
-      case 'group-buy-rankings':
-        getGroupBuyRank(params)
-        break
-      case 'customer-rankings':
-        getCustomerRank(params)
-        break
-      case 'supplier-rankings':
-        getSupplierRank(params)
-        break
-      case 'merged-group-buy-overview':
-        getMergedGroupBuyOverview({
-          ...(isAllData
-            ? {}
-            : {
-                startDate: calendarValue[0],
-                endDate: calendarValue[1]
-              }),
-          page: 1,
-          pageSize: 10
-        })
-        break
-      case 'supplier-overview':
-        getSupplierOverview({
-          ...(isAllData
-            ? {}
-            : {
-                startDate: calendarValue[0],
-                endDate: calendarValue[1]
-              }),
-          page: 1,
-          pageSize: 10
-        })
-        break
-    }
-  }, [activeViewKey, calendarValue, isAllData])
-
   const viewComponents: Record<string, React.ReactNode> = {
-    overview: <Overview />,
+    overview: (
+      <Overview
+        {...(isAllData
+          ? {}
+          : {
+              startDate: calendarValue[0],
+              endDate: calendarValue[1]
+            })}
+      />
+    ),
     'merged-group-buy-overview': (
       <MergedGroupBuyOverview
         {...(isAllData
@@ -128,9 +79,27 @@ export const Component = () => {
             })}
       />
     ),
-    'group-buy-rankings': <GroupBuyRankings />,
-    'customer-rankings': <CustomerRankings />,
-    'supplier-rankings': <SupplierRankings />
+    'group-buy-overview': (
+      <MergedGroupBuyOverview
+        {...(isAllData
+          ? {}
+          : {
+              startDate: calendarValue[0],
+              endDate: calendarValue[1]
+            })}
+        mergeSameName={false}
+      />
+    ),
+    'customer-rankings': (
+      <CustomerRankings
+        {...(isAllData
+          ? {}
+          : {
+              startDate: calendarValue[0],
+              endDate: calendarValue[1]
+            })}
+      />
+    )
   }
 
   return (
@@ -247,6 +216,10 @@ export const Component = () => {
                 label: '团购单（合并）概况'
               },
               {
+                value: 'group-buy-overview',
+                label: '团购单（单期）概况'
+              },
+              {
                 value: 'supplier-overview',
                 label: '供货商概况'
               }
@@ -256,16 +229,8 @@ export const Component = () => {
             label: '排行数据',
             options: [
               {
-                value: 'group-buy-rankings',
-                label: '团购单排行'
-              },
-              {
                 value: 'customer-rankings',
                 label: '客户排行'
-              },
-              {
-                value: 'supplier-rankings',
-                label: '供货商排行'
               }
             ]
           }

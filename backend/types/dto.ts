@@ -145,41 +145,21 @@ export type SupplierListItem = Supplier & {
  * 供货商排行榜项（按订单数量）
  * 用于统计分析中的供货商排行
  */
-export type SupplierRankByOrderCountItem = {
-  id: string; // 供货商ID
-  name: string; // 供货商名称
-  orderCount: number; // 订单总数
-};
 
 /**
  * 供货商排行榜项（按总销售额）
  * 用于统计分析中的供货商排行
  */
-export type SupplierRankByTotalSalesItem = {
-  id: string; // 供货商ID
-  name: string; // 供货商名称
-  totalSales: number; // 总销售额
-};
 
 /**
  * 供货商排行榜项（按总利润）
  * 用于统计分析中的供货商排行
  */
-export type SupplierRankByTotalProfitItem = {
-  id: string; // 供货商ID
-  name: string; // 供货商名称
-  totalProfit: number; // 总利润
-};
 
 /**
  * 供货商排行榜结果集合
  * 包含供货商的各种排行榜数据
  */
-export type SupplierRankResult = {
-  supplierRankByOrderCount: SupplierRankByOrderCountItem[]; // 按订单数排行
-  supplierRankByTotalSales: SupplierRankByTotalSalesItem[]; // 按销售额排行
-  supplierRankByTotalProfit: SupplierRankByTotalProfitItem[]; // 按利润排行
-};
 
 // ===================================================================
 // 商品类型模块 (ProductType)
@@ -493,11 +473,6 @@ export type GroupBuyRankByTotalProfitItem = {
  * 团购排行榜结果集合
  * 包含团购的各种排行榜数据
  */
-export type GroupBuyRankResult = {
-  groupBuyRankByOrderCount: GroupBuyRankByOrderCountItem[]; // 按订单数排行
-  groupBuyRankByTotalSales: GroupBuyRankByTotalSalesItem[]; // 按销售额排行
-  groupBuyRankByTotalProfit: GroupBuyRankByTotalProfitItem[]; // 按利润排行
-};
 
 /**
  * 团购合并概况排序字段枚举
@@ -541,6 +516,8 @@ export type MergedGroupBuyOverviewParams = {
   // 排序参数
   sortField?: MergedGroupBuyOverviewSortField; // 排序字段
   sortOrder?: SortOrder; // 排序方向
+  // 合并控制：true=按同名+供货商合并（默认），false=按单期团购返回
+  mergeSameName?: boolean;
 };
 
 /**
@@ -555,6 +532,8 @@ export type MergedGroupBuyOverviewListItem = {
   totalProfit: number; // 总利润
   totalOrderCount: number; // 总订单量
   uniqueCustomerCount: number; // 总参与客户数（去重）
+  // 单期模式下提供的附加信息（mergeSameName=false 才会返回）
+  groupBuyStartDate?: Date; // 团购开始时间（单期）
 };
 
 /**

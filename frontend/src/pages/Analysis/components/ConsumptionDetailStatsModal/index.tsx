@@ -80,14 +80,14 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                       • <b>商品排行：</b>按消费金额排序，显示该客户购买最多的商品
                     </div>
                     <div className="mb-1">
-                      • <b>团购详情：</b>每个商品下的具体团购参与情况
+                      • <b>参团明细（按商品展开）：</b>查看该客户在各商品下的参团记录与小计
                     </div>
                     <div className="mb-1">
                       • <b>最新购买：</b>标记该客户最近一次购买的商品
                     </div>
-                    <div className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+                    <div className="border-white-200 mt-2 rounded-md border px-3 py-2">
                       <div className="flex items-center gap-2">
-                        <div className="text-sm font-medium text-blue-700">
+                        <div className="text-sm font-medium">
                           数据已扣除部分退款金额，仅统计已付款、已完成、已退款的订单
                         </div>
                       </div>
@@ -105,14 +105,11 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                       • <b>商品排行：</b>按消费金额排序，显示该地址购买最多的商品
                     </div>
                     <div className="mb-1">
-                      • <b>团购详情：</b>每个商品下该地址所有客户的团购参与情况
+                      • <b>参团明细（按商品展开）：</b>查看该地址下所有客户在各商品的参团记录与小计
                     </div>
-                    <div className="mb-1">
-                      • <b>汇总统计：</b>将同一地址下所有客户的消费数据合并计算
-                    </div>
-                    <div className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+                    <div className="border-white-200 mt-2 rounded-md border px-3 py-2">
                       <div className="flex items-center gap-2">
-                        <div className="text-sm font-medium text-blue-700">
+                        <div className="text-sm font-medium">
                           数据已扣除部分退款金额，仅统计已付款、已完成、已退款的订单
                         </div>
                       </div>
@@ -464,7 +461,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                           </div>
                         </div>
                       </div>
-                      {/* 团购详情列表 - 现代化展开设计 */}
+                      {/* 参团明细列表（按商品展开） */}
                       {product.groupBuys &&
                         product.groupBuys.length > 0 &&
                         expandedProducts.has(product.productId) && (

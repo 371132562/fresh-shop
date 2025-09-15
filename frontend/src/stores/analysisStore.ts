@@ -3,7 +3,6 @@ import { create } from 'zustand'
 import {
   analysisCountApi,
   analysisCustomerRankApi,
-  analysisGroupBuyRankApi,
   analysisMergedGroupBuyFrequencyCustomersApi,
   analysisMergedGroupBuyOverviewApi,
   analysisMergedGroupBuyOverviewDetailApi,
@@ -11,7 +10,6 @@ import {
   analysisSupplierFrequencyCustomersApi,
   analysisSupplierOverviewApi,
   analysisSupplierOverviewDetailApi,
-  analysisSupplierRankApi,
   analysisSupplierRegionalCustomersApi
 } from '@/services/apis'
 import http from '@/services/base'
@@ -21,7 +19,6 @@ import type {
   AnalysisCountResult,
   CustomerBasicInfo,
   CustomerRankResult,
-  GroupBuyRankResult,
   MergedGroupBuyFrequencyCustomersParams,
   MergedGroupBuyFrequencyCustomersResult,
   MergedGroupBuyOverviewDetail,
@@ -36,7 +33,6 @@ import type {
   SupplierOverviewDetailParams,
   SupplierOverviewParams,
   SupplierOverviewResult,
-  SupplierRankResult,
   SupplierRegionalCustomersParams,
   SupplierRegionalCustomersResult
 } from '../../../backend/types/dto'
@@ -50,20 +46,10 @@ type AnalysisStore = {
   isAllData: boolean
   setIsAllData: (flag: boolean) => void
 
-  // 团购单排行榜数据
-  groupBuyRank: GroupBuyRankResult
-  getGroupBuyRank: (data: AnalysisCountParams) => Promise<void>
-  getGroupBuyRankLoading: boolean
-
   // 客户排行榜数据
   customerRank: CustomerRankResult
   getCustomerRank: (data: AnalysisCountParams) => Promise<void>
   getCustomerRankLoading: boolean
-
-  // 供货商排行榜数据
-  supplierRank: SupplierRankResult
-  getSupplierRank: (data: AnalysisCountParams) => Promise<void>
-  getSupplierRankLoading: boolean
 
   // 团购单合并概况数据
   mergedGroupBuyOverviewList: MergedGroupBuyOverviewResult['list']
@@ -164,23 +150,6 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
   },
   getCountLoading: false,
 
-  // 团购单排行榜数据
-  groupBuyRank: {
-    groupBuyRankByOrderCount: [],
-    groupBuyRankByTotalSales: [],
-    groupBuyRankByTotalProfit: []
-  },
-  getGroupBuyRank: async data => {
-    try {
-      set({ getGroupBuyRankLoading: true })
-      const res = await http.post<GroupBuyRankResult>(analysisGroupBuyRankApi, data)
-      set({ groupBuyRank: res.data })
-    } finally {
-      set({ getGroupBuyRankLoading: false })
-    }
-  },
-  getGroupBuyRankLoading: false,
-
   // 客户排行榜数据
   customerRank: {
     customerRankByOrderCount: [],
@@ -199,23 +168,6 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
     }
   },
   getCustomerRankLoading: false,
-
-  // 供货商排行榜数据
-  supplierRank: {
-    supplierRankByOrderCount: [],
-    supplierRankByTotalSales: [],
-    supplierRankByTotalProfit: []
-  },
-  getSupplierRank: async data => {
-    try {
-      set({ getSupplierRankLoading: true })
-      const res = await http.post<SupplierRankResult>(analysisSupplierRankApi, data)
-      set({ supplierRank: res.data })
-    } finally {
-      set({ getSupplierRankLoading: false })
-    }
-  },
-  getSupplierRankLoading: false,
 
   // 团购单合并概况数据
   mergedGroupBuyOverviewList: [],

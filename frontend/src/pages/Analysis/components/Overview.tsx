@@ -1,5 +1,6 @@
 import type { StatisticProps } from 'antd'
 import { Card, Col, Row, Statistic } from 'antd'
+import { useEffect } from 'react'
 import CountUp from 'react-countup'
 
 import useAnalysisStore from '@/stores/analysisStore'
@@ -8,12 +9,18 @@ import useGlobalSettingStore from '@/stores/globalSettingStore'
 import { GroupBuyOrderTrendChart } from './GroupBuyOrderTrendChart'
 import { PriceProfitTrendChart } from './PriceProfitTrendChart'
 
-export const Overview = () => {
+type OverviewProps = {
+  startDate?: Date
+  endDate?: Date
+}
+
+export const Overview = ({ startDate, endDate }: OverviewProps) => {
   const getCountLoading = useAnalysisStore(state => state.getCountLoading)
   const groupBuyCount = useAnalysisStore(state => state.count.groupBuyCount)
   const orderCount = useAnalysisStore(state => state.count.orderCount)
   const totalPrice = useAnalysisStore(state => state.count.totalPrice)
   const totalProfit = useAnalysisStore(state => state.count.totalProfit)
+  const getCount = useAnalysisStore(state => state.getCount)
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
 
   const formatter: StatisticProps['formatter'] = value => (
@@ -24,6 +31,15 @@ export const Overview = () => {
       decimals={2}
     />
   )
+
+  // 初始化与日期变化时获取概览数据
+  useEffect(() => {
+    if (startDate && endDate) {
+      getCount({ startDate, endDate })
+    } else {
+      getCount({})
+    }
+  }, [startDate, endDate])
 
   return (
     <Row

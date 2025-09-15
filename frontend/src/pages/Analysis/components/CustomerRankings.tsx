@@ -4,7 +4,7 @@ import type {
   CustomerRankByOrderCountItem,
   CustomerRankByTotalAmountItem
 } from 'fresh-shop-backend/types/dto'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import ConsumptionDetailStatsModal from '@/pages/Analysis/components/ConsumptionDetailStatsModal'
 import useAnalysisStore from '@/stores/analysisStore'
@@ -13,12 +13,18 @@ import useCustomerStore from '@/stores/customerStore'
 /**
  * 客户排行组件
  */
-export const CustomerRankings = () => {
+type CustomerRankingsProps = {
+  startDate?: Date
+  endDate?: Date
+}
+
+export const CustomerRankings = ({ startDate, endDate }: CustomerRankingsProps) => {
   // 消费详情模态框状态
   const [consumptionDetailVisible, setConsumptionDetailVisible] = useState(false)
 
   // 从 Zustand store 中获取数据和加载状态
   const getCustomerRankLoading = useAnalysisStore(state => state.getCustomerRankLoading)
+  const getCustomerRank = useAnalysisStore(state => state.getCustomerRank)
   const customerRank = useAnalysisStore(state => state.customerRank)
 
   // 消费详情相关状态和方法
@@ -45,6 +51,15 @@ export const CustomerRankings = () => {
     customerRankByTotalAmount = [],
     customerRankByAverageOrderAmount = []
   } = useMemo(() => customerRank, [customerRank])
+
+  // 初始化与日期变化时获取排行数据
+  useEffect(() => {
+    if (startDate && endDate) {
+      getCustomerRank({ startDate, endDate })
+    } else {
+      getCustomerRank({})
+    }
+  }, [startDate, endDate])
 
   // 定义 Collapse 的 items 配置
   const collapseItems = [

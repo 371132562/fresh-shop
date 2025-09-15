@@ -22,27 +22,11 @@ export class AnalysisController {
   }
 
   /**
-   * 获取团购单排行数据
-   */
-  @Post('groupBuyRank')
-  getGroupBuyRank(@Body() params: AnalysisCountParams) {
-    return this.analysisService.getGroupBuyRank(params);
-  }
-
-  /**
    * 获取客户排行数据
    */
   @Post('customerRank')
   getCustomerRank(@Body() params: AnalysisCountParams) {
     return this.analysisService.getCustomerRank(params);
-  }
-
-  /**
-   * 获取供货商排行数据
-   */
-  @Post('supplierRank')
-  getSupplierRank(@Body() params: AnalysisCountParams) {
-    return this.analysisService.getSupplierRank(params);
   }
 
   /**

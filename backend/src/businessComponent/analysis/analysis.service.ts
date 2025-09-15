@@ -14,9 +14,7 @@ import {
   AnalysisCountParams,
   AnalysisCountResult,
   GroupBuyUnit,
-  GroupBuyRankResult,
   CustomerRankResult,
-  SupplierRankResult,
   MergedGroupBuyOverviewParams,
   MergedGroupBuyOverviewResult,
   MergedGroupBuyOverviewDetail,
@@ -482,9 +480,7 @@ export class AnalysisService {
    *   · 部分退款：销售额与利润均减去退款金额。
    * 输出：返回三类排行榜（订单量、销售额、利润）各取前 10。
    */
-  async getGroupBuyRank(
-    params: AnalysisCountParams,
-  ): Promise<GroupBuyRankResult> {
+  async getGroupBuyRank(params: AnalysisCountParams): Promise<any> {
     // ================================================================
     // 步骤一：读取团购单及其订单（作为排行的源数据）
     // - 团购过滤：按 groupBuyStartDate（若有），并排除逻辑删除
@@ -743,166 +739,6 @@ export class AnalysisService {
   }
 
   /**
-   * 获取供货商排行数据（Top10）
-   * 口径约定：
-   * - 时间：按团购发起时间 groupBuyStartDate 过滤团购；未传入则统计全量。
-   * - 订单：仅统计 delete=0 且状态 ∈ [PAID, COMPLETED, REFUNDED]。
-   * - 金额：
-   *   · 全额退款：销售额=0，利润=-成本（损益冲减）。
-   *   · 部分退款：销售额与利润均减去退款金额。
-   * 输出：按供货商维度生成三类排行榜（订单量、总销售额、总利润），各取前 10。
-   */
-  async getSupplierRank(
-    params: AnalysisCountParams,
-  ): Promise<SupplierRankResult> {
-    // ================================================================
-    // 步骤一：读取供货商关联的团购及订单（作为排行源数据）
-    // - 团购过滤：按 groupBuyStartDate（若有），排除 delete=1
-    // - 订单过滤：delete=0 且状态 ∈ [PAID, COMPLETED, REFUNDED]
-    // - 字段选择：仅保留计算所需字段，降低数据体积
-    // ================================================================
-    const { startDate, endDate } = params;
-
-    // 获取指定时间范围内的团购单及其关联订单和供应商信息
-    const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
-      where: {
-        ...(startDate && endDate
-          ? {
-              groupBuyStartDate: {
-                gte: startDate,
-                lte: endDate,
-              },
-            }
-          : {}),
-        delete: 0,
-      },
-      include: {
-        supplier: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        order: {
-          where: {
-            delete: 0,
-            status: {
-              in: [
-                OrderStatus.PAID,
-                OrderStatus.COMPLETED,
-                OrderStatus.REFUNDED,
-              ],
-            },
-          },
-          select: {
-            quantity: true,
-            unitId: true,
-            partialRefundAmount: true,
-            status: true,
-          },
-        },
-      },
-    });
-
-    // ================================================================
-    // 步骤二：按供货商维度聚合
-    // - Map(key=supplierId) 存储供货商基础信息与累积指标
-    // - 指标：orderCount（订单量）、totalSales（总销售额）、totalProfit（总利润）
-    // ================================================================
-    const supplierData = new Map<
-      string,
-      {
-        id: string;
-        name: string;
-        orderCount: number;
-        totalSales: number;
-        totalProfit: number;
-      }
-    >();
-
-    for (const gb of groupBuysWithOrders) {
-      if (!gb.supplier) continue;
-
-      const supplierId = gb.supplier.id; // 供货商ID
-      const supplierName = gb.supplier.name; // 供货商名称
-      const units = gb.units as Array<GroupBuyUnit>; // 团购规格（含单价/成本）
-
-      let totalSales = 0;
-      let totalProfit = 0;
-      const orderCount = gb.order.length; // 订单量口径：计入已退款订单，用于供货商总单量
-
-      for (const order of gb.order as Array<{
-        quantity: number;
-        unitId: string;
-        partialRefundAmount: number;
-        status: OrderStatus;
-      }>) {
-        const selectedUnit = units.find((unit) => unit.id === order.unitId);
-        if (selectedUnit) {
-          // 原始金额口径（未考虑退款）
-          const originalSale = selectedUnit.price * order.quantity;
-          const originalProfit =
-            (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
-          const originalCost = selectedUnit.costPrice * order.quantity;
-
-          let actualSale = 0;
-          let actualProfit = 0;
-          if (order.status === OrderStatus.REFUNDED) {
-            // 全额退款：销售额=0，利润=-成本
-            actualSale = 0;
-            actualProfit = -originalCost;
-          } else {
-            // 部分退款：销售额/利润均减退款金额
-            const partial = order.partialRefundAmount || 0;
-            actualSale = originalSale - partial;
-            actualProfit = originalProfit - partial;
-          }
-
-          totalSales += actualSale;
-          totalProfit += actualProfit;
-        }
-      }
-
-      if (supplierData.has(supplierId)) {
-        const existing = supplierData.get(supplierId)!;
-        existing.orderCount += orderCount;
-        existing.totalSales += totalSales;
-        existing.totalProfit += totalProfit;
-      } else {
-        supplierData.set(supplierId, {
-          id: supplierId,
-          name: supplierName,
-          orderCount,
-          totalSales,
-          totalProfit,
-        });
-      }
-    }
-
-    const suppliersArray = Array.from(supplierData.values()); // 转数组以便排序
-
-    // ================================================================
-    // 步骤三：生成排行榜（各取 Top10）
-    // - 按订单量/总销售额/总利润分别降序排序
-    // ================================================================
-    const supplierRankByOrderCount = [...suppliersArray]
-      .sort((a, b) => b.orderCount - a.orderCount)
-      .slice(0, 10);
-    const supplierRankByTotalSales = [...suppliersArray]
-      .sort((a, b) => b.totalSales - a.totalSales)
-      .slice(0, 10);
-    const supplierRankByTotalProfit = [...suppliersArray]
-      .sort((a, b) => b.totalProfit - a.totalProfit)
-      .slice(0, 10);
-
-    return {
-      supplierRankByOrderCount,
-      supplierRankByTotalSales,
-      supplierRankByTotalProfit,
-    };
-  }
-
-  /**
    * 获取团购单合并概况数据
    * 针对同名的团购单进行聚合分析
    */
@@ -932,6 +768,7 @@ export class AnalysisService {
       supplierIds,
       sortField = 'totalRevenue',
       sortOrder = 'desc',
+      mergeSameName = true,
     } = params;
 
     // 1) 构建查询条件（按名称/供货商/时间过滤）
@@ -990,7 +827,7 @@ export class AnalysisService {
       },
     });
 
-    // 3) 初始化聚合容器：按"团购名称+供货商ID"作为唯一键
+    // 3) 初始化聚合容器：按 mergeSameName 决定聚合键
     const mergedDataMap = new Map<
       string,
       {
@@ -1002,6 +839,7 @@ export class AnalysisService {
         totalOrderCount: number;
         uniqueCustomerIds: Set<string>;
         totalQuantity: number;
+        groupBuyStartDate?: Date;
       }
     >();
 
@@ -1012,8 +850,12 @@ export class AnalysisService {
       const supplierName = groupBuy.supplier?.name || '未知供货商';
       const units = groupBuy.units as Array<GroupBuyUnit>;
 
-      // 生成唯一键：团购名称 + 供货商ID
-      const uniqueKey = `${groupBuyName}|${supplierId}`;
+      // 生成唯一键
+      // 合并模式：团购名称 + 供货商ID
+      // 单期模式：团购ID（每期单独统计）
+      const uniqueKey = mergeSameName
+        ? `${groupBuyName}|${supplierId}`
+        : groupBuy.id;
 
       // 如果该名称和供货商的团购单还未在Map中，则初始化
       if (!mergedDataMap.has(uniqueKey)) {
@@ -1026,6 +868,10 @@ export class AnalysisService {
           totalOrderCount: 0,
           uniqueCustomerIds: new Set<string>(),
           totalQuantity: 0,
+          // 单期模式下记录发起时间
+          ...(mergeSameName
+            ? {}
+            : { groupBuyStartDate: groupBuy.groupBuyStartDate }),
         });
       }
 
@@ -1095,6 +941,7 @@ export class AnalysisService {
         totalOrderCount: data.totalOrderCount,
         uniqueCustomerCount,
         averageCustomerOrderValue,
+        groupBuyStartDate: data.groupBuyStartDate,
       };
     });
 

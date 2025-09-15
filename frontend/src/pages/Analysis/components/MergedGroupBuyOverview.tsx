@@ -1,5 +1,6 @@
 import { SearchOutlined } from '@ant-design/icons'
 import { Button, Form, Input, List, Modal, Select } from 'antd'
+import dayjs from 'dayjs'
 import type {
   MergedGroupBuyOverviewDetailParams,
   MergedGroupBuyOverviewListItem,
@@ -17,13 +18,18 @@ import MergedGroupBuyDetailModal from './MergedGroupBuyDetailModal'
 type MergedGroupBuyOverviewProps = {
   startDate?: Date
   endDate?: Date
+  mergeSameName?: boolean
 }
 
 /**
  * 团购单（合并）概况组件
  * 显示合并团购单的列表和统计概况信息
  */
-export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOverviewProps) => {
+export const MergedGroupBuyOverview = ({
+  startDate,
+  endDate,
+  mergeSameName = true
+}: MergedGroupBuyOverviewProps) => {
   const [searchVisible, setSearchVisible] = useState(false)
   const [detailVisible, setDetailVisible] = useState(false)
   const [searchParams, setSearchParams] = useState({
@@ -56,7 +62,7 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
   useEffect(() => {
     // 当日期范围变化时，重新获取数据
     fetchData(1)
-  }, [startDate, endDate])
+  }, [startDate, endDate, mergeSameName])
 
   useEffect(() => {
     // 获取所有供货商数据
@@ -69,7 +75,8 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
       endDate,
       page,
       pageSize: mergedGroupBuyOverviewPageSize,
-      ...searchParams
+      ...searchParams,
+      mergeSameName
     })
   }
 
@@ -115,7 +122,8 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
           groupBuyName: values.groupBuyName || '',
           supplierIds: values.supplierIds || [],
           sortField: searchParams.sortField,
-          sortOrder: searchParams.sortOrder
+          sortOrder: searchParams.sortOrder,
+          mergeSameName
         })
         setSearchVisible(false)
       })
@@ -148,7 +156,8 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
       groupBuyName: '',
       supplierIds: [],
       sortField: 'totalRevenue',
-      sortOrder: 'desc'
+      sortOrder: 'desc',
+      mergeSameName
     })
     handleSearchCancel()
   }
@@ -167,7 +176,8 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
       endDate,
       page: 1,
       pageSize: mergedGroupBuyOverviewPageSize,
-      ...newSearchParams
+      ...newSearchParams,
+      mergeSameName
     })
   }
 
@@ -226,9 +236,16 @@ export const MergedGroupBuyOverview = ({ startDate, endDate }: MergedGroupBuyOve
             <List.Item>
               <List.Item.Meta
                 title={
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-medium">{item.groupBuyName}</span>
-                    <span className="text-sm text-gray-500">({item.supplierName})</span>
+                  <div className="flex flex-col items-start">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-medium">{item.groupBuyName}</span>
+                      <span className="text-sm text-gray-500">({item.supplierName})</span>
+                    </div>
+                    {!mergeSameName && item.groupBuyStartDate && (
+                      <div className="mb-1 text-sm">
+                        发起时间：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')}
+                      </div>
+                    )}
                   </div>
                 }
                 description={
