@@ -240,6 +240,131 @@ export class CustomerService {
 
     const averagePricePerOrder = totalAmount / orderCount;
 
+    // ================================================================
+    // 最近15天 vs 再往前15天 对比统计（总体与商品维度）
+    // 口径：
+    // - 时间：按 groupBuyStartDate 归属至对应窗口
+    // - 订单：仅统计状态 ∈ [PAID, COMPLETED]
+    // - 金额：退款订单金额记为0；部分退款按绝对额扣减
+    // ================================================================
+    const now = new Date();
+    const endCurrent = new Date(now);
+    const startCurrent = new Date(endCurrent);
+    startCurrent.setDate(startCurrent.getDate() - 14); // 包含今天在内15天窗口
+    const endPrevious = new Date(startCurrent);
+    const startPrevious = new Date(endPrevious);
+    startPrevious.setDate(startPrevious.getDate() - 15);
+
+    const sumWindow = (list: typeof orders, start: Date, end: Date) => {
+      let amount = 0;
+      let count = 0;
+      for (const o of list) {
+        const d = o.groupBuy.groupBuyStartDate;
+        if (d >= start && d <= end) {
+          const units = this.parseUnits(o.groupBuy.units);
+          const unit = units.find((u) => u.id === o.unitId);
+          if (!unit) continue;
+          const originalAmount = unit.price * o.quantity;
+          const partial = o.partialRefundAmount || 0;
+          const orderAmount =
+            o.status === OrderStatus.REFUNDED ? 0 : originalAmount - partial;
+          amount += orderAmount;
+          // 订单量仅统计已支付/已完成
+          if (
+            o.status === OrderStatus.PAID ||
+            o.status === OrderStatus.COMPLETED
+          ) {
+            count += 1;
+          }
+        }
+      }
+      return { totalAmount: amount, orderCount: count };
+    };
+
+    const currentOverall = sumWindow(orders, startCurrent, endCurrent);
+    const previousOverall = sumWindow(orders, startPrevious, endPrevious);
+
+    // 商品维度
+    const groupByProduct = (list: typeof orders, start: Date, end: Date) => {
+      const map = new Map<
+        string,
+        { productName: string; totalAmount: number; orderCount: number }
+      >();
+      for (const o of list) {
+        const d = o.groupBuy.groupBuyStartDate;
+        if (d >= start && d <= end) {
+          const units = this.parseUnits(o.groupBuy.units);
+          const unit = units.find((u) => u.id === o.unitId);
+          if (!unit) continue;
+          const originalAmount = unit.price * o.quantity;
+          const partial = o.partialRefundAmount || 0;
+          const orderAmount =
+            o.status === OrderStatus.REFUNDED ? 0 : originalAmount - partial;
+          const key = o.groupBuy.productId;
+          if (!map.has(key)) {
+            map.set(key, {
+              productName: o.groupBuy.product.name,
+              totalAmount: 0,
+              orderCount: 0,
+            });
+          }
+          const agg = map.get(key)!;
+          agg.totalAmount += orderAmount;
+          // 订单量仅统计已支付/已完成
+          if (
+            o.status === OrderStatus.PAID ||
+            o.status === OrderStatus.COMPLETED
+          ) {
+            agg.orderCount += 1;
+          }
+        }
+      }
+      return map;
+    };
+
+    const currentByProduct = groupByProduct(orders, startCurrent, endCurrent);
+    const previousByProduct = groupByProduct(
+      orders,
+      startPrevious,
+      endPrevious,
+    );
+
+    const fifteenDayProductComparisons = Array.from(
+      new Set<string>([
+        ...Array.from(currentByProduct.keys()),
+        ...Array.from(previousByProduct.keys()),
+      ]),
+    )
+      .map((productId) => {
+        const curr = currentByProduct.get(productId) || {
+          productName: '',
+          totalAmount: 0,
+          orderCount: 0,
+        };
+        const prev = previousByProduct.get(productId) || {
+          productName: curr.productName,
+          totalAmount: 0,
+          orderCount: 0,
+        };
+        return {
+          productId,
+          productName: curr.productName || prev.productName,
+          current: {
+            totalAmount: curr.totalAmount,
+            orderCount: curr.orderCount,
+          },
+          previous: {
+            totalAmount: prev.totalAmount,
+            orderCount: prev.orderCount,
+          },
+          diff: {
+            totalAmount: curr.totalAmount - prev.totalAmount,
+            orderCount: curr.orderCount - prev.orderCount,
+          },
+        };
+      })
+      .sort((a, b) => b.current.totalAmount - a.current.totalAmount);
+
     // 处理isLatestConsumption逻辑（仅客户维度需要）
     let globalLatestDate: Date | null = null;
     let globalLatestCreatedAt: Date | null = null;
@@ -355,12 +480,21 @@ export class CustomerService {
       });
 
     // 根据类型返回对应的结果
-    const baseResult = {
+    const baseResult: any = {
       orderCount,
       totalAmount,
       averagePricePerOrder,
       totalPartialRefundAmount,
       productConsumptionRanks,
+      fifteenDayComparison: {
+        current: currentOverall,
+        previous: previousOverall,
+        diff: {
+          totalAmount: currentOverall.totalAmount - previousOverall.totalAmount,
+          orderCount: currentOverall.orderCount - previousOverall.orderCount,
+        },
+      },
+      fifteenDayProductComparisons,
     };
 
     if (type === 'customer') {

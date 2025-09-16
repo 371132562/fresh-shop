@@ -156,12 +156,12 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                             <InfoCircleOutlined className="text-blue-500" />
                           </Tooltip>
                         </div>
-                        <div className="mt-1 text-xl font-bold text-emerald-600">
+                        <div className="mt-1 text-xl font-bold text-cyan-600">
                           ¥{mergedGroupBuyOverviewDetail.totalRevenue.toFixed(2)}
                         </div>
                       </div>
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                        <span className="text-xl text-emerald-600">💰</span>
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-100">
+                        <span className="text-xl text-cyan-600">💰</span>
                       </div>
                     </div>
                   </div>

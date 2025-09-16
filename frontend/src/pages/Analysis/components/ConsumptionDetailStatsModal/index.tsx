@@ -9,10 +9,15 @@ import {
   UpOutlined
 } from '@ant-design/icons'
 import { Button, Card, Col, Modal, Row, Skeleton, Tag, Tooltip } from 'antd'
-import type { CustomerConsumptionDetailDto } from 'fresh-shop-backend/types/dto'
+import type {
+  CustomerAddressConsumptionDetailDto,
+  CustomerConsumptionDetailDto
+} from 'fresh-shop-backend/types/dto'
 import React, { useState } from 'react'
 
 import dayjs from '@/utils/day'
+
+import FifteenDayComparison from './components/FifteenDayComparison'
 
 // 定义商品和团购的类型
 type ProductItem = CustomerConsumptionDetailDto['productConsumptionRanks'][0]
@@ -21,7 +26,7 @@ type GroupBuyItem = ProductItem['groupBuys'][0]
 type ConsumptionDetailStatsModalProps = {
   visible: boolean
   onClose: () => void
-  consumptionDetail: CustomerConsumptionDetailDto | null
+  consumptionDetail: CustomerConsumptionDetailDto | CustomerAddressConsumptionDetailDto | null
   loading?: boolean
   title?: string
   width?: number
@@ -38,7 +43,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
   consumptionDetail,
   loading,
   title = '消费详情',
-  width = 900,
+  width = 1000,
   type = 'customer'
 }: ConsumptionDetailStatsModalProps) => {
   // 展开状态管理 - 记录每个商品的展开状态
@@ -158,7 +163,11 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
               <div className="flex h-12 items-center justify-between">
                 <div className="flex items-center gap-2">
                   <TrophyOutlined className="text-blue-500" />
-                  <span className="text-lg font-medium">{consumptionDetail.customerName}</span>
+                  <span className="text-lg font-medium">
+                    {type === 'address'
+                      ? (consumptionDetail as CustomerAddressConsumptionDetailDto).addressName
+                      : (consumptionDetail as CustomerConsumptionDetailDto).customerName}
+                  </span>
                 </div>
                 <span className="text-sm text-orange-500">
                   {type === 'address' ? '地址消费详情统计' : '消费详情统计'}
@@ -211,12 +220,12 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                             <InfoCircleOutlined className="text-blue-500" />
                           </Tooltip>
                         </div>
-                        <div className="mt-1 text-xl font-bold text-emerald-600">
+                        <div className="mt-1 text-xl font-bold text-cyan-600">
                           ¥{consumptionDetail.totalAmount.toFixed(2)}
                         </div>
                       </div>
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                        <span className="text-xl text-emerald-600">💰</span>
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-100">
+                        <span className="text-xl text-cyan-600">💰</span>
                       </div>
                     </div>
                   </div>
@@ -264,6 +273,14 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
               </Row>
             </div>
           </Card>
+
+          {/* 15天窗口总体+商品对比合并卡片 */}
+          {consumptionDetail.fifteenDayComparison && (
+            <FifteenDayComparison
+              comparison={consumptionDetail.fifteenDayComparison}
+              productComparisons={consumptionDetail.fifteenDayProductComparisons || []}
+            />
+          )}
 
           {/* 商品消费详情 */}
           <Card
@@ -443,7 +460,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
 
                           {/* 金额信息 */}
                           <div className="text-right">
-                            <div className="text-2xl font-bold text-emerald-600">
+                            <div className="text-2xl font-bold text-cyan-600">
                               {formatAmount(totalGroupBuyAmount)}
                             </div>
                             <div className="flex items-center justify-end gap-1 text-sm text-gray-500">
@@ -498,7 +515,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                                         <div className="text-xs text-gray-500">购买次数</div>
                                       </div>
                                       <div className="text-right">
-                                        <div className="text-xl font-bold text-emerald-600">
+                                        <div className="text-xl font-bold text-cyan-600">
                                           {formatAmount(groupBuy.totalAmount || 0)}
                                         </div>
                                         <div className="flex items-center justify-end gap-1 text-xs text-gray-500">

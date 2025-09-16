@@ -265,6 +265,12 @@ export type CustomerConsumptionDetailDto = {
   totalAmount: number; // 订单总额（已扣除部分退款）
   averagePricePerOrder: number; // 每单平均价格
   totalPartialRefundAmount: number; // 总部分退款金额
+  // 15天窗口对比（总体）：最近15天 vs 再往前15天
+  fifteenDayComparison?: {
+    current: { totalAmount: number; orderCount: number }; // 最近15天
+    previous: { totalAmount: number; orderCount: number }; // 再往前15天
+    diff: { totalAmount: number; orderCount: number }; // 增减量（current-previous）
+  };
   productConsumptionRanks: {
     productId: string; // 商品ID
     productName: string; // 商品名称
@@ -279,6 +285,14 @@ export type CustomerConsumptionDetailDto = {
       latestGroupBuyStartDate: Date; // 最近一次团购发起时间
     }[]; // 该商品下的团购单列表
   }[]; // 客户的商品消费排行（完整）
+  // 15天窗口对比（商品维度）：最近15天 vs 再往前15天，按商品细分
+  fifteenDayProductComparisons?: {
+    productId: string;
+    productName: string;
+    current: { totalAmount: number; orderCount: number };
+    previous: { totalAmount: number; orderCount: number };
+    diff: { totalAmount: number; orderCount: number };
+  }[];
 };
 
 /**
@@ -291,6 +305,12 @@ export type CustomerAddressConsumptionDetailDto = {
   totalAmount: number; // 订单总额（已扣除部分退款）
   averagePricePerOrder: number; // 每单平均价格
   totalPartialRefundAmount: number; // 总部分退款金额
+  // 15天窗口对比（总体）：最近15天 vs 再往前15天
+  fifteenDayComparison?: {
+    current: { totalAmount: number; orderCount: number }; // 最近15天
+    previous: { totalAmount: number; orderCount: number }; // 再往前15天
+    diff: { totalAmount: number; orderCount: number }; // 增减量（current-previous）
+  };
   productConsumptionRanks: {
     productId: string; // 商品ID
     productName: string; // 商品名称
@@ -305,6 +325,14 @@ export type CustomerAddressConsumptionDetailDto = {
       latestGroupBuyStartDate: Date; // 最近一次团购发起时间
     }[]; // 该商品下的团购单列表
   }[]; // 地址下所有客户的商品消费排行（完整）
+  // 15天窗口对比（商品维度）：最近15天 vs 再往前15天，按商品细分
+  fifteenDayProductComparisons?: {
+    productId: string;
+    productName: string;
+    current: { totalAmount: number; orderCount: number };
+    previous: { totalAmount: number; orderCount: number };
+    diff: { totalAmount: number; orderCount: number };
+  }[];
 };
 
 /**

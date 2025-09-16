@@ -32,7 +32,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       title: '发起时间',
       dataIndex: 'launchDate',
       key: 'launchDate',
-      render: (date: Date, record) => (
+      render: (date: Date) => (
         <div className="flex items-center gap-2">{dayjs(date).format('YYYY-MM-DD')}</div>
       ),
       defaultSortOrder: 'descend' as const
@@ -70,7 +70,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       dataIndex: 'revenue',
       key: 'revenue',
       render: (revenue: number) => (
-        <span className="font-medium text-emerald-600">¥{revenue.toFixed(2)}</span>
+        <span className="font-medium text-cyan-600">¥{revenue.toFixed(2)}</span>
       )
     },
     {

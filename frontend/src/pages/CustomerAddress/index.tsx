@@ -226,18 +226,7 @@ export const Component = () => {
       <ConsumptionDetailStatsModal
         visible={consumptionDetailVisible}
         onClose={handleCloseConsumptionDetail}
-        consumptionDetail={
-          addressConsumptionDetail
-            ? {
-                customerName: addressConsumptionDetail.addressName, // 将地址名称映射为 customerName 以复用组件
-                orderCount: addressConsumptionDetail.orderCount,
-                totalAmount: addressConsumptionDetail.totalAmount,
-                averagePricePerOrder: addressConsumptionDetail.averagePricePerOrder,
-                totalPartialRefundAmount: addressConsumptionDetail.totalPartialRefundAmount,
-                productConsumptionRanks: addressConsumptionDetail.productConsumptionRanks
-              }
-            : null
-        }
+        consumptionDetail={addressConsumptionDetail}
         loading={consumptionDetailLoading}
         title="地址消费详情"
         width={900}
