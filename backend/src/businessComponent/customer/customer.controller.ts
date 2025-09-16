@@ -40,6 +40,11 @@ export class CustomerController {
 
   @Post('consumptionDetail')
   consumptionDetail(@Body('id') id: string) {
-    return this.customerService.getConsumptionDetail(id);
+    return this.customerService.getConsumptionDetail(id, 'customer');
+  }
+
+  @Post('addressConsumptionDetail')
+  addressConsumptionDetail(@Body('id') id: string) {
+    return this.customerService.getConsumptionDetail(id, 'address');
   }
 }

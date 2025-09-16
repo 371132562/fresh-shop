@@ -1,5 +1,6 @@
 import {
   Customer,
+  CustomerAddressConsumptionDetailDto,
   CustomerConsumptionDetailDto,
   CustomerListItem,
   CustomerPageParams,
@@ -8,6 +9,7 @@ import {
 import { create } from 'zustand'
 
 import {
+  customerAddressConsumptionDetailApi,
   customerConsumptionDetailApi,
   customerCreateApi,
   customerDeleteApi,
@@ -54,6 +56,12 @@ type CustomerStore = {
   consumptionDetailLoading: boolean
   getConsumptionDetail: (id: string) => Promise<void>
   resetConsumptionDetail: () => void
+
+  // 地址消费详情相关
+  addressConsumptionDetail: CustomerAddressConsumptionDetailDto | null
+  addressConsumptionDetailLoading: boolean
+  getAddressConsumptionDetail: (id: string) => Promise<void>
+  setAddressConsumptionDetail: (data: CustomerAddressConsumptionDetailDto | null) => void
 }
 
 const useCustomerStore = create<CustomerStore>((set, get) => ({
@@ -197,6 +205,28 @@ const useCustomerStore = create<CustomerStore>((set, get) => ({
       consumptionDetail: null,
       consumptionDetailLoading: false
     })
+  },
+
+  // 地址消费详情相关
+  addressConsumptionDetail: null as CustomerAddressConsumptionDetailDto | null,
+  addressConsumptionDetailLoading: false,
+  getAddressConsumptionDetail: async (id: string) => {
+    set({ addressConsumptionDetailLoading: true })
+    try {
+      const res = await http.post<CustomerAddressConsumptionDetailDto>(
+        customerAddressConsumptionDetailApi,
+        {
+          id
+        }
+      )
+      set({ addressConsumptionDetail: res.data, addressConsumptionDetailLoading: false })
+    } catch (error) {
+      console.error(error)
+      set({ addressConsumptionDetailLoading: false })
+    }
+  },
+  setAddressConsumptionDetail: (data: CustomerAddressConsumptionDetailDto | null) => {
+    set({ addressConsumptionDetail: data })
   }
 }))
 

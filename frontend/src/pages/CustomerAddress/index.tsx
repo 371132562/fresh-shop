@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import SearchToolbar from '@/components/SearchToolbar'
 import ConsumptionDetailStatsModal from '@/pages/Analysis/components/ConsumptionDetailStatsModal/index.tsx'
 import useCustomerAddressStore from '@/stores/customerAddressStore.ts'
+import useCustomerStore from '@/stores/customerStore.ts'
 
 import Modify from './Modify.tsx'
 
@@ -22,14 +23,10 @@ export const Component = () => {
   const setPageParams = useCustomerAddressStore(state => state.setPageParams)
 
   // 消费详情相关状态
-  const consumptionDetailLoading = useCustomerAddressStore(state => state.consumptionDetailLoading)
-  const addressConsumptionDetail = useCustomerAddressStore(state => state.addressConsumptionDetail)
-  const getAddressConsumptionDetail = useCustomerAddressStore(
-    state => state.getAddressConsumptionDetail
-  )
-  const setAddressConsumptionDetail = useCustomerAddressStore(
-    state => state.setAddressConsumptionDetail
-  )
+  const consumptionDetailLoading = useCustomerStore(state => state.addressConsumptionDetailLoading)
+  const addressConsumptionDetail = useCustomerStore(state => state.addressConsumptionDetail)
+  const getAddressConsumptionDetail = useCustomerStore(state => state.getAddressConsumptionDetail)
+  const setAddressConsumptionDetail = useCustomerStore(state => state.setAddressConsumptionDetail)
 
   useEffect(() => {
     pageChange()
@@ -77,7 +74,7 @@ export const Component = () => {
   // 查看消费详情
   const handleViewConsumptionDetail = async (id: string) => {
     setConsumptionDetailVisible(true)
-    await getAddressConsumptionDetail({ id })
+    await getAddressConsumptionDetail(id)
   }
 
   // 关闭消费详情弹窗

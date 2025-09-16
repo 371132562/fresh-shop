@@ -176,7 +176,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                 <div className="mx-auto mt-1 h-1 w-16 rounded-full bg-gradient-to-r from-blue-400 to-purple-400"></div>
               </div>
 
-              <Row gutter={[24, 24]}>
+              <Row gutter={[12, 12]}>
                 {/* 订单数量 */}
                 <Col
                   xs={12}

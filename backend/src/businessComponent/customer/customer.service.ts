@@ -7,6 +7,7 @@ import {
   ListByPage,
   GroupBuyUnit,
   CustomerConsumptionDetailDto,
+  CustomerAddressConsumptionDetailDto,
 } from '../../../types/dto';
 import { BusinessException } from '../../exceptions/businessException';
 import { ErrorCode } from '../../../types/response';
@@ -15,50 +16,143 @@ import { ErrorCode } from '../../../types/response';
 export class CustomerService {
   constructor(private prisma: PrismaService) {}
 
+  // 解析团购规格列表，保证返回为数组
+  private parseUnits(units: unknown): GroupBuyUnit[] {
+    return Array.isArray(units) ? (units as GroupBuyUnit[]) : [];
+  }
+
+  /**
+   * 获取消费详情（统一方法）
+   * 支持客户维度和地址维度的消费详情查询
+   * @param id 客户ID或地址ID
+   * @param type 查询类型：'customer' | 'address'
+   */
   async getConsumptionDetail(
     id: string,
-  ): Promise<CustomerConsumptionDetailDto> {
-    const customer = await this.prisma.customer.findUnique({
-      where: { id },
-    });
+    type: 'customer' | 'address' = 'customer',
+  ): Promise<
+    CustomerConsumptionDetailDto | CustomerAddressConsumptionDetailDto
+  > {
+    // 强类型定义：用于限定 select 返回的订单结构，避免 any 访问
+    type SelectedOrder = {
+      quantity: number;
+      unitId: string;
+      partialRefundAmount: number | null;
+      status: OrderStatus;
+      groupBuy: {
+        productId: string;
+        name: string;
+        groupBuyStartDate: Date;
+        createdAt: Date;
+        // Prisma JsonValue，这里用 unknown 承接，使用时再断言为 GroupBuyUnit[]
+        units?: unknown;
+        product: {
+          name: string;
+        };
+      };
+    };
+    // 根据类型验证资源是否存在并获取基本信息
+    let resourceName: string;
+    let orders: SelectedOrder[];
 
-    if (!customer) {
-      throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, '客户不存在');
-    }
+    if (type === 'customer') {
+      // 客户维度查询
+      const customer = await this.prisma.customer.findUnique({
+        where: { id },
+      });
 
-    const orders = await this.prisma.order.findMany({
-      where: {
-        customerId: id,
-        delete: 0,
-        status: {
-          in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
-        },
-      },
-      select: {
-        quantity: true,
-        unitId: true,
-        partialRefundAmount: true, // 部分退款金额
-        status: true,
-        groupBuy: {
-          include: {
-            product: true,
+      if (!customer) {
+        throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, '客户不存在');
+      }
+
+      resourceName = customer.name;
+
+      // 查询该客户的所有订单
+      orders = (await this.prisma.order.findMany({
+        where: {
+          customerId: id,
+          delete: 0,
+          status: {
+            in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
           },
         },
-      },
-    });
+        select: {
+          quantity: true,
+          unitId: true,
+          partialRefundAmount: true,
+          status: true,
+          groupBuy: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      })) as unknown as SelectedOrder[];
+    } else {
+      // 地址维度查询
+      const address = await this.prisma.customerAddress.findUnique({
+        where: { id },
+      });
+
+      if (!address) {
+        throw new BusinessException(
+          ErrorCode.RESOURCE_NOT_FOUND,
+          '客户地址不存在',
+        );
+      }
+
+      resourceName = address.name;
+
+      // 查询该地址下所有客户的订单
+      orders = (await this.prisma.order.findMany({
+        where: {
+          customer: {
+            customerAddressId: id,
+            delete: 0,
+          },
+          delete: 0,
+          status: {
+            in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
+          },
+        },
+        select: {
+          quantity: true,
+          unitId: true,
+          partialRefundAmount: true,
+          status: true,
+          groupBuy: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      })) as unknown as SelectedOrder[];
+    }
 
     const orderCount = orders.length;
     if (orderCount === 0) {
-      return {
-        customerName: customer.name,
+      const baseResult = {
         orderCount: 0,
         totalAmount: 0,
         averagePricePerOrder: 0,
         totalPartialRefundAmount: 0,
         productConsumptionRanks: [],
       };
+
+      if (type === 'customer') {
+        return {
+          customerName: resourceName,
+          ...baseResult,
+        } as CustomerConsumptionDetailDto;
+      } else {
+        return {
+          addressName: resourceName,
+          ...baseResult,
+        } as CustomerAddressConsumptionDetailDto;
+      }
     }
 
+    // 统计消费数据
     let totalAmount = 0;
     let totalPartialRefundAmount = 0;
     const productCounts: Record<
@@ -81,12 +175,12 @@ export class CustomerService {
     > = {};
 
     for (const order of orders) {
-      const units = order.groupBuy.units as GroupBuyUnit[];
+      const units = this.parseUnits(order.groupBuy.units);
       const unit = units.find((u) => u.id === order.unitId);
       if (unit) {
         const originalAmount = unit.price * order.quantity;
         const partialRefundAmount = order.partialRefundAmount || 0;
-        // 客户消费额：已退款订单不计入消费额（收入为0）；部分退款按绝对额扣减
+        // 消费额计算：已退款订单不计入消费额（收入为0）；部分退款按绝对额扣减
         const orderAmount =
           order.status === OrderStatus.REFUNDED
             ? 0
@@ -146,32 +240,36 @@ export class CustomerService {
 
     const averagePricePerOrder = totalAmount / orderCount;
 
-    // 找到全局最新的团购发起时间（用于标识最新消费）
+    // 处理isLatestConsumption逻辑（仅客户维度需要）
     let globalLatestDate: Date | null = null;
-    for (const order of orders) {
-      const startDate = order.groupBuy.groupBuyStartDate;
-
-      if (!globalLatestDate || startDate > globalLatestDate) {
-        globalLatestDate = startDate;
-      }
-    }
-
-    // 当存在多个同一天的团购时，再细分比较创建时间，找出该天中最新创建的时间
     let globalLatestCreatedAt: Date | null = null;
-    if (globalLatestDate) {
+
+    if (type === 'customer') {
+      // 找到全局最新的团购发起时间（用于标识最新消费）
       for (const order of orders) {
-        if (
-          order.groupBuy.groupBuyStartDate.getTime() ===
-          globalLatestDate.getTime()
-        ) {
-          const createdAt = order.groupBuy.createdAt;
-          if (!globalLatestCreatedAt || createdAt > globalLatestCreatedAt) {
-            globalLatestCreatedAt = createdAt;
+        const startDate = order.groupBuy.groupBuyStartDate;
+        if (!globalLatestDate || startDate > globalLatestDate) {
+          globalLatestDate = startDate;
+        }
+      }
+
+      // 当存在多个同一天的团购时，再细分比较创建时间，找出该天中最新创建的时间
+      if (globalLatestDate) {
+        for (const order of orders) {
+          if (
+            order.groupBuy.groupBuyStartDate.getTime() ===
+            globalLatestDate.getTime()
+          ) {
+            const createdAt = order.groupBuy.createdAt;
+            if (!globalLatestCreatedAt || createdAt > globalLatestCreatedAt) {
+              globalLatestCreatedAt = createdAt;
+            }
           }
         }
       }
     }
 
+    // 生成商品消费排行
     const productConsumptionRanks = Object.entries(productCounts)
       .sort(([, a], [, b]) => {
         // 计算每个商品的总消费金额
@@ -187,49 +285,59 @@ export class CustomerService {
         return totalAmountB - totalAmountA;
       })
       .map(([productId, { name, count, groupBuys }]) => {
-        // 找到该商品中最新的团购发起时间
-        let productLatestDate: Date | null = null;
+        let isLatestConsumption = false;
 
-        // 从该商品的所有团购中找到最新的发起时间
-        const productGroupBuys = Object.values(groupBuys);
-        for (const gb of productGroupBuys) {
-          const startDate = gb.latestGroupBuyStartDate;
+        if (type === 'customer') {
+          // 客户维度：计算isLatestConsumption
+          let productLatestDate: Date | null = null;
 
-          if (!productLatestDate || startDate > productLatestDate) {
-            productLatestDate = startDate;
-          }
-        }
-
-        // 基于发起时间进行初次判定
-        let isLatestConsumption =
-          !!productLatestDate &&
-          !!globalLatestDate &&
-          productLatestDate.getTime() === globalLatestDate.getTime();
-
-        // 当发起时间相同可能存在多个“最新”，此时使用创建时间做二次细分
-        if (isLatestConsumption && globalLatestCreatedAt && productLatestDate) {
-          let productLatestCreatedAt: Date | null = null;
-          // 在该商品、该发起日期下找到创建时间的最大值
-          for (const order of orders) {
-            if (
-              order.groupBuy.productId === productId &&
-              order.groupBuy.groupBuyStartDate.getTime() ===
-                productLatestDate.getTime()
-            ) {
-              const createdAt = order.groupBuy.createdAt;
-              if (
-                !productLatestCreatedAt ||
-                createdAt > productLatestCreatedAt
-              ) {
-                productLatestCreatedAt = createdAt;
-              }
+          // 从该商品的所有团购中找到最新的发起时间
+          const productGroupBuys = Object.values(groupBuys);
+          for (const gb of productGroupBuys) {
+            const startDate = gb.latestGroupBuyStartDate;
+            if (!productLatestDate || startDate > productLatestDate) {
+              productLatestDate = startDate;
             }
           }
 
+          // 基于发起时间进行初次判定
           isLatestConsumption =
-            !!productLatestCreatedAt &&
-            productLatestCreatedAt.getTime() ===
-              globalLatestCreatedAt.getTime();
+            !!productLatestDate &&
+            !!globalLatestDate &&
+            productLatestDate.getTime() === globalLatestDate.getTime();
+
+          // 当发起时间相同可能存在多个"最新"，此时使用创建时间做二次细分
+          if (
+            isLatestConsumption &&
+            globalLatestCreatedAt &&
+            productLatestDate
+          ) {
+            let productLatestCreatedAt: Date | null = null;
+            // 在该商品、该发起日期下找到创建时间的最大值
+            for (const order of orders) {
+              if (
+                order.groupBuy.productId === productId &&
+                order.groupBuy.groupBuyStartDate.getTime() ===
+                  productLatestDate.getTime()
+              ) {
+                const createdAt = order.groupBuy.createdAt;
+                if (
+                  !productLatestCreatedAt ||
+                  createdAt > productLatestCreatedAt
+                ) {
+                  productLatestCreatedAt = createdAt;
+                }
+              }
+            }
+
+            isLatestConsumption =
+              !!productLatestCreatedAt &&
+              productLatestCreatedAt.getTime() ===
+                globalLatestCreatedAt.getTime();
+          }
+        } else {
+          // 地址维度：isLatestConsumption固定为false
+          isLatestConsumption = false;
         }
 
         return {
@@ -246,14 +354,26 @@ export class CustomerService {
         };
       });
 
-    return {
-      customerName: customer.name,
+    // 根据类型返回对应的结果
+    const baseResult = {
       orderCount,
       totalAmount,
       averagePricePerOrder,
       totalPartialRefundAmount,
       productConsumptionRanks,
     };
+
+    if (type === 'customer') {
+      return {
+        customerName: resourceName,
+        ...baseResult,
+      } as CustomerConsumptionDetailDto;
+    } else {
+      return {
+        addressName: resourceName,
+        ...baseResult,
+      } as CustomerAddressConsumptionDetailDto;
+    }
   }
 
   async create(data: Prisma.CustomerCreateInput): Promise<Customer> {
@@ -391,7 +511,7 @@ export class CustomerService {
           // 计算总金额（扣除部分退款；已退款订单不计入消费额）
           let totalAmount = 0;
           orders.forEach((order) => {
-            const units = order.groupBuy.units as GroupBuyUnit[];
+            const units = this.parseUnits(order.groupBuy.units);
             const unit = units.find((u) => u.id === order.unitId);
             if (unit) {
               const originalAmount = unit.price * order.quantity;
@@ -502,7 +622,7 @@ export class CustomerService {
 
           let totalAmount = 0;
           orders.forEach((order) => {
-            const units = order.groupBuy.units as GroupBuyUnit[];
+            const units = this.parseUnits(order.groupBuy.units);
             const unit = units.find((u) => u.id === order.unitId);
             if (unit) {
               const originalAmount = unit.price * order.quantity;
