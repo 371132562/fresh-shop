@@ -30,6 +30,8 @@ export class CustomerService {
   async getConsumptionDetail(
     id: string,
     type: 'customer' | 'address' = 'customer',
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<
     CustomerConsumptionDetailDto | CustomerAddressConsumptionDetailDto
   > {
@@ -55,6 +57,16 @@ export class CustomerService {
     let resourceName: string;
     let orders: SelectedOrder[];
 
+    const timeFilter: any = {};
+    if (startDate && endDate) {
+      timeFilter.groupBuy = {
+        groupBuyStartDate: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        },
+      };
+    }
+
     if (type === 'customer') {
       // 客户维度查询
       const customer = await this.prisma.customer.findUnique({
@@ -75,6 +87,7 @@ export class CustomerService {
           status: {
             in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
           },
+          ...(timeFilter || {}),
         },
         select: {
           quantity: true,
@@ -114,6 +127,7 @@ export class CustomerService {
           status: {
             in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
           },
+          ...(timeFilter || {}),
         },
         select: {
           quantity: true,

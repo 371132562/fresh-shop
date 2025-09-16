@@ -39,12 +39,26 @@ export class CustomerController {
   }
 
   @Post('consumptionDetail')
-  consumptionDetail(@Body('id') id: string) {
-    return this.customerService.getConsumptionDetail(id, 'customer');
+  consumptionDetail(
+    @Body() data: { id: string; startDate?: Date; endDate?: Date },
+  ) {
+    return this.customerService.getConsumptionDetail(
+      data.id,
+      'customer',
+      data.startDate,
+      data.endDate,
+    );
   }
 
   @Post('addressConsumptionDetail')
-  addressConsumptionDetail(@Body('id') id: string) {
-    return this.customerService.getConsumptionDetail(id, 'address');
+  addressConsumptionDetail(
+    @Body() data: { id: string; startDate?: Date; endDate?: Date },
+  ) {
+    return this.customerService.getConsumptionDetail(
+      data.id,
+      'address',
+      data.startDate,
+      data.endDate,
+    );
   }
 }

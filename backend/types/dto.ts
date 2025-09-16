@@ -336,46 +336,6 @@ export type CustomerAddressConsumptionDetailDto = {
 };
 
 /**
- * 客户排行榜项（按订单数量）
- * 用于统计分析中的客户排行
- */
-export type CustomerRankByOrderCountItem = {
-  id: string; // 客户ID
-  name: string; // 客户名称
-  orderCount: number; // 订单总数
-};
-
-/**
- * 客户排行榜项（按总消费金额）
- * 用于统计分析中的客户排行
- */
-export type CustomerRankByTotalAmountItem = {
-  id: string; // 客户ID
-  name: string; // 客户名称
-  totalAmount: number; // 总消费金额
-};
-
-/**
- * 客户排行榜项（按平均订单金额）
- * 用于统计分析中的客户排行
- */
-export type CustomerRankByAverageOrderAmountItem = {
-  id: string; // 客户ID
-  name: string; // 客户名称
-  averageOrderAmount: number; // 平均订单金额
-};
-
-/**
- * 客户排行榜结果集合
- * 包含客户的各种排行榜数据
- */
-export type CustomerRankResult = {
-  customerRankByOrderCount: CustomerRankByOrderCountItem[]; // 按订单数排行
-  customerRankByTotalAmount: CustomerRankByTotalAmountItem[]; // 按消费额排行
-  customerRankByAverageOrderAmount: CustomerRankByAverageOrderAmountItem[]; // 按平均订单额排行
-};
-
-/**
  * 客户购买频次分布
  * 用于统计客户的购买次数分布情况
  */
@@ -813,6 +773,40 @@ export type AnalysisCountResult = {
     date: Date; // 日期
     count: number; // 累计利润
   }[];
+};
+// ===================================================================
+// 客户概况分析模块 (Customer Overview)
+// 支持按时间范围的客户维度统计、搜索、排序与分页
+// ===================================================================
+
+export type CustomerOverviewSortField =
+  | 'totalRevenue'
+  | 'totalOrderCount'
+  | 'averageOrderAmount';
+
+export type CustomerOverviewParams = {
+  startDate?: Date;
+  endDate?: Date;
+  page?: number;
+  pageSize?: number;
+  customerName?: string;
+  sortField?: CustomerOverviewSortField;
+  sortOrder?: SortOrder;
+};
+
+export type CustomerOverviewListItem = {
+  customerId: string;
+  customerName: string;
+  totalRevenue: number;
+  totalOrderCount: number;
+  averageOrderAmount: number;
+};
+
+export type CustomerOverviewResult = {
+  list: CustomerOverviewListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
 };
 
 // ===================================================================

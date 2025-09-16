@@ -57,7 +57,7 @@ export const globalSettingDetailApi = '/globalSetting/detail'
 export const globalSettingListApi = '/globalSetting/list'
 
 export const analysisCountApi = '/analysis/count'
-export const analysisCustomerRankApi = '/analysis/customerRank'
+export const analysisCustomerOverviewApi = '/analysis/customerOverview'
 export const analysisMergedGroupBuyOverviewApi = '/analysis/mergedGroupBuyOverview'
 export const analysisMergedGroupBuyOverviewDetailApi = '/analysis/mergedGroupBuyOverviewDetail'
 export const analysisMergedGroupBuyFrequencyCustomersApi =

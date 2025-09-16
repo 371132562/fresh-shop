@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 import {
   analysisCountApi,
-  analysisCustomerRankApi,
+  analysisCustomerOverviewApi,
   analysisMergedGroupBuyFrequencyCustomersApi,
   analysisMergedGroupBuyOverviewApi,
   analysisMergedGroupBuyOverviewDetailApi,
@@ -18,7 +18,8 @@ import type {
   AnalysisCountParams,
   AnalysisCountResult,
   CustomerBasicInfo,
-  CustomerRankResult,
+  CustomerOverviewParams,
+  CustomerOverviewResult,
   MergedGroupBuyFrequencyCustomersParams,
   MergedGroupBuyFrequencyCustomersResult,
   MergedGroupBuyOverviewDetail,
@@ -31,6 +32,7 @@ import type {
   SupplierFrequencyCustomersResult,
   SupplierOverviewDetail,
   SupplierOverviewDetailParams,
+  SupplierOverviewListItem,
   SupplierOverviewParams,
   SupplierOverviewResult,
   SupplierRegionalCustomersParams,
@@ -45,11 +47,6 @@ type AnalysisStore = {
   // 全部数据模式标记（用于前端展示控制）
   isAllData: boolean
   setIsAllData: (flag: boolean) => void
-
-  // 客户排行榜数据
-  customerRank: CustomerRankResult
-  getCustomerRank: (data: AnalysisCountParams) => Promise<void>
-  getCustomerRankLoading: boolean
 
   // 团购单合并概况数据
   mergedGroupBuyOverviewList: MergedGroupBuyOverviewResult['list']
@@ -101,7 +98,7 @@ type AnalysisStore = {
   handleRegionalClick: (addressId: string, addressName: string) => Promise<void>
 
   // 供货商概况数据
-  supplierOverviewList: SupplierOverviewResult['list']
+  supplierOverviewList: SupplierOverviewListItem[]
   supplierOverviewTotal: number
   supplierOverviewPage: number
   supplierOverviewPageSize: number
@@ -120,6 +117,15 @@ type AnalysisStore = {
 
   // 获取供货商特定区域的客户列表
   getSupplierRegionalCustomers: (params: SupplierRegionalCustomersParams) => Promise<void>
+
+  // 客户概况数据
+  customerOverviewList: CustomerOverviewResult['list']
+  customerOverviewTotal: number
+  customerOverviewPage: number
+  customerOverviewPageSize: number
+  customerOverviewLoading: boolean
+  getCustomerOverview: (data: CustomerOverviewParams) => Promise<void>
+  setCustomerOverviewPage: (page: number) => void
 }
 
 const useAnalysisStore = create<AnalysisStore>((set, get) => ({
@@ -149,25 +155,6 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
     }
   },
   getCountLoading: false,
-
-  // 客户排行榜数据
-  customerRank: {
-    customerRankByOrderCount: [],
-    customerRankByTotalAmount: [],
-    customerRankByAverageOrderAmount: []
-  },
-  getCustomerRank: async data => {
-    set({ getCustomerRankLoading: true })
-    try {
-      const res = await http.post(analysisCustomerRankApi, data)
-      set({ customerRank: res.data })
-    } catch (error) {
-      console.error('获取客户排行榜失败:', error)
-    } finally {
-      set({ getCustomerRankLoading: false })
-    }
-  },
-  getCustomerRankLoading: false,
 
   // 团购单合并概况数据
   mergedGroupBuyOverviewList: [],
@@ -440,7 +427,29 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
     } finally {
       set({ customerListLoading: false })
     }
-  }
+  },
+
+  // 客户概况数据
+  customerOverviewList: [],
+  customerOverviewTotal: 0,
+  customerOverviewPage: 1,
+  customerOverviewPageSize: 10,
+  customerOverviewLoading: false,
+  getCustomerOverview: async data => {
+    try {
+      set({ customerOverviewLoading: true })
+      const res = await http.post<CustomerOverviewResult>(analysisCustomerOverviewApi, data)
+      set({
+        customerOverviewList: res.data.list,
+        customerOverviewTotal: res.data.total,
+        customerOverviewPage: res.data.page,
+        customerOverviewPageSize: res.data.pageSize
+      })
+    } finally {
+      set({ customerOverviewLoading: false })
+    }
+  },
+  setCustomerOverviewPage: page => set({ customerOverviewPage: page })
 }))
 
 export default useAnalysisStore

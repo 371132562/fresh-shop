@@ -48,7 +48,7 @@ const CustomerListModal: React.FC = () => {
         type="primary"
         ghost
         onClick={() => {
-          getConsumptionDetail(record.customerId)
+          getConsumptionDetail({ id: record.customerId })
           setConsumptionDetailVisible(true)
         }}
       >

@@ -4,7 +4,7 @@ import * as dayjs from 'dayjs'; // 导入 dayjs
 import * as utc from 'dayjs/plugin/utc';
 import * as timezone from 'dayjs/plugin/timezone';
 import * as isSameOrBefore from 'dayjs/plugin/isSameOrBefore'; // 导入 isSameOrBefore 插件
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, Prisma } from '@prisma/client';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrBefore); // 扩展 isSameOrBefore 插件
@@ -14,7 +14,9 @@ import {
   AnalysisCountParams,
   AnalysisCountResult,
   GroupBuyUnit,
-  CustomerRankResult,
+  CustomerOverviewParams,
+  CustomerOverviewResult,
+  CustomerOverviewListItem,
   MergedGroupBuyOverviewParams,
   MergedGroupBuyOverviewResult,
   MergedGroupBuyOverviewDetail,
@@ -471,143 +473,6 @@ export class AnalysisService {
   }
 
   /**
-   * 获取客户排行数据（Top10）
-   * 口径约定：
-   * - 时间：按"团购发起时间 groupBuyStartDate"过滤关联的团购；未传入则统计全量。
-   * - 订单：仅统计 delete=0 且状态 ∈ [PAID, COMPLETED]（不含已退款）。
-   * - 金额：订单金额 = 单价*数量 - 部分退款金额（仅退款不退货）。
-   * 输出：三类排行榜（订单量、总消费额、平均订单额）各取前 10。
-   */
-  async getCustomerRank(
-    params: AnalysisCountParams,
-  ): Promise<CustomerRankResult> {
-    // ================================================================
-    // 步骤一：读取订单（包含客户与团购规格）
-    // - 过滤：delete=0，状态 ∈ [PAID, COMPLETED]
-    // - 时间：通过关联团购的 groupBuyStartDate 进行过滤
-    // - 字段：仅保留计算所需字段，降低数据体积
-    // ================================================================
-    const { startDate, endDate } = params;
-
-    const orders = await this.prisma.order.findMany({
-      where: {
-        delete: 0,
-        status: {
-          in: [OrderStatus.PAID, OrderStatus.COMPLETED],
-        },
-        groupBuy: {
-          ...(startDate && endDate
-            ? {
-                groupBuyStartDate: {
-                  gte: startDate,
-                  lte: endDate,
-                },
-              }
-            : {}),
-        },
-      },
-      select: {
-        quantity: true,
-        unitId: true,
-        partialRefundAmount: true, // 部分退款金额（用于冲减订单金额）
-        customer: {
-          select: {
-            id: true,
-            name: true,
-            phone: true,
-          },
-        },
-        groupBuy: {
-          select: {
-            units: true,
-          },
-        },
-      },
-    });
-
-    // ================================================================
-    // 步骤二：按客户维度聚合
-    // - Map(key=customerId) 存储客户基础信息与累积指标
-    // - 指标：orderCount（订单量）、totalAmount（总消费额）
-    // ================================================================
-    const customerData = new Map<
-      string,
-      {
-        id: string;
-        name: string;
-        phone: string;
-        orderCount: number;
-        totalAmount: number;
-      }
-    >();
-
-    for (const order of orders) {
-      if (!order.customer) continue;
-
-      const customerId = order.customer.id;
-      const customerName = order.customer.name || '';
-      const customerPhone = order.customer.phone || '';
-      const units = order.groupBuy.units as Array<GroupBuyUnit>;
-
-      // 计算订单金额：单价*数量 - 部分退款（不涉及利润口径）
-      let orderAmount = 0;
-      const selectedUnit = units.find((unit) => unit.id === order.unitId);
-      if (selectedUnit) {
-        const originalAmount = selectedUnit.price * order.quantity;
-        orderAmount = originalAmount - (order.partialRefundAmount || 0);
-      }
-
-      if (customerData.has(customerId)) {
-        const existing = customerData.get(customerId)!;
-        existing.orderCount += 1;
-        existing.totalAmount += orderAmount;
-      } else {
-        customerData.set(customerId, {
-          id: customerId,
-          name: customerName,
-          phone: customerPhone,
-          orderCount: 1,
-          totalAmount: orderAmount,
-        });
-      }
-    }
-
-    // ================================================================
-    // 步骤三：派生平均订单额并转为数组
-    // - averageOrderAmount = totalAmount / orderCount（订单量为0时兜底为0）
-    // ================================================================
-    const customersArray = Array.from(customerData.values()).map(
-      (customer) => ({
-        ...customer,
-        averageOrderAmount:
-          customer.orderCount > 0
-            ? customer.totalAmount / customer.orderCount
-            : 0,
-      }),
-    );
-
-    // ================================================================
-    // 步骤四：生成排行榜（各取 Top10）
-    // - 订单量/总消费额/平均订单额三类榜单，均按降序
-    // ================================================================
-    const customerRankByOrderCount = [...customersArray]
-      .sort((a, b) => b.orderCount - a.orderCount)
-      .slice(0, 10);
-    const customerRankByTotalAmount = [...customersArray]
-      .sort((a, b) => b.totalAmount - a.totalAmount)
-      .slice(0, 10);
-    const customerRankByAverageOrderAmount = [...customersArray]
-      .sort((a, b) => b.averageOrderAmount - a.averageOrderAmount)
-      .slice(0, 10);
-
-    return {
-      customerRankByOrderCount,
-      customerRankByTotalAmount,
-      customerRankByAverageOrderAmount,
-    };
-  }
-
-  /**
    * 获取团购单合并概况数据
    * 针对同名的团购单进行聚合分析
    */
@@ -864,6 +729,117 @@ export class AnalysisService {
       page,
       pageSize,
     };
+  }
+
+  // 客户概况：按客户聚合订单金额与数量，并支持时间范围/搜索/排序/分页
+  async getCustomerOverview(
+    params: CustomerOverviewParams,
+  ): Promise<CustomerOverviewResult> {
+    const {
+      startDate,
+      endDate,
+      page = 1,
+      pageSize = 10,
+      customerName = '',
+      sortField = 'totalRevenue',
+      sortOrder = 'desc',
+    } = params;
+
+    const whereOrder: Prisma.OrderWhereInput = {
+      delete: 0,
+      status: {
+        in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
+      },
+      ...(startDate && endDate
+        ? {
+            groupBuy: {
+              groupBuyStartDate: {
+                gte: new Date(startDate),
+                lte: new Date(endDate),
+              },
+            },
+          }
+        : {}),
+      customer: customerName
+        ? {
+            name: { contains: customerName },
+            delete: 0,
+          }
+        : { delete: 0 },
+    };
+
+    // 拉取相关订单（仅必要字段），在内存中聚合金额（考虑退款口径）与计数
+    const orders = await this.prisma.order.findMany({
+      where: whereOrder,
+      select: {
+        quantity: true,
+        unitId: true,
+        partialRefundAmount: true,
+        status: true,
+        customerId: true,
+        customer: { select: { name: true } },
+        groupBuy: { select: { units: true } },
+      },
+    });
+
+    type Agg = {
+      customerId: string;
+      customerName: string;
+      totalRevenue: number;
+      totalOrderCount: number;
+    };
+    const aggMap = new Map<string, Agg>();
+
+    for (const o of orders) {
+      const units = (o.groupBuy.units as unknown as Array<GroupBuyUnit>) || [];
+      const unit = units.find((u) => u.id === o.unitId);
+      if (!unit) continue;
+      const originalRevenue = unit.price * o.quantity;
+      const partial = o.partialRefundAmount || 0;
+      const revenue =
+        o.status === OrderStatus.REFUNDED ? 0 : originalRevenue - partial;
+
+      if (!aggMap.has(o.customerId)) {
+        aggMap.set(o.customerId, {
+          customerId: o.customerId,
+          customerName: o.customer?.name || '未知客户',
+          totalRevenue: 0,
+          totalOrderCount: 0,
+        });
+      }
+      const agg = aggMap.get(o.customerId)!;
+      agg.totalRevenue += revenue;
+      if (o.status === OrderStatus.PAID || o.status === OrderStatus.COMPLETED) {
+        agg.totalOrderCount += 1;
+      }
+    }
+
+    let list: CustomerOverviewListItem[] = Array.from(aggMap.values()).map(
+      (x) => ({
+        customerId: x.customerId,
+        customerName: x.customerName,
+        totalRevenue: x.totalRevenue,
+        totalOrderCount: x.totalOrderCount,
+        averageOrderAmount: x.totalOrderCount
+          ? x.totalRevenue / x.totalOrderCount
+          : 0,
+      }),
+    );
+
+    // 排序
+    list.sort((a, b) => {
+      const field = sortField;
+      const av = a[field];
+      const bv = b[field];
+      return sortOrder === 'asc' ? av - bv : bv - av;
+    });
+
+    const total = list.length;
+    const start = (page - 1) * pageSize;
+    const endIdx = start + pageSize;
+    list = list.slice(start, endIdx);
+
+    return { list, total, page, pageSize };
   }
 
   /**

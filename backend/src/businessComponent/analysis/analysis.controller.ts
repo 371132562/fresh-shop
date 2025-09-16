@@ -10,6 +10,7 @@ import {
   SupplierOverviewDetailParams,
   SupplierFrequencyCustomersParams,
   SupplierRegionalCustomersParams,
+  CustomerOverviewParams,
 } from '../../../types/dto';
 
 @Controller('analysis')
@@ -19,14 +20,6 @@ export class AnalysisController {
   @Post('count')
   count(@Body() data: AnalysisCountParams) {
     return this.analysisService.count(data);
-  }
-
-  /**
-   * 获取客户排行数据
-   */
-  @Post('customerRank')
-  getCustomerRank(@Body() params: AnalysisCountParams) {
-    return this.analysisService.getCustomerRank(params);
   }
 
   /**
@@ -101,6 +94,12 @@ export class AnalysisController {
   @Post('supplierOverviewDetail')
   getSupplierOverviewDetail(@Body() params: SupplierOverviewDetailParams) {
     return this.analysisService.getSupplierOverviewDetail(params);
+  }
+
+  // 客户概况
+  @Post('customerOverview')
+  getCustomerOverview(@Body() params: CustomerOverviewParams) {
+    return this.analysisService.getCustomerOverview(params);
   }
 
   /**

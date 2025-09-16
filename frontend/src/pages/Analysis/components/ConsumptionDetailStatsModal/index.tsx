@@ -31,6 +31,8 @@ type ConsumptionDetailStatsModalProps = {
   title?: string
   width?: number
   type?: 'customer' | 'address' // 新增 type 参数区分消费详情类型
+  startDate?: Date
+  endDate?: Date
 }
 
 /**
@@ -44,7 +46,9 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
   loading,
   title = '消费详情',
   width = 1000,
-  type = 'customer'
+  type = 'customer',
+  startDate,
+  endDate
 }: ConsumptionDetailStatsModalProps) => {
   // 展开状态管理 - 记录每个商品的展开状态
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set())
@@ -70,6 +74,12 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
       title={
         <div className="flex items-center gap-2">
           <span>{title}</span>
+          {startDate && endDate && (
+            <span className="text-xs text-gray-500">
+              （统计范围：{dayjs(startDate).format('YYYY-MM-DD')} 至{' '}
+              {dayjs(endDate).format('YYYY-MM-DD')}）
+            </span>
+          )}
           <Tooltip
             title={
               <div style={{ maxWidth: 500, lineHeight: 1.6 }}>

@@ -82,7 +82,7 @@ export const Component = () => {
 
   const handleConsumptionDetail = (id: string) => {
     setCurrentId(id)
-    getConsumptionDetail(id)
+    getConsumptionDetail({ id })
     setConsumptionDetailVisible(true)
   }
 

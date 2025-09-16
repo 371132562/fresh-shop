@@ -6,7 +6,7 @@ import { useState } from 'react'
 import useAnalysisStore from '@/stores/analysisStore.ts'
 import dayjs from '@/utils/day'
 
-import { CustomerRankings } from './components/CustomerRankings' // 导入客户排行组件
+import { CustomerOverview } from './components/CustomerOverview'
 import { MergedGroupBuyOverview } from './components/MergedGroupBuyOverview'
 import { Overview } from './components/Overview'
 import { SupplierOverview } from './components/SupplierOverview'
@@ -91,7 +91,7 @@ export const Component = () => {
       />
     ),
     'customer-rankings': (
-      <CustomerRankings
+      <CustomerOverview
         {...(isAllData
           ? {}
           : {
@@ -205,34 +205,24 @@ export const Component = () => {
         onChange={setActiveViewKey}
         options={[
           {
-            label: '概览数据',
-            options: [
-              {
-                value: 'overview',
-                label: '整体概况'
-              },
-              {
-                value: 'merged-group-buy-overview',
-                label: '团购单（合并）概况'
-              },
-              {
-                value: 'group-buy-overview',
-                label: '团购单（单期）概况'
-              },
-              {
-                value: 'supplier-overview',
-                label: '供货商概况'
-              }
-            ]
+            value: 'overview',
+            label: '整体概况'
           },
           {
-            label: '排行数据',
-            options: [
-              {
-                value: 'customer-rankings',
-                label: '客户排行'
-              }
-            ]
+            value: 'merged-group-buy-overview',
+            label: '团购单（合并）概况'
+          },
+          {
+            value: 'group-buy-overview',
+            label: '团购单（单期）概况'
+          },
+          {
+            value: 'supplier-overview',
+            label: '供货商概况'
+          },
+          {
+            value: 'customer-rankings',
+            label: '客户概况'
           }
         ]}
       />

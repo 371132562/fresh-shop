@@ -54,7 +54,9 @@ type CustomerStore = {
 
   consumptionDetail: CustomerConsumptionDetailDto | null
   consumptionDetailLoading: boolean
-  getConsumptionDetail: (id: string) => Promise<void>
+  getConsumptionDetail: (
+    data: string | { id: string; startDate?: Date; endDate?: Date }
+  ) => Promise<void>
   resetConsumptionDetail: () => void
 
   // 地址消费详情相关
@@ -188,12 +190,14 @@ const useCustomerStore = create<CustomerStore>((set, get) => ({
 
   consumptionDetail: null as CustomerConsumptionDetailDto | null,
   consumptionDetailLoading: false,
-  getConsumptionDetail: async (id: string) => {
+  getConsumptionDetail: async (data: string | { id: string; startDate?: Date; endDate?: Date }) => {
     set({ consumptionDetailLoading: true })
     try {
-      const res = await http.post<CustomerConsumptionDetailDto>(customerConsumptionDetailApi, {
-        id
-      })
+      const payload = typeof data === 'string' ? { id: data } : data
+      const res = await http.post<CustomerConsumptionDetailDto>(
+        customerConsumptionDetailApi,
+        payload
+      )
       set({ consumptionDetail: res.data, consumptionDetailLoading: false })
     } catch (error) {
       console.error(error)
