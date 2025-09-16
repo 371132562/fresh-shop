@@ -512,7 +512,7 @@ export type MergedGroupBuyOverviewParams = {
   pageSize?: number; // 每页数量（可选）
   // 搜索参数
   groupBuyName?: string; // 按团购名称搜索（模糊匹配）
-  supplierIds?: Supplier['id'][]; // 按供应商ID数组搜索（精确匹配）
+  supplierIds?: Supplier['id'][]; // 按供货商ID数组搜索（精确匹配）
   // 排序参数
   sortField?: MergedGroupBuyOverviewSortField; // 排序字段
   sortOrder?: SortOrder; // 排序方向

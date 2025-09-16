@@ -1,9 +1,10 @@
-import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
-import { Button, FloatButton, Form, Input, List, Modal } from 'antd'
+import { PlusOutlined } from '@ant-design/icons'
+import { Button, Card, Col, FloatButton, Form, Input, List, Row } from 'antd'
 import type { SupplierListItem } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
+import SearchToolbar from '@/components/SearchToolbar'
 import SupplierDetailModal from '@/pages/Analysis/components/SupplierDetailModal'
 import useSupplierStore from '@/stores/supplierStore.ts'
 import { validatePhoneNumber } from '@/utils'
@@ -12,7 +13,6 @@ import Modify from './Modify.tsx'
 
 export const Component = () => {
   const [visible, setVisible] = useState(false)
-  const [searchVisible, setSearchVisible] = useState(false)
   const [detailModalVisible, setDetailModalVisible] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState<SupplierListItem | null>(null)
   const [form] = Form.useForm()
@@ -40,8 +40,8 @@ export const Component = () => {
     setDetailModalVisible(true)
   }
 
-  //搜索
-  const handleOk = () => {
+  // 搜索功能
+  const handleSearch = () => {
     form
       .validateFields()
       .then(async val => {
@@ -49,17 +49,13 @@ export const Component = () => {
           page: 1,
           ...val
         })
-        setSearchVisible(false)
       })
       .catch(err => {
         console.log(err)
       })
   }
 
-  const handleCancel = () => {
-    setSearchVisible(false)
-  }
-
+  // 重置搜索
   const resetSearch = () => {
     const resetValues = {
       name: '',
@@ -68,33 +64,106 @@ export const Component = () => {
     }
     form.setFieldsValue(resetValues)
     setPageParams({
+      page: 1,
       ...resetValues
     })
-    handleCancel()
   }
 
   return (
     <>
+      {/* 搜索表单区域 */}
+      <Card
+        className="mb-4 w-full"
+        size="small"
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          name="searchForm"
+          autoComplete="off"
+        >
+          <Row gutter={[16, 8]}>
+            <Col
+              xs={24}
+              sm={12}
+              md={8}
+            >
+              <Form.Item
+                label="供货商名称"
+                name="name"
+                className="!mb-1"
+              >
+                <Input
+                  placeholder="请输入供货商名称"
+                  allowClear
+                  onPressEnter={handleSearch}
+                  onClear={handleSearch}
+                />
+              </Form.Item>
+            </Col>
+            <Col
+              xs={24}
+              sm={12}
+              md={8}
+            >
+              <Form.Item
+                label="手机号"
+                name="phone"
+                className="!mb-1"
+                rules={[
+                  {
+                    required: false,
+                    message: '请输入手机号！'
+                  },
+                  {
+                    validator: validatePhoneNumber
+                  }
+                ]}
+              >
+                <Input
+                  placeholder="请输入手机号"
+                  maxLength={11}
+                  allowClear
+                  onPressEnter={handleSearch}
+                  onClear={handleSearch}
+                />
+              </Form.Item>
+            </Col>
+            <Col
+              xs={24}
+              sm={12}
+              md={8}
+            >
+              <Form.Item
+                label="微信号"
+                name="wechat"
+                className="!mb-1"
+              >
+                <Input
+                  placeholder="请输入微信号"
+                  allowClear
+                  onPressEnter={handleSearch}
+                  onClear={handleSearch}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          {/* 工具栏区域 */}
+          <SearchToolbar
+            onSearch={handleSearch}
+            onReset={resetSearch}
+            searchLoading={listLoading}
+            totalCount={listCount.totalCount}
+            countLabel="家供货商"
+          />
+        </Form>
+      </Card>
+
+      {/* 供货商列表 */}
       <section className="box-border flex w-full items-center justify-between">
         <List
           className="w-full"
           itemLayout="horizontal"
-          header={
-            <div className="box-border flex w-full flex-row items-center justify-between">
-              <div>
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<SearchOutlined />}
-                  iconPosition="end"
-                  onClick={() => setSearchVisible(true)}
-                >
-                  搜索供货商
-                </Button>
-              </div>
-              <div>共 {listCount.totalCount} 家</div>
-            </div>
-          }
           loading={listLoading}
           pagination={{
             position: 'bottom',
@@ -173,61 +242,6 @@ export const Component = () => {
           }}
         />
       )}
-      <Modal
-        open={searchVisible}
-        onOk={handleOk}
-        onCancel={handleCancel}
-        footer={[
-          <Button onClick={resetSearch}>清空</Button>,
-          <Button onClick={handleCancel}>取消</Button>,
-          <Button
-            type="primary"
-            loading={listLoading}
-            onClick={handleOk}
-          >
-            确定
-          </Button>
-        ]}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          size="large"
-          name="basic"
-          labelCol={{ span: 24 }}
-          wrapperCol={{ span: 24 }}
-          style={{ maxWidth: 600 }}
-          autoComplete="off"
-        >
-          <Form.Item
-            label="按名称搜索"
-            name="name"
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="按手机号搜索"
-            name="phone"
-            rules={[
-              {
-                required: false,
-                message: '请输入手机号！'
-              },
-              {
-                validator: validatePhoneNumber
-              }
-            ]}
-          >
-            <Input maxLength={11} />
-          </Form.Item>
-          <Form.Item
-            label="按微信号搜索"
-            name="wechat"
-          >
-            <Input />
-          </Form.Item>
-        </Form>
-      </Modal>
     </>
   )
 }

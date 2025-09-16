@@ -1479,14 +1479,14 @@ export class AnalysisService {
     // ================================================================
     // 接口：供货商概况列表（按供货商维度）
     // 目标：聚合供货商在指定时间范围内的核心指标并分页返回
-    // 过滤：供应商 delete=0；团购 delete=0；按 groupBuyStartDate 进行时间过滤
+    // 过滤：供货商 delete=0；团购 delete=0；按 groupBuyStartDate 进行时间过滤
     // 订单口径：delete=0 且状态 ∈ [PAID, COMPLETED, REFUNDED]
     // 指标口径：
     //   - 总销售额 totalRevenue：退款订单记 0；部分退款直减
     //   - 总利润 totalProfit：退款订单记 -成本；部分退款直减
     //   - 总订单量 totalOrderCount：仅计 PAID/COMPLETED
     //   - 参与客户数 uniqueCustomerCount：去重客户ID
-    //   - 团购单数 totalGroupBuyCount：该供应商匹配的团购数量
+    //   - 团购单数 totalGroupBuyCount：该供货商匹配的团购数量
     //   - 平均利润率 averageProfitMargin：totalProfit/totalRevenue*100（分母为0时为0）
     // ================================================================
     const {

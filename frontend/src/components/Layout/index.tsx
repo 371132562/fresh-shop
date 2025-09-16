@@ -117,7 +117,7 @@ export const Component: FC = () => {
           const description = (
             <div className="space-y-2">
               <div className="font-medium text-blue-600">
-                发现 {currentOrphanImages.length} 张孤立图片（未被供应商或团购单引用）
+                发现 {currentOrphanImages.length} 张孤立图片（未被供货商或团购单引用）
               </div>
               <div className="space-y-1 text-sm">
                 {bothButOrphan > 0 && (

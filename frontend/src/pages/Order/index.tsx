@@ -1,8 +1,9 @@
-import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
-import { Button, FloatButton, Form, List, Modal, Popconfirm, Select, Tag } from 'antd'
+import { PlusOutlined } from '@ant-design/icons'
+import { Button, Card, Col, FloatButton, Form, List, Popconfirm, Row, Select, Tag } from 'antd'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
+import SearchToolbar from '@/components/SearchToolbar'
 import useCustomerStore from '@/stores/customerStore.ts'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import useOrderStore, {
@@ -17,7 +18,6 @@ import Modify from './Modify.tsx'
 
 export const Component = () => {
   const [visible, setVisible] = useState(false)
-  const [searchVisible, setSearchVisible] = useState(false)
   const [form] = Form.useForm()
 
   const listLoading = useOrderStore(state => state.listLoading)
@@ -49,23 +49,22 @@ export const Component = () => {
     })
   }
 
-  //搜索
-  const handleOk = () => {
+  // 搜索功能
+  const handleSearch = () => {
     form
       .validateFields()
       .then(async val => {
-        setPageParams(val)
-        setSearchVisible(false)
+        setPageParams({
+          page: 1,
+          ...val
+        })
       })
       .catch(err => {
         console.log(err)
       })
   }
 
-  const handleCancel = () => {
-    setSearchVisible(false)
-  }
-
+  // 重置搜索
   const resetSearch = () => {
     const resetValues = {
       statuses: [],
@@ -73,36 +72,144 @@ export const Component = () => {
       groupBuyIds: []
     }
     form.setFieldsValue(resetValues)
-    setPageParams(resetValues)
-    handleCancel()
-  }
-
-  const filterOption = (input: string, option?: { children?: string }) => {
-    return (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+    setPageParams({
+      page: 1,
+      ...resetValues
+    })
   }
 
   return (
     <>
+      {/* 搜索表单区域 */}
+      <Card
+        className="mb-4 w-full"
+        size="small"
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          name="searchForm"
+          autoComplete="off"
+        >
+          <Row gutter={[16, 8]}>
+            <Col
+              xs={24}
+              sm={12}
+              md={8}
+            >
+              <Form.Item
+                label="客户"
+                name="customerIds"
+                className="!mb-1"
+              >
+                <Select
+                  loading={getAllCustomerLoading}
+                  showSearch
+                  mode="multiple"
+                  allowClear
+                  placeholder="请选择客户"
+                  onChange={handleSearch}
+                  onClear={handleSearch}
+                  filterOption={(input, option) =>
+                    String(option?.children || '')
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                  popupMatchSelectWidth={300}
+                >
+                  {allCustomer.map(item => (
+                    <Select.Option
+                      key={item.id}
+                      value={item.id}
+                    >
+                      {item.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col
+              xs={24}
+              sm={12}
+              md={8}
+            >
+              <Form.Item
+                label="团购单"
+                name="groupBuyIds"
+                className="!mb-1"
+              >
+                <Select
+                  loading={getAllGroupBuyLoading}
+                  showSearch
+                  mode="multiple"
+                  allowClear
+                  placeholder="请选择团购单"
+                  onChange={handleSearch}
+                  onClear={handleSearch}
+                  filterOption={(input, option) =>
+                    String(option?.children || '')
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                  popupMatchSelectWidth={300}
+                >
+                  {allGroupBuy.map(item => (
+                    <Select.Option
+                      key={item.id}
+                      value={item.id}
+                    >
+                      {item.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col
+              xs={24}
+              sm={12}
+              md={8}
+            >
+              <Form.Item
+                label="订单状态"
+                name="statuses"
+                className="!mb-1"
+              >
+                <Select
+                  mode="multiple"
+                  allowClear
+                  placeholder="请选择订单状态"
+                  onChange={handleSearch}
+                  onClear={handleSearch}
+                  popupMatchSelectWidth={300}
+                >
+                  {(ExtendedOrderStatusOptions || OrderStatusOptions).map(option => (
+                    <Select.Option
+                      key={option.value}
+                      value={option.value}
+                    >
+                      <Tag color={option.color}>{option.label}</Tag>
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          {/* 工具栏区域 */}
+          <SearchToolbar
+            onSearch={handleSearch}
+            onReset={resetSearch}
+            searchLoading={listLoading}
+            totalCount={listCount.totalCount}
+            countLabel="个订单"
+          />
+        </Form>
+      </Card>
+
+      {/* 订单列表 */}
       <section className="box-border flex w-full items-center justify-between">
         <List
           className="w-full"
           itemLayout="horizontal"
-          header={
-            <div className="box-border flex w-full flex-row items-center justify-between">
-              <div>
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<SearchOutlined />}
-                  iconPosition="end"
-                  onClick={() => setSearchVisible(true)}
-                >
-                  搜索订单
-                </Button>
-              </div>
-              <div>共 {listCount.totalCount} 条</div>
-            </div>
-          }
           loading={listLoading}
           pagination={{
             position: 'bottom',
@@ -238,103 +345,6 @@ export const Component = () => {
           setVisible={setVisible}
         />
       )}
-      <Modal
-        open={searchVisible}
-        onOk={handleOk}
-        onCancel={handleCancel}
-        footer={[
-          <Button onClick={resetSearch}>清空</Button>,
-          <Button onClick={handleCancel}>取消</Button>,
-          <Button
-            type="primary"
-            loading={listLoading}
-            onClick={handleOk}
-          >
-            确定
-          </Button>
-        ]}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          size="large"
-          name="basic"
-          labelCol={{ span: 24 }}
-          wrapperCol={{ span: 24 }}
-          style={{ maxWidth: 600 }}
-          autoComplete="off"
-        >
-          <Form.Item
-            label="按客户搜索(可多选)"
-            name="customerIds"
-          >
-            <Select
-              loading={getAllCustomerLoading}
-              showSearch
-              mode="multiple"
-              allowClear
-              placeholder="请选择客户"
-              filterOption={filterOption}
-            >
-              {allCustomer.map(item => {
-                return (
-                  <Select.Option
-                    key={item.id}
-                    value={item.id}
-                  >
-                    {item.name}
-                  </Select.Option>
-                )
-              })}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="按团购单搜索(可多选)"
-            name="groupBuyIds"
-          >
-            <Select
-              loading={getAllGroupBuyLoading}
-              showSearch
-              mode="multiple"
-              allowClear
-              placeholder="请选择团购单"
-              filterOption={filterOption}
-            >
-              {allGroupBuy.map(item => {
-                return (
-                  <Select.Option
-                    key={item.id}
-                    value={item.id}
-                  >
-                    {item.name}
-                  </Select.Option>
-                )
-              })}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="按订单状态搜索(可多选)"
-            name="statuses"
-          >
-            <Select
-              mode="multiple"
-              allowClear
-              placeholder="请选择订单状态"
-            >
-              {(ExtendedOrderStatusOptions || OrderStatusOptions).map(option => {
-                return (
-                  <Select.Option
-                    key={option.value}
-                    value={option.value}
-                  >
-                    <Tag color={option.color}>{option.label}</Tag>
-                  </Select.Option>
-                )
-              })}
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
     </>
   )
 }

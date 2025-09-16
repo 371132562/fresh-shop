@@ -1,7 +1,8 @@
-import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
-import { Button, FloatButton, Form, Input, List, Modal } from 'antd'
+import { PlusOutlined } from '@ant-design/icons'
+import { Button, Card, Col, FloatButton, Form, Input, List, Row } from 'antd'
 import { useEffect, useState } from 'react'
 
+import SearchToolbar from '@/components/SearchToolbar'
 import useProductTypeStore from '@/stores/productTypeStore.ts'
 
 import Modify from './Modify.tsx'
@@ -9,7 +10,6 @@ import Modify from './Modify.tsx'
 export const Component = () => {
   const [visible, setVisible] = useState(false)
   const [currentId, setCurrentId] = useState<string | null>(null)
-  const [searchVisible, setSearchVisible] = useState(false)
   const [form] = Form.useForm()
 
   const listLoading = useProductTypeStore(state => state.listLoading)
@@ -29,8 +29,8 @@ export const Component = () => {
     })
   }
 
-  //搜索
-  const handleOk = () => {
+  // 搜索功能
+  const handleSearch = () => {
     form
       .validateFields()
       .then(async val => {
@@ -38,26 +38,22 @@ export const Component = () => {
           page: 1,
           ...val
         })
-        setSearchVisible(false)
       })
       .catch(err => {
         console.log(err)
       })
   }
 
-  const handleCancel = () => {
-    setSearchVisible(false)
-  }
-
+  // 重置搜索
   const resetSearch = () => {
     const resetValues = {
       name: ''
     }
     form.setFieldsValue(resetValues)
     setPageParams({
+      page: 1,
       ...resetValues
     })
-    handleCancel()
   }
 
   const handleModify = (id: string) => {
@@ -67,26 +63,53 @@ export const Component = () => {
 
   return (
     <>
+      {/* 搜索表单区域 */}
+      <Card
+        className="mb-4 w-full"
+        size="small"
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          name="searchForm"
+          autoComplete="off"
+        >
+          <Row gutter={[16, 8]}>
+            <Col
+              xs={24}
+              sm={12}
+              md={8}
+            >
+              <Form.Item
+                label="商品类型名称"
+                name="name"
+                className="!mb-1"
+              >
+                <Input
+                  placeholder="请输入商品类型名称"
+                  allowClear
+                  onPressEnter={handleSearch}
+                  onClear={handleSearch}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          {/* 工具栏区域 */}
+          <SearchToolbar
+            onSearch={handleSearch}
+            onReset={resetSearch}
+            searchLoading={listLoading}
+            totalCount={listCount.totalCount}
+            countLabel="个类型"
+          />
+        </Form>
+      </Card>
+
+      {/* 商品类型列表 */}
       <section className="box-border flex w-full items-center justify-between">
         <List
           className="w-full"
           itemLayout="horizontal"
-          header={
-            <div className="box-border flex w-full flex-row items-center justify-between">
-              <div>
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<SearchOutlined />}
-                  iconPosition="end"
-                  onClick={() => setSearchVisible(true)}
-                >
-                  搜索商品类型
-                </Button>
-              </div>
-              <div>共 {listCount.totalCount} 类</div>
-            </div>
-          }
           loading={listLoading}
           pagination={{
             position: 'bottom',
@@ -136,40 +159,6 @@ export const Component = () => {
           setCurrentId={setCurrentId}
         />
       )}
-      <Modal
-        open={searchVisible}
-        onOk={handleOk}
-        onCancel={handleCancel}
-        footer={[
-          <Button onClick={resetSearch}>清空</Button>,
-          <Button onClick={handleCancel}>取消</Button>,
-          <Button
-            type="primary"
-            loading={listLoading}
-            onClick={handleOk}
-          >
-            确定
-          </Button>
-        ]}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          size="large"
-          name="basic"
-          labelCol={{ span: 24 }}
-          wrapperCol={{ span: 24 }}
-          style={{ maxWidth: 600 }}
-          autoComplete="off"
-        >
-          <Form.Item
-            label="按名称搜索"
-            name="name"
-          >
-            <Input />
-          </Form.Item>
-        </Form>
-      </Modal>
     </>
   )
 }
