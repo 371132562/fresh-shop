@@ -206,23 +206,23 @@ export const Component = () => {
         options={[
           {
             value: 'overview',
-            label: '整体概况'
+            label: '整体统计'
           },
           {
             value: 'merged-group-buy-overview',
-            label: '团购单（合并）概况'
+            label: '团购单（合并）统计'
           },
           {
             value: 'group-buy-overview',
-            label: '团购单（单期）概况'
+            label: '团购单（单期）统计'
           },
           {
             value: 'supplier-overview',
-            label: '供货商概况'
+            label: '供货商统计'
           },
           {
             value: 'customer-rankings',
-            label: '客户概况'
+            label: '客户统计'
           }
         ]}
       />

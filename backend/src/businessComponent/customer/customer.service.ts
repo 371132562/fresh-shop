@@ -56,16 +56,8 @@ export class CustomerService {
     // 根据类型验证资源是否存在并获取基本信息
     let resourceName: string;
     let orders: SelectedOrder[];
-
-    const timeFilter: any = {};
-    if (startDate && endDate) {
-      timeFilter.groupBuy = {
-        groupBuyStartDate: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
-      };
-    }
+    // 用于15天窗口对比的全量订单（不受 startDate/endDate 限制）
+    let ordersAllFor15d: SelectedOrder[];
 
     if (type === 'customer') {
       // 客户维度查询
@@ -79,7 +71,7 @@ export class CustomerService {
 
       resourceName = customer.name;
 
-      // 查询该客户的所有订单
+      // 查询该客户的订单（受时间过滤）
       orders = (await this.prisma.order.findMany({
         where: {
           customerId: id,
@@ -87,7 +79,16 @@ export class CustomerService {
           status: {
             in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
           },
-          ...(timeFilter || {}),
+          ...(startDate && endDate
+            ? {
+                groupBuy: {
+                  groupBuyStartDate: {
+                    gte: new Date(startDate),
+                    lte: new Date(endDate),
+                  },
+                },
+              }
+            : {}),
         },
         select: {
           quantity: true,
@@ -100,7 +101,29 @@ export class CustomerService {
             },
           },
         },
-      })) as unknown as SelectedOrder[];
+      })) as SelectedOrder[];
+
+      // 查询该客户的全量订单（用于15天窗口对比，不受时间过滤）
+      ordersAllFor15d = (await this.prisma.order.findMany({
+        where: {
+          customerId: id,
+          delete: 0,
+          status: {
+            in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
+          },
+        },
+        select: {
+          quantity: true,
+          unitId: true,
+          partialRefundAmount: true,
+          status: true,
+          groupBuy: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      })) as SelectedOrder[];
     } else {
       // 地址维度查询
       const address = await this.prisma.customerAddress.findUnique({
@@ -116,7 +139,7 @@ export class CustomerService {
 
       resourceName = address.name;
 
-      // 查询该地址下所有客户的订单
+      // 查询该地址下所有客户的订单（受时间过滤）
       orders = (await this.prisma.order.findMany({
         where: {
           customer: {
@@ -127,7 +150,16 @@ export class CustomerService {
           status: {
             in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
           },
-          ...(timeFilter || {}),
+          ...(startDate && endDate
+            ? {
+                groupBuy: {
+                  groupBuyStartDate: {
+                    gte: new Date(startDate),
+                    lte: new Date(endDate),
+                  },
+                },
+              }
+            : {}),
         },
         select: {
           quantity: true,
@@ -140,7 +172,32 @@ export class CustomerService {
             },
           },
         },
-      })) as unknown as SelectedOrder[];
+      })) as SelectedOrder[];
+
+      // 查询该地址下所有客户的全量订单（用于15天窗口对比，不受时间过滤）
+      ordersAllFor15d = (await this.prisma.order.findMany({
+        where: {
+          customer: {
+            customerAddressId: id,
+            delete: 0,
+          },
+          delete: 0,
+          status: {
+            in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
+          },
+        },
+        select: {
+          quantity: true,
+          unitId: true,
+          partialRefundAmount: true,
+          status: true,
+          groupBuy: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      })) as SelectedOrder[];
     }
 
     const orderCount = orders.length;
@@ -295,8 +352,13 @@ export class CustomerService {
       return { totalAmount: amount, orderCount: count };
     };
 
-    const currentOverall = sumWindow(orders, startCurrent, endCurrent);
-    const previousOverall = sumWindow(orders, startPrevious, endPrevious);
+    // 15天窗口对比应基于“全量订单”，不受外部时间参数影响
+    const currentOverall = sumWindow(ordersAllFor15d, startCurrent, endCurrent);
+    const previousOverall = sumWindow(
+      ordersAllFor15d,
+      startPrevious,
+      endPrevious,
+    );
 
     // 商品维度
     const groupByProduct = (list: typeof orders, start: Date, end: Date) => {
@@ -336,9 +398,13 @@ export class CustomerService {
       return map;
     };
 
-    const currentByProduct = groupByProduct(orders, startCurrent, endCurrent);
+    const currentByProduct = groupByProduct(
+      ordersAllFor15d,
+      startCurrent,
+      endCurrent,
+    );
     const previousByProduct = groupByProduct(
-      orders,
+      ordersAllFor15d,
       startPrevious,
       endPrevious,
     );
@@ -386,9 +452,9 @@ export class CustomerService {
     if (type === 'customer') {
       // 找到全局最新的团购发起时间（用于标识最新消费）
       for (const order of orders) {
-        const startDate = order.groupBuy.groupBuyStartDate;
-        if (!globalLatestDate || startDate > globalLatestDate) {
-          globalLatestDate = startDate;
+        const latestGroupBuyStartDate = order.groupBuy.groupBuyStartDate;
+        if (!globalLatestDate || latestGroupBuyStartDate > globalLatestDate) {
+          globalLatestDate = latestGroupBuyStartDate;
         }
       }
 

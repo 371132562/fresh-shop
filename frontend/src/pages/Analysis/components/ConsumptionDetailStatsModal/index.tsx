@@ -74,12 +74,6 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
       title={
         <div className="flex items-center gap-2">
           <span>{title}</span>
-          {startDate && endDate && (
-            <span className="text-xs text-gray-500">
-              （统计范围：{dayjs(startDate).format('YYYY-MM-DD')} 至{' '}
-              {dayjs(endDate).format('YYYY-MM-DD')}）
-            </span>
-          )}
           <Tooltip
             title={
               <div style={{ maxWidth: 500, lineHeight: 1.6 }}>
@@ -179,9 +173,14 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                       : (consumptionDetail as CustomerConsumptionDetailDto).customerName}
                   </span>
                 </div>
-                <span className="text-sm text-orange-500">
-                  {type === 'address' ? '地址消费详情统计' : '消费详情统计'}
-                </span>
+                {startDate && endDate ? (
+                  <span className="text-sm text-orange-500">
+                    统计时间：{dayjs(startDate).format('YYYY-MM-DD')} -{' '}
+                    {dayjs(endDate).format('YYYY-MM-DD')}
+                  </span>
+                ) : (
+                  <span className="text-sm text-orange-500">当前为全部时间统计</span>
+                )}
               </div>
             }
             size="small"

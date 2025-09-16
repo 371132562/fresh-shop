@@ -3,6 +3,7 @@ import {
   ArrowUpOutlined,
   DownOutlined,
   InfoCircleOutlined,
+  QuestionCircleOutlined,
   TableOutlined,
   TrophyOutlined,
   UpOutlined
@@ -185,13 +186,19 @@ const FifteenDayComparison: React.FC<FifteenDayComparisonProps> = ({
         <div className="flex h-12 items-center justify-between">
           <div className="flex items-center gap-2">
             <TrophyOutlined className="text-blue-500" />
-            <span className="text-lg font-medium">近15天与前15天消费对比</span>
+            <span className="text-lg font-medium">
+              近15天与前15天消费对比{' '}
+              <Tooltip title="该对比基于全量数据统计，不受上方统计时间筛选影响。">
+                <QuestionCircleOutlined className="text-gray-400" />
+              </Tooltip>
+            </span>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-1">
             <Tooltip
+              className="text-lg"
               title={
                 <div style={{ maxWidth: 420, lineHeight: 1.6 }}>
-                  <div>时间：按团购发起日归属至窗口</div>
+                  <div>时间：按团购发起日期</div>
                   <div>金额：已扣除部分退款</div>
                   <div>订单：仅统计已支付/已完成</div>
                 </div>
@@ -200,7 +207,7 @@ const FifteenDayComparison: React.FC<FifteenDayComparisonProps> = ({
               <InfoCircleOutlined className="text-gray-400" />
             </Tooltip>
             <Tag color="blue">近15天（含今日）：{ranges.currentLabel}</Tag>
-            <Tag>前15天：{ranges.previousLabel}</Tag>
+            <Tag color="blue">前15天：{ranges.previousLabel}</Tag>
           </div>
         </div>
       }
