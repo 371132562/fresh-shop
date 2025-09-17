@@ -48,7 +48,7 @@ const OrderStatsButton = () => {
         >
           <ClockCircleOutlined className="text-lg" />
           <span className="hidden p-1 md:inline">待付款</span>
-          <span className="rounded-full bg-white/20 px-2 py-0.5 font-bold">
+          <span className="box-border rounded-full bg-white/20 px-2 py-0.5 font-bold">
             {orderStats.notPaidCount}
           </span>
         </button>
@@ -100,7 +100,7 @@ const OrderStatsButton = () => {
           </div>
 
           {/* 两列布局 */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* 左列：待付款订单列表 */}
             <div>
               {orderStats.notPaidOrders.length > 0 && (

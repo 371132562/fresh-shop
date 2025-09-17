@@ -1,7 +1,6 @@
-import { Button, Col, Divider, Form, Input, List, Row } from 'antd'
+import { Button, Col, Divider, Form, Input, List, Popconfirm, Row } from 'antd'
 import type { SupplierListItem } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
-import { NavLink } from 'react-router'
 
 import SearchToolbar from '@/components/SearchToolbar'
 import SupplierDetailModal from '@/pages/Analysis/components/SupplierDetailModal'
@@ -12,8 +11,10 @@ import Modify from './Modify.tsx'
 
 export const Component = () => {
   const [visible, setVisible] = useState(false)
+  const [editVisible, setEditVisible] = useState(false)
   const [detailModalVisible, setDetailModalVisible] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState<SupplierListItem | null>(null)
+  const [editingSupplier, setEditingSupplier] = useState<SupplierListItem | null>(null)
   const [form] = Form.useForm()
 
   const listLoading = useSupplierStore(state => state.listLoading)
@@ -21,6 +22,9 @@ export const Component = () => {
   const listCount = useSupplierStore(state => state.listCount)
   const pageParams = useSupplierStore(state => state.pageParams)
   const setPageParams = useSupplierStore(state => state.setPageParams)
+  const deleteSupplier = useSupplierStore(state => state.deleteSupplier)
+  const deleteLoading = useSupplierStore(state => state.deleteLoading)
+  const getSupplier = useSupplierStore(state => state.getSupplier)
 
   useEffect(() => {
     pageChange()
@@ -37,6 +41,23 @@ export const Component = () => {
   const handleViewDetail = (supplier: SupplierListItem) => {
     setSelectedSupplier(supplier)
     setDetailModalVisible(true)
+  }
+
+  // 处理编辑供货商
+  const handleEdit = async (supplier: SupplierListItem) => {
+    setEditingSupplier(supplier)
+    // 获取完整的供货商详情数据
+    await getSupplier({ id: supplier.id })
+    setEditVisible(true)
+  }
+
+  // 处理删除供货商
+  const handleDelete = async (supplier: SupplierListItem) => {
+    const success = await deleteSupplier({ id: supplier.id })
+    if (success) {
+      // 删除成功后刷新列表
+      pageChange()
+    }
   }
 
   // 搜索功能
@@ -176,24 +197,48 @@ export const Component = () => {
               actions={[
                 <Button
                   key="detail"
-                  type="primary"
-                  ghost
+                  color="default"
+                  variant="outlined"
                   onClick={() => handleViewDetail(item)}
                 >
-                  查看详细数据
-                </Button>
+                  查看数据
+                </Button>,
+                <Button
+                  key="edit"
+                  color="primary"
+                  variant="outlined"
+                  onClick={() => handleEdit(item)}
+                >
+                  编辑
+                </Button>,
+                <Popconfirm
+                  key="delete"
+                  title="确定要删除这个供货商吗？"
+                  description="删除后将无法恢复"
+                  onConfirm={() => handleDelete(item)}
+                  okText="确定"
+                  cancelText="取消"
+                >
+                  <Button
+                    color="danger"
+                    variant="solid"
+                    danger
+                    loading={deleteLoading}
+                  >
+                    删除
+                  </Button>
+                </Popconfirm>
               ]}
             >
               <List.Item.Meta
                 title={
-                  <NavLink to={`/supplier/detail/${item.id}`}>
-                    <Button
-                      type="link"
-                      style={{ padding: 0 }}
-                    >
-                      <span className="text-lg">{item.name}</span>
-                    </Button>
-                  </NavLink>
+                  <Button
+                    type="link"
+                    style={{ padding: 0, height: 'auto' }}
+                    onClick={() => handleEdit(item)}
+                  >
+                    <span className="text-lg font-medium">{item.name}</span>
+                  </Button>
                 }
                 description={
                   <>
@@ -214,6 +259,13 @@ export const Component = () => {
         <Modify
           visible={visible}
           setVisible={setVisible}
+        />
+      )}
+      {editVisible && editingSupplier && (
+        <Modify
+          visible={editVisible}
+          setVisible={setEditVisible}
+          id={editingSupplier.id}
         />
       )}
       {detailModalVisible && selectedSupplier && (

@@ -1,4 +1,4 @@
-import { Button, Card, Col, Form, Input, List, Row } from 'antd'
+import { Button, Card, Col, Form, Input, List, Popconfirm, Row } from 'antd'
 import type { CustomerAddressSortField, SortOrder } from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
 
@@ -20,6 +20,8 @@ export const Component = () => {
   const listCount = useCustomerAddressStore(state => state.listCount)
   const pageParams = useCustomerAddressStore(state => state.pageParams)
   const setPageParams = useCustomerAddressStore(state => state.setPageParams)
+  const deleteCustomerAddress = useCustomerAddressStore(state => state.deleteCustomerAddress)
+  const deleteLoading = useCustomerAddressStore(state => state.deleteLoading)
 
   // 消费详情相关状态
   const consumptionDetailLoading = useCustomerStore(state => state.addressConsumptionDetailLoading)
@@ -68,6 +70,15 @@ export const Component = () => {
   const handleModify = (id: string) => {
     setCurrentId(id)
     setVisible(true)
+  }
+
+  // 处理删除客户地址
+  const handleDelete = async (id: string) => {
+    const success = await deleteCustomerAddress({ id })
+    if (success) {
+      // 删除成功后刷新列表
+      pageChange()
+    }
   }
 
   // 查看消费详情
@@ -161,43 +172,65 @@ export const Component = () => {
           }}
           dataSource={customerAddressList}
           renderItem={item => (
-            <List.Item>
+            <List.Item
+              actions={[
+                <Button
+                  key="consumption"
+                  color="default"
+                  variant="outlined"
+                  onClick={() => handleViewConsumptionDetail(item.id)}
+                >
+                  查看消费详情
+                </Button>,
+                <Button
+                  key="edit"
+                  color="primary"
+                  variant="outlined"
+                  onClick={() => handleModify(item.id)}
+                >
+                  编辑
+                </Button>,
+                <Popconfirm
+                  key="delete"
+                  title="确定要删除这个客户地址吗？"
+                  description="删除后将无法恢复"
+                  onConfirm={() => handleDelete(item.id)}
+                  okText="确定"
+                  cancelText="取消"
+                >
+                  <Button
+                    color="danger"
+                    variant="solid"
+                    loading={deleteLoading}
+                  >
+                    删除
+                  </Button>
+                </Popconfirm>
+              ]}
+            >
               <List.Item.Meta
                 title={
                   <Button
                     type="link"
-                    style={{ padding: 0 }}
-                    onClick={() => {
-                      handleModify(item.id)
-                    }}
+                    style={{ padding: 0, height: 'auto' }}
+                    onClick={() => handleModify(item.id)}
                   >
-                    <span className="text-lg">{item.name}</span>
+                    <span className="text-lg font-medium">{item.name}</span>
                   </Button>
                 }
                 description={
-                  <div className="flex items-start justify-between">
-                    <div>
-                      {item.orderCount !== undefined && (
-                        <div className="mb-1 font-medium text-gray-800">
-                          订单数量：<span className="text-blue-500">{item.orderCount}</span>
-                        </div>
-                      )}
-                      {item.orderTotalAmount !== undefined && (
-                        <div className="mb-1 font-medium text-gray-800">
-                          订单总额：
-                          <span className="text-green-500">
-                            ¥{item.orderTotalAmount.toFixed(2)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <Button
-                      type="primary"
-                      ghost
-                      onClick={() => handleViewConsumptionDetail(item.id)}
-                    >
-                      查看消费详情
-                    </Button>
+                  <div>
+                    {item.orderCount !== undefined && (
+                      <div className="mb-1 font-medium text-gray-800">
+                        订单数量：<span className="text-blue-500">{item.orderCount}</span>
+                      </div>
+                    )}
+                    {item.orderTotalAmount !== undefined && (
+                      <div className="mb-1 font-medium text-gray-800">
+                        订单总额：
+                        <span className="text-green-500">¥{item.orderTotalAmount.toFixed(2)}</span>
+                      </div>
+                    )}
                   </div>
                 }
               />

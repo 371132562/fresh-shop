@@ -384,7 +384,7 @@ export const Component = () => {
               <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
                 相关图片
               </h3>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 {/* 保持原有的图片网格布局 */}
                 <Image.PreviewGroup>
                   {images.map((image, index) => (

@@ -159,8 +159,8 @@ export const Component = () => {
                     }`}
                   >
                     <div className="text-lg">{icon}</div>
-                    <span className="hidden text-xs font-semibold sm:inline">{label}</span>
-                    <span className="text-xs font-semibold sm:hidden">{short}</span>
+                    <span className="hidden text-xs font-semibold md:inline">{label}</span>
+                    <span className="text-xs font-semibold md:hidden">{short}</span>
                   </button>
                 )
               })}

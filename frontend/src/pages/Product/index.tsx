@@ -1,4 +1,4 @@
-import { Button, Card, Col, Form, Input, List, Row, Select, Tag } from 'antd'
+import { Button, Card, Col, Form, Input, List, Popconfirm, Row, Select, Tag } from 'antd'
 import { useEffect, useState } from 'react'
 
 import SearchToolbar from '@/components/SearchToolbar'
@@ -17,6 +17,8 @@ export const Component = () => {
   const listCount = useProductStore(state => state.listCount)
   const pageParams = useProductStore(state => state.pageParams)
   const setPageParams = useProductStore(state => state.setPageParams)
+  const deleteProduct = useProductStore(state => state.deleteProduct)
+  const deleteLoading = useProductStore(state => state.deleteLoading)
 
   const getAllProductTypes = useProductTypeStore(state => state.getAllProductTypes)
   const getAllProductTypesLoading = useProductTypeStore(state => state.getAllProductTypesLoading)
@@ -65,6 +67,15 @@ export const Component = () => {
   const handleModify = (id: string) => {
     setCurrentId(id)
     setVisible(true)
+  }
+
+  // 处理删除商品
+  const handleDelete = async (id: string) => {
+    const success = await deleteProduct({ id })
+    if (success) {
+      // 删除成功后刷新列表
+      pageChange()
+    }
   }
 
   return (
@@ -165,17 +176,42 @@ export const Component = () => {
           }}
           dataSource={productsList}
           renderItem={item => (
-            <List.Item>
+            <List.Item
+              actions={[
+                <Button
+                  key="edit"
+                  color="primary"
+                  variant="outlined"
+                  onClick={() => handleModify(item.id)}
+                >
+                  编辑
+                </Button>,
+                <Popconfirm
+                  key="delete"
+                  title="确定要删除这个商品吗？"
+                  description="删除后将无法恢复"
+                  onConfirm={() => handleDelete(item.id)}
+                  okText="确定"
+                  cancelText="取消"
+                >
+                  <Button
+                    color="danger"
+                    variant="solid"
+                    loading={deleteLoading}
+                  >
+                    删除
+                  </Button>
+                </Popconfirm>
+              ]}
+            >
               <List.Item.Meta
                 title={
                   <Button
                     type="link"
-                    style={{ padding: 0 }}
-                    onClick={() => {
-                      handleModify(item.id)
-                    }}
+                    style={{ padding: 0, height: 'auto' }}
+                    onClick={() => handleModify(item.id)}
                   >
-                    <span className="text-lg">{item.name}</span>
+                    <span className="text-lg font-medium">{item.name}</span>
                     <Tag color="#55acee">{item.productTypeName}</Tag>
                   </Button>
                 }

@@ -1,4 +1,4 @@
-import { Button, Card, Col, Form, Input, List, Row, Select, Tag } from 'antd'
+import { Button, Card, Col, Form, Input, List, Popconfirm, Row, Select, Tag } from 'antd'
 import type { CustomerSortField, SortOrder } from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
 
@@ -21,6 +21,8 @@ export const Component = () => {
   const listCount = useCustomerStore(state => state.listCount)
   const pageParams = useCustomerStore(state => state.pageParams)
   const setPageParams = useCustomerStore(state => state.setPageParams)
+  const deleteCustomer = useCustomerStore(state => state.deleteCustomer)
+  const deleteLoading = useCustomerStore(state => state.deleteLoading)
   const getConsumptionDetail = useCustomerStore(state => state.getConsumptionDetail)
   const consumptionDetail = useCustomerStore(state => state.consumptionDetail)
   const consumptionDetailLoading = useCustomerStore(state => state.consumptionDetailLoading)
@@ -83,6 +85,15 @@ export const Component = () => {
     setCurrentId(id)
     getConsumptionDetail({ id })
     setConsumptionDetailVisible(true)
+  }
+
+  // 删除客户
+  const handleDelete = async (id: string) => {
+    const success = await deleteCustomer({ id })
+    if (success) {
+      // 删除成功后刷新列表
+      pageChange()
+    }
   }
 
   // 关闭消费详情模态框（包含额外的currentId重置逻辑）
@@ -253,45 +264,69 @@ export const Component = () => {
           }}
           dataSource={customersList}
           renderItem={item => (
-            <List.Item>
+            <List.Item
+              actions={[
+                <Button
+                  key="consumption"
+                  color="default"
+                  variant="outlined"
+                  onClick={() => handleConsumptionDetail(item.id)}
+                >
+                  查看消费详情
+                </Button>,
+                <Button
+                  key="edit"
+                  color="primary"
+                  variant="outlined"
+                  onClick={() => handleModify(item.id)}
+                >
+                  编辑
+                </Button>,
+                <Popconfirm
+                  key="delete"
+                  title="确定要删除这个客户吗？"
+                  description="删除后将无法恢复"
+                  onConfirm={() => handleDelete(item.id)}
+                  okText="确定"
+                  cancelText="取消"
+                >
+                  <Button
+                    color="danger"
+                    variant="solid"
+                    loading={deleteLoading}
+                  >
+                    删除
+                  </Button>
+                </Popconfirm>
+              ]}
+            >
               <List.Item.Meta
                 title={
                   <Button
                     type="link"
-                    style={{ padding: 0 }}
+                    style={{ padding: 0, height: 'auto' }}
                     onClick={() => {
                       handleModify(item.id)
                     }}
                   >
-                    <span className="text-lg">{item.name}</span>
+                    <span className="text-lg font-medium">{item.name}</span>
                     <Tag color="#55acee">{item.customerAddressName}</Tag>
                   </Button>
                 }
                 description={
-                  <div className="flex items-start justify-between">
-                    <div>
-                      {item.orderCount !== undefined && (
-                        <div className="mb-1 font-medium text-gray-800">
-                          订单数量：<span className="text-blue-500">{item.orderCount}</span>
-                        </div>
-                      )}
-                      {item.orderTotalAmount !== undefined && (
-                        <div className="mb-1 font-medium text-gray-800">
-                          订单总额：
-                          <span className="text-green-500">
-                            ¥{item.orderTotalAmount.toFixed(2)}
-                          </span>
-                        </div>
-                      )}
-                      {item.description && <div className="text-gray-600">{item.description}</div>}
-                    </div>
-                    <Button
-                      type="primary"
-                      ghost
-                      onClick={() => handleConsumptionDetail(item.id)}
-                    >
-                      查看消费详情
-                    </Button>
+                  <div>
+                    {item.orderCount !== undefined && (
+                      <div className="mb-1 font-medium text-gray-800">
+                        订单数量：<span className="text-blue-500">{item.orderCount}</span>
+                      </div>
+                    )}
+                    {item.orderTotalAmount !== undefined && (
+                      <div className="mb-1 font-medium text-gray-800">
+                        <span>订单总额：</span>
+                        <span className="text-green-500">¥{item.orderTotalAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {item.description && <div className="text-gray-600">{item.description}</div>}
                   </div>
                 }
               />

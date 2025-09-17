@@ -2,4 +2,37 @@
 
 html {
     font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Heiti SC", "WenQuanYi Micro Hei", sans-serif;
+    /* 防止滚动条影响布局宽度 */
+    scrollbar-gutter: stable;
+}
+
+/* 确保body也应用相同的滚动条处理 */
+body {
+    scrollbar-gutter: stable;
+}
+
+/* 为所有可滚动元素设置一致的滚动条样式 */
+* {
+    scrollbar-width: auto;
+    scrollbar-color: #a8b1bb #f1f5f9;
+}
+
+/* Webkit浏览器滚动条样式 */
+*::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }

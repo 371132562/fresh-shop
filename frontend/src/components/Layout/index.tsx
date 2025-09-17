@@ -195,19 +195,22 @@ export const Component: FC = () => {
 
   return (
     <>
-      {/* 整体页面容器：浅灰色背景，全屏高度 */}
-      <div className="min-h-screen bg-gray-100">
+      {/* 整体页面容器：浅灰色背景，全屏高度，防止滚动条影响布局 */}
+      <div
+        className="min-h-screen bg-gray-100"
+        style={{ scrollbarGutter: 'stable' }}
+      >
         {/* 主容器：最大宽度限制，居中布局，响应式内边距 */}
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-4 md:px-6 md:px-8">
           {/* Header 容器：悬浮设计，蓝色背景，白色文字，阴影效果 */}
-          <header className="mb-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3 shadow-lg sm:px-6 sm:py-4">
+          <header className="mb-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3 shadow-lg md:px-6 md:py-4">
             <div className="flex items-center justify-between">
               {/* 左侧：菜单按钮和标题 */}
               <div className="flex min-w-0 flex-1 items-center space-x-3">
-                <p className="text-xl font-bold text-white sm:text-2xl">团购管理平台</p>
+                <p className="text-xl font-bold text-white md:text-2xl">团购管理平台</p>
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/20 px-3 py-2 text-white transition-colors hover:bg-white/30 lg:hidden"
+                  className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/20 px-3 py-2 text-white transition-colors hover:bg-white/30 md:hidden"
                 >
                   <MenuOutlined className="text-lg" />
                   <span className="hidden p-1 md:inline">菜单</span>
@@ -215,7 +218,7 @@ export const Component: FC = () => {
               </div>
 
               {/* 右侧：功能按钮组 */}
-              <div className="flex flex-shrink-0 items-center gap-2 sm:gap-4">
+              <div className="flex flex-shrink-0 items-center gap-2 md:gap-4">
                 <OrderStatsButton />
                 <button
                   onClick={() => setSettingOpen(true)}
@@ -229,9 +232,12 @@ export const Component: FC = () => {
           </header>
 
           {/* 主体内容区域：flex布局，响应式排列 */}
-          <div className="flex flex-col gap-4 lg:flex-row">
-            {/* Sider 侧边栏：悬浮设计，白色背景，阴影效果，固定定位 */}
-            <aside className="lg:w-70 hidden w-full rounded-xl bg-white p-6 shadow-lg lg:sticky lg:top-4 lg:block lg:h-fit">
+          <div className="flex flex-col gap-4 md:flex-row">
+            {/* Sider 侧边栏：悬浮设计，白色背景，阴影效果，固定定位，防止滚动条影响布局 */}
+            <aside
+              className="md:w-70 hidden w-full rounded-xl bg-white p-6 shadow-lg md:sticky md:top-4 md:block md:h-fit"
+              style={{ scrollbarGutter: 'stable' }}
+            >
               <h2 className="mb-4 text-lg font-semibold text-black/80">功能菜单</h2>
               <nav className="space-y-2">
                 {navItems.map(item => (
@@ -253,8 +259,11 @@ export const Component: FC = () => {
               </nav>
             </aside>
 
-            {/* Content 主内容区：悬浮设计，白色背景，阴影效果，可滚动 */}
-            <main className="flex-1 rounded-xl bg-white p-6 shadow-lg">
+            {/* Content 主内容区：悬浮设计，白色背景，阴影效果，可滚动，防止滚动条影响布局 */}
+            <main
+              className="flex-1 rounded-xl bg-white p-6 shadow-lg"
+              style={{ scrollbarGutter: 'stable' }}
+            >
               <div className="h-full">
                 <ErrorBoundary FallbackComponent={ErrorPage}>{outlet}</ErrorBoundary>
               </div>
@@ -263,9 +272,9 @@ export const Component: FC = () => {
         </div>
       </div>
 
-      {/* 小屏幕悬浮下拉菜单 */}
+      {/* 平板悬浮下拉菜单 */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-50 md:hidden">
           {/* 背景遮罩 */}
           <div
             className="absolute inset-0 bg-black/20"
