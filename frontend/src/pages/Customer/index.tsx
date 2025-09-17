@@ -119,8 +119,8 @@ export const Component = () => {
           <Row gutter={[16, 8]}>
             <Col
               xs={24}
-              sm={12}
-              md={8}
+              md={12}
+              lg={8}
             >
               <Form.Item
                 label="客户名称"
@@ -137,8 +137,8 @@ export const Component = () => {
             </Col>
             <Col
               xs={24}
-              sm={12}
-              md={8}
+              md={12}
+              lg={8}
             >
               <Form.Item
                 label="客户地址"
@@ -173,8 +173,8 @@ export const Component = () => {
             </Col>
             <Col
               xs={24}
-              sm={12}
-              md={8}
+              md={12}
+              lg={8}
             >
               <Form.Item
                 label="手机号"
@@ -201,8 +201,8 @@ export const Component = () => {
             </Col>
             <Col
               xs={24}
-              sm={12}
-              md={8}
+              md={12}
+              lg={8}
             >
               <Form.Item
                 label="微信号"

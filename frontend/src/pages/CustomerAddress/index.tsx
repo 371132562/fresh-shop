@@ -109,8 +109,8 @@ export const Component = () => {
           <Row gutter={[16, 8]}>
             <Col
               xs={24}
-              sm={12}
-              md={8}
+              md={12}
+              lg={8}
             >
               <Form.Item
                 label="地址名称"

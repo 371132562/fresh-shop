@@ -190,8 +190,8 @@ export const MergedGroupBuyOverview = ({
           <Row gutter={[16, 8]}>
             <Col
               xs={24}
-              sm={12}
-              md={8}
+              md={12}
+              lg={8}
             >
               <Form.Item
                 label="团购名称"
@@ -208,8 +208,8 @@ export const MergedGroupBuyOverview = ({
             </Col>
             <Col
               xs={24}
-              sm={12}
-              md={8}
+              md={12}
+              lg={8}
             >
               <Form.Item
                 label="按供货商搜索(可多选)"

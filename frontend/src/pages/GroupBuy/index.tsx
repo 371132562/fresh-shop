@@ -135,8 +135,8 @@ export const Component = () => {
           <Row gutter={[16, 8]}>
             <Col
               xs={24}
-              sm={12}
-              md={8}
+              md={12}
+              lg={8}
             >
               <Form.Item
                 label="团购单名称"
@@ -153,8 +153,8 @@ export const Component = () => {
             </Col>
             <Col
               xs={24}
-              sm={12}
-              md={8}
+              md={12}
+              lg={8}
             >
               <Form.Item
                 label="供货商"
@@ -189,8 +189,8 @@ export const Component = () => {
             </Col>
             <Col
               xs={24}
-              sm={12}
-              md={8}
+              md={12}
+              lg={8}
             >
               <Form.Item
                 label="商品"
@@ -225,8 +225,8 @@ export const Component = () => {
             </Col>
             <Col
               xs={24}
-              sm={12}
-              md={8}
+              md={12}
+              lg={8}
             >
               <Form.Item
                 label="订单状态"
