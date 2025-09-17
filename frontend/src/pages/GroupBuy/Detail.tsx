@@ -76,6 +76,34 @@ export const Component = () => {
     return Object.values(stats).filter(item => item.quantity > 0)
   }, [groupBuy])
 
+  // 计算总销售额（按订单规格单价×数量，减去部分退款；全额退款订单计为0）
+  const totalSalesAmount = useMemo(() => {
+    if (
+      !groupBuy?.order?.length ||
+      !groupBuy?.units ||
+      !Array.isArray(groupBuy.units) ||
+      !groupBuy.units.length
+    ) {
+      return 0
+    }
+
+    const unitMap = new Map<string, GroupBuyUnit>()
+    ;(groupBuy.units as GroupBuyUnit[]).forEach(u => {
+      unitMap.set(u.id, u)
+    })
+
+    return (groupBuy.order as Order[]).reduce((sum, order) => {
+      const unit = order.unitId ? unitMap.get(order.unitId) : undefined
+      if (!unit) return sum
+      const gross = unit.price * order.quantity
+      // 已全额退款订单不计入销售额
+      if (order.status === 'REFUNDED') return sum
+      const partialRefund = order.partialRefundAmount || 0
+      const net = Math.max(0, gross - partialRefund)
+      return sum + net
+    }, 0)
+  }, [groupBuy])
+
   useEffect(() => {
     if (id) {
       getGroupBuy({ id })
@@ -417,7 +445,11 @@ export const Component = () => {
             </h3>
             {unitStatistics.length > 0 && (
               <div className="mb-4 rounded-md bg-gray-50 p-4">
-                <h4 className="mb-3 text-base font-semibold text-gray-600">各规格售卖统计</h4>
+                <h4 className="mb-3 text-base font-semibold text-gray-600">售卖统计</h4>
+                <div className="mb-3 flex items-center justify-between text-sm">
+                  <span className="text-gray-700">总销售额</span>
+                  <span className="font-bold text-blue-600">¥{totalSalesAmount.toFixed(2)}</span>
+                </div>
                 <ul className="space-y-2">
                   {unitStatistics.map(stat => (
                     <li

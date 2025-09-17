@@ -21,8 +21,6 @@ export const Component = () => {
   const deleteOrder = useOrderStore(state => state.deleteOrder)
   const deleteLoading = useOrderStore(state => state.deleteLoading)
   const setOrder = useOrderStore(state => state.setOrder)
-  const refundOrder = useOrderStore(state => state.refundOrder)
-  const refundLoading = useOrderStore(state => state.refundLoading)
   const updateOrder = useOrderStore(state => state.updateOrder)
   const canUpdateOrderStatus = useOrderStore(state => state.canUpdateOrderStatus)
   const getNextOrderStatusLabel = useOrderStore(state => state.getNextOrderStatusLabel)
@@ -57,17 +55,6 @@ export const Component = () => {
       navigate(-1)
     }
   }
-
-  const refund: PopconfirmProps['onConfirm'] = async () => {
-    const res = await refundOrder({ id: id as string })
-    if (res) {
-      notification.success({
-        message: '成功',
-        description: '退款成功'
-      })
-    }
-  }
-
   return (
     <div className="w-full">
       {getLoading ? (
@@ -160,24 +147,6 @@ export const Component = () => {
                       }
                     }}
                   />
-                )}
-                {order?.status === OrderStatus.COMPLETED && (
-                  <Popconfirm
-                    title={<div className="text-lg">确定要退款这个订单吗？</div>}
-                    onConfirm={refund}
-                    okText="是"
-                    cancelText="否"
-                    okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
-                    cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
-                  >
-                    <Button
-                      color="danger"
-                      variant="outlined"
-                      loading={refundLoading}
-                    >
-                      退款
-                    </Button>
-                  </Popconfirm>
                 )}
                 <Popconfirm
                   title={<div className="text-lg">确定要删除这个订单吗？</div>}

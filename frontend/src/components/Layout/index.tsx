@@ -317,7 +317,7 @@ export const Component: FC = () => {
       )}
 
       <Drawer
-        title={<span className="text-lg font-bold text-gray-700">全局设置</span>}
+        title={<span className="text-lg font-bold text-gray-700">系统功能</span>}
         placement="right"
         onClose={() => {
           setSettingOpen(false)
