@@ -10,11 +10,22 @@ import {
   TeamOutlined,
   UserOutlined
 } from '@ant-design/icons' // 导入更多图标
-import { Button, Checkbox, Drawer, Form, Image, notification, Switch, Tag } from 'antd'
+import {
+  Button,
+  Checkbox,
+  Divider,
+  Form,
+  Image,
+  Modal,
+  notification,
+  Switch,
+  Tag,
+  Tooltip,
+  Typography
+} from 'antd'
 import { FC, useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
-import { useOutlet } from 'react-router'
-import { NavLink } from 'react-router'
+import { NavLink, useOutlet } from 'react-router'
 
 import ErrorPage from '@/components/Error'
 import OrderStatsButton from '@/components/OrderStatsButton'
@@ -316,140 +327,126 @@ export const Component: FC = () => {
         </div>
       )}
 
-      <Drawer
-        title={<span className="text-lg font-bold text-gray-700">系统功能</span>}
-        placement="right"
-        onClose={() => {
-          setSettingOpen(false)
-        }}
+      <Modal
         open={settingOpen}
-        width={600}
-        styles={{
-          body: { padding: 0 }, // 保持 body padding 为 0
-          header: {
-            borderBottom: '1px solid #e0e0e0', // 更浅的边框颜色
-            padding: '16px 20px', // 头部内边距
-            backgroundColor: '#f8f8f8' // 头部背景色略微区分
-          }
-        }}
+        title={
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold text-gray-800">系统功能</span>
+          </div>
+        }
+        onCancel={() => setSettingOpen(false)}
+        width={800}
+        footer={null}
+        styles={{ body: { paddingTop: 8, paddingBottom: 16 } }}
       >
-        <div className="flex flex-col p-4">
-          <Form
-            name="global_settings" // 为表单添加名称
-            layout="horizontal" // 水平布局更适合设置项
-            labelCol={{ span: 6 }} // 调整标签和控件的比例
-            wrapperCol={{ span: 16 }}
-            autoComplete="off"
-          >
-            <Form.Item
-              label={<span className="font-medium text-gray-700">隐藏敏感数据</span>}
-              className="border-b border-gray-200 py-2 last:border-b-0"
-              valuePropName="checked"
+        <div className="flex flex-col gap-4">
+          {/* <section className="rounded-lg border border-gray-100 bg-white p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <div>
+                <Typography.Text className="text-base font-semibold text-gray-800">
+                  基础设置
+                </Typography.Text>
+                <div className="text-xs text-gray-500">影响全局展示与隐私保护的通用选项</div>
+              </div>
+              <Tooltip title="开启后隐藏价格、手机号等敏感字段">
+                <Switch
+                  loading={getGlobalSettingLoading || upsertGlobalSettingLoading}
+                  checked={globalSetting?.value?.sensitive}
+                  checkedChildren="隐藏中"
+                  unCheckedChildren="已显示"
+                  onChange={onSensitiveChange}
+                />
+              </Tooltip>
+            </div>
+            <Divider className="my-3" />
+            <Form
+              name="global_settings"
+              layout="vertical"
+              autoComplete="off"
             >
-              <Switch
-                loading={getGlobalSettingLoading || upsertGlobalSettingLoading}
-                checked={globalSetting?.value?.sensitive}
-                checkedChildren="是"
-                unCheckedChildren="否"
-                onChange={onSensitiveChange}
-              />
-            </Form.Item>
-
-            {/* 孤立图片清理 */}
-            <Form.Item
-              label={<span className="font-medium text-gray-700">孤立图片清理</span>}
-              className="border-b border-gray-200 py-2 last:border-b-0"
-            >
-              <div className="flex w-full flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="primary"
-                    onClick={handleScan}
-                    loading={orphanScanLoading}
-                  >
-                    检索孤立图片
-                  </Button>
-                  <Checkbox
-                    checked={allSelected}
-                    indeterminate={selectedFilenames.length > 0 && !allSelected}
-                    onChange={e => toggleSelectAll(e.target.checked)}
-                    disabled={orphanImages.length === 0}
-                  >
-                    全选
-                  </Checkbox>
-                  <Button
-                    danger
-                    disabled={selectedFilenames.length === 0}
-                    onClick={handleDeleteSelected}
-                    loading={orphanDeleteLoading}
-                  >
-                    删除所选
-                  </Button>
-                </div>
+              <Form.Item
+                label={<span className="font-medium text-gray-700">敏感数据展示</span>}
+                className="mb-0"
+              >
                 <div className="text-sm text-gray-600">
-                  {orphanImages.length === 0 ? (
-                    <div className="flex items-center gap-2 text-green-600">
-                      <span className="text-lg">✓</span>
-                      <span>未发现孤立图片，系统运行良好</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-blue-600">
-                        <span className="font-medium">共 {orphanImages.length} 张候选图片</span>
-                      </div>
-                      <div className="space-y-1">
-                        {(() => {
-                          const safeDelete = orphanImages.filter(
-                            item => item.inDisk && item.inDB
-                          ).length
-                          const diskOnly = orphanImages.filter(
-                            item => item.inDisk && !item.inDB
-                          ).length
-                          const dbOnly = orphanImages.filter(
-                            item => !item.inDisk && item.inDB
-                          ).length
-                          const inconsistent = orphanImages.filter(
-                            item => !item.inDisk && !item.inDB
-                          ).length
-
-                          return (
-                            <>
-                              {safeDelete > 0 && (
-                                <div className="flex items-center gap-2 text-green-600">
-                                  <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                                  <span>{safeDelete} 张可安全删除（未被引用）</span>
-                                </div>
-                              )}
-                              {diskOnly > 0 && (
-                                <div className="flex items-center gap-2 text-orange-600">
-                                  <span className="h-2 w-2 rounded-full bg-orange-500"></span>
-                                  <span>{diskOnly} 张仅磁盘存在</span>
-                                </div>
-                              )}
-                              {dbOnly > 0 && (
-                                <div className="flex items-center gap-2 text-red-600">
-                                  <span className="h-2 w-2 rounded-full bg-red-500"></span>
-                                  <span>{dbOnly} 张数据库记录异常</span>
-                                </div>
-                              )}
-                              {inconsistent > 0 && (
-                                <div className="flex items-center gap-2 text-gray-600">
-                                  <span className="h-2 w-2 rounded-full bg-gray-500"></span>
-                                  <span>{inconsistent} 张数据不一致</span>
-                                </div>
-                              )}
-                            </>
-                          )
-                        })()}
-                      </div>
-                    </div>
-                  )}
+                  受控于右上角的开关，适用于演示或公共环境；不会影响导出数据。
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+              </Form.Item>
+            </Form>
+          </section> */}
+
+          <section className="rounded-lg border border-gray-100 bg-white p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <div>
+                <Typography.Text className="text-base font-semibold text-gray-800">
+                  媒体资源清理
+                </Typography.Text>
+                <div className="text-gray-500">扫描未被引用的图片资源并进行批量处理</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="primary"
+                  onClick={handleScan}
+                  loading={orphanScanLoading}
+                >
+                  检索孤立图片
+                </Button>
+                <Checkbox
+                  checked={allSelected}
+                  indeterminate={selectedFilenames.length > 0 && !allSelected}
+                  onChange={e => toggleSelectAll(e.target.checked)}
+                  disabled={orphanImages.length === 0}
+                >
+                  全选
+                </Checkbox>
+                <Button
+                  danger
+                  disabled={selectedFilenames.length === 0}
+                  onClick={handleDeleteSelected}
+                  loading={orphanDeleteLoading}
+                >
+                  删除所选
+                </Button>
+              </div>
+            </div>
+
+            {orphanImages.length === 0 ? (
+              <div className="flex items-center justify-between rounded-md bg-green-50 px-3 py-2">
+                <div className="flex items-center gap-2 text-green-700">
+                  <span className="text-base">✓</span>
+                  <span className="text-sm">未发现孤立图片，系统运行良好</span>
+                </div>
+                <span className="text-xs text-green-600">建议每周例行扫描一次</span>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-3 text-sm">
+                  <span className="font-medium text-blue-600">
+                    共 {orphanImages.length} 张候选图片
+                  </span>
+                  {(() => {
+                    const safeDelete = orphanImages.filter(item => item.inDisk && item.inDB).length
+                    const diskOnly = orphanImages.filter(item => item.inDisk && !item.inDB).length
+                    const dbOnly = orphanImages.filter(item => !item.inDisk && item.inDB).length
+                    const inconsistent = orphanImages.filter(
+                      item => !item.inDisk && !item.inDB
+                    ).length
+                    return (
+                      <div className="flex flex-wrap items-center gap-2">
+                        {safeDelete > 0 && <Tag color="green">{safeDelete} 可安全删除</Tag>}
+                        {diskOnly > 0 && <Tag color="orange">{diskOnly} 仅磁盘存在</Tag>}
+                        {dbOnly > 0 && <Tag color="red">{dbOnly} 数据库异常</Tag>}
+                        {inconsistent > 0 && <Tag color="default">{inconsistent} 数据不一致</Tag>}
+                      </div>
+                    )
+                  })()}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                   {orphanImages.map(item => (
                     <div
                       key={item.filename}
-                      className="flex w-full flex-col items-center justify-start overflow-hidden rounded-md border border-gray-200 p-2 shadow-sm"
+                      className="group relative flex w-full flex-col items-center justify-start overflow-hidden rounded-md border border-gray-200 p-2 transition-shadow hover:shadow-md"
                     >
                       <Checkbox
                         className="w-full"
@@ -475,8 +472,8 @@ export const Component: FC = () => {
                         <div className="mt-1 w-full">
                           <Image
                             src={buildImageUrl(item.filename)}
-                            width={120}
-                            height={120}
+                            width={160}
+                            height={160}
                             style={{ objectFit: 'cover' }}
                             preview={{}}
                           />
@@ -490,10 +487,10 @@ export const Component: FC = () => {
                   ))}
                 </div>
               </div>
-            </Form.Item>
-          </Form>
+            )}
+          </section>
         </div>
-      </Drawer>
+      </Modal>
     </>
   )
 }
