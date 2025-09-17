@@ -245,10 +245,10 @@ export const Component: FC = () => {
                     key={item.to}
                     to={item.to}
                     className={({ isActive }) =>
-                      `flex items-center space-x-3 rounded-lg px-4 py-3 text-base font-medium transition-colors ${
+                      `flex items-center space-x-3 rounded-lg px-4 py-3 text-base font-medium no-underline transition-colors ${
                         isActive
-                          ? '!bg-blue-500/90 text-white'
-                          : 'text-black/70 hover:!bg-blue-500/15 hover:text-black/80'
+                          ? '!bg-blue-500/90 !text-white'
+                          : '!text-black/70 hover:!bg-blue-500/15 hover:!text-black/80'
                       }`
                     }
                   >
@@ -300,10 +300,10 @@ export const Component: FC = () => {
                   to={item.to}
                   onClick={() => setMobileMenuOpen(false)}
                   className={({ isActive }) =>
-                    `flex items-center space-x-3 rounded-lg px-4 py-3 text-base font-medium transition-colors ${
+                    `flex items-center space-x-3 rounded-lg px-4 py-3 text-base font-medium no-underline transition-colors ${
                       isActive
                         ? '!bg-blue-500/90 text-white'
-                        : 'text-black/70 hover:!bg-blue-500/15 hover:text-black/80'
+                        : '!text-black/70 hover:!bg-blue-500/15 hover:!text-black/80'
                     }`
                   }
                 >

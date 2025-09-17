@@ -125,7 +125,6 @@ const CustomerLoyaltyAnalysis: React.FC<CustomerLoyaltyAnalysisProps> = ({
             }))}
             pagination={false}
             size="small"
-            className="mt-2"
           />
         </Col>
       </Row>
