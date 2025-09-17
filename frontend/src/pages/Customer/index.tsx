@@ -1,5 +1,4 @@
-import { PlusOutlined } from '@ant-design/icons'
-import { Button, Card, Col, FloatButton, Form, Input, List, Row, Select, Tag } from 'antd'
+import { Button, Card, Col, Form, Input, List, Row, Select, Tag } from 'antd'
 import type { CustomerSortField, SortOrder } from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
 
@@ -232,6 +231,7 @@ export const Component = () => {
             searchLoading={listLoading}
             totalCount={listCount.totalCount}
             countLabel="个客户"
+            onAdd={() => setVisible(true)}
           />
         </Form>
       </Card>
@@ -299,14 +299,6 @@ export const Component = () => {
           )}
         />
       </section>
-      <FloatButton
-        style={{ position: 'absolute', left: 24 }}
-        icon={<PlusOutlined />}
-        type="primary"
-        description="添加"
-        shape="square"
-        onClick={() => setVisible(true)}
-      />
       {visible && (
         <Modify
           id={currentId}

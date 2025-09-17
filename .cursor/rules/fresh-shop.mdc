@@ -39,7 +39,8 @@ rules:
       - 样式方案优先级：Ant Design > Tailwind CSS > CSS Modules
       - 避免使用全局样式
       - 保持全局风格一致性
-      - 以移动端为主要设计目标
+      - 采用tailwindcss响应式设计，尽量使用tailwindcss的类名，避免使用全局样式
+      - 参考文档DESIGN_GUIDE.md
 
   - title: 状态管理与API调用
     body: |

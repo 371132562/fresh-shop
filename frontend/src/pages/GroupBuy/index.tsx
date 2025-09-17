@@ -1,17 +1,4 @@
-import { PlusOutlined } from '@ant-design/icons'
-import {
-  Button,
-  Card,
-  Col,
-  DatePicker,
-  FloatButton,
-  Form,
-  Input,
-  List,
-  Row,
-  Select,
-  Tag
-} from 'antd'
+import { Button, Card, Col, DatePicker, Form, Input, List, Row, Select, Tag } from 'antd'
 import {
   GroupBuyListItem,
   MergedGroupBuyOverviewDetailParams
@@ -164,7 +151,6 @@ export const Component = () => {
                 />
               </Form.Item>
             </Col>
-          
             <Col
               xs={24}
               sm={12}
@@ -291,6 +277,7 @@ export const Component = () => {
             searchLoading={listLoading}
             totalCount={listCount.totalCount}
             countLabel="个团购单"
+            onAdd={() => setVisible(true)}
           />
         </Form>
       </Card>
@@ -381,14 +368,6 @@ export const Component = () => {
           )}
         />
       </section>
-      <FloatButton
-        style={{ position: 'absolute', left: 24 }}
-        icon={<PlusOutlined />}
-        type="primary"
-        description="添加"
-        shape="square"
-        onClick={() => setVisible(true)}
-      />
       {visible && (
         <Modify
           visible={visible}

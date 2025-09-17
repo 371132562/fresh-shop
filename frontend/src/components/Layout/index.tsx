@@ -3,11 +3,11 @@ import {
   EnvironmentOutlined,
   FileTextOutlined,
   GroupOutlined,
+  MenuOutlined,
   SettingOutlined,
   ShoppingOutlined,
   TagsOutlined,
   TeamOutlined,
-  UnorderedListOutlined,
   UserOutlined
 } from '@ant-design/icons' // 导入更多图标
 import { Button, Checkbox, Drawer, Form, Image, notification, Switch, Tag } from 'antd'
@@ -22,12 +22,10 @@ import type { OrphanImageItem } from '@/services/common.ts'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import { buildImageUrl } from '@/utils'
 
-import style from './index.module.less'
-
 export const Component: FC = () => {
   const outlet = useOutlet()
-  const [open, setOpen] = useState(false)
   const [settingOpen, setSettingOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   // 孤立图片 - 本地选中集合
   const [selectedFilenames, setSelectedFilenames] = useState<string[]>([])
 
@@ -197,90 +195,118 @@ export const Component: FC = () => {
 
   return (
     <>
-      {/*外层容器：居中，全高宽，最大宽度，浅灰色背景*/}
-      <div
-        className={`mx-auto flex h-dvh w-dvw max-w-3xl flex-col font-sans antialiased ${style.layout}`}
-      >
-        {/* 头部：固定顶部，深色背景，居中，有阴影，顶部圆角 */}
-        <header className="sticky top-0 z-10 rounded-b-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-1 shadow-md">
-          <div className="relative flex h-16 items-center">
-            {/* 左侧按钮组：菜单和订单统计 */}
-            <div className="flex items-center space-x-2">
-              <div
-                className="cursor-pointer rounded-full p-2 text-white transition duration-200 hover:bg-blue-600/50 active:bg-blue-600/50"
-                onClick={() => {
-                  setOpen(true)
-                }}
-              >
-                <UnorderedListOutlined className="text-2xl" />
+      {/* 整体页面容器：浅灰色背景，全屏高度 */}
+      <div className="min-h-screen bg-gray-100">
+        {/* 主容器：最大宽度限制，居中布局，响应式内边距 */}
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          {/* Header 容器：悬浮设计，蓝色背景，白色文字，阴影效果 */}
+          <header className="mb-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3 shadow-lg sm:px-6 sm:py-4">
+            <div className="flex items-center justify-between">
+              {/* 左侧：菜单按钮和标题 */}
+              <div className="flex min-w-0 flex-1 items-center space-x-3">
+                <p className="text-xl font-bold text-white sm:text-2xl">团购管理平台</p>
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/20 px-3 py-2 text-white transition-colors hover:bg-white/30 lg:hidden"
+                >
+                  <MenuOutlined className="text-lg" />
+                  <span className="hidden p-1 md:inline">菜单</span>
+                </button>
               </div>
-              <OrderStatsButton className="cursor-pointer rounded-full p-2 text-white transition duration-200 active:bg-blue-600/50" />
-            </div>
-            {/* 标题：绝对定位居中，白色字体，更粗的字体 */}
-            <p className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl font-bold tracking-wide text-white">
-              团购管理平台
-            </p>
-            {/* 右侧设置按钮 */}
-            <div
-              className="absolute right-0 cursor-pointer rounded-full p-2 text-white transition duration-200 active:bg-blue-600/50"
-              onClick={() => {
-                setSettingOpen(true)
-              }}
-            >
-              <SettingOutlined className="text-2xl" />
-            </div>
-          </div>
-        </header>
 
-        {/* 主内容区域：带内边距，圆角，白色背景，大阴影，有滚动条 */}
-        <div className="mx-4 my-4 flex-grow overflow-y-auto rounded-xl bg-[rgba(255,255,255,0.85)] p-4 shadow-lg">
-          {/* 内容容器：居中，flex布局，允许内容滚动 */}
-          <div className="flex w-full flex-col items-center">
-            <ErrorBoundary FallbackComponent={ErrorPage}>{outlet}</ErrorBoundary>
+              {/* 右侧：功能按钮组 */}
+              <div className="flex flex-shrink-0 items-center gap-2 sm:gap-4">
+                <OrderStatsButton />
+                <button
+                  onClick={() => setSettingOpen(true)}
+                  className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/20 px-4 py-2 text-white transition-colors hover:bg-white/30"
+                >
+                  <SettingOutlined className="text-lg" />
+                  <span className="hidden p-1 md:inline">系统功能</span>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* 主体内容区域：flex布局，响应式排列 */}
+          <div className="flex flex-col gap-4 lg:flex-row">
+            {/* Sider 侧边栏：悬浮设计，白色背景，阴影效果，固定定位 */}
+            <aside className="lg:w-70 hidden w-full rounded-xl bg-white p-6 shadow-lg lg:sticky lg:top-4 lg:block lg:h-fit">
+              <h2 className="mb-4 text-lg font-semibold text-black/80">功能菜单</h2>
+              <nav className="space-y-2">
+                {navItems.map(item => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `flex items-center space-x-3 rounded-lg px-4 py-3 text-base font-medium transition-colors ${
+                        isActive
+                          ? '!bg-blue-500/90 text-white'
+                          : 'text-black/70 hover:!bg-blue-500/15 hover:text-black/80'
+                      }`
+                    }
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </NavLink>
+                ))}
+              </nav>
+            </aside>
+
+            {/* Content 主内容区：悬浮设计，白色背景，阴影效果，可滚动 */}
+            <main className="flex-1 rounded-xl bg-white p-6 shadow-lg">
+              <div className="h-full">
+                <ErrorBoundary FallbackComponent={ErrorPage}>{outlet}</ErrorBoundary>
+              </div>
+            </main>
           </div>
         </div>
       </div>
 
-      <Drawer
-        title={<span className="text-lg font-bold text-gray-700">功能菜单</span>}
-        placement="left"
-        onClose={() => {
-          setOpen(false)
-        }}
-        open={open}
-        width={280} // 抽屉宽度略微增加，适应更美观的内边距
-        styles={{
-          body: { padding: 0 }, // 保持 body padding 为 0
-          header: {
-            borderBottom: '1px solid #e0e0e0', // 更浅的边框颜色
-            padding: '16px 20px', // 头部内边距
-            backgroundColor: '#f8f8f8' // 头部背景色略微区分
-          }
-        }}
-      >
-        <div className="flex flex-col py-2">
-          {navItems.map(item => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={() => {
-                setOpen(false)
-              }}
-              className={({ isActive }) =>
-                `group relative mx-3 flex cursor-pointer items-center rounded-lg px-4 py-3 text-base font-medium transition-all duration-300 ease-in-out ${
-                  isActive
-                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 !text-white shadow-md shadow-blue-300' // 激活状态：渐变背景更强烈，白色字体，阴影更明显
-                    : '!text-gray-700 hover:bg-gray-100 active:bg-gray-200' // 非激活状态：柔和的悬停和点击效果
-                }`
-              }
-            >
-              {item.icon && <span className={`mr-4 text-xl`}>{item.icon}</span>}
-              {/* 文本样式：统一字体大小，根据状态变色 */}
-              <span className={`flex-grow`}>{item.label}</span>
-            </NavLink>
-          ))}
+      {/* 小屏幕悬浮下拉菜单 */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* 背景遮罩 */}
+          <div
+            className="absolute inset-0 bg-black/20"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          {/* 下拉菜单 */}
+          <div className="absolute left-4 right-4 top-20 rounded-xl bg-white p-4 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">功能菜单</h3>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg p-1 text-gray-500 hover:bg-gray-100"
+              >
+                <span className="text-xl">×</span>
+              </button>
+            </div>
+
+            <nav className="space-y-2">
+              {navItems.map(item => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center space-x-3 rounded-lg px-4 py-3 text-base font-medium transition-colors ${
+                      isActive
+                        ? '!bg-blue-500/90 text-white'
+                        : 'text-black/70 hover:!bg-blue-500/15 hover:text-black/80'
+                    }`
+                  }
+                >
+                  <span className="text-lg">{item.icon}</span>
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+            </nav>
+          </div>
         </div>
-      </Drawer>
+      )}
+
       <Drawer
         title={<span className="text-lg font-bold text-gray-700">全局设置</span>}
         placement="right"

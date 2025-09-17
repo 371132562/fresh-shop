@@ -1,5 +1,4 @@
-import { PlusOutlined } from '@ant-design/icons'
-import { Button, Card, Col, FloatButton, Form, Input, List, Row, Select, Tag } from 'antd'
+import { Button, Card, Col, Form, Input, List, Row, Select, Tag } from 'antd'
 import { useEffect, useState } from 'react'
 
 import SearchToolbar from '@/components/SearchToolbar'
@@ -144,6 +143,7 @@ export const Component = () => {
             searchLoading={listLoading}
             totalCount={listCount.totalCount}
             countLabel="个商品"
+            onAdd={() => setVisible(true)}
           />
         </Form>
       </Card>
@@ -187,14 +187,6 @@ export const Component = () => {
           )}
         />
       </section>
-      <FloatButton
-        style={{ position: 'absolute', left: 24 }}
-        icon={<PlusOutlined />}
-        type="primary"
-        description="添加"
-        shape="square"
-        onClick={() => setVisible(true)}
-      />
       {visible && (
         <Modify
           id={currentId}

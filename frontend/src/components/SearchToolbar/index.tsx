@@ -1,4 +1,4 @@
-import { ReloadOutlined, SearchOutlined } from '@ant-design/icons'
+import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 import { Button, Select } from 'antd'
 import type { ReactNode } from 'react'
 
@@ -22,6 +22,10 @@ type SearchToolbarProps = {
   totalCount?: number
   countLabel?: string
 
+  // 添加按钮
+  onAdd?: () => void
+  addButtonText?: string
+
   // 自定义内容
   extra?: ReactNode
 }
@@ -35,15 +39,28 @@ const SearchToolbar = ({
   searchLoading = false,
   totalCount = 0,
   countLabel = '条',
+  onAdd,
+  addButtonText = '添加',
   extra
 }: SearchToolbarProps) => {
   return (
     <div className="mt-2 w-full border-t border-gray-100 pt-2">
       {/* 单行布局：左边统计信息，右边排序选择器和操作按钮 */}
       <div className="flex w-full items-center justify-between gap-3">
-        {/* 左边：统计信息 */}
-        <div className="whitespace-nowrap text-sm text-gray-600">
-          共 {totalCount} {countLabel}
+        {/* 左边：统计信息和添加按钮 */}
+        <div className="flex items-center gap-3">
+          <div className="whitespace-nowrap text-sm text-gray-600">
+            共 {totalCount} {countLabel}
+          </div>
+          {onAdd && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={onAdd}
+            >
+              <span className="hidden md:inline">{addButtonText}</span>
+            </Button>
+          )}
         </div>
 
         {/* 右边：排序选择器、操作按钮和自定义内容 */}
@@ -67,12 +84,13 @@ const SearchToolbar = ({
             <div className="flex items-center gap-2">
               {onSearch && (
                 <Button
-                  type="primary"
+                  color="primary"
+                  variant="outlined"
                   icon={<SearchOutlined />}
                   onClick={onSearch}
                   loading={searchLoading}
                 >
-                  搜索
+                  <span className="hidden md:inline">搜索</span>
                 </Button>
               )}
               {onReset && (
@@ -80,7 +98,7 @@ const SearchToolbar = ({
                   icon={<ReloadOutlined />}
                   onClick={onReset}
                 >
-                  重置
+                  <span className="hidden md:inline">重置</span>
                 </Button>
               )}
             </div>

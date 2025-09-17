@@ -1,5 +1,4 @@
-import { PlusOutlined } from '@ant-design/icons'
-import { Button, Card, Col, FloatButton, Form, List, Popconfirm, Row, Select, Tag } from 'antd'
+import { Button, Card, Col, Form, List, Popconfirm, Row, Select, Tag } from 'antd'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
@@ -201,6 +200,7 @@ export const Component = () => {
             searchLoading={listLoading}
             totalCount={listCount.totalCount}
             countLabel="个订单"
+            onAdd={() => setVisible(true)}
           />
         </Form>
       </Card>
@@ -331,14 +331,6 @@ export const Component = () => {
           }}
         />
       </section>
-      <FloatButton
-        style={{ position: 'absolute', left: 24 }}
-        icon={<PlusOutlined />}
-        type="primary"
-        description="添加"
-        shape="square"
-        onClick={() => setVisible(true)}
-      />
       {visible && (
         <Modify
           visible={visible}
