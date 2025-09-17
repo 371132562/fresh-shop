@@ -112,7 +112,7 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
       return false
     } finally {
       set({ createLoading: false })
-      // get().getSuppliersList(get().pageParams)
+      get().getSuppliersList(get().pageParams)
       get().getSupplier({ id: data.id })
     }
   },
@@ -128,6 +128,7 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
       return false
     } finally {
       set({ deleteLoading: false })
+      get().getSuppliersList(get().pageParams)
     }
   },
 

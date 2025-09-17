@@ -155,7 +155,7 @@ rules:
       - 避免使用全局样式
       - 保持全局风格一致性
       - 采用tailwindcss响应式设计，尽量使用tailwindcss的类名，避免使用全局样式
-      - 参考文档DESIGN_GUIDE.md
+      - 参考文档DESIGN_GUIDE.md，主要以默认，md，lg断点为主
 
   - title: 状态管理与API调用
     body: |

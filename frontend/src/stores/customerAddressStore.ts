@@ -138,6 +138,7 @@ const useCustomerAddressStore = create<CustomerAddressStore>((set, get) => ({
       return false
     } finally {
       set({ deleteLoading: false })
+      get().getCustomerAddressList(get().pageParams)
     }
   },
 

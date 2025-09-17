@@ -176,49 +176,68 @@ export const Component = () => {
           }}
           dataSource={productsList}
           renderItem={item => (
-            <List.Item
-              actions={[
-                <Button
-                  key="edit"
-                  color="primary"
-                  variant="outlined"
-                  onClick={() => handleModify(item.id)}
-                >
-                  编辑
-                </Button>,
-                <Popconfirm
-                  key="delete"
-                  title="确定要删除这个商品吗？"
-                  description="删除后将无法恢复"
-                  onConfirm={() => handleDelete(item.id)}
-                  okText="确定"
-                  cancelText="取消"
-                >
+            <List.Item>
+              {/* 自定义容器：左侧信息 + 右侧操作，避免溢出导致响应式混乱 */}
+              <div className="flex w-full flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
+                {/* 左侧信息区：可伸展，溢出隐藏，md起自动换行 */}
+                <div className="min-w-0 flex-1 overflow-hidden pr-0 md:pr-4">
+                  {/* 标题：名称与类型标签同行，名称小屏单行省略，md起换行 */}
+                  <div className="mb-1">
+                    <Button
+                      type="link"
+                      style={{ padding: 0, height: 'auto' }}
+                      onClick={() => handleModify(item.id)}
+                    >
+                      <div className="flex min-w-0 flex-row flex-wrap items-center gap-2">
+                        <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all">
+                          {item.name}
+                        </span>
+                        {item.productTypeName && (
+                          <span className="shrink-0">
+                            <Tag color="#55acee">{item.productTypeName}</Tag>
+                          </span>
+                        )}
+                      </div>
+                    </Button>
+                  </div>
+                  {/* 描述：不撑坏布局，按断点换行 */}
+                  {item.description && (
+                    <div className="max-w-full overflow-hidden break-words text-gray-600 md:break-all">
+                      <span className="block overflow-hidden text-ellipsis whitespace-nowrap md:whitespace-normal">
+                        {item.description}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 右侧操作区：不收缩，允许换行；窄屏下按钮自然换行 */}
+                <div className="flex shrink-0 flex-row flex-wrap items-center justify-start gap-2 md:justify-end md:gap-3">
                   <Button
-                    color="danger"
-                    variant="solid"
-                    loading={deleteLoading}
-                  >
-                    删除
-                  </Button>
-                </Popconfirm>
-              ]}
-            >
-              <List.Item.Meta
-                title={
-                  <Button
-                    type="link"
-                    style={{ padding: 0, height: 'auto' }}
+                    key="edit"
+                    color="primary"
+                    variant="outlined"
                     onClick={() => handleModify(item.id)}
                   >
-                    <span className="text-lg font-medium">{item.name}</span>
-                    <Tag color="#55acee">{item.productTypeName}</Tag>
+                    编辑
                   </Button>
-                }
-                description={
-                  item.description && <div className="text-gray-600">{item.description}</div>
-                }
-              />
+                  <Popconfirm
+                    key="delete"
+                    title="确定要删除这个商品吗？"
+                    description="删除后将无法恢复"
+                    onConfirm={() => handleDelete(item.id)}
+                    okText="确定"
+                    cancelText="取消"
+                  >
+                    <Button
+                      color="danger"
+                      variant="solid"
+                      loading={deleteLoading}
+                    >
+                      删除
+                    </Button>
+                  </Popconfirm>
+                </div>
+              </div>
             </List.Item>
           )}
         />

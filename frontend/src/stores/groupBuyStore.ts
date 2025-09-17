@@ -143,7 +143,7 @@ const useGroupBuyStore = create<GroupBuyStore>((set, get) => ({
       return false
     } finally {
       set({ createLoading: false })
-      // get().getGroupBuyList(get().pageParams)
+      get().getGroupBuyList(get().pageParams)
       get().getGroupBuy({ id: data.id })
     }
   },
@@ -160,6 +160,7 @@ const useGroupBuyStore = create<GroupBuyStore>((set, get) => ({
     } finally {
       set({ deleteLoading: false })
       useOrderStore.getState().getOrderStats()
+      get().getGroupBuyList(get().pageParams)
     }
   },
 

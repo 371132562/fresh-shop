@@ -130,6 +130,7 @@ const useProductStore = create<ProductStore>((set, get) => ({
       return false
     } finally {
       set({ deleteLoading: false })
+      get().getProductList(get().pageParams)
     }
   },
 

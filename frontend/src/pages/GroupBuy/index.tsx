@@ -1,4 +1,16 @@
-import { Button, Card, Col, DatePicker, Form, Input, List, Row, Select, Tag } from 'antd'
+import {
+  Button,
+  Card,
+  Col,
+  DatePicker,
+  Form,
+  Input,
+  List,
+  Popconfirm,
+  Row,
+  Select,
+  Tag
+} from 'antd'
 import {
   GroupBuyListItem,
   MergedGroupBuyOverviewDetailParams
@@ -33,6 +45,9 @@ export const Component = () => {
   const listCount = useGroupBuyStore(state => state.listCount)
   const pageParams = useGroupBuyStore(state => state.pageParams)
   const setPageParams = useGroupBuyStore(state => state.setPageParams)
+  const getGroupBuy = useGroupBuyStore(state => state.getGroupBuy)
+  const deleteGroupBuy = useGroupBuyStore(state => state.deleteGroupBuy)
+  const deleteLoading = useGroupBuyStore(state => state.deleteLoading)
   const allSupplierList = useSupplierStore(state => state.allSupplierList)
   const getAllSuppliers = useSupplierStore(state => state.getAllSuppliers)
   const getAllSuppliersLoading = useSupplierStore(state => state.getAllSuppliersLoading)
@@ -86,13 +101,29 @@ export const Component = () => {
 
   const [detailParams, setDetailParams] = useState<MergedGroupBuyOverviewDetailParams | undefined>()
 
-  // 处理查看详情
+  // 处理查看数据（统计详情）
   const handleViewDetail = (item: GroupBuyListItem) => {
     setDetailParams({
       groupBuyName: item.name,
       supplierId: item.supplierId
     })
     setDetailVisible(true)
+  }
+
+  // 处理编辑
+  const [currentId, setCurrentId] = useState<string | null>(null)
+  const handleEdit = async (id: string) => {
+    await getGroupBuy({ id })
+    setCurrentId(id)
+    setVisible(true)
+  }
+
+  // 处理删除
+  const handleDelete = async (id: string) => {
+    const ok = await deleteGroupBuy({ id })
+    if (ok) {
+      pageChange()
+    }
   }
 
   // 关闭详情模态框
@@ -300,76 +331,118 @@ export const Component = () => {
           dataSource={groupBuysList}
           renderItem={(item: GroupBuyListItem) => (
             <List.Item>
-              <List.Item.Meta
-                title={
-                  <NavLink to={`/groupBuy/detail/${item.id}`}>
-                    <Button
-                      type="link"
-                      style={{ padding: 0 }}
-                    >
-                      <span className="text-lg">{item.name}</span>
-                    </Button>
-                  </NavLink>
-                }
-                description={
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="mb-1 font-medium text-gray-800">
-                        发起时间：
-                        <span className="text-blue-500">{formatDate(item.groupBuyStartDate)}</span>
-                      </div>
-                      {item.product?.name && (
-                        <div className="mb-1 font-medium text-gray-800">
-                          商品：<span className="text-blue-500">{item.product.name}</span>
-                        </div>
-                      )}
-                      {item.partialRefundStats.partialRefundAmount > 0 && (
-                        <div className="font-medium text-gray-800">
-                          部分退款：
-                          <span className="text-orange-600">
-                            ¥{item.partialRefundStats.partialRefundAmount.toFixed(2)}
-                          </span>
-                          <span className="text-blue-500">
-                            /¥{item.partialRefundStats.totalAmount.toFixed(2)}
+              {/* 自适应容器：左侧信息区 + 右侧操作区 */}
+              <div className="flex w-full flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
+                {/* 左侧信息区 */}
+                <div className="min-w-0 flex-1 overflow-hidden pr-0 md:pr-4">
+                  {/* 标题区：名称可点击编辑 */}
+                  <div className="mb-1">
+                    <NavLink to={`/groupBuy/detail/${item.id}`}>
+                      <Button
+                        type="link"
+                        style={{ padding: 0, height: 'auto' }}
+                      >
+                        <div className="flex min-w-0 flex-row flex-wrap items-center gap-2">
+                          <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all">
+                            {item.name}
                           </span>
                         </div>
-                      )}
-                      <div className="my-1 flex items-center font-medium text-gray-800">
-                        <Tag className="ml-2">订单数量：{item.orderStats.orderCount}</Tag>
-                        {Object.entries(item.orderStats)
-                          .filter(([key]) => key !== 'orderCount')
-                          .map(([status, count]) => {
-                            if (count === 0) return null // 如果数量为0，则不显示
-                            const statusInfo = OrderStatusMap[status as OrderStatus]
-                            return (
-                              <Tag
-                                color={statusInfo.color}
-                                key={status}
-                                className="ml-2"
-                              >
-                                {statusInfo.label}: {count}
-                              </Tag>
-                            )
-                          })}
-                      </div>
-                      {item.description && <div className="text-gray-600">{item.description}</div>}
-                    </div>
-                    <Button
-                      type="primary"
-                      ghost
-                      onClick={() => handleViewDetail(item)}
-                    >
-                      查看详细数据
-                    </Button>
+                      </Button>
+                    </NavLink>
                   </div>
-                }
-              />
+                  {/* 统计/描述 */}
+                  <div className="space-y-1">
+                    <div className="text-[13px] font-medium text-gray-800">
+                      发起时间：
+                      <span className="text-blue-500">{formatDate(item.groupBuyStartDate)}</span>
+                    </div>
+                    {item.product?.name && (
+                      <div className="max-w-full overflow-hidden break-words text-gray-600 md:break-all">
+                        <span>商品：</span>
+                        <span className="text-blue-600">{item.product.name}</span>
+                      </div>
+                    )}
+                    {item.partialRefundStats.partialRefundAmount > 0 && (
+                      <div className="text-[13px] font-medium text-gray-800">
+                        <span>部分退款：</span>
+                        <span className="text-orange-600">
+                          ¥{item.partialRefundStats.partialRefundAmount.toFixed(2)}
+                        </span>
+                        <span className="text-blue-500">
+                          /¥{item.partialRefundStats.totalAmount.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="my-1 flex flex-wrap items-center font-medium text-gray-800">
+                      <Tag>订单数量：{item.orderStats.orderCount}</Tag>
+                      {Object.entries(item.orderStats)
+                        .filter(([key]) => key !== 'orderCount')
+                        .map(([status, count]) => {
+                          if (count === 0) return null
+                          const statusInfo = OrderStatusMap[status as OrderStatus]
+                          return (
+                            <Tag
+                              color={statusInfo.color}
+                              key={status}
+                            >
+                              {statusInfo.label}: {count}
+                            </Tag>
+                          )
+                        })}
+                    </div>
+                    {item.description && (
+                      <div className="max-w-full overflow-hidden break-words text-gray-600 md:break-all">
+                        <span className="block overflow-hidden text-ellipsis whitespace-nowrap md:whitespace-normal">
+                          {item.description}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 右侧操作区 */}
+                <div className="flex shrink-0 flex-row flex-wrap items-center justify-start gap-2 md:justify-end md:gap-3">
+                  <Button
+                    key="stats"
+                    color="default"
+                    variant="outlined"
+                    onClick={() => handleViewDetail(item)}
+                  >
+                    查看数据
+                  </Button>
+                  <Button
+                    key="edit"
+                    color="primary"
+                    variant="outlined"
+                    onClick={() => handleEdit(item.id)}
+                  >
+                    编辑
+                  </Button>
+                  <Popconfirm
+                    key="delete"
+                    title="确定要删除这个团购单吗？"
+                    description="删除后将无法恢复"
+                    onConfirm={() => handleDelete(item.id)}
+                    okText="确定"
+                    cancelText="取消"
+                  >
+                    <Button
+                      color="danger"
+                      variant="solid"
+                      loading={deleteLoading}
+                    >
+                      删除
+                    </Button>
+                  </Popconfirm>
+                </div>
+              </div>
             </List.Item>
           )}
         />
       </section>
       {visible && (
         <Modify
+          id={currentId || undefined}
           visible={visible}
           setVisible={setVisible}
         />

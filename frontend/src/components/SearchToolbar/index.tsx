@@ -45,10 +45,13 @@ const SearchToolbar = ({
 }: SearchToolbarProps) => {
   return (
     <div className="mt-2 w-full border-t border-gray-100 pt-2">
-      {/* 单行布局：左边统计信息，右边排序选择器和操作按钮 */}
-      <div className="flex w-full items-center justify-between gap-3">
-        {/* 左边：统计信息和添加按钮 */}
-        <div className="flex items-center gap-3">
+      {/* 响应式布局：
+          - <lg: 左右两组分行显示
+          - <md: 右侧组的排序与按钮也分行显示
+      */}
+      <div className="flex w-full flex-col items-stretch justify-between gap-3 lg:flex-row lg:items-center">
+        {/* 左侧组：统计信息与添加按钮 */}
+        <div className="flex items-center justify-between gap-3 lg:justify-start">
           <div className="whitespace-nowrap text-sm text-gray-600">
             共 {totalCount} {countLabel}
           </div>
@@ -63,25 +66,27 @@ const SearchToolbar = ({
           )}
         </div>
 
-        {/* 右边：排序选择器、操作按钮和自定义内容 */}
-        <div className="flex items-center gap-3">
+        {/* 右侧组：排序、按钮、自定义内容 */}
+        <div className="flex flex-col items-stretch justify-between gap-2 md:flex-row md:items-center md:gap-3">
           {/* 排序选择器 */}
           {sortOptions && sortValue && onSortChange && (
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-col items-stretch gap-1 sm:flex-row sm:items-center sm:gap-2 md:w-auto">
               <span className="whitespace-nowrap text-sm font-medium text-gray-700">排序：</span>
-              <Select
-                value={sortValue}
-                style={{ width: 160 }}
-                onChange={onSortChange}
-                options={sortOptions}
-                popupMatchSelectWidth={200}
-              />
+              <div className="w-full md:w-[160px]">
+                <Select
+                  value={sortValue}
+                  style={{ width: '100%' }}
+                  onChange={onSortChange}
+                  options={sortOptions}
+                  popupMatchSelectWidth={240}
+                />
+              </div>
             </div>
           )}
 
           {/* 操作按钮 */}
           {(onSearch || onReset) && (
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-row flex-wrap items-center gap-2 md:w-auto">
               {onSearch && (
                 <Button
                   color="primary"

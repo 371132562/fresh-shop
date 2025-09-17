@@ -151,6 +151,7 @@ const useCustomerStore = create<CustomerStore>((set, get) => ({
       console.error(err)
       return false
     } finally {
+      get().getCustomerList(get().pageParams)
       set({ deleteLoading: false })
     }
   },

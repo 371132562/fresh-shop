@@ -264,72 +264,91 @@ export const Component = () => {
           }}
           dataSource={customersList}
           renderItem={item => (
-            <List.Item
-              actions={[
-                <Button
-                  key="consumption"
-                  color="default"
-                  variant="outlined"
-                  onClick={() => handleConsumptionDetail(item.id)}
-                >
-                  查看消费详情
-                </Button>,
-                <Button
-                  key="edit"
-                  color="primary"
-                  variant="outlined"
-                  onClick={() => handleModify(item.id)}
-                >
-                  编辑
-                </Button>,
-                <Popconfirm
-                  key="delete"
-                  title="确定要删除这个客户吗？"
-                  description="删除后将无法恢复"
-                  onConfirm={() => handleDelete(item.id)}
-                  okText="确定"
-                  cancelText="取消"
-                >
-                  <Button
-                    color="danger"
-                    variant="solid"
-                    loading={deleteLoading}
-                  >
-                    删除
-                  </Button>
-                </Popconfirm>
-              ]}
-            >
-              <List.Item.Meta
-                title={
-                  <Button
-                    type="link"
-                    style={{ padding: 0, height: 'auto' }}
-                    onClick={() => {
-                      handleModify(item.id)
-                    }}
-                  >
-                    <span className="text-lg font-medium">{item.name}</span>
-                    <Tag color="#55acee">{item.customerAddressName}</Tag>
-                  </Button>
-                }
-                description={
-                  <div>
+            <List.Item>
+              {/* 自定义容器：左侧信息 + 右侧操作，避免溢出导致响应式混乱 */}
+              <div className="flex w-full flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
+                {/* 左侧信息区：可伸展，溢出隐藏，md起自动换行 */}
+                <div className="min-w-0 flex-1 overflow-hidden pr-0 md:pr-4">
+                  {/* 标题：名称与地址标签同行，名称小屏单行省略，md起换行 */}
+                  <div className="mb-1">
+                    <Button
+                      type="link"
+                      style={{ padding: 0, height: 'auto' }}
+                      onClick={() => {
+                        handleModify(item.id)
+                      }}
+                    >
+                      <div className="flex min-w-0 flex-row flex-wrap items-center gap-2">
+                        <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all">
+                          {item.name}
+                        </span>
+                        {item.customerAddressName && (
+                          <span className="shrink-0">
+                            <Tag color="#55acee">{item.customerAddressName}</Tag>
+                          </span>
+                        )}
+                      </div>
+                    </Button>
+                  </div>
+                  {/* 描述/统计：提供订单数量与总额，保证不撑坏布局 */}
+                  <div className="space-y-1">
                     {item.orderCount !== undefined && (
-                      <div className="mb-1 font-medium text-gray-800">
+                      <div className="text-[13px] font-medium text-gray-800">
                         订单数量：<span className="text-blue-500">{item.orderCount}</span>
                       </div>
                     )}
                     {item.orderTotalAmount !== undefined && (
-                      <div className="mb-1 font-medium text-gray-800">
+                      <div className="max-w-full overflow-hidden break-words text-gray-600 md:break-all">
                         <span>订单总额：</span>
-                        <span className="text-green-500">¥{item.orderTotalAmount.toFixed(2)}</span>
+                        <span className="text-green-600">¥{item.orderTotalAmount.toFixed(2)}</span>
                       </div>
                     )}
-                    {item.description && <div className="text-gray-600">{item.description}</div>}
+                    {item.description && (
+                      <div className="max-w-full overflow-hidden break-words text-gray-600 md:break-all">
+                        <span className="block overflow-hidden text-ellipsis whitespace-nowrap md:whitespace-normal">
+                          {item.description}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                }
-              />
+                </div>
+
+                {/* 右侧操作区：不收缩，允许换行；窄屏下按钮自然换行 */}
+                <div className="flex shrink-0 flex-row flex-wrap items-center justify-start gap-2 md:justify-end md:gap-3">
+                  <Button
+                    key="consumption"
+                    color="default"
+                    variant="outlined"
+                    onClick={() => handleConsumptionDetail(item.id)}
+                  >
+                    查看数据
+                  </Button>
+                  <Button
+                    key="edit"
+                    color="primary"
+                    variant="outlined"
+                    onClick={() => handleModify(item.id)}
+                  >
+                    编辑
+                  </Button>
+                  <Popconfirm
+                    key="delete"
+                    title="确定要删除这个客户吗？"
+                    description="删除后将无法恢复"
+                    onConfirm={() => handleDelete(item.id)}
+                    okText="确定"
+                    cancelText="取消"
+                  >
+                    <Button
+                      color="danger"
+                      variant="solid"
+                      loading={deleteLoading}
+                    >
+                      删除
+                    </Button>
+                  </Popconfirm>
+                </div>
+              </div>
             </List.Item>
           )}
         />

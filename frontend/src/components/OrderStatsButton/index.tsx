@@ -47,8 +47,8 @@ const OrderStatsButton = () => {
           className="flex cursor-pointer items-center space-x-1 rounded-lg bg-orange-500/95 px-4 py-2 text-white transition-colors hover:bg-orange-400"
         >
           <ClockCircleOutlined className="text-lg" />
-          <span className="hidden p-1 md:inline">待付款</span>
-          <span className="box-border rounded-full bg-white/20 px-2 py-0.5 font-bold">
+          <span className="hidden px-1 md:inline">待付款</span>
+          <span className="box-border rounded-full bg-white/20 px-2 py-1 font-bold">
             {orderStats.notPaidCount}
           </span>
         </button>
@@ -61,8 +61,8 @@ const OrderStatsButton = () => {
           className="flex cursor-pointer items-center space-x-1 rounded-lg bg-green-500/95 px-4 py-2 text-white transition-colors hover:bg-green-400"
         >
           <CheckCircleOutlined className="text-lg" />
-          <span className="hidden p-1 md:inline">已付款</span>
-          <span className="rounded-full bg-white/20 px-2 py-0.5 font-bold">
+          <span className="hidden px-1 md:inline">已付款</span>
+          <span className="rounded-full bg-white/20 px-2 py-1 font-bold">
             {orderStats.paidCount}
           </span>
         </button>

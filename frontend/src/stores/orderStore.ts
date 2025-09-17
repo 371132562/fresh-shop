@@ -200,7 +200,7 @@ const useOrderStore = create<OrderStore>((set, get) => ({
       return false
     } finally {
       set({ createLoading: false })
-      // get().getOrderList(get().pageParams)
+      get().getOrderList(get().pageParams)
       get().getOrder({ id: data.id })
       // 更新订单后自动刷新统计数据
       get().getOrderStats()
@@ -220,6 +220,7 @@ const useOrderStore = create<OrderStore>((set, get) => ({
       set({ deleteLoading: false })
       // 删除订单后更新订单统计数据
       get().getOrderStats()
+      get().getOrderList(get().pageParams)
     }
   },
 

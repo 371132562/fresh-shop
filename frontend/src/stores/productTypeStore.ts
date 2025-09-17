@@ -127,6 +127,7 @@ const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
       return false
     } finally {
       set({ deleteLoading: false })
+      get().getProductTypeList(get().pageParams)
     }
   },
 

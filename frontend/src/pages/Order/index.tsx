@@ -17,6 +17,7 @@ import Modify from './Modify.tsx'
 
 export const Component = () => {
   const [visible, setVisible] = useState(false)
+  const [currentId, setCurrentId] = useState<string | null>(null)
   const [form] = Form.useForm()
 
   const listLoading = useOrderStore(state => state.listLoading)
@@ -30,7 +31,10 @@ export const Component = () => {
   const allGroupBuy = useGroupBuyStore(state => state.allGroupBuy)
   const getAllGroupBuy = useGroupBuyStore(state => state.getAllGroupBuy)
   const getAllGroupBuyLoading = useGroupBuyStore(state => state.getAllGroupBuyLoading)
+  const getOrder = useOrderStore(state => state.getOrder)
   const updateOrder = useOrderStore(state => state.updateOrder)
+  const deleteOrder = useOrderStore(state => state.deleteOrder)
+  const deleteLoading = useOrderStore(state => state.deleteLoading)
   const canUpdateOrderStatus = useOrderStore(state => state.canUpdateOrderStatus)
   const getNextOrderStatusLabel = useOrderStore(state => state.getNextOrderStatusLabel)
   const handleUpdateOrderStatus = useOrderStore(state => state.handleUpdateOrderStatus)
@@ -75,6 +79,19 @@ export const Component = () => {
       page: 1,
       ...resetValues
     })
+  }
+
+  const handleModify = async (id: string) => {
+    await getOrder({ id })
+    setCurrentId(id)
+    setVisible(true)
+  }
+
+  const handleDelete = async (id: string) => {
+    const ok = await deleteOrder({ id })
+    if (ok) {
+      pageChange()
+    }
   }
 
   return (
@@ -230,71 +247,36 @@ export const Component = () => {
             const selectedUnit = units.find(unit => unit.id === item.unitId)
             const itemTotalAmount = selectedUnit ? selectedUnit.price * item.quantity : 0
 
-            const actions = []
-
-            if (canUpdate) {
-              actions.push(
-                <Popconfirm
-                  key="update-status"
-                  title={
-                    <div className="text-lg">
-                      确定要将订单状态变更为{' '}
-                      <span className="text-blue-500">{nextStatusLabel}</span> 吗？
-                    </div>
-                  }
-                  placement="left"
-                  onConfirm={() =>
-                    handleUpdateOrderStatus(item, updateOrder, () => {
-                      // 更新成功后重新获取订单列表和统计数据
-                      pageChange()
-                    })
-                  }
-                  okText="确定"
-                  cancelText="取消"
-                  okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
-                  cancelButtonProps={{
-                    size: 'large',
-                    color: 'primary',
-                    variant: 'outlined'
-                  }}
-                >
-                  <Button type="primary">更新状态</Button>
-                </Popconfirm>
-              )
-              // 添加部分退款按钮
-              actions.push(
-                <PartialRefundButton
-                  key="partial-refund"
-                  orderId={item.id}
-                  orderTotalAmount={itemTotalAmount}
-                  currentRefundAmount={item.partialRefundAmount || 0}
-                  orderStatus={item.status}
-                  onSuccess={() => pageChange()}
-                />
-              )
-            }
-
             return (
-              <List.Item actions={actions}>
-                <List.Item.Meta
-                  title={
-                    <NavLink to={`/order/detail/${item.id}`}>
-                      <Button
-                        type="link"
-                        style={{ padding: 0 }}
-                      >
-                        <span className="text-lg">{item.customer.name}</span>
-                        <Tag color={OrderStatusMap[item.status].color}>
-                          {OrderStatusMap[item.status].label}
-                        </Tag>
-                      </Button>
-                    </NavLink>
-                  }
-                  description={
-                    <>
+              <List.Item>
+                {/* 自定义容器：左侧信息 + 右侧操作，保证响应式 */}
+                <div className="flex w-full flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
+                  {/* 左侧信息区：标题、团购信息、数量、退款、描述 */}
+                  <div className="min-w-0 flex-1 overflow-hidden pr-0 md:pr-4">
+                    {/* 标题：进入订单详情 */}
+                    <div className="mb-1">
+                      <NavLink to={`/order/detail/${item.id}`}>
+                        <Button
+                          type="link"
+                          style={{ padding: 0, height: 'auto' }}
+                        >
+                          <div className="flex min-w-0 flex-row flex-wrap items-center gap-2">
+                            <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all">
+                              {item.customer.name}
+                            </span>
+                            <span className="shrink-0">
+                              <Tag color={OrderStatusMap[item.status].color}>
+                                {OrderStatusMap[item.status].label}
+                              </Tag>
+                            </span>
+                          </div>
+                        </Button>
+                      </NavLink>
+                    </div>
+                    <div className="space-y-1">
                       {item.groupBuy?.name && (
-                        <div className="mb-1 font-medium text-gray-800">
-                          团购单：
+                        <div className="max-w-full overflow-hidden break-words text-gray-800 md:break-all">
+                          <span className="font-medium">团购单：</span>
                           <NavLink
                             to={`/groupBuy/detail/${item.groupBuy.id}`}
                             className="text-blue-500 transition-colors hover:text-blue-600"
@@ -309,23 +291,99 @@ export const Component = () => {
                         </div>
                       )}
                       {item.quantity && (
-                        <div className="mt-1 font-medium text-gray-800">
+                        <div className="text-[13px] font-medium text-gray-800">
                           购买数量：<span className="text-blue-500">{item.quantity}</span>
                         </div>
                       )}
                       {item.partialRefundAmount > 0 && item.status !== 'REFUNDED' && (
-                        <div className="mt-1 font-medium text-gray-800">
-                          部分退款：
+                        <div className="text-[13px] font-medium text-gray-800">
+                          <span>部分退款：</span>
                           <span className="text-orange-600">
                             ¥{item.partialRefundAmount.toFixed(2)}
                           </span>
                           <span className="text-blue-500">/¥{itemTotalAmount.toFixed(2)}</span>
                         </div>
                       )}
-                      {item.description && <div className="text-gray-600">{item.description}</div>}
-                    </>
-                  }
-                />
+                      {item.description && (
+                        <div className="max-w-full overflow-hidden break-words text-gray-600 md:break-all">
+                          <span className="block overflow-hidden text-ellipsis whitespace-nowrap md:whitespace-normal">
+                            {item.description}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 右侧操作区：更新状态、部分退款、编辑、删除 */}
+                  <div className="flex shrink-0 flex-row flex-wrap items-center justify-start gap-2 md:justify-end md:gap-3">
+                    {canUpdate && (
+                      <>
+                        <Popconfirm
+                          key="update-status"
+                          title={
+                            <div className="text-lg">
+                              确定要将订单状态变更为{' '}
+                              <span className="text-blue-500">{nextStatusLabel}</span> 吗？
+                            </div>
+                          }
+                          placement="left"
+                          onConfirm={() =>
+                            handleUpdateOrderStatus(item, updateOrder, () => {
+                              pageChange()
+                            })
+                          }
+                          okText="确定"
+                          cancelText="取消"
+                          okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
+                          cancelButtonProps={{
+                            size: 'large',
+                            color: 'primary',
+                            variant: 'outlined'
+                          }}
+                        >
+                          <Button
+                            color="primary"
+                            variant="outlined"
+                          >
+                            更新状态
+                          </Button>
+                        </Popconfirm>
+                        <PartialRefundButton
+                          key="partial-refund"
+                          orderId={item.id}
+                          orderTotalAmount={itemTotalAmount}
+                          currentRefundAmount={item.partialRefundAmount || 0}
+                          orderStatus={item.status}
+                          onSuccess={() => pageChange()}
+                        />
+                      </>
+                    )}
+                    <Button
+                      key="edit"
+                      color="primary"
+                      variant="outlined"
+                      onClick={() => handleModify(item.id)}
+                    >
+                      编辑
+                    </Button>
+                    <Popconfirm
+                      key="delete"
+                      title="确定要删除这个订单吗？"
+                      description="删除后将无法恢复"
+                      onConfirm={() => handleDelete(item.id)}
+                      okText="确定"
+                      cancelText="取消"
+                    >
+                      <Button
+                        color="danger"
+                        variant="solid"
+                        loading={deleteLoading}
+                      >
+                        删除
+                      </Button>
+                    </Popconfirm>
+                  </div>
+                </div>
               </List.Item>
             )
           }}
@@ -333,6 +391,7 @@ export const Component = () => {
       </section>
       {visible && (
         <Modify
+          id={currentId || undefined}
           visible={visible}
           setVisible={setVisible}
         />

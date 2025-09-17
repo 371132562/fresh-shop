@@ -210,10 +210,10 @@ export const Component: FC = () => {
                 <p className="text-xl font-bold text-white md:text-2xl">团购管理平台</p>
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/20 px-3 py-2 text-white transition-colors hover:bg-white/30 md:hidden"
+                  className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/20 p-3 text-white transition-colors hover:bg-white/30 lg:hidden"
                 >
-                  <MenuOutlined className="text-lg" />
-                  <span className="hidden p-1 md:inline">菜单</span>
+                  <MenuOutlined className="!mr-0 text-lg" />
+                  <span className="hidden px-1 sm:inline">菜单</span>
                 </button>
               </div>
 
@@ -222,20 +222,20 @@ export const Component: FC = () => {
                 <OrderStatsButton />
                 <button
                   onClick={() => setSettingOpen(true)}
-                  className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/20 px-4 py-2 text-white transition-colors hover:bg-white/30"
+                  className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/20 p-3 text-white transition-colors hover:bg-white/30"
                 >
-                  <SettingOutlined className="text-lg" />
-                  <span className="hidden p-1 md:inline">系统功能</span>
+                  <SettingOutlined className="!mr-0 text-lg" />
+                  <span className="hidden px-1 lg:inline">系统功能</span>
                 </button>
               </div>
             </div>
           </header>
 
           {/* 主体内容区域：flex布局，响应式排列 */}
-          <div className="flex flex-col gap-4 md:flex-row">
+          <div className="flex flex-col gap-4 lg:flex-row">
             {/* Sider 侧边栏：悬浮设计，白色背景，阴影效果，固定定位，防止滚动条影响布局 */}
             <aside
-              className="md:w-70 hidden w-full rounded-xl bg-white p-6 shadow-lg md:sticky md:top-4 md:block md:h-fit"
+              className="lg:w-70 hidden w-full rounded-xl bg-white p-6 shadow-lg lg:sticky lg:top-4 lg:block lg:h-fit"
               style={{ scrollbarGutter: 'stable' }}
             >
               <h2 className="mb-4 text-lg font-semibold text-black/80">功能菜单</h2>
@@ -274,7 +274,7 @@ export const Component: FC = () => {
 
       {/* 平板悬浮下拉菜单 */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           {/* 背景遮罩 */}
           <div
             className="absolute inset-0 bg-black/20"
