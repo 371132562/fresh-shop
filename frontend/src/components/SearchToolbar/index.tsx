@@ -39,23 +39,29 @@ const SearchToolbar = ({
 }: SearchToolbarProps) => {
   return (
     <div className="mt-2 w-full border-t border-gray-100 pt-2">
-      {/* 第一行：排序选择器 */}
-      {sortOptions && sortValue && onSortChange && (
-        <div className="mb-3 flex items-center gap-2">
-          <span className="whitespace-nowrap text-sm font-medium text-gray-700">排序方式：</span>
-          <Select
-            value={sortValue}
-            style={{ width: 180 }}
-            onChange={onSortChange}
-            options={sortOptions}
-            popupMatchSelectWidth={200}
-          />
+      {/* 单行布局：左边统计信息，右边排序选择器和操作按钮 */}
+      <div className="flex w-full items-center justify-between gap-3">
+        {/* 左边：统计信息 */}
+        <div className="whitespace-nowrap text-sm text-gray-600">
+          共 {totalCount} {countLabel}
         </div>
-      )}
 
-      {/* 第二行：操作按钮、自定义内容和统计信息 */}
-      <div className="flex w-full flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
+        {/* 右边：排序选择器、操作按钮和自定义内容 */}
+        <div className="flex items-center gap-3">
+          {/* 排序选择器 */}
+          {sortOptions && sortValue && onSortChange && (
+            <div className="flex items-center gap-2">
+              <span className="whitespace-nowrap text-sm font-medium text-gray-700">排序：</span>
+              <Select
+                value={sortValue}
+                style={{ width: 160 }}
+                onChange={onSortChange}
+                options={sortOptions}
+                popupMatchSelectWidth={200}
+              />
+            </div>
+          )}
+
           {/* 操作按钮 */}
           {(onSearch || onReset) && (
             <div className="flex items-center gap-2">
@@ -82,11 +88,6 @@ const SearchToolbar = ({
 
           {/* 自定义内容 */}
           {extra}
-        </div>
-
-        {/* 统计信息 */}
-        <div className="whitespace-nowrap text-sm text-gray-600">
-          共 {totalCount} {countLabel}
         </div>
       </div>
     </div>
