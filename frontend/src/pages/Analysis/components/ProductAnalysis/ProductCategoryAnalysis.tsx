@@ -3,6 +3,8 @@ import { Badge, Card, Empty, List, Progress, Segmented, Tag, Tooltip } from 'ant
 import type { ProductCategoryStat } from 'fresh-shop-backend/types/dto'
 import React, { useMemo, useState } from 'react'
 
+import useGlobalSettingStore from '@/stores/globalSettingStore'
+
 // 组件入参类型定义
 // data: 分类统计数据
 // title: 卡片标题
@@ -27,8 +29,11 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
   const formatCurrency = (value: number) => `¥${(value || 0).toFixed(2)}`
   const formatPercent = (value: number) => `${(value || 0).toFixed(2)}%`
 
-  // 默认利润占比
-  const [percentMetric, setPercentMetric] = useState<'revenue' | 'profit'>('profit')
+  const globalSetting = useGlobalSettingStore(state => state.globalSetting)
+  // 默认利润占比（敏感模式下强制为销售额占比）
+  const [percentMetric, setPercentMetric] = useState<'revenue' | 'profit'>(
+    globalSetting?.value?.sensitive ? 'revenue' : 'profit'
+  )
 
   // 计算总销售额/总利润
   const totals = useMemo(() => {
@@ -47,8 +52,9 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
     })
   }, [data, percentMetric])
 
-  const progressColor = percentMetric === 'revenue' ? '#34d399' : '#f43f5e'
-  const percentTitle = percentMetric === 'revenue' ? '销售额占比' : '利润占比'
+  const effectiveMetric = globalSetting?.value?.sensitive ? 'revenue' : percentMetric
+  const progressColor = effectiveMetric === 'revenue' ? '#34d399' : '#f43f5e'
+  const percentTitle = effectiveMetric === 'revenue' ? '销售额占比' : '利润占比'
 
   return (
     <Card
@@ -60,12 +66,16 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
           </div>
           <Segmented
             size="small"
-            value={percentMetric}
+            value={effectiveMetric}
             onChange={val => setPercentMetric(val as 'revenue' | 'profit')}
-            options={[
-              { label: '利润占比', value: 'profit' },
-              { label: '销售额占比', value: 'revenue' }
-            ]}
+            options={
+              globalSetting?.value?.sensitive
+                ? [{ label: '销售额占比', value: 'revenue' }]
+                : [
+                    { label: '利润占比', value: 'profit' },
+                    { label: '销售额占比', value: 'revenue' }
+                  ]
+            }
           />
         </div>
       }
@@ -85,11 +95,11 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
               const groupBuys = item.groupBuyCount || 0
               const margin = revenue > 0 ? (profit / revenue) * 100 : 0
 
-              const base = percentMetric === 'revenue' ? totals.totalRevenue : totals.totalProfit
-              const value = percentMetric === 'revenue' ? revenue : profit
+              const base = effectiveMetric === 'revenue' ? totals.totalRevenue : totals.totalProfit
+              const value = effectiveMetric === 'revenue' ? revenue : profit
               const percent = base > 0 ? (value / base) * 100 : 0
 
-              const titleAmount = percentMetric === 'profit' ? profit : revenue
+              const titleAmount = effectiveMetric === 'profit' ? profit : revenue
 
               return (
                 <List.Item className="px-2 py-2">
@@ -135,12 +145,14 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
 
                       {/* 辅助指标：按顺序 渲染（缺失自动跳过） */}
                       <div className="mt-2 flex flex-wrap gap-2">
-                        <Tag
-                          color="blue"
-                          className="m-0"
-                        >
-                          利润率 {formatPercent(margin)}
-                        </Tag>
+                        {!globalSetting?.value?.sensitive && (
+                          <Tag
+                            color="blue"
+                            className="m-0"
+                          >
+                            利润率 {formatPercent(margin)}
+                          </Tag>
+                        )}
                         {products ? (
                           <Tag
                             color="blue"

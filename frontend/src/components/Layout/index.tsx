@@ -387,7 +387,7 @@ export const Component: FC = () => {
                   <div className="flex-1">
                     <div className="font-medium text-gray-900">隐藏敏感数据</div>
                     <div className="text-sm text-gray-500">
-                      在列表中隐藏客户手机号等敏感信息，保护用户隐私
+                      在各个功能中隐藏利润及利润率等敏感信息
                     </div>
                   </div>
                   <Switch

@@ -4,6 +4,7 @@ import type { SupplierOverviewDetailParams } from 'fresh-shop-backend/types/dto'
 import React, { useEffect } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore'
+import useGlobalSettingStore from '@/stores/globalSettingStore'
 import dayjs from '@/utils/day'
 import {
   getProfitBgColor,
@@ -37,6 +38,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
   params,
   width = 1000
 }: SupplierDetailModalProps) => {
+  const globalSetting = useGlobalSettingStore(state => state.globalSetting)
   // 客户列表模态框状态
 
   // 从 Zustand store 中获取分析数据的方法和状态
@@ -167,67 +169,71 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                 </Col>
 
                 {/* 总利润 */}
-                <Col
-                  xs={24}
-                  md={12}
-                  lg={8}
-                >
-                  <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-sm font-medium text-gray-600">总利润</span>
-                          <Tooltip title="已扣除退款金额">
-                            <InfoCircleOutlined className="text-blue-500" />
-                          </Tooltip>
+                {!globalSetting?.value?.sensitive && (
+                  <Col
+                    xs={24}
+                    md={12}
+                    lg={8}
+                  >
+                    <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium text-gray-600">总利润</span>
+                            <Tooltip title="已扣除退款金额">
+                              <InfoCircleOutlined className="text-blue-500" />
+                            </Tooltip>
+                          </div>
+                          <div
+                            className={`mt-1 text-xl font-bold ${getProfitColor(supplierOverviewDetail.totalProfit)}`}
+                          >
+                            ¥{supplierOverviewDetail.totalProfit.toFixed(2)}
+                          </div>
                         </div>
                         <div
-                          className={`mt-1 text-xl font-bold ${getProfitColor(supplierOverviewDetail.totalProfit)}`}
+                          className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(supplierOverviewDetail.totalProfit)}`}
                         >
-                          ¥{supplierOverviewDetail.totalProfit.toFixed(2)}
+                          <span
+                            className={`text-xl ${getProfitIconColor(supplierOverviewDetail.totalProfit)}`}
+                          >
+                            {getProfitIcon(supplierOverviewDetail.totalProfit)}
+                          </span>
                         </div>
                       </div>
-                      <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(supplierOverviewDetail.totalProfit)}`}
-                      >
-                        <span
-                          className={`text-xl ${getProfitIconColor(supplierOverviewDetail.totalProfit)}`}
-                        >
-                          {getProfitIcon(supplierOverviewDetail.totalProfit)}
-                        </span>
-                      </div>
                     </div>
-                  </div>
-                </Col>
+                  </Col>
+                )}
 
                 {/* 平均利润率 */}
-                <Col
-                  xs={24}
-                  md={12}
-                  lg={8}
-                >
-                  <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-medium text-gray-600">平均利润率</div>
+                {!globalSetting?.value?.sensitive && (
+                  <Col
+                    xs={24}
+                    md={12}
+                    lg={8}
+                  >
+                    <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-medium text-gray-600">平均利润率</div>
+                          <div
+                            className={`mt-1 text-xl font-bold ${getProfitMarginColor(supplierOverviewDetail.averageProfitMargin)}`}
+                          >
+                            {supplierOverviewDetail.averageProfitMargin.toFixed(1)}%
+                          </div>
+                        </div>
                         <div
-                          className={`mt-1 text-xl font-bold ${getProfitMarginColor(supplierOverviewDetail.averageProfitMargin)}`}
+                          className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(supplierOverviewDetail.averageProfitMargin)}`}
                         >
-                          {supplierOverviewDetail.averageProfitMargin.toFixed(1)}%
+                          <span
+                            className={`text-xl ${getProfitIconColor(supplierOverviewDetail.averageProfitMargin)}`}
+                          >
+                            📊
+                          </span>
                         </div>
                       </div>
-                      <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(supplierOverviewDetail.averageProfitMargin)}`}
-                      >
-                        <span
-                          className={`text-xl ${getProfitIconColor(supplierOverviewDetail.averageProfitMargin)}`}
-                        >
-                          📊
-                        </span>
-                      </div>
                     </div>
-                  </div>
-                </Col>
+                  </Col>
+                )}
 
                 {/* 总订单量 */}
                 <Col

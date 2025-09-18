@@ -5,6 +5,7 @@ import type { GroupBuyLaunchHistory } from 'fresh-shop-backend/types/dto'
 import React, { useState } from 'react'
 import { NavLink } from 'react-router'
 
+import useGlobalSettingStore from '@/stores/globalSettingStore'
 import dayjs from '@/utils/day'
 import { getProfitColor, getProfitMarginColor } from '@/utils/profitColor'
 
@@ -26,8 +27,11 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
   const showToggle = groupBuyHistory.length > 5
   const displayedGroupBuyHistory = isExpanded ? groupBuyHistory : groupBuyHistory.slice(0, 5)
 
-  // 团购历史表格列定义
-  const groupBuyHistoryColumns: ColumnsType<GroupBuyLaunchHistory & { key: number }> = [
+  // 敏感数据控制
+  const sensitive = useGlobalSettingStore.getState().globalSetting?.value?.sensitive
+
+  // 团购历史表格列定义（按敏感开关动态拼装列）
+  let groupBuyHistoryColumns: ColumnsType<GroupBuyLaunchHistory & { key: number }> = [
     {
       title: '发起时间',
       dataIndex: 'launchDate',
@@ -65,15 +69,36 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       render: (revenue: number) => (
         <span className="font-medium text-cyan-600">¥{revenue.toFixed(2)}</span>
       )
-    },
-    {
-      title: '利润',
-      dataIndex: 'profit',
-      key: 'profit',
-      render: (profit: number) => (
-        <span className={`font-medium ${getProfitColor(profit)}`}>¥{profit.toFixed(2)}</span>
-      )
-    },
+    }
+  ]
+
+  if (!sensitive) {
+    groupBuyHistoryColumns.push(
+      {
+        title: '利润',
+        dataIndex: 'profit',
+        key: 'profit',
+        render: (profit: number) => (
+          <span className={`font-medium ${getProfitColor(profit)}`}>¥{profit.toFixed(2)}</span>
+        )
+      },
+      {
+        title: '利润率',
+        key: 'profitMargin',
+        render: (_, record) => {
+          const margin = record.revenue > 0 ? (record.profit / record.revenue) * 100 : 0
+          return (
+            <span className={`font-medium ${getProfitMarginColor(margin)}`}>
+              {margin.toFixed(1)}%
+            </span>
+          )
+        }
+      }
+    )
+  }
+
+  groupBuyHistoryColumns = [
+    ...groupBuyHistoryColumns,
     {
       title: '退款金额',
       dataIndex: 'totalRefundAmount',
@@ -91,18 +116,6 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
           {record.partialRefundOrderCount || 0}/{record.refundedOrderCount || 0} 单
         </span>
       )
-    },
-    {
-      title: '利润率',
-      key: 'profitMargin',
-      render: (_, record) => {
-        const margin = record.revenue > 0 ? (record.profit / record.revenue) * 100 : 0
-        return (
-          <span className={`font-medium ${getProfitMarginColor(margin)}`}>
-            {margin.toFixed(1)}%
-          </span>
-        )
-      }
     }
   ]
 
@@ -151,15 +164,17 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
                 valueStyle={{ color: '#52c41a' }}
               />
             </Col>
-            <Col span={5}>
-              <Statistic
-                title="平均团购利润"
-                value={averageProfit}
-                precision={2}
-                prefix="¥"
-                valueStyle={{ color: '#fa8c16' }}
-              />
-            </Col>
+            {!useGlobalSettingStore.getState().globalSetting?.value?.sensitive && (
+              <Col span={5}>
+                <Statistic
+                  title="平均团购利润"
+                  value={averageProfit}
+                  precision={2}
+                  prefix="¥"
+                  valueStyle={{ color: '#fa8c16' }}
+                />
+              </Col>
+            )}
             <Col span={5}>
               <Statistic
                 title="平均团购订单量"

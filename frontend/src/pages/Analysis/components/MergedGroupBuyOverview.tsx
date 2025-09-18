@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 
 import SearchToolbar from '@/components/SearchToolbar'
 import useAnalysisStore from '@/stores/analysisStore'
+import useGlobalSettingStore from '@/stores/globalSettingStore'
 import useSupplierStore from '@/stores/supplierStore'
 import dayjs from '@/utils/day'
 import { getProfitColor } from '@/utils/profitColor'
@@ -30,6 +31,7 @@ export const MergedGroupBuyOverview = ({
   endDate,
   mergeSameName = true
 }: MergedGroupBuyOverviewProps) => {
+  const globalSetting = useGlobalSettingStore(state => state.globalSetting)
   const [detailVisible, setDetailVisible] = useState(false)
   const [searchParams, setSearchParams] = useState({
     groupBuyName: '',
@@ -307,12 +309,16 @@ export const MergedGroupBuyOverview = ({
                         ¥{item.totalRevenue.toFixed(2)}
                       </span>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm text-gray-500">总利润</span>
-                      <span className={`text-lg font-semibold ${getProfitColor(item.totalProfit)}`}>
-                        ¥{item.totalProfit.toFixed(2)}
-                      </span>
-                    </div>
+                    {!globalSetting?.value?.sensitive && (
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">总利润</span>
+                        <span
+                          className={`text-lg font-semibold ${getProfitColor(item.totalProfit)}`}
+                        >
+                          ¥{item.totalProfit.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-500">参与客户数</span>
                       <span className="text-lg font-semibold text-purple-600">

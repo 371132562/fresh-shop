@@ -96,7 +96,7 @@ export const PriceProfitTrendChart = () => {
   return (
     <Card
       loading={getCountLoading}
-      title="销售额和利润趋势"
+      title={sensitive ? '销售额趋势' : '销售额和利润趋势'}
       extra={
         isAllData ? (
           <Checkbox
@@ -109,7 +109,7 @@ export const PriceProfitTrendChart = () => {
       }
     >
       <FullscreenChart
-        title="销售额和利润趋势"
+        title={sensitive ? '销售额趋势' : '销售额和利润趋势'}
         option={option}
         height="300px"
       />

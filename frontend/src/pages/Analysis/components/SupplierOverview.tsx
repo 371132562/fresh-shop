@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 
 import SearchToolbar from '@/components/SearchToolbar'
 import useAnalysisStore from '@/stores/analysisStore'
+import useGlobalSettingStore from '@/stores/globalSettingStore'
 import { getProfitColor, getProfitMarginColor } from '@/utils/profitColor'
 
 import SupplierDetailModal from './SupplierDetailModal'
@@ -23,6 +24,7 @@ type SupplierOverviewProps = {
  * 显示供货商维度的列表和统计概况信息
  */
 export const SupplierOverview = ({ startDate, endDate }: SupplierOverviewProps) => {
+  const globalSetting = useGlobalSettingStore(state => state.globalSetting)
   const [detailVisible, setDetailVisible] = useState(false)
   const [searchParams, setSearchParams] = useState({
     supplierName: '',
@@ -234,20 +236,26 @@ export const SupplierOverview = ({ startDate, endDate }: SupplierOverviewProps) 
                         ¥{item.totalRevenue.toFixed(2)}
                       </span>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm text-gray-500">总利润</span>
-                      <span className={`text-lg font-semibold ${getProfitColor(item.totalProfit)}`}>
-                        ¥{item.totalProfit.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm text-gray-500">平均利润率</span>
-                      <span
-                        className={`text-lg font-semibold ${getProfitMarginColor(item.averageProfitMargin)}`}
-                      >
-                        {item.averageProfitMargin.toFixed(1)}%
-                      </span>
-                    </div>
+                    {!globalSetting?.value?.sensitive && (
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">总利润</span>
+                        <span
+                          className={`text-lg font-semibold ${getProfitColor(item.totalProfit)}`}
+                        >
+                          ¥{item.totalProfit.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    {!globalSetting?.value?.sensitive && (
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">平均利润率</span>
+                        <span
+                          className={`text-lg font-semibold ${getProfitMarginColor(item.averageProfitMargin)}`}
+                        >
+                          {item.averageProfitMargin.toFixed(1)}%
+                        </span>
+                      </div>
+                    )}
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-500">团购单量</span>
                       <span className="text-lg font-semibold text-indigo-600">

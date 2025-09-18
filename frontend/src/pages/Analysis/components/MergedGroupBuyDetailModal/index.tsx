@@ -4,6 +4,7 @@ import type { MergedGroupBuyOverviewDetailParams } from 'fresh-shop-backend/type
 import React, { useEffect } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore'
+import useGlobalSettingStore from '@/stores/globalSettingStore'
 import dayjs from '@/utils/day'
 import {
   getProfitBgColor,
@@ -36,6 +37,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   params,
   width = 1000
 }: MergedGroupBuyDetailModalProps) => {
+  const globalSetting = useGlobalSettingStore(state => state.globalSetting)
   // 客户列表模态框状态
 
   // 从 Zustand store 中获取分析数据的方法和状态
@@ -171,67 +173,71 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                 </Col>
 
                 {/* 总利润 */}
-                <Col
-                  xs={24}
-                  md={12}
-                  lg={8}
-                >
-                  <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-sm font-medium text-gray-600">总利润</span>
-                          <Tooltip title="已扣除退款金额">
-                            <InfoCircleOutlined className="text-blue-500" />
-                          </Tooltip>
+                {!globalSetting?.value?.sensitive && (
+                  <Col
+                    xs={24}
+                    md={12}
+                    lg={8}
+                  >
+                    <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium text-gray-600">总利润</span>
+                            <Tooltip title="已扣除退款金额">
+                              <InfoCircleOutlined className="text-blue-500" />
+                            </Tooltip>
+                          </div>
+                          <div
+                            className={`mt-1 text-xl font-bold ${getProfitColor(mergedGroupBuyOverviewDetail.totalProfit)}`}
+                          >
+                            ¥{mergedGroupBuyOverviewDetail.totalProfit.toFixed(2)}
+                          </div>
                         </div>
                         <div
-                          className={`mt-1 text-xl font-bold ${getProfitColor(mergedGroupBuyOverviewDetail.totalProfit)}`}
+                          className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(mergedGroupBuyOverviewDetail.totalProfit)}`}
                         >
-                          ¥{mergedGroupBuyOverviewDetail.totalProfit.toFixed(2)}
+                          <span
+                            className={`text-xl ${getProfitIconColor(mergedGroupBuyOverviewDetail.totalProfit)}`}
+                          >
+                            {getProfitIcon(mergedGroupBuyOverviewDetail.totalProfit)}
+                          </span>
                         </div>
                       </div>
-                      <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(mergedGroupBuyOverviewDetail.totalProfit)}`}
-                      >
-                        <span
-                          className={`text-xl ${getProfitIconColor(mergedGroupBuyOverviewDetail.totalProfit)}`}
-                        >
-                          {getProfitIcon(mergedGroupBuyOverviewDetail.totalProfit)}
-                        </span>
-                      </div>
                     </div>
-                  </div>
-                </Col>
+                  </Col>
+                )}
 
                 {/* 利润率 */}
-                <Col
-                  xs={24}
-                  md={12}
-                  lg={8}
-                >
-                  <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-medium text-gray-600">利润率</div>
+                {!globalSetting?.value?.sensitive && (
+                  <Col
+                    xs={24}
+                    md={12}
+                    lg={8}
+                  >
+                    <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-medium text-gray-600">利润率</div>
+                          <div
+                            className={`mt-1 text-xl font-bold ${getProfitMarginColor(mergedGroupBuyOverviewDetail.totalProfitMargin)}`}
+                          >
+                            {mergedGroupBuyOverviewDetail.totalProfitMargin.toFixed(1)}%
+                          </div>
+                        </div>
                         <div
-                          className={`mt-1 text-xl font-bold ${getProfitMarginColor(mergedGroupBuyOverviewDetail.totalProfitMargin)}`}
+                          className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(mergedGroupBuyOverviewDetail.totalProfitMargin)}`}
                         >
-                          {mergedGroupBuyOverviewDetail.totalProfitMargin.toFixed(1)}%
+                          <span
+                            className={`text-xl ${getProfitIconColor(mergedGroupBuyOverviewDetail.totalProfitMargin)}`}
+                          >
+                            📊
+                          </span>
                         </div>
                       </div>
-                      <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(mergedGroupBuyOverviewDetail.totalProfitMargin)}`}
-                      >
-                        <span
-                          className={`text-xl ${getProfitIconColor(mergedGroupBuyOverviewDetail.totalProfitMargin)}`}
-                        >
-                          📊
-                        </span>
-                      </div>
                     </div>
-                  </div>
-                </Col>
+                  </Col>
+                )}
 
                 {/* 总订单量 */}
                 <Col
