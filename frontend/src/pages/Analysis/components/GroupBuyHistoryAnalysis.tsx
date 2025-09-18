@@ -54,20 +54,20 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       title: '订单量',
       dataIndex: 'orderCount',
       key: 'orderCount',
-      render: (count: number) => <span className="font-medium text-green-600">{count}单</span>
+      render: (count: number) => <span className="font-bold text-blue-600">{count}单</span>
     },
     {
       title: '客户量',
       dataIndex: 'customerCount',
       key: 'customerCount',
-      render: (count: number) => <span className="font-medium text-purple-600">{count}人</span>
+      render: (count: number) => <span className="font-bold text-blue-600">{count}人</span>
     },
     {
       title: '销售额',
       dataIndex: 'revenue',
       key: 'revenue',
       render: (revenue: number) => (
-        <span className="font-medium text-cyan-600">¥{revenue.toFixed(2)}</span>
+        <span className="font-bold text-blue-400">¥{revenue.toFixed(2)}</span>
       )
     }
   ]

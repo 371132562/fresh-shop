@@ -134,10 +134,7 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                             ) : null}
                           </div>
                         </Tooltip>
-                        <div
-                          className="whitespace-nowrap text-base font-semibold"
-                          style={{ color: progressColor }}
-                        >
+                        <div className="whitespace-nowrap text-base font-bold text-blue-400">
                           {formatCurrency(titleAmount)}
                         </div>
                       </div>

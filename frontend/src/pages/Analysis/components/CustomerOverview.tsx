@@ -161,25 +161,25 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-500">总消费额</span>
-                      <span className="text-lg font-semibold text-cyan-600">
+                      <span className="text-lg font-bold text-blue-400">
                         ¥{item.totalRevenue.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-500">订单量</span>
-                      <span className="text-lg font-semibold text-blue-600">
+                      <span className="text-lg font-bold text-blue-600">
                         {item.totalOrderCount}
                       </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-500">平均单价</span>
-                      <span className="text-lg font-semibold text-purple-600">
+                      <span className="text-lg font-bold text-blue-400">
                         ¥{item.averageOrderAmount.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-500">退款金额</span>
-                      <span className="text-lg font-semibold text-orange-600">
+                      <span className="text-lg font-bold text-orange-600">
                         ¥{item.totalRefundAmount.toFixed(2)}
                       </span>
                     </div>

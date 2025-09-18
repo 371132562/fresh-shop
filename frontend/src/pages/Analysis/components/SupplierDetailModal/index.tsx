@@ -157,7 +157,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                             <InfoCircleOutlined className="text-blue-500" />
                           </Tooltip>
                         </div>
-                        <div className="mt-1 text-xl font-bold text-cyan-600">
+                        <div className="mt-1 text-xl font-bold text-blue-400">
                           ¥{supplierOverviewDetail.totalRevenue.toFixed(2)}
                         </div>
                       </div>
@@ -245,7 +245,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-600">总订单量</div>
-                        <div className="mt-1 text-xl font-bold text-purple-600">
+                        <div className="mt-1 text-xl font-bold text-blue-600">
                           {supplierOverviewDetail.totalOrderCount}单
                         </div>
                       </div>
@@ -266,7 +266,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-600">团购单量</div>
-                        <div className="mt-1 text-xl font-bold text-orange-500">
+                        <div className="mt-1 text-xl font-bold text-blue-600">
                           {supplierOverviewDetail.totalGroupBuyCount}个
                         </div>
                       </div>
@@ -287,7 +287,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-600">部分退款/退款订单量</div>
-                        <div className="mt-1 text-xl font-bold text-orange-600">
+                        <div className="mt-1 text-xl font-bold text-blue-600">
                           {supplierOverviewDetail.totalPartialRefundOrderCount || 0}/
                           {supplierOverviewDetail.totalRefundedOrderCount || 0} 单
                         </div>

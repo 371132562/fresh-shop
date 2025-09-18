@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, notification, Popconfirm } from 'antd'
+import { Button, Form, Input, Modal, notification } from 'antd'
 import { useEffect } from 'react'
 
 import useCustomerAddressStore from '@/stores/customerAddressStore.ts'
@@ -20,7 +20,6 @@ const Modify = (props: params) => {
   const customerAddress = useCustomerAddressStore(state => state.customerAddress)
   const getCustomerAddress = useCustomerAddressStore(state => state.getCustomerAddress)
   const setCustomerAddress = useCustomerAddressStore(state => state.setCustomerAddress)
-  const deleteCustomerAddress = useCustomerAddressStore(state => state.deleteCustomerAddress)
 
   useEffect(() => {
     if (id) {
@@ -62,17 +61,6 @@ const Modify = (props: params) => {
     setCurrentId(null)
   }
 
-  const handleDelete = async () => {
-    const res = await deleteCustomerAddress({ id: id as string })
-    if (res) {
-      notification.success({
-        message: '成功',
-        description: '删除成功'
-      })
-      setVisible(false)
-    }
-  }
-
   return (
     <>
       <Modal
@@ -97,23 +85,6 @@ const Modify = (props: params) => {
             rules={[{ required: true, message: '请输入地址' }]}
           >
             <Input placeholder="必填" />
-          </Form.Item>
-          <Form.Item label="操作">
-            <Popconfirm
-              title={<div className="text-lg">确定要删除这个地址吗？</div>}
-              onConfirm={handleDelete}
-              okText="是"
-              cancelText="否"
-              okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
-              cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
-            >
-              <Button
-                color="danger"
-                variant="solid"
-              >
-                删除
-              </Button>
-            </Popconfirm>
           </Form.Item>
         </Form>
       </Modal>

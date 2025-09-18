@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, notification, Popconfirm, Select } from 'antd'
+import { Form, Input, Modal, notification, Select } from 'antd'
 import { useEffect } from 'react'
 
 import useProductStore from '@/stores/productStore.ts'
@@ -21,8 +21,6 @@ const Modify = (props: params) => {
   const product = useProductStore(state => state.product)
   const getProduct = useProductStore(state => state.getProduct)
   const setProduct = useProductStore(state => state.setProduct)
-  const deleteProduct = useProductStore(state => state.deleteProduct)
-
   const allProductTypes = useProductTypeStore(state => state.allProductTypes)
   const getAllProductTypesLoading = useProductTypeStore(state => state.getAllProductTypesLoading)
 
@@ -62,17 +60,6 @@ const Modify = (props: params) => {
     setVisible(false)
     setProduct(null)
     setCurrentId(null)
-  }
-
-  const handleDelete = async () => {
-    const res = await deleteProduct({ id: id as string })
-    if (res) {
-      notification.success({
-        message: '成功',
-        description: '删除成功'
-      })
-      setVisible(false)
-    }
   }
 
   return (
@@ -127,23 +114,6 @@ const Modify = (props: params) => {
             name="description"
           >
             <Input placeholder="选填" />
-          </Form.Item>
-          <Form.Item label="操作">
-            <Popconfirm
-              title={<div className="text-lg">确定要删除这个商品吗？</div>}
-              onConfirm={handleDelete}
-              okText="是"
-              cancelText="否"
-              okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
-              cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
-            >
-              <Button
-                color="danger"
-                variant="solid"
-              >
-                删除
-              </Button>
-            </Popconfirm>
           </Form.Item>
         </Form>
       </Modal>

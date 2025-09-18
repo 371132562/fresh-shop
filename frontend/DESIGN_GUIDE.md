@@ -13,30 +13,10 @@
 - **布局方式**：响应式设计，移动端优先
 - **视觉层次**：通过阴影、圆角、透明度营造层次感
 
-### 色彩规范
-
-```css
-/* 主色调 */
---primary-blue: #3b82f6 (blue-500)
---primary-blue-dark: #2563eb (blue-600)
---primary-blue-light: #dbeafe (blue-50)
-
-/* 功能色 */
---success-green: #10b981 (green-500)
---warning-orange: #f59e0b (orange-500)
---danger-red: #ef4444 (red-500)
-
-/* 中性色 */
---gray-100: #f3f4f6 (页面背景)
---gray-600: #4b5563 (次要文字)
---gray-900: #111827 (主要文字)
---white: #ffffff (卡片背景)
-```
-
 #### 数值/统计文本配色规范（通用）
-
-- 金额类（总销售额、消费总额、小计等）：`text-cyan-600`
-- 利润类：正值用 `text-red-600`，负值用 `text-green-600`，等于 0 用 `text-gray-500`
+- 以下配色规则统一使用 font-bold 字体加粗
+- 金额类（总销售额、消费总额、小计等）：`text-blue-400`
+- 利润类：正值用 `text-red-600`，负值用 `text-green-600`，等于 0 用 `text-gray-500`，应使用utils/profitColor.tsx中的函数获取颜色
 - 退款相关（退款金额、部分退款/退款订单量等）：`text-orange-600`
 - 计数类（次数、订单量、购买次数、团购单量、客户量等）：`text-blue-600`
 

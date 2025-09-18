@@ -156,12 +156,11 @@ export const Component = () => {
                   />
                 )}
                 <Popconfirm
-                  title={<div className="text-lg">确定要删除这个订单吗？</div>}
+                  title="确定要删除这个订单吗？"
+                  description="删除后将无法恢复"
                   onConfirm={confirm}
-                  okText="是"
-                  cancelText="否"
-                  okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
-                  cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
+                  okText="确定"
+                  cancelText="取消"
                 >
                   <Button
                     color="danger"
@@ -209,7 +208,7 @@ export const Component = () => {
               {/* 数量 */}
               <div className="flex items-start text-base">
                 <span className="w-20 flex-shrink-0 font-medium text-gray-500">购买数量：</span>
-                <span className="word-break-all flex-grow break-words font-bold text-cyan-600">
+                <span className="word-break-all flex-grow break-words font-bold text-blue-600">
                   {order?.quantity || <span className="italic text-gray-400">无</span>}
                 </span>
               </div>
@@ -224,7 +223,7 @@ export const Component = () => {
                       <span className="font-bold text-orange-600">
                         ¥{order.partialRefundAmount.toFixed(2)}
                       </span>
-                      <span className="font-bold text-cyan-600">
+                      <span className="font-bold text-blue-400">
                         /¥{(unit ? unit.price * order.quantity : 0).toFixed(2)}
                       </span>
                     </span>

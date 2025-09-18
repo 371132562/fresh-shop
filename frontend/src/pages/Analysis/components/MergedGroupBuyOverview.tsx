@@ -321,13 +321,13 @@ export const MergedGroupBuyOverview = ({
                     )}
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-500">参与客户数</span>
-                      <span className="text-lg font-semibold text-purple-600">
+                      <span className="text-lg font-bold text-blue-600">
                         {item.uniqueCustomerCount}
                       </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-500">订单量</span>
-                      <span className="text-lg font-semibold text-orange-600">
+                      <span className="text-lg font-bold text-blue-600">
                         {item.totalOrderCount}
                       </span>
                     </div>

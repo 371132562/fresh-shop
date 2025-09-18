@@ -1,16 +1,4 @@
-import {
-  Button,
-  Card,
-  Col,
-  DatePicker,
-  Form,
-  Input,
-  List,
-  Popconfirm,
-  Row,
-  Select,
-  Tag
-} from 'antd'
+import { Button, Card, Col, DatePicker, Form, Input, List, Row, Select, Tag } from 'antd'
 import {
   GroupBuyListItem,
   MergedGroupBuyOverviewDetailParams
@@ -20,6 +8,7 @@ import { NavLink } from 'react-router'
 
 import SearchToolbar from '@/components/SearchToolbar'
 import MergedGroupBuyDetailModal from '@/pages/Analysis/components/MergedGroupBuyDetailModal'
+import DeleteGroupBuyButton from '@/pages/GroupBuy/components/DeleteGroupBuyButton'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import {
   ExtendedOrderStatusOptions,
@@ -46,8 +35,6 @@ export const Component = () => {
   const pageParams = useGroupBuyStore(state => state.pageParams)
   const setPageParams = useGroupBuyStore(state => state.setPageParams)
   const getGroupBuy = useGroupBuyStore(state => state.getGroupBuy)
-  const deleteGroupBuy = useGroupBuyStore(state => state.deleteGroupBuy)
-  const deleteLoading = useGroupBuyStore(state => state.deleteLoading)
   const allSupplierList = useSupplierStore(state => state.allSupplierList)
   const getAllSuppliers = useSupplierStore(state => state.getAllSuppliers)
   const getAllSuppliersLoading = useSupplierStore(state => state.getAllSuppliersLoading)
@@ -116,14 +103,6 @@ export const Component = () => {
     await getGroupBuy({ id })
     setCurrentId(id)
     setVisible(true)
-  }
-
-  // 处理删除
-  const handleDelete = async (id: string) => {
-    const ok = await deleteGroupBuy({ id })
-    if (ok) {
-      pageChange()
-    }
   }
 
   // 关闭详情模态框
@@ -365,10 +344,10 @@ export const Component = () => {
                     {item.partialRefundStats.partialRefundAmount > 0 && (
                       <div className="text-[13px] font-medium text-gray-800">
                         <span>退款：</span>
-                        <span className="text-orange-600">
+                        <span className="font-bold text-orange-600">
                           ¥{item.partialRefundStats.partialRefundAmount.toFixed(2)}
                         </span>
-                        <span className="text-cyan-600">
+                        <span className="font-bold text-blue-400">
                           /¥{item.partialRefundStats.totalAmount.toFixed(2)}
                         </span>
                       </div>
@@ -418,22 +397,13 @@ export const Component = () => {
                   >
                     编辑
                   </Button>
-                  <Popconfirm
-                    key="delete"
-                    title="确定要删除这个团购单吗？"
-                    description="删除后将无法恢复"
-                    onConfirm={() => handleDelete(item.id)}
-                    okText="确定"
-                    cancelText="取消"
-                  >
-                    <Button
-                      color="danger"
-                      variant="solid"
-                      loading={deleteLoading}
-                    >
-                      删除
-                    </Button>
-                  </Popconfirm>
+                  <DeleteGroupBuyButton
+                    id={item.id}
+                    name={item.name}
+                    orderStats={item.orderStats as unknown as Record<string, number>}
+                    size="middle"
+                    onDeleted={() => pageChange()}
+                  />
                 </div>
               </div>
             </List.Item>

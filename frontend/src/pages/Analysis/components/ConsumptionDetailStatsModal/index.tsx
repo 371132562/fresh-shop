@@ -205,7 +205,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-600">订单量</div>
-                        <div className="mt-1 text-xl font-bold text-purple-600">
+                        <div className="mt-1 text-xl font-bold text-blue-600">
                           {consumptionDetail.orderCount}单
                         </div>
                       </div>
@@ -231,7 +231,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                             <InfoCircleOutlined className="text-blue-500" />
                           </Tooltip>
                         </div>
-                        <div className="mt-1 text-xl font-bold text-cyan-600">
+                        <div className="mt-1 text-xl font-bold text-blue-400">
                           ¥{consumptionDetail.totalAmount.toFixed(2)}
                         </div>
                       </div>
@@ -252,7 +252,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-600">平均单价</div>
-                        <div className="mt-1 text-xl font-bold text-blue-500">
+                        <div className="mt-1 text-xl font-bold text-blue-400">
                           ¥{consumptionDetail.averagePricePerOrder.toFixed(2)}
                         </div>
                       </div>
@@ -294,7 +294,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-600">部分退款/退款订单</div>
-                        <div className="mt-1 text-xl font-bold text-orange-600">
+                        <div className="mt-1 text-xl font-bold text-blue-600">
                           {consumptionDetail.totalPartialRefundOrderCount || 0}/
                           {consumptionDetail.totalRefundedOrderCount || 0} 单
                         </div>

@@ -1,5 +1,4 @@
 import { ArrowLeftOutlined } from '@ant-design/icons'
-import type { PopconfirmProps } from 'antd'
 import { Button, Flex, Image, List, notification, Popconfirm, Skeleton, Spin, Tag } from 'antd'
 import {
   GroupBuy,
@@ -11,13 +10,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { NavLink, useNavigate, useParams } from 'react-router'
 
 import MergedGroupBuyDetailModal from '@/pages/Analysis/components/MergedGroupBuyDetailModal'
+import DeleteGroupBuyButton from '@/pages/GroupBuy/components/DeleteGroupBuyButton'
 import Modify from '@/pages/GroupBuy/Modify.tsx'
 import { PartialRefundButton } from '@/pages/Order/components/PartialRefundModal.tsx'
 import OrderModify from '@/pages/Order/Modify.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
-import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
+import useOrderStore, { OrderStatusMap } from '@/stores/orderStore.ts'
 import { buildImageUrl, formatDate } from '@/utils'
+import { getProfitColor } from '@/utils/profitColor'
 
 export const Component = () => {
   const { id } = useParams()
@@ -31,7 +32,6 @@ export const Component = () => {
   const groupBuy = useGroupBuyStore(state => state.groupBuy)
   const getGroupBuy = useGroupBuyStore(state => state.getGroupBuy)
   const getLoading = useGroupBuyStore(state => state.getLoading)
-  const deleteGroupBuy = useGroupBuyStore(state => state.deleteGroupBuy)
   const setGroupBuy = useGroupBuyStore(state => state.setGroupBuy)
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
   const updateOrder = useOrderStore(state => state.updateOrder)
@@ -65,75 +65,7 @@ export const Component = () => {
     }
   }, [orderModifyVisible])
 
-  const confirm: PopconfirmProps['onConfirm'] = async () => {
-    const res = await deleteGroupBuy({ id: id as string })
-    if (res) {
-      notification.success({
-        message: '成功',
-        description: '删除成功'
-      })
-      navigate(-1)
-    }
-  }
-
-  // 根据是否有订单生成不同的确认提示
-  const getDeleteConfirmTitle = () => {
-    const orderCount = groupBuy?.order?.length || 0
-    if (orderCount === 0) {
-      return <div className="text-lg">确定要删除这个团购单吗？</div>
-    } else {
-      // 统计各个状态的订单数量
-      const statusCounts: Record<string, number> = {}
-      groupBuy?.order?.forEach(order => {
-        const statusLabel = OrderStatusMap[order.status].label
-        statusCounts[statusLabel] = (statusCounts[statusLabel] || 0) + 1
-      })
-
-      return (
-        <div className="space-y-4">
-          {/* 影响范围提示 */}
-          <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
-            <div className="flex items-start space-x-3">
-              <div className="flex-1">
-                <div className="mb-2 text-sm font-medium text-orange-800">
-                  删除此团购单将同时删除以下订单：
-                </div>
-                <div className="space-y-2">
-                  {Object.entries(statusCounts).map(([status, count]) => {
-                    const orderStatus = Object.entries(OrderStatusMap).find(
-                      ([, statusInfo]) => statusInfo.label === status
-                    )?.[0] as OrderStatus
-                    const color = orderStatus ? OrderStatusMap[orderStatus].color : '#666'
-
-                    return (
-                      <div
-                        key={status}
-                        className="flex items-center justify-between rounded-md border border-orange-100 bg-white px-3 py-2"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <Tag
-                            color={color}
-                            className="text-xs"
-                          >
-                            {status}
-                          </Tag>
-                          <span className="text-xs text-gray-500">订单</span>
-                        </div>
-                        <span className="text-sm font-semibold text-orange-700">{count} 个</span>
-                      </div>
-                    )
-                  })}
-                </div>
-                <div className="mt-3 text-xs text-orange-600">
-                  总计：<span className="font-semibold">{orderCount}</span> 个订单将被删除
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    }
-  }
+  // 删除交互由子组件负责
 
   const [detailParams, setDetailParams] = useState<MergedGroupBuyOverviewDetailParams | undefined>()
 
@@ -258,22 +190,15 @@ export const Component = () => {
                   >
                     编辑
                   </Button>
-                  <Popconfirm
-                    title={getDeleteConfirmTitle()}
-                    placement="left"
-                    onConfirm={confirm}
-                    okText="是"
-                    cancelText="否"
-                    okButtonProps={{ size: 'large', color: 'danger', variant: 'solid' }}
-                    cancelButtonProps={{ size: 'large', color: 'primary', variant: 'outlined' }}
-                  >
-                    <Button
-                      color="danger"
-                      variant="solid"
-                    >
-                      删除
-                    </Button>
-                  </Popconfirm>
+                  {id && (
+                    <DeleteGroupBuyButton
+                      id={id}
+                      name={groupBuy?.name}
+                      orders={groupBuy?.order}
+                      size="middle"
+                      onDeleted={() => navigate(-1)}
+                    />
+                  )}
                 </Flex>
               </div>
             </h3>
@@ -316,11 +241,19 @@ export const Component = () => {
                 </span>
               </div>
 
+              {/* 订单量 */}
+              <div className="flex items-start text-base">
+                <span className="w-20 flex-shrink-0 font-medium text-gray-500">订单量：</span>
+                <span className="word-break-all flex-grow break-words font-bold text-blue-600">
+                  {groupBuy?.order?.length || <span className="italic text-gray-400">无</span>}
+                </span>
+              </div>
+
               {/* 销售额 */}
               <div className="flex items-start text-base">
                 <span className="w-20 flex-shrink-0 font-medium text-gray-500">销售额：</span>
                 <span className="word-break-all flex-grow break-words text-gray-700">
-                  <span className="font-bold text-cyan-600">
+                  <span className="font-bold text-blue-400">
                     ¥{(groupBuy?.totalSalesAmount || 0).toFixed(2)}
                   </span>
                 </span>
@@ -330,11 +263,7 @@ export const Component = () => {
               <div className="flex items-start text-base">
                 <span className="w-20 flex-shrink-0 font-medium text-gray-500">利润：</span>
                 <span className="word-break-all flex-grow break-words text-gray-700">
-                  <span
-                    className={`font-bold ${
-                      (groupBuy?.totalProfit || 0) >= 0 ? 'text-red-600' : 'text-green-600'
-                    }`}
-                  >
+                  <span className={`font-bold ${getProfitColor(groupBuy?.totalProfit || 0)}`}>
                     ¥{(groupBuy?.totalProfit || 0).toFixed(2)}
                   </span>
                 </span>
@@ -376,12 +305,12 @@ export const Component = () => {
                     </div>
                     <div className="mb-3 flex items-center">
                       <span className="w-20 flex-shrink-0 text-gray-500">售价：</span>
-                      <span className="mr-2 font-medium text-blue-500">￥{item.price}</span>
+                      <span className="mr-2 font-bold text-blue-400">￥{item.price}</span>
                     </div>
                     {!globalSetting?.value?.sensitive && (
                       <div className="flex items-center">
                         <span className="w-20 flex-shrink-0 text-gray-500">成本价：</span>
-                        <span className="font-medium text-blue-500">￥{item.costPrice}</span>
+                        <span className="font-bold text-blue-400">￥{item.costPrice}</span>
                       </div>
                     )}
                   </div>
@@ -599,6 +528,7 @@ export const Component = () => {
         onClose={handleDetailCancel}
         params={detailParams}
       />
+      {/* 删除交互已由 DeleteGroupBuyButton 负责 */}
     </div>
   )
 }
