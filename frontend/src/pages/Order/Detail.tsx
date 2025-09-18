@@ -1,12 +1,12 @@
 import { PopconfirmProps, Tag } from 'antd'
 import { Button, Flex, notification, Popconfirm, Skeleton } from 'antd'
+import { GroupBuyUnit } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, useNavigate, useParams } from 'react-router'
 
 import { PartialRefundButton } from '@/pages/Order/components/PartialRefundModal.tsx'
 import Modify from '@/pages/Order/Modify.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
-import { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
 import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
 import { formatDate } from '@/utils'
 

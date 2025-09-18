@@ -391,6 +391,16 @@ export type GroupBuyListItem = GroupBuy & {
 };
 
 /**
+ * 团购规格统计
+ * 用于统计团购下各规格的销售情况
+ */
+export type GroupBuyUnitStats = {
+  name: string; // 规格名称
+  quantity: number; // 销售数量
+  price: number; // 规格价格
+};
+
+/**
  * 团购详情
  * 包含团购的完整信息和相关订单列表
  */
@@ -400,6 +410,9 @@ export type GroupBuyDetail = GroupBuy & {
   order: (Order & {
     customer: { name: string; phone: string; wechat: string }; // 客户基本信息
   })[]; // 订单列表
+  // 统计数据
+  unitStatistics: GroupBuyUnitStats[]; // 规格统计
+  totalSalesAmount: number; // 总销售额（只计算已付款和已完成状态的订单，扣除部分退款）
 };
 
 /**

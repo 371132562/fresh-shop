@@ -139,11 +139,12 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                 <div className="mx-auto mt-1 h-1 w-16 rounded-full bg-gradient-to-r from-blue-400 to-purple-400"></div>
               </div>
 
-              <Row gutter={[24, 24]}>
+              <Row gutter={[12, 12]}>
                 {/* 总销售额 */}
                 <Col
-                  xs={12}
-                  sm={8}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
@@ -167,8 +168,9 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
 
                 {/* 总利润 */}
                 <Col
-                  xs={12}
-                  sm={8}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
@@ -200,8 +202,9 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
 
                 {/* 平均利润率 */}
                 <Col
-                  xs={12}
-                  sm={8}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
@@ -228,8 +231,9 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
 
                 {/* 总订单量 */}
                 <Col
-                  xs={12}
-                  sm={8}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
@@ -248,8 +252,9 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
 
                 {/* 团购单数 */}
                 <Col
-                  xs={12}
-                  sm={8}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">

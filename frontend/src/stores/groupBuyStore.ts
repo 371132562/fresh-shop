@@ -21,13 +21,6 @@ import { PSEUDO_STATUS_PARTIAL_REFUND } from '@/stores/orderStore.ts'
 
 import useOrderStore from './orderStore'
 
-export type GroupBuyUnit = {
-  id: string
-  unit: string
-  price: number
-  costPrice: number
-}
-
 type GroupBuyCreate = Omit<GroupBuy, 'id' | 'delete' | 'createdAt' | 'updatedAt'>
 
 type GroupBuyId = Pick<GroupBuy, 'id'>

@@ -133,6 +133,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
             }
             size="small"
             className="overflow-hidden"
+            styles={{ header: { background: '#e6f7ff' } }}
           >
             {/* 核心指标区域 - 采用渐变背景和卡片式布局 */}
             <div className="mb-6 rounded-xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
@@ -141,11 +142,12 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                 <div className="mx-auto mt-1 h-1 w-16 rounded-full bg-gradient-to-r from-blue-400 to-purple-400"></div>
               </div>
 
-              <Row gutter={[24, 24]}>
+              <Row gutter={[12, 12]}>
                 {/* 总销售额 */}
                 <Col
-                  xs={12}
-                  sm={8}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
@@ -169,8 +171,9 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
 
                 {/* 总利润 */}
                 <Col
-                  xs={12}
-                  sm={8}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
@@ -202,8 +205,9 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
 
                 {/* 利润率 */}
                 <Col
-                  xs={12}
-                  sm={8}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
@@ -230,8 +234,9 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
 
                 {/* 总订单量 */}
                 <Col
-                  xs={12}
-                  sm={8}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
@@ -250,8 +255,9 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
 
                 {/* 发起次数 */}
                 <Col
-                  xs={12}
-                  sm={8}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
@@ -270,8 +276,9 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
 
                 {/* 供货商信息 */}
                 <Col
-                  xs={12}
-                  sm={8}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">

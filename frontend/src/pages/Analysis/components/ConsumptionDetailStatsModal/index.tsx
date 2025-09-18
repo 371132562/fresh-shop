@@ -197,8 +197,9 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
               <Row gutter={[12, 12]}>
                 {/* 订单数量 */}
                 <Col
-                  xs={12}
-                  sm={6}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
@@ -217,8 +218,9 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
 
                 {/* 消费总额 */}
                 <Col
-                  xs={12}
-                  sm={6}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
@@ -242,8 +244,9 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
 
                 {/* 平均单价 */}
                 <Col
-                  xs={12}
-                  sm={6}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
@@ -262,8 +265,9 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
 
                 {/* 部分退款 */}
                 <Col
-                  xs={12}
-                  sm={6}
+                  xs={24}
+                  md={12}
+                  lg={8}
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">

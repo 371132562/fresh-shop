@@ -1,8 +1,9 @@
 import { Form, Input, InputNumber, Modal, notification, Select } from 'antd'
+import { GroupBuyUnit } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 
 import useCustomerStore from '@/stores/customerStore.ts'
-import useGroupBuyStore, { GroupBuyUnit } from '@/stores/groupBuyStore.ts'
+import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import useOrderStore from '@/stores/orderStore.ts'
 import { formatDate } from '@/utils'
 

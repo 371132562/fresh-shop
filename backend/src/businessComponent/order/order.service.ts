@@ -6,6 +6,7 @@ import {
   OrderPageParams,
   ListByPage,
   PartialRefundParams,
+  GroupBuyUnit,
 } from '../../../types/dto';
 
 @Injectable()
@@ -187,12 +188,7 @@ export class OrderService {
     }
 
     // 计算订单总金额
-    const units = order.groupBuy.units as Array<{
-      id: string;
-      unit: string;
-      price: number;
-      costPrice: number;
-    }>;
+    const units = order.groupBuy.units as Array<GroupBuyUnit>;
     const selectedUnit = units.find((unit) => unit.id === order.unitId);
 
     if (!selectedUnit) {

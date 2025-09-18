@@ -9,6 +9,9 @@ import {
   ListByPage,
   GroupBuyOrderStats,
   GroupBuyListItem,
+  GroupBuyUnit,
+  GroupBuyUnitStats,
+  Order,
 } from '../../../types/dto';
 import { UploadService } from 'src/upload/upload.service';
 
@@ -253,7 +256,8 @@ export class GroupBuyService {
   }
 
   async detail(id: string) {
-    return this.prisma.groupBuy.findUnique({
+    // 获取团购详情数据
+    const groupBuy = await this.prisma.groupBuy.findUnique({
       where: {
         id,
       },
@@ -277,6 +281,62 @@ export class GroupBuyService {
         }, // 包含所有 order 字段
       },
     });
+
+    if (!groupBuy) {
+      return null;
+    }
+
+    // 计算规格统计和总销售额
+    let unitStatistics: GroupBuyUnitStats[] = [];
+    let totalSalesAmount = 0;
+
+    if (
+      groupBuy?.order?.length &&
+      groupBuy?.units &&
+      Array.isArray(groupBuy.units)
+    ) {
+      // 构建规格映射表，同时初始化统计对象
+      const unitMap = new Map<string, GroupBuyUnit>();
+      const stats: Record<string, GroupBuyUnitStats> = {};
+
+      // 初始化规格统计对象和映射表
+      (groupBuy.units as GroupBuyUnit[]).forEach((unit) => {
+        unitMap.set(unit.id, unit);
+        stats[unit.id] = {
+          name: unit.unit,
+          quantity: 0,
+          price: unit.price,
+        };
+      });
+
+      // 一次遍历同时计算规格统计和总销售额
+      (groupBuy.order as Order[]).forEach((order) => {
+        // 统计所有订单的数量（用于规格统计）
+        if (order.unitId && stats[order.unitId]) {
+          stats[order.unitId].quantity += order.quantity;
+        }
+
+        // 只计算已付款和已完成状态的订单销售额
+        if (order.status === 'PAID' || order.status === 'COMPLETED') {
+          const unit = order.unitId ? unitMap.get(order.unitId) : undefined;
+          if (unit) {
+            const gross = unit.price * order.quantity;
+            const partialRefund = order.partialRefundAmount || 0;
+            const net = Math.max(0, gross - partialRefund);
+            totalSalesAmount += net;
+          }
+        }
+      });
+
+      // 过滤掉未被订购的规格
+      unitStatistics = Object.values(stats).filter((item) => item.quantity > 0);
+    }
+
+    return {
+      ...groupBuy,
+      unitStatistics,
+      totalSalesAmount,
+    };
   }
 
   async delete(id: string) {
