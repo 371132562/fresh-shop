@@ -286,9 +286,10 @@ export class GroupBuyService {
       return null;
     }
 
-    // 计算规格统计和总销售额
+    // 计算规格统计、销售额和利润
     let unitStatistics: GroupBuyUnitStats[] = [];
     let totalSalesAmount = 0;
+    let totalProfit = 0;
 
     if (
       groupBuy?.order?.length &&
@@ -316,7 +317,7 @@ export class GroupBuyService {
           stats[order.unitId].quantity += order.quantity;
         }
 
-        // 只计算已付款和已完成状态的订单销售额
+        // 只计算已付款和已完成状态的订单销售额和利润
         if (order.status === 'PAID' || order.status === 'COMPLETED') {
           const unit = order.unitId ? unitMap.get(order.unitId) : undefined;
           if (unit) {
@@ -324,6 +325,11 @@ export class GroupBuyService {
             const partialRefund = order.partialRefundAmount || 0;
             const net = Math.max(0, gross - partialRefund);
             totalSalesAmount += net;
+
+            // 计算利润：销售额减去成本
+            const cost = unit.costPrice * order.quantity;
+            const profit = net - cost;
+            totalProfit += profit;
           }
         }
       });
@@ -336,6 +342,7 @@ export class GroupBuyService {
       ...groupBuy,
       unitStatistics,
       totalSalesAmount,
+      totalProfit,
     };
   }
 

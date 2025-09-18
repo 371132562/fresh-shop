@@ -1,3 +1,4 @@
+import { ArrowLeftOutlined } from '@ant-design/icons'
 import type { PopconfirmProps } from 'antd'
 import { Button, Flex, Image, List, notification, Popconfirm, Skeleton, Spin, Tag } from 'antd'
 import {
@@ -213,7 +214,15 @@ export const Component = () => {
           <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
             {/* 卡片标题及操作按钮 */}
             <h3 className="mb-4 border-b border-gray-100 pb-3 text-xl font-bold text-gray-800">
-              <div className="mb-3">{groupBuy?.name}</div>
+              <div className="mb-3 flex items-center gap-3">
+                <Button
+                  type="text"
+                  icon={<ArrowLeftOutlined />}
+                  onClick={() => navigate(-1)}
+                  className="flex items-center justify-center p-1"
+                />
+                {groupBuy?.name}
+              </div>
               <div className="flex items-center justify-between">
                 <Button
                   type="primary"
@@ -312,7 +321,7 @@ export const Component = () => {
           {/* 规格信息卡片 - 优化显示方式 */}
           <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
             <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
-              商品规格
+              所有规格
             </h3>
             <div className="space-y-4">
               {/* 增加每项规格之间的垂直间距 */}
@@ -389,11 +398,21 @@ export const Component = () => {
             </h3>
             {(groupBuy?.unitStatistics || []).length > 0 && (
               <div className="mb-4 rounded-md bg-gray-50 p-4">
-                <h4 className="mb-3 text-base font-semibold text-gray-600">售卖统计</h4>
+                <h4 className="mb-3 text-base font-semibold text-gray-600">售卖情况</h4>
                 <div className="mb-3 flex items-center justify-between text-sm">
-                  <span className="text-gray-700">总销售额</span>
+                  <span className="text-gray-700">销售额</span>
                   <span className="font-bold text-blue-600">
                     ¥{(groupBuy?.totalSalesAmount || 0).toFixed(2)}
+                  </span>
+                </div>
+                <div className="mb-3 flex items-center justify-between text-sm">
+                  <span className="text-gray-700">利润</span>
+                  <span
+                    className={`font-bold ${
+                      (groupBuy?.totalProfit || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}
+                  >
+                    ¥{(groupBuy?.totalProfit || 0).toFixed(2)}
                   </span>
                 </div>
                 <ul className="space-y-2">
@@ -515,7 +534,7 @@ export const Component = () => {
                               </Tag>
                             </span>
                           </p>
-                          {order.partialRefundAmount > 0 && order.status !== 'REFUNDED' && (
+                          {(order.partialRefundAmount || 0) > 0 && order.status !== 'REFUNDED' && (
                             <p className="flex items-center">
                               <span className="w-20 flex-shrink-0 text-gray-600">部分退款:</span>
                               <span className="flex-grow">

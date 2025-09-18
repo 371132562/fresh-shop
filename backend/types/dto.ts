@@ -412,7 +412,8 @@ export type GroupBuyDetail = GroupBuy & {
   })[]; // 订单列表
   // 统计数据
   unitStatistics: GroupBuyUnitStats[]; // 规格统计
-  totalSalesAmount: number; // 总销售额（只计算已付款和已完成状态的订单，扣除部分退款）
+  totalSalesAmount: number; // 销售额（只计算已付款和已完成状态的订单，扣除部分退款）
+  totalProfit: number; // 利润（销售额减去成本）
 };
 
 /**

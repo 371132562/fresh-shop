@@ -1,3 +1,4 @@
+import { ArrowLeftOutlined } from '@ant-design/icons'
 import { PopconfirmProps, Tag } from 'antd'
 import { Button, Flex, notification, Popconfirm, Skeleton } from 'antd'
 import { GroupBuyUnit } from 'fresh-shop-backend/types/dto.ts'
@@ -79,7 +80,13 @@ export const Component = () => {
           <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
             {/* 卡片标题及操作按钮：保持你原有的设计不变 */}
             <h3 className="mb-4 flex flex-col justify-between border-b border-gray-100 pb-3 text-xl font-bold text-gray-800">
-              <div className="mb-3">
+              <div className="mb-3 flex items-center gap-3">
+                <Button
+                  type="text"
+                  icon={<ArrowLeftOutlined />}
+                  onClick={() => navigate(-1)}
+                  className="flex items-center justify-center p-1"
+                />
                 {order?.status ? (
                   <div className="flex items-center">
                     <span className="mr-2">订单状态</span>
@@ -208,7 +215,7 @@ export const Component = () => {
               </div>
 
               {/* 部分退款 */}
-              {order?.partialRefundAmount &&
+              {order?.partialRefundAmount != null &&
                 order.partialRefundAmount > 0 &&
                 order.status !== 'REFUNDED' && (
                   <div className="flex items-start text-base">
