@@ -915,7 +915,10 @@ export class AnalysisService {
         endDate,
         totalRevenue: 0,
         totalProfit: 0,
+        totalRefundAmount: 0,
         totalPartialRefundAmount: 0,
+        totalRefundedOrderCount: 0,
+        totalPartialRefundOrderCount: 0,
         totalProfitMargin: 0,
         totalOrderCount: 0,
         uniqueCustomerCount: 0,
@@ -934,7 +937,10 @@ export class AnalysisService {
     // 2. 聚合数据计算
     let totalRevenue = 0;
     let totalProfit = 0;
+    let totalRefundAmount = 0;
     let totalPartialRefundAmount = 0;
+    let totalRefundedOrderCount = 0;
+    let totalPartialRefundOrderCount = 0;
     let totalOrderCount = 0;
     const uniqueCustomerIds = new Set<string>();
     const customerPurchaseCounts = new Map<string, number>();
@@ -979,6 +985,18 @@ export class AnalysisService {
             totalRevenue += revenue;
             totalProfit += profit;
             totalPartialRefundAmount += partialRefundAmount;
+
+            // 统计退款相关数据
+            if (order.status === OrderStatus.REFUNDED) {
+              totalRefundAmount += originalRevenue;
+              totalRefundedOrderCount += 1;
+            } else {
+              totalRefundAmount += partialRefundAmount;
+              if (partialRefundAmount > 0) {
+                totalPartialRefundOrderCount += 1;
+              }
+            }
+
             // 订单量统计：仅统计已支付与已完成
             if (
               order.status === OrderStatus.PAID ||
@@ -1121,7 +1139,9 @@ export class AnalysisService {
         let orderCount = 0;
         let revenue = 0;
         let profit = 0;
-        let partialRefundAmount = 0;
+        let totalRefundAmount = 0;
+        let partialRefundOrderCount = 0;
+        let refundedOrderCount = 0;
         const customerIds = new Set<string>();
         const units = groupBuy.units as Array<GroupBuyUnit>;
 
@@ -1135,7 +1155,6 @@ export class AnalysisService {
             customerIds.add(order.customerId);
             const selectedUnit = units.find((unit) => unit.id === order.unitId);
             if (selectedUnit) {
-              // 部分退款按绝对值扣利润；全额退款不计入此分支（因未计入订单量）
               const originalRevenue = selectedUnit.price * order.quantity;
               const originalProfit =
                 (selectedUnit.price - selectedUnit.costPrice) * order.quantity;
@@ -1146,26 +1165,26 @@ export class AnalysisService {
 
               revenue += orderRevenue;
               profit += orderProfit;
-              partialRefundAmount += orderPartialRefundAmount;
+              totalRefundAmount += orderPartialRefundAmount;
+
+              // 统计部分退款订单数
+              if (orderPartialRefundAmount > 0) {
+                partialRefundOrderCount += 1;
+              }
             }
           }
           // 已退款订单：收入为0、利润为-成本，计入损益但不计入订单量
           else if (order.status === OrderStatus.REFUNDED) {
+            refundedOrderCount += 1;
             const selectedUnit = units.find((unit) => unit.id === order.unitId);
             if (selectedUnit) {
               const originalCost = selectedUnit.costPrice * order.quantity;
+              const originalRevenue = selectedUnit.price * order.quantity;
               profit += -originalCost;
-              // revenue 加 0
-              // partialRefundAmount 在此无需增加，明细展示仍以已支付/完成订单为准
+              totalRefundAmount += originalRevenue;
             }
           }
         }
-
-        // 统计该次团购的退款订单数
-        // 注意：退款订单不计入收入/利润，但用于历史项展示
-        const refundedOrderCount = groupBuy.order.filter(
-          (o) => o.status === OrderStatus.REFUNDED,
-        ).length;
 
         return {
           groupBuyId: groupBuy.id,
@@ -1174,9 +1193,11 @@ export class AnalysisService {
           orderCount,
           revenue,
           profit,
-          partialRefundAmount,
+          totalRefundAmount,
+          partialRefundOrderCount,
           customerCount: customerIds.size,
           refundedOrderCount,
+          totalRefundOrderCount: partialRefundOrderCount + refundedOrderCount,
         };
       });
 
@@ -1196,7 +1217,10 @@ export class AnalysisService {
       endDate,
       totalRevenue,
       totalProfit,
+      totalRefundAmount,
       totalPartialRefundAmount,
+      totalRefundedOrderCount,
+      totalPartialRefundOrderCount,
       totalProfitMargin,
       totalOrderCount,
       uniqueCustomerCount,
@@ -1775,10 +1799,11 @@ export class AnalysisService {
     // 核心统计变量
     let totalRevenue = 0; // 总销售额
     let totalProfit = 0; // 总利润
+    let totalRefundAmount = 0; // 总退款金额（部分退款+全额退款）
     let totalPartialRefundAmount = 0; // 总部分退款金额
+    let totalRefundedOrderCount = 0; // 总全额退款订单数
+    let totalPartialRefundOrderCount = 0; // 总部分退款订单数
     let totalOrderCount = 0; // 总订单量
-    // 退款订单数（与合并团购统计保持一致统计口径）
-    // 已移除：详情级别不再返回退款总数，由团购历史中的每条记录提供 refundedOrderCount
 
     // ================================================================
     // 步骤四：逐团购与订单累计指标
@@ -1814,6 +1839,8 @@ export class AnalysisService {
           const refundedCost = unit.costPrice * order.quantity;
           totalProfit += -refundedCost;
           groupBuyProfit += -refundedCost;
+          totalRefundAmount += originalRevenue;
+          totalRefundedOrderCount += 1;
 
           // 同步将负成本计入商品与分类的利润（不增加订单量/商品数量）
           const productKey = groupBuy.product.id;
@@ -1860,6 +1887,10 @@ export class AnalysisService {
         totalRevenue += orderRevenue;
         totalProfit += orderProfit;
         totalPartialRefundAmount += partialRefundAmount;
+        totalRefundAmount += partialRefundAmount;
+        if (partialRefundAmount > 0) {
+          totalPartialRefundOrderCount += 1;
+        }
         totalOrderCount++;
         // 累加到当前团购单统计中
         groupBuyRevenue += orderRevenue;
@@ -1948,6 +1979,80 @@ export class AnalysisService {
 
       // 组装团购历史项（用于详情页时间轴/列表展示）
       if (groupBuyOrderCount > 0) {
+        // 计算该团购单的退款相关统计
+        const refundedOrderCount = await this.prisma.order.count({
+          where: {
+            delete: 0,
+            status: OrderStatus.REFUNDED,
+            groupBuyId: groupBuy.id,
+            ...(startDate && endDate
+              ? {
+                  groupBuy: {
+                    groupBuyStartDate: {
+                      gte: startDate,
+                      lte: endDate,
+                    },
+                  },
+                }
+              : {}),
+          },
+        });
+
+        // 计算部分退款订单数
+        const partialRefundOrderCount = await this.prisma.order.count({
+          where: {
+            delete: 0,
+            status: {
+              in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+            },
+            groupBuyId: groupBuy.id,
+            partialRefundAmount: {
+              gt: 0,
+            },
+            ...(startDate && endDate
+              ? {
+                  groupBuy: {
+                    groupBuyStartDate: {
+                      gte: startDate,
+                      lte: endDate,
+                    },
+                  },
+                }
+              : {}),
+          },
+        });
+
+        // 计算总退款金额（部分退款金额 + 全额退款金额）
+        const refundedOrders = await this.prisma.order.findMany({
+          where: {
+            delete: 0,
+            status: OrderStatus.REFUNDED,
+            groupBuyId: groupBuy.id,
+            ...(startDate && endDate
+              ? {
+                  groupBuy: {
+                    groupBuyStartDate: {
+                      gte: startDate,
+                      lte: endDate,
+                    },
+                  },
+                }
+              : {}),
+          },
+          select: {
+            quantity: true,
+            unitId: true,
+          },
+        });
+
+        let totalRefundAmount = groupBuyPartialRefundAmount; // 部分退款金额
+        for (const order of refundedOrders) {
+          const unit = units.get(order.unitId);
+          if (unit) {
+            totalRefundAmount += unit.price * order.quantity; // 全额退款金额
+          }
+        }
+
         groupBuyHistory.push({
           groupBuyId: groupBuy.id,
           groupBuyName: groupBuy.name,
@@ -1955,25 +2060,11 @@ export class AnalysisService {
           orderCount: groupBuyOrderCount,
           revenue: groupBuyRevenue,
           profit: groupBuyProfit,
-          partialRefundAmount: groupBuyPartialRefundAmount,
+          totalRefundAmount,
+          partialRefundOrderCount,
           customerCount: groupBuyCustomerIds.size,
-          refundedOrderCount: await this.prisma.order.count({
-            where: {
-              delete: 0,
-              status: OrderStatus.REFUNDED,
-              groupBuyId: groupBuy.id,
-              ...(startDate && endDate
-                ? {
-                    groupBuy: {
-                      groupBuyStartDate: {
-                        gte: startDate,
-                        lte: endDate,
-                      },
-                    },
-                  }
-                : {}),
-            },
-          }),
+          refundedOrderCount,
+          totalRefundOrderCount: partialRefundOrderCount + refundedOrderCount,
         });
       }
     }
@@ -2139,7 +2230,10 @@ export class AnalysisService {
       endDate,
       totalRevenue,
       totalProfit,
+      totalRefundAmount,
       totalPartialRefundAmount,
+      totalRefundedOrderCount,
+      totalPartialRefundOrderCount,
       averageProfitMargin,
       totalOrderCount,
       uniqueCustomerCount: uniqueCustomerIds.size,

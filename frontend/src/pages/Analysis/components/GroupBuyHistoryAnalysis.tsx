@@ -32,26 +32,20 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       title: '发起时间',
       dataIndex: 'launchDate',
       key: 'launchDate',
-      render: (date: Date) => (
-        <div className="flex items-center gap-2">{dayjs(date).format('YYYY-MM-DD')}</div>
+      render: (date: Date, record) => (
+        <div className="flex items-center gap-2">
+          <NavLink
+            to={`/groupBuy/detail/${record.groupBuyId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 transition-colors hover:text-blue-600"
+            title="点击查看团购单详情"
+          >
+            <span>{dayjs(date).format('YYYY-MM-DD')}</span>
+          </NavLink>
+        </div>
       ),
       defaultSortOrder: 'descend' as const
-    },
-    {
-      title: '团购',
-      dataIndex: 'groupBuyName',
-      key: 'groupBuyName',
-      render: (name: string, record) => (
-        <NavLink
-          to={`/groupBuy/detail/${record.groupBuyId}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-500 transition-colors hover:text-blue-600"
-          title="点击查看团购单详情"
-        >
-          {name}
-        </NavLink>
-      )
     },
     {
       title: '订单量',
@@ -82,18 +76,22 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       )
     },
     {
-      title: '部分退款',
-      dataIndex: 'partialRefundAmount',
-      key: 'partialRefundAmount',
+      title: '退款金额',
+      dataIndex: 'totalRefundAmount',
+      key: 'totalRefundAmount',
       render: (amount: number) => (
-        <span className="font-medium text-orange-500">¥{(amount || 0).toFixed(2)}</span>
+        <span className="font-medium text-orange-600">¥{(amount || 0).toFixed(2)}</span>
       )
     },
     {
-      title: '退款订单',
-      dataIndex: 'refundedOrderCount',
-      key: 'refundedOrderCount',
-      render: (count: number) => <span className="font-medium text-orange-500">{count}单</span>
+      title: '部分退款/退款订单',
+      dataIndex: 'totalRefundOrderCount',
+      key: 'totalRefundOrderCount',
+      render: (_, record) => (
+        <span className="font-medium text-orange-600">
+          {record.partialRefundOrderCount || 0}/{record.refundedOrderCount || 0} 单
+        </span>
+      )
     },
     {
       title: '利润率',
@@ -112,11 +110,15 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
   // 计算统计指标
   const totalRevenue = groupBuyHistory.reduce((sum, item) => sum + item.revenue, 0)
   const totalProfit = groupBuyHistory.reduce((sum, item) => sum + item.profit, 0)
-  const totalPartialRefundAmount = groupBuyHistory.reduce(
-    (sum, item) => sum + (item.partialRefundAmount || 0),
+  const totalRefundAmount = groupBuyHistory.reduce(
+    (sum, item) => sum + (item.totalRefundAmount || 0),
     0
   )
   const totalOrderCount = groupBuyHistory.reduce((sum, item) => sum + item.orderCount, 0)
+  const totalPartialRefundOrderCount = groupBuyHistory.reduce(
+    (sum, item) => sum + (item.partialRefundOrderCount || 0),
+    0
+  )
   const totalRefundedOrderCount = groupBuyHistory.reduce(
     (sum, item) => sum + (item.refundedOrderCount || 0),
     0
@@ -170,19 +172,19 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
             </Col>
             <Col span={5}>
               <Statistic
-                title="部分退款金额"
-                value={totalPartialRefundAmount}
+                title="退款金额"
+                value={totalRefundAmount}
                 precision={2}
                 prefix="¥"
-                valueStyle={{ color: '#fa541c' }}
+                valueStyle={{ color: '#ea580c' }}
               />
             </Col>
             <Col span={4}>
               <Statistic
-                title="退款订单数"
-                value={totalRefundedOrderCount}
+                title="部分退款/退款订单数"
+                value={`${totalPartialRefundOrderCount}/${totalRefundedOrderCount}`}
                 suffix="单"
-                valueStyle={{ color: '#fa541c' }}
+                valueStyle={{ color: '#ea580c' }}
               />
             </Col>
           </Row>

@@ -303,11 +303,11 @@ export const Component = () => {
                       )}
                       {item.partialRefundAmount > 0 && item.status !== 'REFUNDED' && (
                         <div className="text-[13px] font-medium text-gray-800">
-                          <span>部分退款：</span>
+                          <span>退款：</span>
                           <span className="text-orange-600">
                             ¥{item.partialRefundAmount.toFixed(2)}
                           </span>
-                          <span className="text-blue-500">/¥{itemTotalAmount.toFixed(2)}</span>
+                          <span className="text-cyan-600">/¥{itemTotalAmount.toFixed(2)}</span>
                         </div>
                       )}
                       {item.description && (

@@ -209,22 +209,22 @@ export const Component = () => {
               {/* 数量 */}
               <div className="flex items-start text-base">
                 <span className="w-20 flex-shrink-0 font-medium text-gray-500">购买数量：</span>
-                <span className="word-break-all flex-grow break-words font-bold text-blue-500">
+                <span className="word-break-all flex-grow break-words font-bold text-cyan-600">
                   {order?.quantity || <span className="italic text-gray-400">无</span>}
                 </span>
               </div>
 
-              {/* 部分退款 */}
+              {/* 退款金额 */}
               {order?.partialRefundAmount != null &&
                 order.partialRefundAmount > 0 &&
                 order.status !== 'REFUNDED' && (
                   <div className="flex items-start text-base">
-                    <span className="w-20 flex-shrink-0 font-medium text-gray-500">部分退款：</span>
+                    <span className="w-20 flex-shrink-0 font-medium text-gray-500">退款金额：</span>
                     <span className="word-break-all flex-grow break-words">
                       <span className="font-bold text-orange-600">
                         ¥{order.partialRefundAmount.toFixed(2)}
                       </span>
-                      <span className="font-bold text-blue-500">
+                      <span className="font-bold text-cyan-600">
                         /¥{(unit ? unit.price * order.quantity : 0).toFixed(2)}
                       </span>
                     </span>
@@ -254,17 +254,17 @@ export const Component = () => {
                   <div className="mb-3 flex items-center">
                     {/* 规格名称单独一行，更醒目 */}
                     <span className="w-20 flex-shrink-0 text-gray-500">计量单位：</span>
-                    <span className="font-bold text-blue-500">{unit.unit}</span>
+                    <span className="font-bold text-cyan-600">{unit.unit}</span>
                     {/* 规格值加粗并使用蓝色强调 */}
                   </div>
                   <div className="mb-3 flex items-center">
                     <span className="w-20 flex-shrink-0 text-gray-500">售价：</span>
-                    <span className="mr-2 font-medium text-blue-500">￥{unit.price}</span>
+                    <span className="mr-2 font-medium text-cyan-600">￥{unit.price}</span>
                   </div>
                   {!globalSetting?.value?.sensitive && (
                     <div className="flex items-center">
                       <span className="w-20 flex-shrink-0 text-gray-500">成本价：</span>
-                      <span className="font-medium text-blue-500">￥{unit.costPrice}</span>
+                      <span className="font-medium text-cyan-600">￥{unit.costPrice}</span>
                     </div>
                   )}
                 </div>

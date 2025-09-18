@@ -281,60 +281,64 @@ export const MergedGroupBuyOverview = ({
           dataSource={mergedGroupBuyOverviewList}
           renderItem={(item: MergedGroupBuyOverviewListItem) => (
             <List.Item>
-              <List.Item.Meta
-                title={
-                  <div className="flex flex-col items-start">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-medium">{item.groupBuyName}</span>
-                      <span className="text-sm text-gray-500">({item.supplierName})</span>
+              {/* 自定义容器：左侧信息 + 右侧操作，避免溢出导致响应式混乱 */}
+              <div className="flex w-full flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
+                {/* 左侧信息区：可伸展，溢出隐藏，md起自动换行 */}
+                <div className="min-w-0 flex-1 overflow-hidden pr-0 md:pr-4">
+                  {/* 标题：团购名称与供货商，小屏单行省略，md起允许换行 */}
+                  <div className="mb-1">
+                    <div className="flex min-w-0 flex-row flex-wrap items-center gap-2">
+                      <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all">
+                        {item.groupBuyName}
+                      </span>
+                      <span className="shrink-0 text-sm text-gray-500">({item.supplierName})</span>
                     </div>
                     {!mergeSameName && item.groupBuyStartDate && (
-                      <div className="mb-1 text-sm">
+                      <div className="mt-1 text-sm text-gray-600">
                         发起时间：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')}
                       </div>
                     )}
                   </div>
-                }
-                description={
-                  <div className="flex items-start justify-between">
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-500">总销售额</span>
-                        <span className="text-lg font-semibold text-cyan-600">
-                          ¥{item.totalRevenue.toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-500">总利润</span>
-                        <span
-                          className={`text-lg font-semibold ${getProfitColor(item.totalProfit)}`}
-                        >
-                          ¥{item.totalProfit.toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-500">参与客户数</span>
-                        <span className="text-lg font-semibold text-purple-600">
-                          {item.uniqueCustomerCount}
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-500">订单量</span>
-                        <span className="text-lg font-semibold text-orange-600">
-                          {item.totalOrderCount}
-                        </span>
-                      </div>
+                  {/* 统计信息：网格布局，保证不撑坏容器 */}
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-500">总销售额</span>
+                      <span className="text-lg font-semibold text-cyan-600">
+                        ¥{item.totalRevenue.toFixed(2)}
+                      </span>
                     </div>
-                    <Button
-                      type="primary"
-                      ghost
-                      onClick={() => handleItemClick(item)}
-                    >
-                      查看详细数据
-                    </Button>
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-500">总利润</span>
+                      <span className={`text-lg font-semibold ${getProfitColor(item.totalProfit)}`}>
+                        ¥{item.totalProfit.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-500">参与客户数</span>
+                      <span className="text-lg font-semibold text-purple-600">
+                        {item.uniqueCustomerCount}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-500">订单量</span>
+                      <span className="text-lg font-semibold text-orange-600">
+                        {item.totalOrderCount}
+                      </span>
+                    </div>
                   </div>
-                }
-              />
+                </div>
+
+                {/* 右侧操作区：不收缩，允许换行；窄屏下按钮自然换行 */}
+                <div className="flex shrink-0 flex-row flex-wrap items-center justify-start gap-2 md:justify-end md:gap-3">
+                  <Button
+                    color="default"
+                    variant="outlined"
+                    onClick={() => handleItemClick(item)}
+                  >
+                    查看数据
+                  </Button>
+                </div>
+              </div>
             </List.Item>
           )}
         />

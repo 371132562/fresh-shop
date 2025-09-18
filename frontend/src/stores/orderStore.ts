@@ -58,7 +58,7 @@ export const OrderStatusOptions = Object.entries(OrderStatusMap).map(([value, co
   color: content.color
 }))
 
-// UI 伪状态：部分退款（非已退款且部分退款金额>0）
+// UI 伪状态：部分s（非已退款且部分退款金额>0）
 export const PSEUDO_STATUS_PARTIAL_REFUND = 'PARTIAL_REFUND'
 export const ExtendedOrderStatusOptions = [
   ...OrderStatusOptions,

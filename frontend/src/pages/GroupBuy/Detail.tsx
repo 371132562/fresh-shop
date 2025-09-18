@@ -278,7 +278,7 @@ export const Component = () => {
               </div>
             </h3>
 
-            {/* 团购基础信息：改回单列模式 */}
+            {/* 团购基础信息 */}
             <div className="space-y-3">
               {/* 发起时间 */}
               <div className="flex items-start text-base">
@@ -315,6 +315,42 @@ export const Component = () => {
                   {groupBuy?.description || <span className="italic text-gray-400">无</span>}
                 </span>
               </div>
+
+              {/* 销售额 */}
+              <div className="flex items-start text-base">
+                <span className="w-20 flex-shrink-0 font-medium text-gray-500">销售额：</span>
+                <span className="word-break-all flex-grow break-words text-gray-700">
+                  <span className="font-bold text-cyan-600">
+                    ¥{(groupBuy?.totalSalesAmount || 0).toFixed(2)}
+                  </span>
+                </span>
+              </div>
+
+              {/* 利润 */}
+              <div className="flex items-start text-base">
+                <span className="w-20 flex-shrink-0 font-medium text-gray-500">利润：</span>
+                <span className="word-break-all flex-grow break-words text-gray-700">
+                  <span
+                    className={`font-bold ${
+                      (groupBuy?.totalProfit || 0) >= 0 ? 'text-red-600' : 'text-green-600'
+                    }`}
+                  >
+                    ¥{(groupBuy?.totalProfit || 0).toFixed(2)}
+                  </span>
+                </span>
+              </div>
+
+              {/* 退款金额 */}
+              {(groupBuy?.totalRefundAmount || 0) > 0 && (
+                <div className="flex items-start text-base">
+                  <span className="w-20 flex-shrink-0 font-medium text-gray-500">退款金额：</span>
+                  <span className="word-break-all flex-grow break-words text-gray-700">
+                    <span className="font-bold text-orange-600">
+                      ¥{(groupBuy?.totalRefundAmount || 0).toFixed(2)}
+                    </span>
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -396,40 +432,6 @@ export const Component = () => {
             <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
               订单信息 共 {groupBuy?.order?.length || 0} 条
             </h3>
-            {(groupBuy?.unitStatistics || []).length > 0 && (
-              <div className="mb-4 rounded-md bg-gray-50 p-4">
-                <h4 className="mb-3 text-base font-semibold text-gray-600">售卖情况</h4>
-                <div className="mb-3 flex items-center justify-between text-sm">
-                  <span className="text-gray-700">销售额</span>
-                  <span className="font-bold text-blue-600">
-                    ¥{(groupBuy?.totalSalesAmount || 0).toFixed(2)}
-                  </span>
-                </div>
-                <div className="mb-3 flex items-center justify-between text-sm">
-                  <span className="text-gray-700">利润</span>
-                  <span
-                    className={`font-bold ${
-                      (groupBuy?.totalProfit || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}
-                  >
-                    ¥{(groupBuy?.totalProfit || 0).toFixed(2)}
-                  </span>
-                </div>
-                <ul className="space-y-2">
-                  {(groupBuy?.unitStatistics || []).map(stat => (
-                    <li
-                      key={stat.name}
-                      className="flex items-center justify-between text-sm"
-                    >
-                      <span className="text-gray-700">
-                        {stat.name} (￥{stat.price})
-                      </span>
-                      <span className="font-bold text-blue-600">{stat.quantity} 份</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
             <List
               itemLayout="horizontal"
               dataSource={groupBuy?.order}

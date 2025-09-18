@@ -126,7 +126,7 @@ const PartialRefundModal = ({
             <div className="text-sm text-gray-600">
               <p>
                 订单总金额：
-                <span className="font-semibold text-blue-600">￥{orderTotalAmount.toFixed(2)}</span>
+                <span className="font-semibold text-cyan-600">￥{orderTotalAmount.toFixed(2)}</span>
               </p>
               <p>
                 已退款金额：

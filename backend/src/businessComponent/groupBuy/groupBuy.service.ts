@@ -286,10 +286,14 @@ export class GroupBuyService {
       return null;
     }
 
-    // 计算规格统计、销售额和利润
+    // 计算规格统计、销售额、利润和退款相关统计
     let unitStatistics: GroupBuyUnitStats[] = [];
     let totalSalesAmount = 0;
     let totalProfit = 0;
+    let totalRefundAmount = 0;
+    let totalPartialRefundAmount = 0;
+    let totalRefundedOrderCount = 0;
+    let totalPartialRefundOrderCount = 0;
 
     if (
       groupBuy?.order?.length &&
@@ -310,11 +314,29 @@ export class GroupBuyService {
         };
       });
 
-      // 一次遍历同时计算规格统计和总销售额
+      // 一次遍历同时计算规格统计、销售额、利润和部分退款总金额
       (groupBuy.order as Order[]).forEach((order) => {
         // 统计所有订单的数量（用于规格统计）
         if (order.unitId && stats[order.unitId]) {
           stats[order.unitId].quantity += order.quantity;
+        }
+
+        // 统计退款相关数据
+        const partialRefund = order.partialRefundAmount || 0;
+        totalPartialRefundAmount += partialRefund;
+
+        if (order.status === 'REFUNDED') {
+          const unit = order.unitId ? unitMap.get(order.unitId) : undefined;
+          if (unit) {
+            const gross = unit.price * order.quantity;
+            totalRefundAmount += gross;
+          }
+          totalRefundedOrderCount += 1;
+        } else {
+          totalRefundAmount += partialRefund;
+          if (partialRefund > 0) {
+            totalPartialRefundOrderCount += 1;
+          }
         }
 
         // 只计算已付款和已完成状态的订单销售额和利润
@@ -322,7 +344,6 @@ export class GroupBuyService {
           const unit = order.unitId ? unitMap.get(order.unitId) : undefined;
           if (unit) {
             const gross = unit.price * order.quantity;
-            const partialRefund = order.partialRefundAmount || 0;
             const net = Math.max(0, gross - partialRefund);
             totalSalesAmount += net;
 
@@ -343,6 +364,10 @@ export class GroupBuyService {
       unitStatistics,
       totalSalesAmount,
       totalProfit,
+      totalRefundAmount,
+      totalPartialRefundAmount,
+      totalRefundedOrderCount,
+      totalPartialRefundOrderCount,
     };
   }
 

@@ -206,7 +206,10 @@ export class CustomerService {
         orderCount: 0,
         totalAmount: 0,
         averagePricePerOrder: 0,
+        totalRefundAmount: 0,
         totalPartialRefundAmount: 0,
+        totalRefundedOrderCount: 0,
+        totalPartialRefundOrderCount: 0,
         productConsumptionRanks: [],
       };
 
@@ -225,7 +228,10 @@ export class CustomerService {
 
     // 统计消费数据
     let totalAmount = 0;
+    let totalRefundAmount = 0;
     let totalPartialRefundAmount = 0;
+    let totalRefundedOrderCount = 0;
+    let totalPartialRefundOrderCount = 0;
     const productCounts: Record<
       string,
       {
@@ -238,6 +244,7 @@ export class CustomerService {
             unitName: string;
             count: number;
             totalAmount: number;
+            totalRefundAmount: number;
             totalPartialRefundAmount: number;
             latestGroupBuyStartDate: Date;
           }
@@ -251,12 +258,24 @@ export class CustomerService {
       if (unit) {
         const originalAmount = unit.price * order.quantity;
         const partialRefundAmount = order.partialRefundAmount || 0;
+
         // 消费额计算：已退款订单不计入消费额（收入为0）；部分退款按绝对额扣减
         const orderAmount =
           order.status === OrderStatus.REFUNDED
             ? 0
             : originalAmount - partialRefundAmount;
         totalAmount += orderAmount;
+
+        // 统计退款相关数据
+        if (order.status === OrderStatus.REFUNDED) {
+          totalRefundAmount += originalAmount;
+          totalRefundedOrderCount += 1;
+        } else {
+          totalRefundAmount += partialRefundAmount;
+          if (partialRefundAmount > 0) {
+            totalPartialRefundOrderCount += 1;
+          }
+        }
         totalPartialRefundAmount += partialRefundAmount;
 
         // 统计团购数据的key
@@ -281,6 +300,7 @@ export class CustomerService {
             unitName: unit.unit,
             count: 0,
             totalAmount: 0,
+            totalRefundAmount: 0,
             totalPartialRefundAmount: 0,
             latestGroupBuyStartDate: order.groupBuy.groupBuyStartDate,
           };
@@ -303,6 +323,17 @@ export class CustomerService {
         productCounts[order.groupBuy.productId].groupBuys[
           groupBuyKey
         ].totalAmount += orderAmount;
+
+        // 统计团购级别的退款数据
+        if (order.status === OrderStatus.REFUNDED) {
+          productCounts[order.groupBuy.productId].groupBuys[
+            groupBuyKey
+          ].totalRefundAmount += originalAmount;
+        } else {
+          productCounts[order.groupBuy.productId].groupBuys[
+            groupBuyKey
+          ].totalRefundAmount += partialRefundAmount;
+        }
         productCounts[order.groupBuy.productId].groupBuys[
           groupBuyKey
         ].totalPartialRefundAmount += partialRefundAmount;
@@ -564,7 +595,10 @@ export class CustomerService {
       orderCount,
       totalAmount,
       averagePricePerOrder,
+      totalRefundAmount,
       totalPartialRefundAmount,
+      totalRefundedOrderCount,
+      totalPartialRefundOrderCount,
       productConsumptionRanks,
       fifteenDayComparison: {
         current: currentOverall,

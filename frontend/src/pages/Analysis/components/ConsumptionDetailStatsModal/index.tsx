@@ -19,7 +19,7 @@ import dayjs from '@/utils/day'
 
 import FifteenDayComparison from './components/FifteenDayComparison'
 
-// 定义商品和团购的类型
+// 使用后端DTO类型定义
 type ProductItem = CustomerConsumptionDetailDto['productConsumptionRanks'][0]
 type GroupBuyItem = ProductItem['groupBuys'][0]
 
@@ -98,7 +98,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                     <div className="border-white-200 mt-2 rounded-md border px-3 py-2">
                       <div className="flex items-center gap-2">
                         <div className="text-sm font-medium">
-                          数据已扣除部分退款金额，仅统计已付款、已完成、已退款的订单
+                          数据已扣除退款金额，仅统计已付款、已完成、已退款的订单
                         </div>
                       </div>
                     </div>
@@ -120,7 +120,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                     <div className="border-white-200 mt-2 rounded-md border px-3 py-2">
                       <div className="flex items-center gap-2">
                         <div className="text-sm font-medium">
-                          数据已扣除部分退款金额，仅统计已付款、已完成、已退款的订单
+                          数据已扣除退款金额，仅统计已付款、已完成、已退款的订单
                         </div>
                       </div>
                     </div>
@@ -227,7 +227,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                       <div>
                         <div className="flex items-center gap-1">
                           <span className="text-sm font-medium text-gray-600">消费总额</span>
-                          <Tooltip title="已扣除部分退款金额">
+                          <Tooltip title="已扣除退款金额">
                             <InfoCircleOutlined className="text-blue-500" />
                           </Tooltip>
                         </div>
@@ -263,7 +263,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                   </div>
                 </Col>
 
-                {/* 部分退款 */}
+                {/* 退款金额 */}
                 <Col
                   xs={24}
                   md={12}
@@ -272,13 +272,13 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-sm font-medium text-gray-600">部分退款</div>
-                        <div className="mt-1 text-xl font-bold text-orange-500">
-                          ¥{(consumptionDetail.totalPartialRefundAmount || 0).toFixed(2)}
+                        <div className="text-sm font-medium text-gray-600">退款金额</div>
+                        <div className="mt-1 text-xl font-bold text-orange-600">
+                          ¥{(consumptionDetail.totalRefundAmount || 0).toFixed(2)}
                         </div>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
-                        <span className="text-xl text-orange-500">💸</span>
+                        <span className="text-xl">💸</span>
                       </div>
                     </div>
                   </div>
@@ -372,9 +372,9 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                       (sum: number, gb: GroupBuyItem) => sum + (gb.totalAmount || 0),
                       0
                     ) || 0
-                  const totalGroupBuyPartialRefund =
+                  const totalGroupBuyRefund =
                     product.groupBuys?.reduce(
-                      (sum: number, gb: GroupBuyItem) => sum + (gb.totalPartialRefundAmount || 0),
+                      (sum: number, gb: GroupBuyItem) => sum + (gb.totalRefundAmount || 0),
                       0
                     ) || 0
 
@@ -478,15 +478,15 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                             </div>
                             <div className="flex items-center justify-end gap-1 text-sm text-gray-500">
                               <span>总消费</span>
-                              {totalGroupBuyPartialRefund > 0 && (
-                                <Tooltip title="已扣除部分退款金额">
+                              {totalGroupBuyRefund > 0 && (
+                                <Tooltip title="已扣除退款金额">
                                   <InfoCircleOutlined className="text-orange-500" />
                                 </Tooltip>
                               )}
                             </div>
-                            {totalGroupBuyPartialRefund > 0 && (
-                              <div className="text-xs text-orange-500">
-                                退款: {formatAmount(totalGroupBuyPartialRefund)}
+                            {totalGroupBuyRefund > 0 && (
+                              <div className="text-xs text-orange-600">
+                                退款: {formatAmount(totalGroupBuyRefund)}
                               </div>
                             )}
                           </div>
@@ -533,16 +533,15 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                                         </div>
                                         <div className="flex items-center justify-end gap-1 text-xs text-gray-500">
                                           <span>小计</span>
-                                          {(groupBuy.totalPartialRefundAmount || 0) > 0 && (
-                                            <Tooltip title="已扣除部分退款金额">
+                                          {(groupBuy.totalRefundAmount || 0) > 0 && (
+                                            <Tooltip title="已扣除退款金额">
                                               <InfoCircleOutlined className="text-orange-500" />
                                             </Tooltip>
                                           )}
                                         </div>
-                                        {(groupBuy.totalPartialRefundAmount || 0) > 0 && (
-                                          <div className="text-xs text-orange-500">
-                                            退款:{' '}
-                                            {formatAmount(groupBuy.totalPartialRefundAmount || 0)}
+                                        {(groupBuy.totalRefundAmount || 0) > 0 && (
+                                          <div className="text-xs text-orange-600">
+                                            退款: {formatAmount(groupBuy.totalRefundAmount || 0)}
                                           </div>
                                         )}
                                       </div>

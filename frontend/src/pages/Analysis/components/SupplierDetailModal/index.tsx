@@ -151,7 +151,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                       <div>
                         <div className="flex items-center gap-1">
                           <span className="text-sm font-medium text-gray-600">总销售额</span>
-                          <Tooltip title="已扣除部分退款金额">
+                          <Tooltip title="已扣除退款金额">
                             <InfoCircleOutlined className="text-blue-500" />
                           </Tooltip>
                         </div>
@@ -177,7 +177,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                       <div>
                         <div className="flex items-center gap-1">
                           <span className="text-sm font-medium text-gray-600">总利润</span>
-                          <Tooltip title="已扣除部分退款金额">
+                          <Tooltip title="已扣除退款金额">
                             <InfoCircleOutlined className="text-blue-500" />
                           </Tooltip>
                         </div>
@@ -266,6 +266,27 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
                         <span className="text-xl text-orange-500">🚀</span>
+                      </div>
+                    </div>
+                  </div>
+                </Col>
+
+                {/* 退款金额 */}
+                <Col
+                  xs={24}
+                  md={12}
+                  lg={8}
+                >
+                  <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-medium text-gray-600">退款金额</div>
+                        <div className="mt-1 text-xl font-bold text-orange-600">
+                          ¥{(supplierOverviewDetail.totalRefundAmount || 0).toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
+                        <span className="text-xl text-orange-600">💸</span>
                       </div>
                     </div>
                   </div>

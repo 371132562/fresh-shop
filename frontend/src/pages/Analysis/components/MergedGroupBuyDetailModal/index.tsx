@@ -119,6 +119,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                   <TrophyOutlined className="text-blue-500" />
                   <span className="text-lg font-medium">
                     团购单：{mergedGroupBuyOverviewDetail.groupBuyName}
+                    （供货商：{mergedGroupBuyOverviewDetail.supplierName}）
                   </span>
                 </div>
                 {mergedGroupBuyOverviewDetail.startDate && mergedGroupBuyOverviewDetail.endDate ? (
@@ -154,7 +155,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                       <div>
                         <div className="flex items-center gap-1">
                           <span className="text-sm font-medium text-gray-600">总销售额</span>
-                          <Tooltip title="已扣除部分退款金额">
+                          <Tooltip title="已扣除退款金额">
                             <InfoCircleOutlined className="text-blue-500" />
                           </Tooltip>
                         </div>
@@ -180,7 +181,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                       <div>
                         <div className="flex items-center gap-1">
                           <span className="text-sm font-medium text-gray-600">总利润</span>
-                          <Tooltip title="已扣除部分退款金额">
+                          <Tooltip title="已扣除退款金额">
                             <InfoCircleOutlined className="text-blue-500" />
                           </Tooltip>
                         </div>
@@ -274,7 +275,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                   </div>
                 </Col>
 
-                {/* 供货商信息 */}
+                {/* 退款金额 */}
                 <Col
                   xs={24}
                   md={12}
@@ -282,14 +283,14 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                 >
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-600">供货商</div>
-                        <div className="mt-1 text-xl font-bold text-green-600">
-                          {mergedGroupBuyOverviewDetail.supplierName || '暂无供货商'}
+                      <div>
+                        <div className="text-sm font-medium text-gray-600">退款金额</div>
+                        <div className="mt-1 text-xl font-bold text-orange-600">
+                          ¥{(mergedGroupBuyOverviewDetail.totalRefundAmount || 0).toFixed(2)}
                         </div>
                       </div>
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                        <span className="text-xl text-green-600">🏪</span>
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
+                        <span className="text-xl text-orange-600">💸</span>
                       </div>
                     </div>
                   </div>
