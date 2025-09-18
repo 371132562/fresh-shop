@@ -467,13 +467,14 @@ export const Component = () => {
                           </p>
                           {(order.partialRefundAmount || 0) > 0 && order.status !== 'REFUNDED' && (
                             <p className="flex items-center">
-                              <span className="w-20 flex-shrink-0 text-gray-600">部分退款:</span>
+                              <span className="w-20 flex-shrink-0 text-gray-600">退款:</span>
                               <span className="flex-grow">
-                                <span className="text-orange-600">
+                                <span className="font-bold text-orange-600">
                                   ¥{order.partialRefundAmount.toFixed(2)}
                                 </span>
-                                <span className="text-gray-600">
-                                  /¥{orderTotalAmount.toFixed(2)}
+                                /
+                                <span className="font-bold text-cyan-600">
+                                  ¥{orderTotalAmount.toFixed(2)}
                                 </span>
                               </span>
                             </p>
