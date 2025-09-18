@@ -250,7 +250,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                   </div>
                 </Col>
 
-                {/* 团购单数 */}
+                {/* 团购单量 */}
                 <Col
                   xs={24}
                   md={12}
@@ -259,7 +259,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-sm font-medium text-gray-600">团购单数</div>
+                        <div className="text-sm font-medium text-gray-600">团购单量</div>
                         <div className="mt-1 text-xl font-bold text-orange-500">
                           {supplierOverviewDetail.totalGroupBuyCount}个
                         </div>
@@ -271,7 +271,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                   </div>
                 </Col>
 
-                {/* 退款金额 */}
+                {/* 部分退款/退款订单量 */}
                 <Col
                   xs={24}
                   md={12}
@@ -280,13 +280,14 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-sm font-medium text-gray-600">退款金额</div>
+                        <div className="text-sm font-medium text-gray-600">部分退款/退款订单量</div>
                         <div className="mt-1 text-xl font-bold text-orange-600">
-                          ¥{(supplierOverviewDetail.totalRefundAmount || 0).toFixed(2)}
+                          {supplierOverviewDetail.totalPartialRefundOrderCount || 0}/
+                          {supplierOverviewDetail.totalRefundedOrderCount || 0} 单
                         </div>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
-                        <span className="text-xl text-orange-600">💸</span>
+                        <span className="text-xl text-orange-600">📋</span>
                       </div>
                     </div>
                   </div>
@@ -330,7 +331,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                 <div>3）订单：只计算已支付/已完成的订单。</div>
                 <div>4）去重：同一个客户只统计一次。</div>
                 <div>5）判定：多次购买指有效订单笔数≥2。</div>
-                <div>6）分布：按有效订单次数分段统计，如“3-4次”表示下过3到4单的客户数。</div>
+                <div>6）分布：按有效订单次数分段统计，如“3-4次”表示下过3到4单的客户量。</div>
               </div>
             }
           />

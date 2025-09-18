@@ -147,10 +147,16 @@ export class AnalysisService {
     // - orderCount：订单总数
     // - totalPrice：销售额合计（两位小数）
     // - totalProfit：利润合计（两位小数）
+    // - totalRefundAmount：总退款金额（部分退款+全额退款）
+    // - totalRefundedOrderCount：全额退款订单数
+    // - totalPartialRefundOrderCount：部分退款订单数
     // ------------------------------------------------
     let orderCount = 0; // 发起的订单总数（注：关联团购单在指定日期内发起）
     let totalPrice = 0; // 总销售额（两位小数）
     let totalProfit = 0; // 总利润（两位小数）
+    let totalRefundAmount = 0; // 总退款金额
+    let totalRefundedOrderCount = 0; // 全额退款订单数
+    let totalPartialRefundOrderCount = 0; // 部分退款订单数
 
     // ------------------------------------------------
     // 每日趋势原始映射（key=YYYY-MM-DD）
@@ -217,11 +223,15 @@ export class AnalysisService {
             // 全额退款口径：销售额清零，利润计为负成本（冲减）
             actualSalesAmount = 0;
             actualProfitAmount = -originalCostAmount;
+            totalRefundAmount = round2(totalRefundAmount + originalSalesAmount);
+            totalRefundedOrderCount += 1;
           } else {
             // 部分退款口径：退款金额同时冲减销售额与利润
             const partial = round2(order.partialRefundAmount || 0);
             actualSalesAmount = round2(originalSalesAmount - partial);
             actualProfitAmount = round2(originalProfitAmount - partial);
+            totalRefundAmount = round2(totalRefundAmount + partial);
+            if (partial > 0) totalPartialRefundOrderCount += 1;
           }
 
           totalPrice = round2(totalPrice + actualSalesAmount);
@@ -461,6 +471,9 @@ export class AnalysisService {
       orderCount,
       totalPrice,
       totalProfit,
+      totalRefundAmount,
+      totalRefundedOrderCount,
+      totalPartialRefundOrderCount,
       groupBuyTrend,
       orderTrend,
       priceTrend,

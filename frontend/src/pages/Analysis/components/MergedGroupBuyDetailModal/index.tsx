@@ -264,7 +264,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-600">发起次数</div>
-                        <div className="mt-1 text-xl font-bold text-orange-500">
+                        <div className="mt-1 text-xl font-bold text-blue-600">
                           {mergedGroupBuyOverviewDetail.totalGroupBuyCount}次
                         </div>
                       </div>
@@ -327,7 +327,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                 <div>3）订单：只计算已支付/已完成的订单。</div>
                 <div>4）去重：同一个客户只统计一次。</div>
                 <div>5）判定：多次购买指有效订单笔数≥2。</div>
-                <div>6）分布：按有效订单次数分段统计，如“3-4次”表示下过3到4单的客户数。</div>
+                <div>6）分布：按有效订单次数分段统计，如“3-4次”表示下过3到4单的客户量。</div>
               </div>
             }
           />

@@ -20,6 +20,11 @@ export const Overview = ({ startDate, endDate }: OverviewProps) => {
   const orderCount = useAnalysisStore(state => state.count.orderCount)
   const totalPrice = useAnalysisStore(state => state.count.totalPrice)
   const totalProfit = useAnalysisStore(state => state.count.totalProfit)
+  const totalRefundAmount = useAnalysisStore(state => state.count.totalRefundAmount)
+  const totalRefundedOrderCount = useAnalysisStore(state => state.count.totalRefundedOrderCount)
+  const totalPartialRefundOrderCount = useAnalysisStore(
+    state => state.count.totalPartialRefundOrderCount
+  )
   const getCount = useAnalysisStore(state => state.getCount)
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
 
@@ -112,6 +117,36 @@ export const Overview = ({ startDate, endDate }: OverviewProps) => {
           </Card>
         </Col>
       )}
+      <Col span={12}>
+        <Card
+          size="small"
+          loading={getCountLoading}
+        >
+          <Statistic
+            title="部分退款/退款订单量"
+            value={0}
+            formatter={() => (
+              <span>
+                {totalPartialRefundOrderCount}/{totalRefundedOrderCount} 单
+              </span>
+            )}
+          />
+        </Card>
+      </Col>
+      <Col span={12}>
+        <Card
+          size="small"
+          loading={getCountLoading}
+        >
+          <Statistic
+            title="退款金额"
+            value={totalRefundAmount}
+            precision={2}
+            prefix="¥"
+            formatter={formatter}
+          />
+        </Card>
+      </Col>
       <Col span={24}>
         <GroupBuyOrderTrendChart />
       </Col>

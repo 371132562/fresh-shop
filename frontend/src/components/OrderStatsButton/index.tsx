@@ -8,7 +8,7 @@ import dayjs from '@/utils/day'
 
 /**
  * 订单统计按钮组件
- * 显示待付款和已付款订单数量，点击可查看详细列表
+ * 显示待付款和已付款订单量，点击可查看详细列表
  */
 const OrderStatsButton = () => {
   const [modalVisible, setModalVisible] = useState(false)

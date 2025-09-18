@@ -10,9 +10,9 @@
  */
 export const getProfitColor = (value: number): string => {
   if (value > 0) {
-    return 'text-red-500'
+    return 'text-red-600'
   } else if (value < 0) {
-    return 'text-green-500'
+    return 'text-green-600'
   }
   return 'text-gray-500'
 }
@@ -24,9 +24,9 @@ export const getProfitColor = (value: number): string => {
  */
 export const getProfitMarginColor = (value: number): string => {
   if (value > 0) {
-    return 'text-red-500'
+    return 'text-red-600'
   } else if (value < 0) {
-    return 'text-green-500'
+    return 'text-green-600'
   }
   return 'text-gray-500'
 }
@@ -52,9 +52,9 @@ export const getProfitBgColor = (value: number): string => {
  */
 export const getProfitIconColor = (value: number): string => {
   if (value > 0) {
-    return 'text-red-500'
+    return 'text-red-600'
   } else if (value < 0) {
-    return 'text-green-500'
+    return 'text-green-600'
   }
   return 'text-gray-500'
 }

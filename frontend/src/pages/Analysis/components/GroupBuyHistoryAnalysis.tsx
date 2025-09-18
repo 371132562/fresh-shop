@@ -33,19 +33,18 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       dataIndex: 'launchDate',
       key: 'launchDate',
       render: (date: Date, record) => (
-        <div className="flex items-center gap-2">
-          <NavLink
-            to={`/groupBuy/detail/${record.groupBuyId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 transition-colors hover:text-blue-600"
-            title="点击查看团购单详情"
-          >
-            <span>{dayjs(date).format('YYYY-MM-DD')}</span>
-          </NavLink>
-        </div>
-      ),
-      defaultSortOrder: 'descend' as const
+        <NavLink
+          to={`/groupBuy/detail/${record.groupBuyId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 transition-colors hover:text-blue-600"
+          title="点击查看团购单详情"
+        >
+          <span>
+            {dayjs(date).format('YYYY-MM-DD')} {record.groupBuyName}
+          </span>
+        </NavLink>
+      )
     },
     {
       title: '订单量',
@@ -163,11 +162,11 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
             </Col>
             <Col span={5}>
               <Statistic
-                title="平均团购订单数"
+                title="平均团购订单量"
                 value={averageOrderCount}
                 precision={1}
                 suffix="单"
-                valueStyle={{ color: '#722ed1' }}
+                valueStyle={{ color: '#2563eb' }}
               />
             </Col>
             <Col span={5}>
@@ -181,7 +180,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
             </Col>
             <Col span={4}>
               <Statistic
-                title="部分退款/退款订单数"
+                title="部分退款/退款订单量"
                 value={`${totalPartialRefundOrderCount}/${totalRefundedOrderCount}`}
                 suffix="单"
                 valueStyle={{ color: '#ea580c' }}
@@ -192,6 +191,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
           <Divider
             orientation="left"
             orientationMargin="0"
+            className="!mb-0"
           >
             <span className="text-sm text-gray-600">详细团购记录</span>
           </Divider>

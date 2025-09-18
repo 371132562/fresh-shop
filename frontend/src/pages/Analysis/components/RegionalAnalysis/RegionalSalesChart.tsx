@@ -16,7 +16,7 @@ type RegionalSalesChartProps = {
 
 /**
  * 地域销售分析柱状图组件
- * 展示不同地区的客户数量分布
+ * 展示不同地区的客户量分布
  */
 const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({
   data,
@@ -26,7 +26,7 @@ const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({
   const option = useMemo(() => {
     if (!data || data.length === 0) return {}
 
-    // 提取地址名称和客户数量
+    // 提取地址名称和客户量
     const addressNames = data.map(item => item.addressName || '未知地址')
     const customerCounts = data.map(item => item.customerCount)
 
@@ -42,7 +42,7 @@ const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({
         formatter: (params: any) => {
           const dataIndex = params[0].dataIndex
           const item = data[dataIndex]
-          return `${item.addressName || '未知地址'}<br/>客户数量: ${item.customerCount}人`
+          return `${item.addressName || '未知地址'}<br/>客户量: ${item.customerCount}人`
         }
       },
       grid: {
@@ -63,14 +63,14 @@ const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({
       },
       yAxis: {
         type: 'value' as const,
-        name: '客户数量(人)',
+        name: '客户量(人)',
         nameTextStyle: {
           fontSize: 12
         }
       },
       series: [
         {
-          name: '客户数量',
+          name: '客户量',
           type: 'bar' as const,
           data: customerCounts.map((count, index) => ({
             value: count,

@@ -45,7 +45,7 @@ const CustomerLoyaltyAnalysis: React.FC<CustomerLoyaltyAnalysisProps> = ({
       )
     },
     {
-      title: '客户数量',
+      title: '客户量',
       dataIndex: 'count',
       key: 'count',
       render: (count: number, record) => (
@@ -82,7 +82,7 @@ const CustomerLoyaltyAnalysis: React.FC<CustomerLoyaltyAnalysisProps> = ({
       <Row gutter={16}>
         <Col span={12}>
           <Statistic
-            title="多次购买客户数"
+            title="多次购买客户量"
             value={multiPurchaseCustomerCount}
             suffix="人"
             valueStyle={{ color: '#52c41a' }}

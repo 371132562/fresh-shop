@@ -374,7 +374,7 @@ export const Component = () => {
                       </div>
                     )}
                     <div className="my-1 flex flex-wrap items-center font-medium text-gray-800">
-                      <Tag>订单数量：{item.orderStats.orderCount}</Tag>
+                      <Tag>订单量：{item.orderStats.orderCount}</Tag>
                       {Object.entries(item.orderStats)
                         .filter(([key]) => key !== 'orderCount')
                         .map(([status, count]) => {

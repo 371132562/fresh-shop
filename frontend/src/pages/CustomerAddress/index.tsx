@@ -131,8 +131,8 @@ export const Component = () => {
             sortOptions={[
               { label: '按添加时间倒序', value: 'createdAt_desc' },
               { label: '按添加时间正序', value: 'createdAt_asc' },
-              { label: '按订单数量倒序', value: 'orderCount_desc' },
-              { label: '按订单数量正序', value: 'orderCount_asc' },
+              { label: '按订单量倒序', value: 'orderCount_desc' },
+              { label: '按订单量正序', value: 'orderCount_asc' },
               { label: '按订单总额倒序', value: 'orderTotalAmount_desc' },
               { label: '按订单总额正序', value: 'orderTotalAmount_asc' }
             ]}
@@ -189,11 +189,11 @@ export const Component = () => {
                       </span>
                     </Button>
                   </div>
-                  {/* 描述/统计：提供订单数量与总额，保证不撑坏布局 */}
+                  {/* 描述/统计：提供订单量与总额，保证不撑坏布局 */}
                   <div className="space-y-1">
                     {item.orderCount !== undefined && (
                       <div className="text-[13px] font-medium text-gray-800">
-                        订单数量：<span className="text-blue-500">{item.orderCount}</span>
+                        订单量：<span className="text-blue-500">{item.orderCount}</span>
                       </div>
                     )}
                     {item.orderTotalAmount !== undefined && (

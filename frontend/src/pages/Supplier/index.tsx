@@ -220,7 +220,7 @@ export const Component = () => {
                   <div className="space-y-1">
                     {item.groupBuyCount !== undefined && (
                       <div className="text-[13px] font-medium text-gray-800">
-                        团购单数量：<span className="text-blue-500">{item.groupBuyCount}</span>
+                        团购单量：<span className="text-blue-500">{item.groupBuyCount}</span>
                       </div>
                     )}
                     {item.description && (

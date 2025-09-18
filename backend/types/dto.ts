@@ -763,6 +763,11 @@ export type AnalysisCountResult = {
   totalPrice: number; // 总销售额
   totalProfit: number; // 总利润
 
+  // 退款相关指标
+  totalRefundAmount: number; // 总退款金额（部分退款+全额退款）
+  totalRefundedOrderCount: number; // 总全额退款订单数
+  totalPartialRefundOrderCount: number; // 总部分退款订单数
+
   // 趋势数据（用于图表展示）
   groupBuyTrend: {
     date: Date; // 日期

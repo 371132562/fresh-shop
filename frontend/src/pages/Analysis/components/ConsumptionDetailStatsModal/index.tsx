@@ -195,7 +195,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
               </div>
 
               <Row gutter={[12, 12]}>
-                {/* 订单数量 */}
+                {/* 订单量 */}
                 <Col
                   xs={24}
                   md={12}
@@ -204,7 +204,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                   <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-sm font-medium text-gray-600">订单数量</div>
+                        <div className="text-sm font-medium text-gray-600">订单量</div>
                         <div className="mt-1 text-xl font-bold text-purple-600">
                           {consumptionDetail.orderCount}单
                         </div>
@@ -284,7 +284,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                   </div>
                 </Col>
 
-                {/* 部分退款/退款订单数 */}
+                {/* 部分退款/退款订单量 */}
                 <Col
                   xs={24}
                   md={12}
@@ -576,7 +576,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                                           // 正常订单的详细显示
                                           <>
                                             <div className="text-center">
-                                              <div className="text-lg font-bold text-purple-600">
+                                              <div className="text-lg font-bold text-blue-600">
                                                 {groupBuy.count}
                                               </div>
                                               <div className="text-xs text-gray-500">购买次数</div>

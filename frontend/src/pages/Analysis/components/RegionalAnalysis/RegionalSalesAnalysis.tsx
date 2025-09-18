@@ -30,7 +30,7 @@ const RegionalSalesAnalysis: React.FC<RegionalSalesAnalysisProps> = ({
       render: (addressName: string) => <span>{addressName || '未知地址'}</span>
     },
     {
-      title: '客户数量',
+      title: '客户量',
       dataIndex: 'customerCount',
       key: 'customerCount',
       render: (count: number, record) => (
