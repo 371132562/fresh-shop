@@ -34,13 +34,14 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
 
   const fetchData = (page: number = customerOverviewPage) => {
     const [fieldKey, order] = sortValue.split('_') as [
-      'orderCount' | 'totalAmount' | 'averageOrderAmount',
+      'orderCount' | 'totalAmount' | 'averageOrderAmount' | 'totalRefundAmount',
       'asc' | 'desc'
     ]
     const sortFieldMap = {
       orderCount: 'totalOrderCount',
       totalAmount: 'totalRevenue',
-      averageOrderAmount: 'averageOrderAmount'
+      averageOrderAmount: 'averageOrderAmount',
+      totalRefundAmount: 'totalRefundAmount'
     } as const
     getCustomerOverview({
       startDate,
@@ -109,7 +110,9 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
               { label: '按订单量倒序', value: 'orderCount_desc' },
               { label: '按订单量正序', value: 'orderCount_asc' },
               { label: '按平均单价倒序', value: 'averageOrderAmount_desc' },
-              { label: '按平均单价正序', value: 'averageOrderAmount_asc' }
+              { label: '按平均单价正序', value: 'averageOrderAmount_asc' },
+              { label: '按退款金额倒序', value: 'totalRefundAmount_desc' },
+              { label: '按退款金额正序', value: 'totalRefundAmount_asc' }
             ]}
             sortValue={sortValue}
             onSortChange={v => setSortValue(v)}
@@ -164,7 +167,7 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-500">订单量</span>
-                      <span className="text-lg font-semibold text-orange-600">
+                      <span className="text-lg font-semibold text-blue-600">
                         {item.totalOrderCount}
                       </span>
                     </div>
@@ -172,6 +175,12 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
                       <span className="text-sm text-gray-500">平均单价</span>
                       <span className="text-lg font-semibold text-purple-600">
                         ¥{item.averageOrderAmount.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-500">退款金额</span>
+                      <span className="text-lg font-semibold text-orange-600">
+                        ¥{item.totalRefundAmount.toFixed(2)}
                       </span>
                     </div>
                   </div>

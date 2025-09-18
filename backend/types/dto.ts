@@ -813,7 +813,8 @@ export type AnalysisCountResult = {
 export type CustomerOverviewSortField =
   | 'totalRevenue'
   | 'totalOrderCount'
-  | 'averageOrderAmount';
+  | 'averageOrderAmount'
+  | 'totalRefundAmount';
 
 export type CustomerOverviewParams = {
   startDate?: Date;
@@ -831,6 +832,7 @@ export type CustomerOverviewListItem = {
   totalRevenue: number;
   totalOrderCount: number;
   averageOrderAmount: number;
+  totalRefundAmount: number; // 总退款金额（部分退款+全额退款）
 };
 
 export type CustomerOverviewResult = {

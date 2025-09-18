@@ -283,6 +283,28 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                     </div>
                   </div>
                 </Col>
+
+                {/* 部分退款/退款订单数 */}
+                <Col
+                  xs={24}
+                  md={12}
+                  lg={8}
+                >
+                  <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-medium text-gray-600">部分退款/退款订单</div>
+                        <div className="mt-1 text-xl font-bold text-orange-600">
+                          {consumptionDetail.totalPartialRefundOrderCount || 0}/
+                          {consumptionDetail.totalRefundedOrderCount || 0} 单
+                        </div>
+                      </div>
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
+                        <span className="text-xl">📋</span>
+                      </div>
+                    </div>
+                  </div>
+                </Col>
               </Row>
             </div>
           </Card>
@@ -498,57 +520,93 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                         expandedProducts.has(product.productId) && (
                           <div className="ml-6 mt-3 space-y-2">
                             <div className="border-l-2 border-blue-200 pl-4">
-                              {product.groupBuys.map((groupBuy: GroupBuyItem, gbIndex: number) => (
-                                <div
-                                  key={`${product.productId}-${gbIndex}`}
-                                  className="mb-2 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-3 shadow-sm transition-all hover:shadow-md"
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2">
-                                        <div className="text-base font-semibold text-gray-800">
-                                          {groupBuy.groupBuyName}
-                                        </div>
-                                        <div className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-600">
-                                          {groupBuy.unitName}
-                                        </div>
-                                      </div>
-                                      <div className="mt-1 text-sm text-gray-500">
-                                        发起时间:{' '}
-                                        {dayjs(groupBuy.latestGroupBuyStartDate).format(
-                                          'YYYY-MM-DD'
-                                        )}
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-6">
-                                      <div className="text-center">
-                                        <div className="text-lg font-bold text-purple-600">
-                                          {groupBuy.count}
-                                        </div>
-                                        <div className="text-xs text-gray-500">购买次数</div>
-                                      </div>
-                                      <div className="text-right">
-                                        <div className="text-xl font-bold text-cyan-600">
-                                          {formatAmount(groupBuy.totalAmount || 0)}
-                                        </div>
-                                        <div className="flex items-center justify-end gap-1 text-xs text-gray-500">
-                                          <span>小计</span>
-                                          {(groupBuy.totalRefundAmount || 0) > 0 && (
-                                            <Tooltip title="已扣除退款金额">
-                                              <InfoCircleOutlined className="text-orange-500" />
-                                            </Tooltip>
+                              {product.groupBuys.map((groupBuy: GroupBuyItem, gbIndex: number) => {
+                                // 判断是否为已退款订单（购买次数为0但有退款金额）
+                                const isRefundedOrder =
+                                  (groupBuy.count || 0) === 0 &&
+                                  (groupBuy.totalRefundAmount || 0) > 0
+
+                                return (
+                                  <div
+                                    key={`${product.productId}-${gbIndex}`}
+                                    className={`mb-2 rounded-lg p-3 shadow-sm transition-all hover:shadow-md ${
+                                      isRefundedOrder
+                                        ? 'border border-red-200 bg-gradient-to-r from-red-50 to-orange-50'
+                                        : 'bg-gradient-to-r from-blue-50 to-indigo-50'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2">
+                                          <div className="text-base font-semibold text-gray-800">
+                                            {groupBuy.groupBuyName}
+                                          </div>
+                                          <div
+                                            className={`rounded-full px-2 py-1 text-xs ${
+                                              isRefundedOrder
+                                                ? 'bg-red-100 text-red-600'
+                                                : 'bg-blue-100 text-blue-600'
+                                            }`}
+                                          >
+                                            {groupBuy.unitName}
+                                          </div>
+                                          {isRefundedOrder && (
+                                            <div className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-600">
+                                              已退款
+                                            </div>
                                           )}
                                         </div>
-                                        {(groupBuy.totalRefundAmount || 0) > 0 && (
-                                          <div className="text-xs text-orange-600">
-                                            退款: {formatAmount(groupBuy.totalRefundAmount || 0)}
+                                        <div className="mt-1 text-sm text-gray-500">
+                                          发起时间:{' '}
+                                          {dayjs(groupBuy.latestGroupBuyStartDate).format(
+                                            'YYYY-MM-DD'
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-6">
+                                        {isRefundedOrder ? (
+                                          // 已退款订单的简化显示
+                                          <div className="text-center">
+                                            <div className="text-lg font-bold text-red-600">
+                                              {formatAmount(groupBuy.totalRefundAmount || 0)}
+                                            </div>
+                                            <div className="text-xs text-gray-500">退款金额</div>
                                           </div>
+                                        ) : (
+                                          // 正常订单的详细显示
+                                          <>
+                                            <div className="text-center">
+                                              <div className="text-lg font-bold text-purple-600">
+                                                {groupBuy.count}
+                                              </div>
+                                              <div className="text-xs text-gray-500">购买次数</div>
+                                            </div>
+                                            <div className="text-right">
+                                              <div className="text-xl font-bold text-cyan-600">
+                                                {formatAmount(groupBuy.totalAmount || 0)}
+                                              </div>
+                                              <div className="flex items-center justify-end gap-1 text-xs text-gray-500">
+                                                <span>小计</span>
+                                                {(groupBuy.totalRefundAmount || 0) > 0 && (
+                                                  <Tooltip title="已扣除退款金额">
+                                                    <InfoCircleOutlined className="text-orange-500" />
+                                                  </Tooltip>
+                                                )}
+                                              </div>
+                                              {(groupBuy.totalRefundAmount || 0) > 0 && (
+                                                <div className="text-xs text-orange-600">
+                                                  退款:{' '}
+                                                  {formatAmount(groupBuy.totalRefundAmount || 0)}
+                                                </div>
+                                              )}
+                                            </div>
+                                          </>
                                         )}
                                       </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
+                                )
+                              })}
                             </div>
                           </div>
                         )}

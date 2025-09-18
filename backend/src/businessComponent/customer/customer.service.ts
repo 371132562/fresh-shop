@@ -291,7 +291,10 @@ export class CustomerService {
           };
         }
 
-        productCounts[order.groupBuy.productId].count++;
+        // 只有非退款订单才计入购买次数
+        if (order.status !== OrderStatus.REFUNDED) {
+          productCounts[order.groupBuy.productId].count++;
+        }
 
         // 在商品下统计团购数据
         if (!productCounts[order.groupBuy.productId].groupBuys[groupBuyKey]) {
@@ -319,10 +322,13 @@ export class CustomerService {
           }
         }
 
-        productCounts[order.groupBuy.productId].groupBuys[groupBuyKey].count++;
-        productCounts[order.groupBuy.productId].groupBuys[
-          groupBuyKey
-        ].totalAmount += orderAmount;
+        // 只有非退款订单才计入团购购买次数和小计金额
+        if (order.status !== OrderStatus.REFUNDED) {
+          const groupBuy =
+            productCounts[order.groupBuy.productId].groupBuys[groupBuyKey];
+          groupBuy.count++;
+          groupBuy.totalAmount += orderAmount;
+        }
 
         // 统计团购级别的退款数据
         if (order.status === OrderStatus.REFUNDED) {

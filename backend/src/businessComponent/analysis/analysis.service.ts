@@ -787,6 +787,7 @@ export class AnalysisService {
       customerName: string;
       totalRevenue: number;
       totalOrderCount: number;
+      totalRefundAmount: number;
     };
     const aggMap = new Map<string, Agg>();
 
@@ -805,10 +806,19 @@ export class AnalysisService {
           customerName: o.customer?.name || '未知客户',
           totalRevenue: 0,
           totalOrderCount: 0,
+          totalRefundAmount: 0,
         });
       }
       const agg = aggMap.get(o.customerId)!;
       agg.totalRevenue += revenue;
+
+      // 统计退款金额
+      if (o.status === OrderStatus.REFUNDED) {
+        agg.totalRefundAmount += originalRevenue; // 全额退款
+      } else {
+        agg.totalRefundAmount += partial; // 部分退款
+      }
+
       if (o.status === OrderStatus.PAID || o.status === OrderStatus.COMPLETED) {
         agg.totalOrderCount += 1;
       }
@@ -823,6 +833,7 @@ export class AnalysisService {
         averageOrderAmount: x.totalOrderCount
           ? x.totalRevenue / x.totalOrderCount
           : 0,
+        totalRefundAmount: x.totalRefundAmount,
       }),
     );
 
