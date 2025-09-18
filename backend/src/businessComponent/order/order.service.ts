@@ -51,14 +51,33 @@ export class OrderService {
       };
     }
 
-    if (statuses && statuses.length > 0) {
-      where.status = {
-        in: statuses,
+    // 订单状态与“部分退款”伪状态的组合筛选
+    // 需求：当同时选择部分退款与若干真实状态时，返回并集（OR）：满足任一条件即返回
+    // 情况1：同时有 statuses 与 hasPartialRefund => 使用 OR
+    // 情况2：只有 statuses => 按状态过滤
+    // 情况3：只有 hasPartialRefund => 仅筛选部分退款（非已退款且部分退款金额>0）
+    if (hasPartialRefund && statuses && statuses.length > 0) {
+      const partialRefundCondition: Prisma.OrderWhereInput = {
+        AND: [
+          { partialRefundAmount: { gt: 0 } },
+          { status: { not: OrderStatus.REFUNDED } },
+        ],
       };
-    }
-
-    // 伪状态：部分退款（非已退款且部分退款金额>0）
-    if (hasPartialRefund) {
+      const statusCondition: Prisma.OrderWhereInput = {
+        status: { in: statuses },
+      };
+      const existingAnd = Array.isArray(where.AND)
+        ? where.AND
+        : where.AND
+          ? [where.AND]
+          : [];
+      where.AND = [
+        ...existingAnd,
+        { OR: [statusCondition, partialRefundCondition] },
+      ];
+    } else if (statuses && statuses.length > 0) {
+      where.status = { in: statuses };
+    } else if (hasPartialRefund) {
       const existingAnd = Array.isArray(where.AND)
         ? where.AND
         : where.AND

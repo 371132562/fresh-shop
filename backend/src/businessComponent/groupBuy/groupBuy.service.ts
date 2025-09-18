@@ -81,8 +81,31 @@ export class GroupBuyService {
       };
     }
 
-    // 如果指定了订单状态筛选，需要筛选出包含指定状态订单的团购单
-    if (orderStatuses && orderStatuses.length > 0) {
+    // 订单状态与“部分退款”伪状态的组合筛选（并集 OR）
+    // 情况1：同时有 orderStatuses 与 hasPartialRefund => 返回并集
+    // 情况2：只有 orderStatuses => 按状态过滤
+    // 情况3：只有 hasPartialRefund => 按部分退款过滤
+    if (hasPartialRefund && orderStatuses && orderStatuses.length > 0) {
+      where.order = {
+        some: {
+          delete: 0,
+          OR: [
+            {
+              status: {
+                in: orderStatuses,
+              },
+            },
+            {
+              AND: [
+                { partialRefundAmount: { gt: 0 } },
+                { status: { not: 'REFUNDED' } },
+              ],
+            },
+          ],
+        },
+      };
+    } else if (orderStatuses && orderStatuses.length > 0) {
+      // 如果指定了订单状态筛选，需要筛选出包含指定状态订单的团购单
       where.order = {
         some: {
           status: {
@@ -91,10 +114,8 @@ export class GroupBuyService {
           delete: 0,
         },
       };
-    }
-
-    // 伪状态：部分退款（非已退款且部分退款金额>0）
-    if (hasPartialRefund) {
+    } else if (hasPartialRefund) {
+      // 伪状态：部分退款（非已退款且部分退款金额>0）
       where.order = {
         some: {
           delete: 0,
@@ -159,72 +180,64 @@ export class GroupBuyService {
       }
     });
 
-    // 计算部分退款统计（仅统计已付款和已完成的订单）
-    const partialRefundStats = await this.prisma.order.groupBy({
+    // 计算总退款金额：部分退款（非已退款订单）+ 全额退款（已退款订单的订单总额）
+    // 1) 统计非已退款订单的部分退款金额
+    const nonRefundedPartialRefundStats = await this.prisma.order.groupBy({
       by: ['groupBuyId'],
       where: {
-        groupBuyId: {
-          in: groupBuyIds,
-        },
-        status: {
-          in: ['PAID', 'COMPLETED'], // 仅统计已付款和已完成的订单
-        },
+        groupBuyId: { in: groupBuyIds },
         delete: 0,
+        status: { not: 'REFUNDED' },
       },
       _sum: {
         partialRefundAmount: true,
       },
     });
 
-    // 计算订单总金额（仅统计已付款和已完成的订单）
-    const orderAmountStats = await this.prisma.order.findMany({
+    const nonRefundedPartialRefundMap = new Map<string, number>();
+    nonRefundedPartialRefundStats.forEach((stat) => {
+      nonRefundedPartialRefundMap.set(
+        stat.groupBuyId,
+        stat._sum.partialRefundAmount || 0,
+      );
+    });
+
+    // 2) 统计已退款订单的应退金额（按规格单价*数量计算）
+    const refundedOrders = await this.prisma.order.findMany({
       where: {
-        groupBuyId: {
-          in: groupBuyIds,
-        },
-        status: {
-          in: ['PAID', 'COMPLETED'], // 仅统计已付款和已完成的订单
-        },
+        groupBuyId: { in: groupBuyIds },
+        status: 'REFUNDED',
         delete: 0,
       },
       select: {
         groupBuyId: true,
         quantity: true,
         unitId: true,
-        groupBuy: {
-          select: {
-            units: true,
-          },
-        },
+        groupBuy: { select: { units: true } },
       },
     });
 
-    // 计算每个团购的总金额
-    const totalAmountMap = new Map<string, number>();
-    orderAmountStats.forEach((order) => {
+    const refundedGrossMap = new Map<string, number>();
+    refundedOrders.forEach((order) => {
       const units = order.groupBuy.units as Array<{
         id: string;
         price: number;
       }>;
       const unit = units.find((u) => u.id === order.unitId);
       if (unit) {
-        const orderTotal = unit.price * order.quantity;
-        const currentTotal = totalAmountMap.get(order.groupBuyId) || 0;
-        totalAmountMap.set(order.groupBuyId, currentTotal + orderTotal);
+        const gross = unit.price * order.quantity;
+        refundedGrossMap.set(
+          order.groupBuyId,
+          (refundedGrossMap.get(order.groupBuyId) || 0) + gross,
+        );
       }
     });
 
-    const partialRefundStatsMap = new Map<
-      string,
-      { partialRefundAmount: number; totalAmount: number }
-    >();
-    partialRefundStats.forEach((stat) => {
-      const { groupBuyId, _sum } = stat;
-      const totalAmount = totalAmountMap.get(groupBuyId) || 0;
-      partialRefundStatsMap.set(groupBuyId, {
-        partialRefundAmount: _sum.partialRefundAmount || 0,
-        totalAmount: totalAmount,
-      });
+    const totalRefundAmountMap = new Map<string, number>();
+    groupBuyIds.forEach((id) => {
+      const partialRefund = nonRefundedPartialRefundMap.get(id) || 0;
+      const fullRefund = refundedGrossMap.get(id) || 0;
+      totalRefundAmountMap.set(id, partialRefund + fullRefund);
     });
 
     const groupBuysWithStats = groupBuys.map((gb) => {
@@ -235,14 +248,10 @@ export class GroupBuyService {
         COMPLETED: 0,
         REFUNDED: 0,
       };
-      const partialRefundStats = partialRefundStatsMap.get(gb.id) || {
-        partialRefundAmount: 0,
-        totalAmount: 0,
-      };
       return {
         ...gb,
         orderStats: stats,
-        partialRefundStats: partialRefundStats,
+        totalRefundAmount: totalRefundAmountMap.get(gb.id) || 0,
       };
     });
 

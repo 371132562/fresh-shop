@@ -392,10 +392,7 @@ export type GroupBuyListItem = GroupBuy & {
   supplier: Supplier; // 供货商信息
   product: Product; // 商品信息
   orderStats: GroupBuyOrderStats; // 订单统计
-  partialRefundStats: {
-    partialRefundAmount: number; // 部分退款总金额（仅统计已付款和已完成订单）
-    totalAmount: number; // 订单总金额（仅统计已付款和已完成订单）
-  };
+  totalRefundAmount: number; // 总退款金额（部分退款+全额退款）
 };
 
 /**
