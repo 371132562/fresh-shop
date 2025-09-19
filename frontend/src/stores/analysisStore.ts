@@ -48,6 +48,12 @@ type AnalysisStore = {
   isAllData: boolean
   setIsAllData: (flag: boolean) => void
 
+  // 图表显示选项状态（全局同步）
+  showCumulative: boolean
+  showMonthly: boolean
+  setShowCumulative: (flag: boolean) => void
+  setShowMonthly: (flag: boolean) => void
+
   // 团购单合并概况数据
   mergedGroupBuyOverviewList: MergedGroupBuyOverviewResult['list']
   mergedGroupBuyOverviewTotal: number
@@ -144,10 +150,18 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
     cumulativeGroupBuyTrend: [],
     cumulativeOrderTrend: [],
     cumulativePriceTrend: [],
-    cumulativeProfitTrend: []
+    cumulativeProfitTrend: [],
+    monthlyGroupBuyTrend: [],
+    monthlyOrderTrend: [],
+    monthlyPriceTrend: [],
+    monthlyProfitTrend: []
   },
   isAllData: false,
   setIsAllData: flag => set({ isAllData: flag }),
+  showCumulative: false,
+  showMonthly: false,
+  setShowCumulative: flag => set({ showCumulative: flag }),
+  setShowMonthly: flag => set({ showMonthly: flag }),
   getCount: async data => {
     try {
       set({ getCountLoading: true })

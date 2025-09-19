@@ -805,6 +805,27 @@ export type AnalysisCountResult = {
     date: Date; // 日期
     count: number; // 累计利润
   }[];
+
+  // 按月统计趋势数据（用于在"全部"时间范围下按月展示）
+  monthlyGroupBuyTrend: {
+    date: Date; // 日期（月份）
+    count: number; // 团购数量
+  }[];
+
+  monthlyOrderTrend: {
+    date: Date; // 日期（月份）
+    count: number; // 订单数量
+  }[];
+
+  monthlyPriceTrend: {
+    date: Date; // 日期（月份）
+    count: number; // 销售额
+  }[];
+
+  monthlyProfitTrend: {
+    date: Date; // 日期（月份）
+    count: number; // 利润
+  }[];
 };
 // ===================================================================
 // 客户概况分析模块 (Customer Overview)

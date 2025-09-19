@@ -462,9 +462,42 @@ export class AnalysisService {
     const aggCumulativeProfitTrend = rebuildCumulative(aggProfitTrend);
 
     // ================================================================
+    // 步骤四：生成按月统计趋势数据
+    // - 基于原始每日数据按月聚合
+    // - 用于前端"按月统计"展示
+    // ================================================================
+    const aggregateByMonth = (
+      series: { date: Date; count: number }[],
+    ): { date: Date; count: number }[] => {
+      if (series.length === 0) return [];
+      
+      const monthlyMap = new Map<string, number>();
+      
+      for (const item of series) {
+        const monthKey = dayjs(item.date).format('YYYY-MM');
+        const current = monthlyMap.get(monthKey) || 0;
+        monthlyMap.set(monthKey, round2(current + item.count));
+      }
+      
+      // 转换为数组并按月份排序
+      return Array.from(monthlyMap.entries())
+        .map(([monthKey, count]) => ({
+          date: dayjs(monthKey + '-01').toDate(), // 使用每月第一天作为日期
+          count,
+        }))
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    };
+
+    const monthlyGroupBuyTrend = aggregateByMonth(groupBuyTrend);
+    const monthlyOrderTrend = aggregateByMonth(orderTrend);
+    const monthlyPriceTrend = aggregateByMonth(priceTrend);
+    const monthlyProfitTrend = aggregateByMonth(profitTrend);
+
+    // ================================================================
     // 步骤五：返回结果（保持既有返回结构与字段命名）
     // - groupBuyTrend/orderTrend/priceTrend/profitTrend：逐日原始序列
     // - cumulativeXXXTrend：分桶后的累计序列（用于前端"累计趋势"展示）
+    // - monthlyXXXTrend：按月聚合序列（用于前端"按月统计"展示）
     // ================================================================
     return {
       groupBuyCount,
@@ -482,6 +515,10 @@ export class AnalysisService {
       cumulativeOrderTrend: aggCumulativeOrderTrend,
       cumulativePriceTrend: aggCumulativePriceTrend,
       cumulativeProfitTrend: aggCumulativeProfitTrend,
+      monthlyGroupBuyTrend,
+      monthlyOrderTrend,
+      monthlyPriceTrend,
+      monthlyProfitTrend,
     };
   }
 

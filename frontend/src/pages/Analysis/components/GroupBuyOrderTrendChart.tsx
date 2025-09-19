@@ -1,6 +1,6 @@
 import { Card, Checkbox } from 'antd'
 import type { AnalysisCountResult } from 'fresh-shop-backend/types/dto'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 import { FullscreenChart } from '@/components/FullscreenChart'
 import useAnalysisStore from '@/stores/analysisStore'
@@ -12,17 +12,34 @@ export const GroupBuyOrderTrendChart = () => {
   const orderTrend = useAnalysisStore(state => state.count.orderTrend)
   const cumulativeGroupBuyTrend = useAnalysisStore(state => state.count.cumulativeGroupBuyTrend)
   const cumulativeOrderTrend = useAnalysisStore(state => state.count.cumulativeOrderTrend)
+  const monthlyGroupBuyTrend = useAnalysisStore(state => state.count.monthlyGroupBuyTrend)
+  const monthlyOrderTrend = useAnalysisStore(state => state.count.monthlyOrderTrend)
   const isAllData = useAnalysisStore(state => state.isAllData)
-  const [showCumulative, setShowCumulative] = useState(false)
+  const showCumulative = useAnalysisStore(state => state.showCumulative)
+  const showMonthly = useAnalysisStore(state => state.showMonthly)
+  const setShowCumulative = useAnalysisStore(state => state.setShowCumulative)
+  const setShowMonthly = useAnalysisStore(state => state.setShowMonthly)
 
   const option = useMemo(() => {
-    const usingGroupBuyTrend = isAllData && showCumulative ? cumulativeGroupBuyTrend : groupBuyTrend
-    const usingOrderTrend = isAllData && showCumulative ? cumulativeOrderTrend : orderTrend
+    let usingGroupBuyTrend, usingOrderTrend
+
+    if (isAllData && showMonthly) {
+      usingGroupBuyTrend = monthlyGroupBuyTrend
+      usingOrderTrend = monthlyOrderTrend
+    } else if (showCumulative) {
+      usingGroupBuyTrend = cumulativeGroupBuyTrend
+      usingOrderTrend = cumulativeOrderTrend
+    } else {
+      usingGroupBuyTrend = groupBuyTrend
+      usingOrderTrend = orderTrend
+    }
+
     const safeGroupBuyTrend = usingGroupBuyTrend || []
     const safeOrderTrend = usingOrderTrend || []
 
+    const dateFormat = isAllData && showMonthly ? 'YYYY-MM' : 'MM-DD'
     const dates = safeGroupBuyTrend.map((item: AnalysisCountResult['groupBuyTrend'][number]) =>
-      dayjs(item.date).format('MM-DD')
+      dayjs(item.date).format(dateFormat)
     )
     const groupBuyCounts = safeGroupBuyTrend.map(
       (item: AnalysisCountResult['groupBuyTrend'][number]) => item.count
@@ -82,8 +99,11 @@ export const GroupBuyOrderTrendChart = () => {
     orderTrend,
     cumulativeGroupBuyTrend,
     cumulativeOrderTrend,
+    monthlyGroupBuyTrend,
+    monthlyOrderTrend,
     isAllData,
-    showCumulative
+    showCumulative,
+    showMonthly
   ])
 
   return (
@@ -91,14 +111,32 @@ export const GroupBuyOrderTrendChart = () => {
       loading={getCountLoading}
       title="团购单和订单趋势"
       extra={
-        isAllData ? (
+        <div className="flex gap-2">
+          {isAllData && (
+            <Checkbox
+              checked={showMonthly}
+              onChange={e => {
+                setShowMonthly(e.target.checked)
+                if (e.target.checked) {
+                  setShowCumulative(false)
+                }
+              }}
+            >
+              按月统计
+            </Checkbox>
+          )}
           <Checkbox
             checked={showCumulative}
-            onChange={e => setShowCumulative(e.target.checked)}
+            onChange={e => {
+              setShowCumulative(e.target.checked)
+              if (e.target.checked) {
+                setShowMonthly(false)
+              }
+            }}
           >
             累计趋势
           </Checkbox>
-        ) : null
+        </div>
       }
     >
       <FullscreenChart

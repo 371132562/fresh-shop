@@ -1,6 +1,6 @@
 import { Card, Checkbox } from 'antd'
 import type { AnalysisCountResult } from 'fresh-shop-backend/types/dto'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 import { FullscreenChart } from '@/components/FullscreenChart'
 import useAnalysisStore from '@/stores/analysisStore'
@@ -13,18 +13,35 @@ export const PriceProfitTrendChart = () => {
   const profitTrend = useAnalysisStore(state => state.count.profitTrend)
   const cumulativePriceTrend = useAnalysisStore(state => state.count.cumulativePriceTrend)
   const cumulativeProfitTrend = useAnalysisStore(state => state.count.cumulativeProfitTrend)
+  const monthlyPriceTrend = useAnalysisStore(state => state.count.monthlyPriceTrend)
+  const monthlyProfitTrend = useAnalysisStore(state => state.count.monthlyProfitTrend)
   const sensitive = useGlobalSettingStore(state => state.globalSetting?.value?.sensitive)
   const isAllData = useAnalysisStore(state => state.isAllData)
-  const [showCumulative, setShowCumulative] = useState(false)
+  const showCumulative = useAnalysisStore(state => state.showCumulative)
+  const showMonthly = useAnalysisStore(state => state.showMonthly)
+  const setShowCumulative = useAnalysisStore(state => state.setShowCumulative)
+  const setShowMonthly = useAnalysisStore(state => state.setShowMonthly)
 
   const option = useMemo(() => {
-    const usingPriceTrend = isAllData && showCumulative ? cumulativePriceTrend : priceTrend
-    const usingProfitTrend = isAllData && showCumulative ? cumulativeProfitTrend : profitTrend
+    let usingPriceTrend, usingProfitTrend
+
+    if (isAllData && showMonthly) {
+      usingPriceTrend = monthlyPriceTrend
+      usingProfitTrend = monthlyProfitTrend
+    } else if (showCumulative) {
+      usingPriceTrend = cumulativePriceTrend
+      usingProfitTrend = cumulativeProfitTrend
+    } else {
+      usingPriceTrend = priceTrend
+      usingProfitTrend = profitTrend
+    }
+
     const safePriceTrend = usingPriceTrend || []
     const safeProfitTrend = usingProfitTrend || []
 
+    const dateFormat = isAllData && showMonthly ? 'YYYY-MM' : 'MM-DD'
     const dates = safePriceTrend.map((item: AnalysisCountResult['priceTrend'][number]) =>
-      dayjs(item.date).format('MM-DD')
+      dayjs(item.date).format(dateFormat)
     )
     const priceCounts = safePriceTrend.map(
       (item: AnalysisCountResult['priceTrend'][number]) => item.count
@@ -88,9 +105,12 @@ export const PriceProfitTrendChart = () => {
     profitTrend,
     cumulativePriceTrend,
     cumulativeProfitTrend,
+    monthlyPriceTrend,
+    monthlyProfitTrend,
     sensitive,
     isAllData,
-    showCumulative
+    showCumulative,
+    showMonthly
   ])
 
   return (
@@ -98,14 +118,32 @@ export const PriceProfitTrendChart = () => {
       loading={getCountLoading}
       title={sensitive ? '销售额趋势' : '销售额和利润趋势'}
       extra={
-        isAllData ? (
+        <div className="flex gap-2">
+          {isAllData && (
+            <Checkbox
+              checked={showMonthly}
+              onChange={e => {
+                setShowMonthly(e.target.checked)
+                if (e.target.checked) {
+                  setShowCumulative(false)
+                }
+              }}
+            >
+              按月统计
+            </Checkbox>
+          )}
           <Checkbox
             checked={showCumulative}
-            onChange={e => setShowCumulative(e.target.checked)}
+            onChange={e => {
+              setShowCumulative(e.target.checked)
+              if (e.target.checked) {
+                setShowMonthly(false)
+              }
+            }}
           >
             累计趋势
           </Checkbox>
-        ) : null
+        </div>
       }
     >
       <FullscreenChart
