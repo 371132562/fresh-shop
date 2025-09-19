@@ -17,6 +17,8 @@ concurrency:
 permissions:
   contents: write
   actions: write
+  # 需要读取仓库内容权限来检查分支和PR
+  metadata: read
 
 jobs:
   build-and-release:
@@ -65,8 +67,10 @@ jobs:
           token: ${{ github.token }}
           repository: ${{ github.repository }}
           # 保留最近30天的记录
-          retain-days: 30
+          retain_days: 30
           # 保留最近10个运行记录
-          keep-minimum-runs: 10
+          keep_minimum_runs: 10
           # 只清理当前workflow的记录
-          workflow-name: "创建便携式运行包"
+          delete_workflow_pattern: "创建便携式运行包"
+          # 只清理已完成的运行记录
+          delete_run_by_conclusion_pattern: "success,failure,cancelled"
