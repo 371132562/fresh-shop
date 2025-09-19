@@ -1,7 +1,7 @@
 # 这个工作流文件的作用是：当代码被推送到 master 分支时，
 # 自动将客户端所需的文件打包成 zip，并创建一个 GitHub Release。
 
-name: 创建客户端发布包
+name: 创建便携式运行包
 
 on:
   push:
@@ -16,6 +16,7 @@ concurrency:
 # 授予工作流写权限，以便它可以创建 Release
 permissions:
   contents: write
+  actions: write
 
 jobs:
   build-and-release:
@@ -56,4 +57,16 @@ jobs:
               - 恢复数据: `restore.ps1`
 
             请下载下面的 `fresh-shop.zip` 文件，解压后即可使用。
-          files: fresh-shop.zip 
+          files: fresh-shop.zip
+
+      - name: 清理旧的workflow运行记录
+        uses: actions/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          # 保留最近30天的记录
+          retain-days: 30
+          # 保留最近10个运行记录
+          keep-minimum-runs: 10
+          # 只清理当前workflow的记录
+          workflow-name: "创建便携式运行包"
