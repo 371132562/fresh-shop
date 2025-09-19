@@ -49,9 +49,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
                 </Tag>
               </div>
               <p className="mb-2 text-base text-gray-600">统计期间内发起的团购活动总数</p>
-              <p className="flex-1 text-sm text-gray-500">
-                包含所有状态的团购单，按发起时间统计。只统计已支付和已完成的订单，未支付订单不参与统计
-              </p>
+              <p className="flex-1 text-sm text-gray-500">包含所有状态的团购单，按发起时间统计。</p>
             </div>
             <div className="flex h-full flex-col rounded-lg bg-blue-50 p-4">
               <div className="mb-2 flex items-center gap-2">
