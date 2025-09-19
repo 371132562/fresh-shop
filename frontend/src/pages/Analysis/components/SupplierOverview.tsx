@@ -178,12 +178,12 @@ export const SupplierOverview = ({ startDate, endDate }: SupplierOverviewProps) 
           </Row>
           <SearchToolbar
             sortOptions={[
-              { label: '按总销售额倒序', value: 'totalRevenue_desc' },
-              { label: '按总销售额正序', value: 'totalRevenue_asc' },
-              { label: '按总利润倒序', value: 'totalProfit_desc' },
-              { label: '按总利润正序', value: 'totalProfit_asc' },
-              { label: '按平均利润率倒序', value: 'averageProfitMargin_desc' },
-              { label: '按平均利润率正序', value: 'averageProfitMargin_asc' },
+              { label: '按销售额倒序', value: 'totalRevenue_desc' },
+              { label: '按销售额正序', value: 'totalRevenue_asc' },
+              { label: '按利润倒序', value: 'totalProfit_desc' },
+              { label: '按利润正序', value: 'totalProfit_asc' },
+              { label: '按利润率倒序', value: 'averageProfitMargin_desc' },
+              { label: '按利润率正序', value: 'averageProfitMargin_asc' },
               { label: '按团购单量倒序', value: 'totalGroupBuyCount_desc' },
               { label: '按团购单量正序', value: 'totalGroupBuyCount_asc' },
               { label: '按订单量倒序', value: 'totalOrderCount_desc' },
@@ -233,14 +233,14 @@ export const SupplierOverview = ({ startDate, endDate }: SupplierOverviewProps) 
                   {/* 统计信息：网格布局，保证不撑坏容器 */}
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
                     <div className="flex flex-col">
-                      <span className="text-sm text-gray-500">总销售额</span>
+                      <span className="text-sm text-gray-500">销售额</span>
                       <span className="text-lg font-semibold text-cyan-600">
                         ¥{item.totalRevenue.toFixed(2)}
                       </span>
                     </div>
                     {!globalSetting?.value?.sensitive && (
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-500">总利润</span>
+                        <span className="text-sm text-gray-500">利润</span>
                         <span
                           className={`text-lg font-semibold ${getProfitColor(item.totalProfit)}`}
                         >
@@ -250,7 +250,7 @@ export const SupplierOverview = ({ startDate, endDate }: SupplierOverviewProps) 
                     )}
                     {!globalSetting?.value?.sensitive && (
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-500">平均利润率</span>
+                        <span className="text-sm text-gray-500">利润率</span>
                         <span
                           className={`text-lg font-semibold ${getProfitMarginColor(item.averageProfitMargin)}`}
                         >
