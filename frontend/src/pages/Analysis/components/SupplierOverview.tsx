@@ -184,12 +184,14 @@ export const SupplierOverview = ({ startDate, endDate }: SupplierOverviewProps) 
               { label: '按总利润正序', value: 'totalProfit_asc' },
               { label: '按平均利润率倒序', value: 'averageProfitMargin_desc' },
               { label: '按平均利润率正序', value: 'averageProfitMargin_asc' },
-              { label: '按参团客户量倒序', value: 'uniqueCustomerCount_desc' },
-              { label: '按参团客户量正序', value: 'uniqueCustomerCount_asc' },
+              { label: '按团购单量倒序', value: 'totalGroupBuyCount_desc' },
+              { label: '按团购单量正序', value: 'totalGroupBuyCount_asc' },
               { label: '按订单量倒序', value: 'totalOrderCount_desc' },
               { label: '按订单量正序', value: 'totalOrderCount_asc' },
-              { label: '按团购单量倒序', value: 'totalGroupBuyCount_desc' },
-              { label: '按团购单量正序', value: 'totalGroupBuyCount_asc' }
+              { label: '按退款金额倒序', value: 'totalRefundAmount_desc' },
+              { label: '按退款金额正序', value: 'totalRefundAmount_asc' },
+              { label: '按参团客户量倒序', value: 'uniqueCustomerCount_desc' },
+              { label: '按参团客户量正序', value: 'uniqueCustomerCount_asc' }
             ]}
             sortValue={`${searchParams.sortField}_${searchParams.sortOrder}`}
             onSortChange={handleSortChange}
@@ -263,15 +265,15 @@ export const SupplierOverview = ({ startDate, endDate }: SupplierOverviewProps) 
                       </span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm text-gray-500">参与客户量</span>
-                      <span className="text-lg font-bold text-blue-600">
-                        {item.uniqueCustomerCount}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
                       <span className="text-sm text-gray-500">订单量</span>
                       <span className="text-lg font-bold text-blue-600">
                         {item.totalOrderCount}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-500">退款金额</span>
+                      <span className="text-lg font-bold text-orange-600">
+                        ¥{item.totalRefundAmount.toFixed(2)}
                       </span>
                     </div>
                   </div>

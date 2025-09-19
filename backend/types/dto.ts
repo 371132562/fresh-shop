@@ -494,6 +494,7 @@ export type MergedGroupBuyOverviewSortField =
   | 'totalRevenue'
   | 'totalProfit'
   | 'profitMargin'
+  | 'totalRefundAmount'
   | 'uniqueCustomerCount'
   | 'totalOrderCount';
 
@@ -542,7 +543,9 @@ export type MergedGroupBuyOverviewListItem = {
   supplierName: string; // 供货商名称
   totalRevenue: number; // 总销售额
   totalProfit: number; // 总利润
+  totalProfitMargin: number; // 总利润率（%）
   totalOrderCount: number; // 总订单量
+  totalRefundAmount: number; // 总退款金额（部分退款+全额退款）
   uniqueCustomerCount: number; // 总参与客户数（去重）
   // 单期模式下提供的附加信息（mergeSameName=false 才会返回）
   groupBuyStartDate?: Date; // 团购开始时间（单期）
@@ -891,6 +894,7 @@ export type SupplierOverviewSortField =
   | 'totalRevenue' // 总销售额
   | 'totalProfit' // 总利润
   | 'totalOrderCount' // 总订单量
+  | 'totalRefundAmount' // 退款金额
   | 'uniqueCustomerCount' // 参与客户数
   | 'totalGroupBuyCount' // 团购单数
   | 'averageProfitMargin'; // 平均利润率
@@ -950,6 +954,7 @@ export type SupplierOverviewListItem = {
   totalRevenue: number; // 总销售额（元）
   totalProfit: number; // 总利润（元）
   totalOrderCount: number; // 总订单量（单）
+  totalRefundAmount: number; // 退款金额（元，部分退款+全额退款）
   uniqueCustomerCount: number; // 参与客户数（人，去重）
   totalGroupBuyCount: number; // 团购单数（个）
   averageProfitMargin: number; // 平均利润率（%）

@@ -294,7 +294,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-600">部分退款/退款订单</div>
-                        <div className="mt-1 text-xl font-bold text-blue-600">
+                        <div className="mt-1 text-xl font-bold text-orange-600">
                           {consumptionDetail.totalPartialRefundOrderCount || 0}/
                           {consumptionDetail.totalRefundedOrderCount || 0} 单
                         </div>

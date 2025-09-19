@@ -235,27 +235,6 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                   </Col>
                 )}
 
-                {/* 总订单量 */}
-                <Col
-                  xs={24}
-                  md={12}
-                  lg={8}
-                >
-                  <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-medium text-gray-600">总订单量</div>
-                        <div className="mt-1 text-xl font-bold text-blue-600">
-                          {supplierOverviewDetail.totalOrderCount}单
-                        </div>
-                      </div>
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
-                        <span className="text-xl text-purple-600">📋</span>
-                      </div>
-                    </div>
-                  </div>
-                </Col>
-
                 {/* 团购单量 */}
                 <Col
                   xs={24}
@@ -277,6 +256,27 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                   </div>
                 </Col>
 
+                {/* 总订单量 */}
+                <Col
+                  xs={24}
+                  md={12}
+                  lg={8}
+                >
+                  <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-medium text-gray-600">订单量</div>
+                        <div className="mt-1 text-xl font-bold text-blue-600">
+                          {supplierOverviewDetail.totalOrderCount}单
+                        </div>
+                      </div>
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
+                        <span className="text-xl text-purple-600">📋</span>
+                      </div>
+                    </div>
+                  </div>
+                </Col>
+
                 {/* 部分退款/退款订单量 */}
                 <Col
                   xs={24}
@@ -287,7 +287,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-600">部分退款/退款订单量</div>
-                        <div className="mt-1 text-xl font-bold text-blue-600">
+                        <div className="mt-1 text-xl font-bold text-orange-600">
                           {supplierOverviewDetail.totalPartialRefundOrderCount || 0}/
                           {supplierOverviewDetail.totalRefundedOrderCount || 0} 单
                         </div>

@@ -12,7 +12,7 @@ import useAnalysisStore from '@/stores/analysisStore'
 import useGlobalSettingStore from '@/stores/globalSettingStore'
 import useSupplierStore from '@/stores/supplierStore'
 import dayjs from '@/utils/day'
-import { getProfitColor } from '@/utils/profitColor'
+import { getProfitColor, getProfitMarginColor } from '@/utils/profitColor'
 
 import MergedGroupBuyDetailModal from './MergedGroupBuyDetailModal'
 
@@ -245,16 +245,18 @@ export const MergedGroupBuyOverview = ({
           </Row>
           <SearchToolbar
             sortOptions={[
-              { label: '按总销售额倒序', value: 'totalRevenue_desc' },
-              { label: '按总销售额正序', value: 'totalRevenue_asc' },
-              { label: '按总利润倒序', value: 'totalProfit_desc' },
-              { label: '按总利润正序', value: 'totalProfit_asc' },
+              { label: '按销售额倒序', value: 'totalRevenue_desc' },
+              { label: '按销售额正序', value: 'totalRevenue_asc' },
+              { label: '按利润倒序', value: 'totalProfit_desc' },
+              { label: '按利润正序', value: 'totalProfit_asc' },
               { label: '按利润率倒序', value: 'profitMargin_desc' },
               { label: '按利润率正序', value: 'profitMargin_asc' },
+              { label: '按订单量倒序', value: 'totalOrderCount_desc' },
+              { label: '按订单量正序', value: 'totalOrderCount_asc' },
               { label: '按参团客户数倒序', value: 'uniqueCustomerCount_desc' },
               { label: '按参团客户数正序', value: 'uniqueCustomerCount_asc' },
-              { label: '按订单量倒序', value: 'totalOrderCount_desc' },
-              { label: '按订单量正序', value: 'totalOrderCount_asc' }
+              { label: '按退款金额倒序', value: 'totalRefundAmount_desc' },
+              { label: '按退款金额正序', value: 'totalRefundAmount_asc' }
             ]}
             sortValue={`${searchParams.sortField}_${searchParams.sortOrder}`}
             onSortChange={handleSortChange}
@@ -302,16 +304,16 @@ export const MergedGroupBuyOverview = ({
                     )}
                   </div>
                   {/* 统计信息：网格布局，保证不撑坏容器 */}
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div className="flex flex-col">
-                      <span className="text-sm text-gray-500">总销售额</span>
+                      <span className="text-sm text-gray-500">销售额</span>
                       <span className="text-lg font-semibold text-cyan-600">
                         ¥{item.totalRevenue.toFixed(2)}
                       </span>
                     </div>
                     {!globalSetting?.value?.sensitive && (
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-500">总利润</span>
+                        <span className="text-sm text-gray-500">利润</span>
                         <span
                           className={`text-lg font-semibold ${getProfitColor(item.totalProfit)}`}
                         >
@@ -319,16 +321,32 @@ export const MergedGroupBuyOverview = ({
                         </span>
                       </div>
                     )}
-                    <div className="flex flex-col">
-                      <span className="text-sm text-gray-500">参与客户数</span>
-                      <span className="text-lg font-bold text-blue-600">
-                        {item.uniqueCustomerCount}
-                      </span>
-                    </div>
+                    {!globalSetting?.value?.sensitive && (
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-500">利润率</span>
+                        <span
+                          className={`text-lg font-semibold ${getProfitMarginColor(item.totalProfitMargin)}`}
+                        >
+                          {item.totalProfitMargin.toFixed(1)}%
+                        </span>
+                      </div>
+                    )}
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-500">订单量</span>
                       <span className="text-lg font-bold text-blue-600">
                         {item.totalOrderCount}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-500">退款金额</span>
+                      <span className="text-lg font-bold text-orange-600">
+                        ¥{item.totalRefundAmount.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-500">参与客户数</span>
+                      <span className="text-lg font-bold text-blue-600">
+                        {item.uniqueCustomerCount}
                       </span>
                     </div>
                   </div>

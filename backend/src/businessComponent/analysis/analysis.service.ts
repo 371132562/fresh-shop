@@ -470,22 +470,24 @@ export class AnalysisService {
       series: { date: Date; count: number }[],
     ): { date: Date; count: number }[] => {
       if (series.length === 0) return [];
-      
+
       const monthlyMap = new Map<string, number>();
-      
+
       for (const item of series) {
         const monthKey = dayjs(item.date).format('YYYY-MM');
         const current = monthlyMap.get(monthKey) || 0;
         monthlyMap.set(monthKey, round2(current + item.count));
       }
-      
+
       // 转换为数组并按月份排序
       return Array.from(monthlyMap.entries())
         .map(([monthKey, count]) => ({
           date: dayjs(monthKey + '-01').toDate(), // 使用每月第一天作为日期
           count,
         }))
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        .sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+        );
     };
 
     const monthlyGroupBuyTrend = aggregateByMonth(groupBuyTrend);
@@ -620,6 +622,7 @@ export class AnalysisService {
         supplierName: string;
         totalRevenue: number;
         totalProfit: number;
+        totalRefundAmount: number;
         totalOrderCount: number;
         uniqueCustomerIds: Set<string>;
         totalQuantity: number;
@@ -649,6 +652,7 @@ export class AnalysisService {
           supplierName,
           totalRevenue: 0,
           totalProfit: 0,
+          totalRefundAmount: 0,
           totalOrderCount: 0,
           uniqueCustomerIds: new Set<string>(),
           totalQuantity: 0,
@@ -692,6 +696,12 @@ export class AnalysisService {
               : originalProfit - partialRefundAmount;
           mergedData.totalRevenue += revenue;
           mergedData.totalProfit += profit;
+          // 退款金额累计：全额退款记原始收入；否则累计部分退款金额
+          if (order.status === OrderStatus.REFUNDED) {
+            mergedData.totalRefundAmount += originalRevenue;
+          } else if (partialRefundAmount > 0) {
+            mergedData.totalRefundAmount += partialRefundAmount;
+          }
           // 订单量仅计入已支付/已完成
           if (
             order.status === OrderStatus.PAID ||
@@ -721,6 +731,7 @@ export class AnalysisService {
         supplierName: data.supplierName,
         totalRevenue: data.totalRevenue,
         totalProfit: data.totalProfit,
+        totalRefundAmount: data.totalRefundAmount,
         totalProfitMargin,
         totalOrderCount: data.totalOrderCount,
         uniqueCustomerCount,
@@ -746,6 +757,10 @@ export class AnalysisService {
         case 'profitMargin':
           aValue = a.totalProfitMargin;
           bValue = b.totalProfitMargin;
+          break;
+        case 'totalRefundAmount':
+          aValue = a.totalRefundAmount;
+          bValue = b.totalRefundAmount;
           break;
         case 'uniqueCustomerCount':
           aValue = a.uniqueCustomerCount;
@@ -1614,6 +1629,7 @@ export class AnalysisService {
       let totalRevenue = 0; // 总销售额
       let totalProfit = 0; // 总利润
       let totalOrderCount = 0; // 总订单量
+      let totalRefundAmount = 0; // 总退款金额（部分退款+全额退款）
 
       // 遍历该供货商的所有团购单
       for (const groupBuy of supplier.groupBuy) {
@@ -1647,13 +1663,22 @@ export class AnalysisService {
             // 累加到供货商总统计
             totalRevenue += orderRevenue;
             totalProfit += orderProfit;
+            // 退款金额累计口径：
+            // - 若订单已全额退款（REFUNDED），仅累计全额退款金额（原始收入），不叠加该单的部分退款，避免重复
+            // - 否则仅累计部分退款金额
+            if (order.status === OrderStatus.REFUNDED) {
+              totalRefundAmount += originalRevenue;
+            } else if (partial > 0) {
+              totalRefundAmount += partial;
+            }
             if (
               order.status === OrderStatus.PAID ||
               order.status === OrderStatus.COMPLETED
             ) {
               totalOrderCount++;
+              // 仅在有效订单（PAID/COMPLETED）时计入参与客户，保持与详情接口一致
+              uniqueCustomerIds.add(order.customerId);
             }
-            uniqueCustomerIds.add(order.customerId); // 添加客户ID到去重集合
           }
         }
       }
@@ -1669,6 +1694,7 @@ export class AnalysisService {
         totalRevenue, // 总销售额
         totalProfit, // 总利润
         totalOrderCount, // 总订单量
+        totalRefundAmount, // 总退款金额
         uniqueCustomerCount: uniqueCustomerIds.size, // 参与客户数（去重）
         totalGroupBuyCount: supplier.groupBuy.length, // 团购单数
         averageProfitMargin, // 平均利润率
@@ -1693,6 +1719,10 @@ export class AnalysisService {
         case 'totalOrderCount': // 按总订单量排序
           aValue = a.totalOrderCount;
           bValue = b.totalOrderCount;
+          break;
+        case 'totalRefundAmount': // 按退款金额排序
+          aValue = a.totalRefundAmount;
+          bValue = b.totalRefundAmount;
           break;
         case 'uniqueCustomerCount': // 按参与客户数排序
           aValue = a.uniqueCustomerCount;
