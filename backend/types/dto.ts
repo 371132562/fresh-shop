@@ -418,11 +418,12 @@ export type GroupBuyDetail = GroupBuy & {
   // 统计数据
   unitStatistics: GroupBuyUnitStats[]; // 规格统计
   totalSalesAmount: number; // 销售额（只计算已付款和已完成状态的订单，扣除退款）
-  totalProfit: number; // 利润（销售额减去成本）
+  totalProfit: number; // 利润（销售额减去成本，包含退款订单的负利润）
   totalRefundAmount: number; // 总退款金额（部分退款+全额退款）
   totalPartialRefundAmount: number; // 部分退款总金额
   totalRefundedOrderCount: number; // 总全额退款订单数
   totalPartialRefundOrderCount: number; // 总部分退款订单数
+  totalOrderCount: number; // 有效订单数量（PAID、COMPLETED，不包含REFUNDED）
 };
 
 /**

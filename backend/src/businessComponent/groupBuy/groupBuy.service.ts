@@ -303,6 +303,7 @@ export class GroupBuyService {
     let totalPartialRefundAmount = 0;
     let totalRefundedOrderCount = 0;
     let totalPartialRefundOrderCount = 0;
+    let totalOrderCount = 0; // 有效订单数量（PAID、COMPLETED、REFUNDED）
 
     if (
       groupBuy?.order?.length &&
@@ -348,8 +349,9 @@ export class GroupBuyService {
           }
         }
 
-        // 只计算已付款和已完成状态的订单销售额和利润
+        // 计算销售额和利润：包含已支付、已完成、已退款三种状态
         if (order.status === 'PAID' || order.status === 'COMPLETED') {
+          totalOrderCount += 1; // 统计有效订单数量
           const unit = order.unitId ? unitMap.get(order.unitId) : undefined;
           if (unit) {
             const gross = unit.price * order.quantity;
@@ -360,6 +362,13 @@ export class GroupBuyService {
             const cost = unit.costPrice * order.quantity;
             const profit = net - cost;
             totalProfit += profit;
+          }
+        } else if (order.status === 'REFUNDED') {
+          // 已退款订单：收入为0，利润为-成本，计入损益但不计入订单量
+          const unit = order.unitId ? unitMap.get(order.unitId) : undefined;
+          if (unit) {
+            const cost = unit.costPrice * order.quantity;
+            totalProfit += -cost; // 退款订单的利润为负成本
           }
         }
       });
@@ -377,6 +386,7 @@ export class GroupBuyService {
       totalPartialRefundAmount,
       totalRefundedOrderCount,
       totalPartialRefundOrderCount,
+      totalOrderCount, // 有效订单数量
     };
   }
 

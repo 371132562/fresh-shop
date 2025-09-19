@@ -245,7 +245,7 @@ export const Component = () => {
               <div className="flex items-start text-base">
                 <span className="w-20 flex-shrink-0 font-medium text-gray-500">订单量：</span>
                 <span className="word-break-all flex-grow break-words font-bold text-blue-600">
-                  {groupBuy?.order?.length || <span className="italic text-gray-400">无</span>}
+                  {groupBuy?.totalOrderCount || <span className="italic text-gray-400">无</span>}
                 </span>
               </div>
 
