@@ -951,8 +951,6 @@ export class AnalysisService {
         customerPurchaseFrequency: [],
         multiPurchaseCustomerCount: 0,
         multiPurchaseCustomerRatio: 0,
-        repeatCustomerCount: 0,
-        repeatCustomerRatio: 0,
         regionalSales: [],
         groupBuyLaunchHistory: [],
       };
@@ -1253,17 +1251,6 @@ export class AnalysisService {
       customerPurchaseFrequency,
       multiPurchaseCustomerCount,
       multiPurchaseCustomerRatio,
-      // 对齐供货商详情增加复购指标
-      repeatCustomerCount: Array.from(customerPurchaseCounts.values()).filter(
-        (c) => c > 1,
-      ).length,
-      repeatCustomerRatio:
-        uniqueCustomerCount > 0
-          ? (Array.from(customerPurchaseCounts.values()).filter((c) => c > 1)
-              .length /
-              uniqueCustomerCount) *
-            100
-          : 0,
       regionalSales: regionalSalesResult,
       groupBuyLaunchHistory,
     };
@@ -2137,11 +2124,6 @@ export class AnalysisService {
       totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
     const averageCustomerOrderValue =
       uniqueCustomerIds.size > 0 ? totalRevenue / uniqueCustomerIds.size : 0;
-    const repeatCustomerCount = repeatCustomerIds.size;
-    const repeatCustomerRatio =
-      uniqueCustomerIds.size > 0
-        ? (repeatCustomerCount / uniqueCustomerIds.size) * 100
-        : 0;
     const totalGroupBuyCount = groupBuysWithOrders.length;
     const averageGroupBuyRevenue =
       totalGroupBuyCount > 0 ? totalRevenue / totalGroupBuyCount : 0;
@@ -2262,8 +2244,6 @@ export class AnalysisService {
       totalOrderCount,
       uniqueCustomerCount: uniqueCustomerIds.size,
       averageCustomerOrderValue,
-      repeatCustomerCount,
-      repeatCustomerRatio,
       customerPurchaseFrequency,
       multiPurchaseCustomerCount,
       multiPurchaseCustomerRatio,

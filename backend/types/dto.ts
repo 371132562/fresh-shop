@@ -600,8 +600,6 @@ export type MergedGroupBuyOverviewDetail = {
   customerPurchaseFrequency: CustomerPurchaseFrequency[]; // 客户购买次数分布
   multiPurchaseCustomerCount: number; // 多次购买客户总数
   multiPurchaseCustomerRatio: number; // 多次购买客户比例
-  repeatCustomerCount: number; // 复购客户数
-  repeatCustomerRatio: number; // 复购客户比例
   regionalSales: RegionalSalesItem[]; // 地域销售分析
   groupBuyLaunchHistory: GroupBuyLaunchHistory[]; // 团购发起历史记录
 };
@@ -1051,8 +1049,6 @@ export type SupplierOverviewDetail = {
   // 客户分析
   uniqueCustomerCount: number; // 总参与客户数
   averageCustomerOrderValue: number; // 平均客单价
-  repeatCustomerCount: number; // 复购客户数
-  repeatCustomerRatio: number; // 复购客户比例
   customerPurchaseFrequency: CustomerPurchaseFrequency[]; // 客户购买次数分布
   multiPurchaseCustomerCount: number; // 多次购买客户数
   multiPurchaseCustomerRatio: number; // 多次购买客户占比

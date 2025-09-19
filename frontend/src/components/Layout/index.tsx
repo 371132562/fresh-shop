@@ -3,6 +3,7 @@ import {
   EnvironmentOutlined,
   FileTextOutlined,
   GroupOutlined,
+  InfoCircleOutlined,
   MenuOutlined,
   SettingOutlined,
   ShoppingOutlined,
@@ -30,6 +31,7 @@ import { NavLink } from 'react-router'
 
 import ErrorPage from '@/components/Error'
 import OrderStatsButton from '@/components/OrderStatsButton'
+import StatisticsGuideModal from '@/components/StatisticsGuideModal'
 import type { OrphanImageItem } from '@/services/common.ts'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import { buildImageUrl } from '@/utils'
@@ -40,6 +42,7 @@ export const Component: FC = () => {
   const outlet = useOutlet()
   const [settingOpen, setSettingOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [statisticsGuideOpen, setStatisticsGuideOpen] = useState(false)
   // 孤立图片 - 本地选中集合
   const [selectedFilenames, setSelectedFilenames] = useState<string[]>([])
   // 是否已执行过扫描
@@ -224,7 +227,17 @@ export const Component: FC = () => {
             <div className="flex items-center justify-between">
               {/* 左侧：菜单按钮和标题 */}
               <div className="flex min-w-0 flex-1 items-center space-x-3">
-                <p className="text-xl font-bold text-white md:text-2xl">团购管理平台</p>
+                <div className="flex items-center gap-3">
+                  <p className="text-xl font-bold text-white md:text-2xl">团购管理平台</p>
+                  <button
+                    onClick={() => setStatisticsGuideOpen(true)}
+                    className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/20 p-3 text-white transition-colors hover:bg-white/30"
+                    title="统计字段说明"
+                  >
+                    <InfoCircleOutlined className="!mr-0 text-lg" />
+                    <span className="hidden px-1 lg:inline">统计数字说明</span>
+                  </button>
+                </div>
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/20 p-3 text-white transition-colors hover:bg-white/30 lg:hidden"
@@ -639,6 +652,12 @@ export const Component: FC = () => {
           </Card>
         </div>
       </Modal>
+
+      {/* 统计字段说明Modal */}
+      <StatisticsGuideModal
+        visible={statisticsGuideOpen}
+        onClose={() => setStatisticsGuideOpen(false)}
+      />
     </>
   )
 }
