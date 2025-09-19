@@ -81,24 +81,6 @@ const OrderStatsButton = () => {
         className="order-stats-modal"
       >
         <div className="space-y-6">
-          {/* 统计概览卡片 */}
-          <div className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white shadow-lg">
-            <div className="text-center">
-              <div className="mb-4 text-lg font-semibold">订单统计概览</div>
-              <div className="flex items-center justify-center space-x-8">
-                <div className="text-center">
-                  <div className="text-3xl font-bold">{orderStats.notPaidCount}</div>
-                  <div className="text-sm opacity-90">待付款</div>
-                </div>
-                <div className="h-12 w-px bg-white/30"></div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold">{orderStats.paidCount}</div>
-                  <div className="text-sm opacity-90">已付款</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* 两列布局 */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* 左列：待付款订单列表 */}
@@ -127,6 +109,17 @@ const OrderStatsButton = () => {
                                 {order.groupBuy.name} (
                                 {dayjs(order.groupBuy.groupBuyStartDate).format('MM-DD')})
                               </div>
+                              {(() => {
+                                const unit = order.groupBuy.units?.find(u => u.id === order.unitId)
+                                if (!unit) return null
+                                return (
+                                  <div className="mt-1 space-y-0.5 text-xs text-gray-600">
+                                    <div>规格：{unit.unit}</div>
+                                    <div>份数：{order.quantity}</div>
+                                    <div>售价：¥{unit.price.toFixed(2)}</div>
+                                  </div>
+                                )
+                              })()}
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="rounded-full bg-orange-500 px-3 py-1 text-xs font-medium text-white">
@@ -204,6 +197,17 @@ const OrderStatsButton = () => {
                                 {order.groupBuy.name} (
                                 {dayjs(order.groupBuy.groupBuyStartDate).format('MM-DD')})
                               </div>
+                              {(() => {
+                                const unit = order.groupBuy.units?.find(u => u.id === order.unitId)
+                                if (!unit) return null
+                                return (
+                                  <div className="mt-1 space-y-0.5 text-xs text-gray-600">
+                                    <div>规格：{unit.unit}</div>
+                                    <div>份数：{order.quantity}</div>
+                                    <div>售价：¥{unit.price.toFixed(2)}</div>
+                                  </div>
+                                )
+                              })()}
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="rounded-full bg-green-500 px-3 py-1 text-xs font-medium text-white">

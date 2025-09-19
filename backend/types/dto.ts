@@ -727,6 +727,7 @@ export type OrderStatsItem = Order & {
     id: string;
     name: string;
     groupBuyStartDate: Date;
+    units: GroupBuyUnit[];
   };
 };
 

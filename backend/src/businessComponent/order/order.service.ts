@@ -271,6 +271,7 @@ export class OrderService {
             id: true,
             name: true,
             groupBuyStartDate: true,
+            units: true,
           },
         },
       },
