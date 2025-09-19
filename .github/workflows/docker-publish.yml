@@ -9,8 +9,6 @@ on:
 permissions:
   contents: read
   actions: write
-  # 需要读取仓库内容权限来检查分支和PR
-  metadata: read
 
 env:
   DOCKER_IMAGE_NAME: linstar666/fresh-shop # 替换为你的 Docker Hub 用户名和镜像名

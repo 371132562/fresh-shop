@@ -17,8 +17,6 @@ concurrency:
 permissions:
   contents: write
   actions: write
-  # 需要读取仓库内容权限来检查分支和PR
-  metadata: read
 
 jobs:
   build-and-release:
