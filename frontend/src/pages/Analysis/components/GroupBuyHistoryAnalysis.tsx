@@ -54,18 +54,21 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       title: '订单量',
       dataIndex: 'orderCount',
       key: 'orderCount',
+      sorter: (a, b) => (a.orderCount || 0) - (b.orderCount || 0),
       render: (count: number) => <span className="font-bold text-blue-600">{count}单</span>
     },
     {
       title: '客户量',
       dataIndex: 'customerCount',
       key: 'customerCount',
+      sorter: (a, b) => (a.customerCount || 0) - (b.customerCount || 0),
       render: (count: number) => <span className="font-bold text-blue-600">{count}人</span>
     },
     {
       title: '销售额',
       dataIndex: 'revenue',
       key: 'revenue',
+      sorter: (a, b) => (a.revenue || 0) - (b.revenue || 0),
       render: (revenue: number) => (
         <span className="font-bold text-blue-400">¥{revenue.toFixed(2)}</span>
       )
@@ -78,6 +81,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
         title: '利润',
         dataIndex: 'profit',
         key: 'profit',
+        sorter: (a, b) => (a.profit || 0) - (b.profit || 0),
         render: (profit: number) => (
           <span className={`font-medium ${getProfitColor(profit)}`}>¥{profit.toFixed(2)}</span>
         )
@@ -85,6 +89,11 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       {
         title: '利润率',
         key: 'profitMargin',
+        sorter: (a, b) => {
+          const am = (a.revenue || 0) > 0 ? (a.profit || 0) / (a.revenue || 0) : 0
+          const bm = (b.revenue || 0) > 0 ? (b.profit || 0) / (b.revenue || 0) : 0
+          return am - bm
+        },
         render: (_, record) => {
           const margin = record.revenue > 0 ? (record.profit / record.revenue) * 100 : 0
           return (
@@ -103,6 +112,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       title: '退款金额',
       dataIndex: 'totalRefundAmount',
       key: 'totalRefundAmount',
+      sorter: (a, b) => (a.totalRefundAmount || 0) - (b.totalRefundAmount || 0),
       render: (amount: number) => (
         <span className="font-medium text-orange-600">¥{(amount || 0).toFixed(2)}</span>
       )
