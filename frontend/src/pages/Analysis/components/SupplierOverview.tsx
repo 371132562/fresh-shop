@@ -177,24 +177,19 @@ export const SupplierOverview = ({ startDate, endDate }: SupplierOverviewProps) 
             </Col>
           </Row>
           <SearchToolbar
-            sortOptions={[
-              { label: '按销售额倒序', value: 'totalRevenue_desc' },
-              { label: '按销售额正序', value: 'totalRevenue_asc' },
-              { label: '按利润倒序', value: 'totalProfit_desc' },
-              { label: '按利润正序', value: 'totalProfit_asc' },
-              { label: '按利润率倒序', value: 'averageProfitMargin_desc' },
-              { label: '按利润率正序', value: 'averageProfitMargin_asc' },
-              { label: '按团购单量倒序', value: 'totalGroupBuyCount_desc' },
-              { label: '按团购单量正序', value: 'totalGroupBuyCount_asc' },
-              { label: '按订单量倒序', value: 'totalOrderCount_desc' },
-              { label: '按订单量正序', value: 'totalOrderCount_asc' },
-              { label: '按退款金额倒序', value: 'totalRefundAmount_desc' },
-              { label: '按退款金额正序', value: 'totalRefundAmount_asc' },
-              { label: '按参团客户量倒序', value: 'uniqueCustomerCount_desc' },
-              { label: '按参团客户量正序', value: 'uniqueCustomerCount_asc' }
+            sortFieldOptions={[
+              { label: '销售额', value: 'totalRevenue' },
+              { label: '利润', value: 'totalProfit' },
+              { label: '利润率', value: 'averageProfitMargin' },
+              { label: '团购单量', value: 'totalGroupBuyCount' },
+              { label: '订单量', value: 'totalOrderCount' },
+              { label: '退款金额', value: 'totalRefundAmount' },
+              { label: '参团客户量', value: 'uniqueCustomerCount' }
             ]}
-            sortValue={`${searchParams.sortField}_${searchParams.sortOrder}`}
-            onSortChange={handleSortChange}
+            sortFieldValue={searchParams.sortField}
+            onSortFieldChange={value => handleSortChange(`${value}_${searchParams.sortOrder}`)}
+            sortOrderValue={searchParams.sortOrder}
+            onSortOrderChange={order => handleSortChange(`${searchParams.sortField}_${order}`)}
             onSearch={handleSearch}
             onReset={resetSearch}
             searchLoading={supplierOverviewLoading}

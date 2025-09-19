@@ -128,20 +128,24 @@ export const Component = () => {
           </Row>
           {/* 工具栏区域 */}
           <SearchToolbar
-            sortOptions={[
-              { label: '按添加时间倒序', value: 'createdAt_desc' },
-              { label: '按添加时间正序', value: 'createdAt_asc' },
-              { label: '按订单量倒序', value: 'orderCount_desc' },
-              { label: '按订单量正序', value: 'orderCount_asc' },
-              { label: '按订单总额倒序', value: 'orderTotalAmount_desc' },
-              { label: '按订单总额正序', value: 'orderTotalAmount_asc' }
+            sortFieldOptions={[
+              { label: '添加时间', value: 'createdAt' },
+              { label: '订单量', value: 'orderCount' },
+              { label: '订单总额', value: 'orderTotalAmount' }
             ]}
-            sortValue={`${pageParams.sortField}_${pageParams.sortOrder}`}
-            onSortChange={value => {
-              const [sortField, sortOrder] = value.split('_') as [string, string]
+            sortFieldValue={pageParams.sortField}
+            onSortFieldChange={value => {
               setPageParams({
-                sortField: sortField as CustomerAddressSortField,
-                sortOrder: sortOrder as SortOrder,
+                sortField: value as CustomerAddressSortField,
+                sortOrder: pageParams.sortOrder,
+                page: 1
+              })
+            }}
+            sortOrderValue={pageParams.sortOrder}
+            onSortOrderChange={order => {
+              setPageParams({
+                sortField: pageParams.sortField,
+                sortOrder: order as SortOrder,
                 page: 1
               })
             }}

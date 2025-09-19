@@ -13,7 +13,10 @@ type CustomerOverviewProps = {
 
 // 客户概况：以 List 形式展示客户概况，支持搜索、排序、分页和查看详情
 export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) => {
-  const [sortValue, setSortValue] = useState<string>('totalAmount_desc')
+  const [sortField, setSortField] = useState<
+    'orderCount' | 'totalAmount' | 'averageOrderAmount' | 'totalRefundAmount'
+  >('totalAmount')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [form] = Form.useForm()
   const [customerName, setCustomerName] = useState('')
 
@@ -33,10 +36,8 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
   const [detailVisible, setDetailVisible] = useState(false)
 
   const fetchData = (page: number = customerOverviewPage) => {
-    const [fieldKey, order] = sortValue.split('_') as [
-      'orderCount' | 'totalAmount' | 'averageOrderAmount' | 'totalRefundAmount',
-      'asc' | 'desc'
-    ]
+    const fieldKey = sortField
+    const order = sortOrder
     const sortFieldMap = {
       orderCount: 'totalOrderCount',
       totalAmount: 'totalRevenue',
@@ -57,7 +58,7 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
   // 拉取客户概况（支持时间范围/搜索/排序）
   useEffect(() => {
     fetchData(1)
-  }, [startDate, endDate, sortValue, customerName])
+  }, [startDate, endDate, sortField, sortOrder, customerName])
 
   const openDetail = (id: string) => {
     // 统一对象参数形式
@@ -104,18 +105,16 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
             </Col>
           </Row>
           <SearchToolbar
-            sortOptions={[
-              { label: '按总消费额倒序', value: 'totalAmount_desc' },
-              { label: '按总消费额正序', value: 'totalAmount_asc' },
-              { label: '按订单量倒序', value: 'orderCount_desc' },
-              { label: '按订单量正序', value: 'orderCount_asc' },
-              { label: '按平均单价倒序', value: 'averageOrderAmount_desc' },
-              { label: '按平均单价正序', value: 'averageOrderAmount_asc' },
-              { label: '按退款金额倒序', value: 'totalRefundAmount_desc' },
-              { label: '按退款金额正序', value: 'totalRefundAmount_asc' }
+            sortFieldOptions={[
+              { label: '总消费额', value: 'totalAmount' },
+              { label: '订单量', value: 'orderCount' },
+              { label: '平均单价', value: 'averageOrderAmount' },
+              { label: '退款金额', value: 'totalRefundAmount' }
             ]}
-            sortValue={sortValue}
-            onSortChange={v => setSortValue(v)}
+            sortFieldValue={sortField}
+            onSortFieldChange={v => setSortField(v as typeof sortField)}
+            sortOrderValue={sortOrder}
+            onSortOrderChange={v => setSortOrder(v)}
             onSearch={() => setCustomerName(form.getFieldValue('customerName') || '')}
             onReset={() => {
               form.setFieldsValue({ customerName: '' })

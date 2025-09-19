@@ -244,22 +244,18 @@ export const MergedGroupBuyOverview = ({
             </Col>
           </Row>
           <SearchToolbar
-            sortOptions={[
-              { label: '按销售额倒序', value: 'totalRevenue_desc' },
-              { label: '按销售额正序', value: 'totalRevenue_asc' },
-              { label: '按利润倒序', value: 'totalProfit_desc' },
-              { label: '按利润正序', value: 'totalProfit_asc' },
-              { label: '按利润率倒序', value: 'profitMargin_desc' },
-              { label: '按利润率正序', value: 'profitMargin_asc' },
-              { label: '按订单量倒序', value: 'totalOrderCount_desc' },
-              { label: '按订单量正序', value: 'totalOrderCount_asc' },
-              { label: '按参团客户数倒序', value: 'uniqueCustomerCount_desc' },
-              { label: '按参团客户数正序', value: 'uniqueCustomerCount_asc' },
-              { label: '按退款金额倒序', value: 'totalRefundAmount_desc' },
-              { label: '按退款金额正序', value: 'totalRefundAmount_asc' }
+            sortFieldOptions={[
+              { label: '销售额', value: 'totalRevenue' },
+              { label: '利润', value: 'totalProfit' },
+              { label: '利润率', value: 'profitMargin' },
+              { label: '订单量', value: 'totalOrderCount' },
+              { label: '参团客户数', value: 'uniqueCustomerCount' },
+              { label: '退款金额', value: 'totalRefundAmount' }
             ]}
-            sortValue={`${searchParams.sortField}_${searchParams.sortOrder}`}
-            onSortChange={handleSortChange}
+            sortFieldValue={searchParams.sortField}
+            onSortFieldChange={value => handleSortChange(`${value}_${searchParams.sortOrder}`)}
+            sortOrderValue={searchParams.sortOrder}
+            onSortOrderChange={order => handleSortChange(`${searchParams.sortField}_${order}`)}
             onSearch={handleSearch}
             onReset={resetSearch}
             searchLoading={mergedGroupBuyOverviewLoading}

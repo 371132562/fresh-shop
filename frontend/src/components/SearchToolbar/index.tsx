@@ -1,5 +1,11 @@
-import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
-import { Button, Select } from 'antd'
+import {
+  PlusOutlined,
+  ReloadOutlined,
+  SearchOutlined,
+  SortAscendingOutlined,
+  SortDescendingOutlined
+} from '@ant-design/icons'
+import { Button, Segmented, Select } from 'antd'
 import type { ReactNode } from 'react'
 
 type SortOption = {
@@ -9,9 +15,11 @@ type SortOption = {
 
 type SearchToolbarProps = {
   // 排序相关
-  sortOptions?: SortOption[]
-  sortValue?: string
-  onSortChange?: (value: string) => void
+  sortFieldOptions?: SortOption[]
+  sortFieldValue?: string
+  onSortFieldChange?: (value: string) => void
+  sortOrderValue?: 'asc' | 'desc'
+  onSortOrderChange?: (value: 'asc' | 'desc') => void
 
   // 操作按钮
   onSearch?: () => void
@@ -31,9 +39,11 @@ type SearchToolbarProps = {
 }
 
 const SearchToolbar = ({
-  sortOptions,
-  sortValue,
-  onSortChange,
+  sortFieldOptions,
+  sortFieldValue,
+  onSortFieldChange,
+  sortOrderValue = 'desc',
+  onSortOrderChange,
   onSearch,
   onReset,
   searchLoading = false,
@@ -69,20 +79,58 @@ const SearchToolbar = ({
         {/* 右侧组：排序、按钮、自定义内容 */}
         <div className="flex flex-col items-stretch justify-between gap-2 md:flex-row md:items-center md:gap-3">
           {/* 排序选择器 */}
-          {sortOptions && sortValue && onSortChange && (
+          {typeof sortFieldValue === 'string' &&
+          !!sortFieldOptions &&
+          !!onSortFieldChange &&
+          !!sortOrderValue &&
+          !!onSortOrderChange ? (
             <div className="flex w-full flex-col items-stretch gap-1 sm:flex-row sm:items-center sm:gap-2 md:w-auto">
               <span className="whitespace-nowrap text-sm font-medium text-gray-700">排序：</span>
-              <div className="w-full md:w-[160px]">
-                <Select
-                  value={sortValue}
-                  style={{ width: '100%' }}
-                  onChange={onSortChange}
-                  options={sortOptions}
-                  popupMatchSelectWidth={240}
-                />
-              </div>
+
+              {/* 字段选择 + 顺序切换 */}
+              {typeof sortFieldValue === 'string' &&
+              !!sortFieldOptions &&
+              !!onSortFieldChange &&
+              !!sortOrderValue &&
+              !!onSortOrderChange ? (
+                <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center md:w-auto">
+                  <div className="w-full md:w-[180px]">
+                    <Select
+                      value={sortFieldValue}
+                      style={{ width: '100%' }}
+                      onChange={onSortFieldChange}
+                      options={sortFieldOptions}
+                      popupMatchSelectWidth={240}
+                    />
+                  </div>
+                  <Segmented
+                    value={sortOrderValue}
+                    onChange={v => onSortOrderChange(v as 'asc' | 'desc')}
+                    options={[
+                      {
+                        label: (
+                          <div className="flex items-center gap-1">
+                            <SortAscendingOutlined />
+                            <span>升序</span>
+                          </div>
+                        ),
+                        value: 'asc'
+                      },
+                      {
+                        label: (
+                          <div className="flex items-center gap-1">
+                            <SortDescendingOutlined />
+                            <span>降序</span>
+                          </div>
+                        ),
+                        value: 'desc'
+                      }
+                    ]}
+                  />
+                </div>
+              ) : null}
             </div>
-          )}
+          ) : null}
 
           {/* 操作按钮 */}
           {(onSearch || onReset) && (
