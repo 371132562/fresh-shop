@@ -44,9 +44,15 @@ type AnalysisStore = {
   getCount: (data: AnalysisCountParams) => Promise<void>
   getCountLoading: boolean
 
-  // 全部数据模式标记（用于前端展示控制）
+  // 时间筛选相关状态
   isAllData: boolean
   setIsAllData: (flag: boolean) => void
+  calendarValue: [Date, Date]
+  setCalendarValue: (value: [Date, Date]) => void
+  calendarVisible: boolean
+  setCalendarVisible: (visible: boolean) => void
+  activeViewKey: string
+  setActiveViewKey: (key: string) => void
 
   // 图表显示选项状态（全局同步）
   showCumulative: boolean
@@ -156,8 +162,34 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
     monthlyPriceTrend: [],
     monthlyProfitTrend: []
   },
+  // 时间筛选相关状态
   isAllData: false,
-  setIsAllData: flag => set({ isAllData: flag }),
+  setIsAllData: flag =>
+    set({
+      isAllData: flag,
+      // 当切换到非全部数据模式时，重置图表显示选项
+      // 当切换到全部数据模式时，保持当前选项状态
+      ...(flag
+        ? {}
+        : {
+            showCumulative: false,
+            showMonthly: false
+          })
+    }),
+  calendarValue: [new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), new Date()], // 默认7天前到今天
+  setCalendarValue: value =>
+    set({
+      calendarValue: value,
+      // 当时间范围改变时，重置图表显示选项
+      showCumulative: false,
+      showMonthly: false
+    }),
+  calendarVisible: false,
+  setCalendarVisible: visible => set({ calendarVisible: visible }),
+  activeViewKey: 'overview',
+  setActiveViewKey: key => set({ activeViewKey: key }),
+
+  // 图表显示选项状态
   showCumulative: false,
   showMonthly: false,
   setShowCumulative: flag => set({ showCumulative: flag }),

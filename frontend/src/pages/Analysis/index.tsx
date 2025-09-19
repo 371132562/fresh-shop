@@ -1,7 +1,6 @@
 import { CalendarOutlined, ClockCircleOutlined, HistoryOutlined } from '@ant-design/icons'
 import { Button, Col, Row, Select } from 'antd'
 import { CalendarPicker } from 'antd-mobile'
-import { useState } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore.ts'
 import dayjs from '@/utils/day'
@@ -12,15 +11,15 @@ import { Overview } from './components/Overview'
 import { SupplierOverview } from './components/SupplierOverview'
 
 export const Component = () => {
-  const [calendarValue, setCalendarValue] = useState<[Date, Date]>([
-    dayjs().subtract(7, 'day').toDate(),
-    dayjs().toDate()
-  ])
-  const [calendarVisible, setCalendarVisible] = useState(false)
-  const [activeViewKey, setActiveViewKey] = useState('overview')
-  const [isAllData, setIsAllData] = useState(false) // 是否查询全部数据
-
-  const setIsAllDataInStore = useAnalysisStore(state => state.setIsAllData)
+  // 从store中获取状态
+  const calendarValue = useAnalysisStore(state => state.calendarValue)
+  const setCalendarValue = useAnalysisStore(state => state.setCalendarValue)
+  const calendarVisible = useAnalysisStore(state => state.calendarVisible)
+  const setCalendarVisible = useAnalysisStore(state => state.setCalendarVisible)
+  const activeViewKey = useAnalysisStore(state => state.activeViewKey)
+  const setActiveViewKey = useAnalysisStore(state => state.setActiveViewKey)
+  const isAllData = useAnalysisStore(state => state.isAllData)
+  const setIsAllData = useAnalysisStore(state => state.setIsAllData)
 
   // 自定义日期是否被选中（不为全部，且选择了时间，但不匹配任何预设快捷天数）
   const presetDays = [7, 14, 30, 90, 180, 360]
@@ -40,12 +39,10 @@ export const Component = () => {
   const changeDateRange = (days: number) => {
     setCalendarValue([dayjs().subtract(days, 'day').toDate(), dayjs().toDate()])
     setIsAllData(false) // 选择具体天数时取消全部数据模式
-    setIsAllDataInStore(false)
   }
 
   const changeToAllData = () => {
     setIsAllData(true)
-    setIsAllDataInStore(true)
   }
 
   const viewComponents: Record<string, React.ReactNode> = {
