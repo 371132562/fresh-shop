@@ -246,6 +246,10 @@ export const MergedGroupBuyOverview = ({
           </Row>
           <SearchToolbar
             sortFieldOptions={[
+              // 仅在单期模式下展示“发起时间”排序
+              ...(mergeSameName
+                ? []
+                : ([{ label: '发起时间', value: 'groupBuyStartDate' }] as const)),
               { label: '销售额', value: 'totalRevenue' },
               { label: '利润', value: 'totalProfit' },
               { label: '利润率', value: 'profitMargin' },

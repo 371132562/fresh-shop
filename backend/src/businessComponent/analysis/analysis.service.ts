@@ -750,8 +750,19 @@ export class AnalysisService {
       };
     });
 
-    // 6) 排序：根据 sortField + sortOrder
+    // 6) 排序：根据 sortField + sortOrder（支持单期模式按发起时间排序）
     mergedDataArray.sort((a, b) => {
+      // 单期模式下且选择按发起时间排序时，使用时间字段比较
+      if (sortField === 'groupBuyStartDate' && !mergeSameName) {
+        const at = a.groupBuyStartDate
+          ? new Date(a.groupBuyStartDate).getTime()
+          : 0;
+        const bt = b.groupBuyStartDate
+          ? new Date(b.groupBuyStartDate).getTime()
+          : 0;
+        return sortOrder === 'asc' ? at - bt : bt - at;
+      }
+
       let aValue: number;
       let bValue: number;
 
@@ -785,11 +796,7 @@ export class AnalysisService {
           bValue = b.totalRevenue;
       }
 
-      if (sortOrder === 'asc') {
-        return aValue - bValue;
-      } else {
-        return bValue - aValue;
-      }
+      return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
     });
 
     // 7) 分页处理

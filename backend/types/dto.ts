@@ -496,7 +496,8 @@ export type MergedGroupBuyOverviewSortField =
   | 'profitMargin'
   | 'totalRefundAmount'
   | 'uniqueCustomerCount'
-  | 'totalOrderCount';
+  | 'totalOrderCount'
+  | 'groupBuyStartDate'; // 单期模式下支持按发起时间排序
 
 /**
  * 团购合并概况详情查询参数
