@@ -16,7 +16,7 @@
 #### 数值/统计文本配色规范（通用）
 - 以下配色规则统一使用 font-bold 字体加粗
 - 金额类（总销售额、消费总额、小计等）：`text-blue-400`
-- 利润类：正值用 `text-red-600`，负值用 `text-green-600`，等于 0 用 `text-gray-500`，应使用utils/profitColor.tsx中的函数获取颜色
+- 利润类：正值用 `text-green-600`，负值用 `text-red-600`，等于 0 用 `text-gray-500`，应使用utils/profitColor.tsx中的函数获取颜色
 - 退款相关（退款金额、部分退款/退款订单量等）：`text-orange-600`
 - 计数类（次数、订单量、购买次数、团购单量、客户量等）：`text-blue-600`
 

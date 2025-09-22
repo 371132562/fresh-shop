@@ -1,6 +1,6 @@
 /**
  * 利润和利润率颜色工具函数
- * 遵循中国股市颜色规则：正数红色，负数绿色
+ * 遵循国际通用颜色规则：正数绿色，负数红色
  */
 
 /**
@@ -10,9 +10,9 @@
  */
 export const getProfitColor = (value: number): string => {
   if (value > 0) {
-    return 'text-red-600'
-  } else if (value < 0) {
     return 'text-green-600'
+  } else if (value < 0) {
+    return 'text-red-600'
   }
   return 'text-gray-500'
 }
@@ -24,9 +24,9 @@ export const getProfitColor = (value: number): string => {
  */
 export const getProfitMarginColor = (value: number): string => {
   if (value > 0) {
-    return 'text-red-600'
-  } else if (value < 0) {
     return 'text-green-600'
+  } else if (value < 0) {
+    return 'text-red-600'
   }
   return 'text-gray-500'
 }
@@ -38,9 +38,9 @@ export const getProfitMarginColor = (value: number): string => {
  */
 export const getProfitBgColor = (value: number): string => {
   if (value > 0) {
-    return 'bg-red-100'
-  } else if (value < 0) {
     return 'bg-green-100'
+  } else if (value < 0) {
+    return 'bg-red-100'
   }
   return 'bg-gray-100'
 }
@@ -52,9 +52,9 @@ export const getProfitBgColor = (value: number): string => {
  */
 export const getProfitIconColor = (value: number): string => {
   if (value > 0) {
-    return 'text-red-600'
-  } else if (value < 0) {
     return 'text-green-600'
+  } else if (value < 0) {
+    return 'text-red-600'
   }
   return 'text-gray-500'
 }
