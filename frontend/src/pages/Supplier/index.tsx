@@ -219,9 +219,9 @@ export const Component = () => {
                   {/* 描述信息：先显示聚合统计，其次显示描述；小屏单行省略，md 起自动换行 */}
                   <div className="space-y-1">
                     {item.groupBuyCount !== undefined && (
-                      <div className="font-medium text-gray-800">
+                      <div className="text-gray-800">
                         团购单量：
-                        <span className="font-bold text-blue-600">{item.groupBuyCount}</span>
+                        <span className="text-blue-600">{item.groupBuyCount}</span>
                       </div>
                     )}
                     {item.description && (

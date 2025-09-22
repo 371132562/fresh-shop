@@ -277,7 +277,7 @@ export const Component = () => {
                     <div className="space-y-1">
                       {item.groupBuy?.name && (
                         <div className="max-w-full overflow-hidden break-words text-gray-800 md:break-all">
-                          <span className="font-medium">团购单：</span>
+                          <span>团购单：</span>
                           <NavLink
                             to={`/groupBuy/detail/${item.groupBuy.id}`}
                             className="text-blue-500 transition-colors hover:text-blue-600"
@@ -292,25 +292,22 @@ export const Component = () => {
                         </div>
                       )}
                       {selectedUnit?.unit && (
-                        <div className="font-medium text-gray-800">
+                        <div className="text-gray-800">
                           规格：<span className="text-blue-500">{selectedUnit.unit}</span>
                         </div>
                       )}
                       {item.quantity && (
-                        <div className="font-medium text-gray-800">
+                        <div className="text-gray-800">
                           购买数量：<span className="text-blue-500">{item.quantity}</span>
                         </div>
                       )}
                       {item.partialRefundAmount > 0 && item.status !== 'REFUNDED' && (
-                        <div className="font-medium text-gray-800">
+                        <div className="text-gray-800">
                           <span>退款：</span>
-                          <span className="font-bold text-orange-600">
+                          <span className="text-orange-600">
                             ¥{item.partialRefundAmount.toFixed(2)}
                           </span>
-                          /
-                          <span className="font-bold text-cyan-600">
-                            ¥{itemTotalAmount.toFixed(2)}
-                          </span>
+                          /<span className="text-cyan-600">¥{itemTotalAmount.toFixed(2)}</span>
                         </div>
                       )}
                       {item.description && (

@@ -2,7 +2,7 @@
 
 ## 📋 项目概述
 
-本项目是一个社区团购管理平台的前端应用，采用 React + TypeScript + Zustand + Ant Design + Tailwind CSS 技术栈。本文档记录了当前最新的UI/UE设计规范和组件使用指南。
+本项目是一个社区团购管理平台的前端应用，采用 React + TypeScript + Zustand + Ant Design + Tailwind CSS 技术栈。本文档记录了当前最新的 UI/UE 设计规范和组件使用指南（以实际实现为准，优先遵循 Ant Design，Tailwind 作为布局与细节的辅助）。
 
 ## 🎨 设计系统
 
@@ -10,17 +10,18 @@
 
 - **设计理念**：现代化、简洁、悬浮卡片式设计
 - **色彩方案**：蓝色主色调 + 浅灰色背景 + 白色卡片
-- **布局方式**：响应式设计，移动端优先
+- **布局方式**：响应式设计，移动端优先（基础样式无前缀，`md`/`lg` 逐级增强）
 - **视觉层次**：通过阴影、圆角、透明度营造层次感
 
-#### 数值/统计文本配色规范（通用）
-- 以下配色规则统一使用 font-bold 字体加粗
+#### 数值/统计文本配色规范
+- 列表页统计/描述区域：仅使用配色强调，不加粗（不使用 `font-medium`/`font-bold`）；备注字段按默认文本样式展示。
+- 统计卡片/分析模块（如 Analysis、统计详情 Modal 的核心指标）：可以使用 `font-bold` 强调数值。
 - 金额类（总销售额、消费总额、小计等）：`text-blue-400`
-- 利润类：正值用 `text-green-600`，负值用 `text-red-600`，等于 0 用 `text-gray-500`，应使用utils/profitColor.tsx中的函数获取颜色
+- 利润类：正值用 `text-green-600`，负值用 `text-red-600`，等于 0 用 `text-gray-500`，推荐使用 `utils/profitColor` 中的 `getProfitColor`/`getProfitMarginColor` 获取颜色
 - 退款相关（退款金额、部分退款/退款订单量等）：`text-orange-600`
 - 计数类（次数、订单量、购买次数、团购单量、客户量等）：`text-blue-600`
 
-说明：上述规则适用于所有页面与组件（包括 Analysis 模块）。新增统计卡片或数值文本请遵循该配色；若引入新的数值类型，请在本节补充。
+说明：上述配色规则适用于所有页面与组件。是否加粗需按场景区分：列表页不加粗；分析模块/核心指标允许加粗。新增统计类型请在本节补充。
 
 ## 🏗️ 核心组件设计规范
 
@@ -85,8 +86,8 @@
 
 #### 工具栏设计
 - **组件**：`SearchToolbar` 统一组件
-- **功能**：搜索、重置、添加、统计信息显示
-- **布局**：左侧统计+添加按钮，右侧搜索+重置按钮
+- **功能**：搜索、重置、添加、统计信息显示（部分页面扩展排序：`sortField`/`sortOrder`）
+- **布局**：左侧统计与新增，右侧排序与搜索/重置（以具体页面为准）
 
 #### 列表项设计
 - **容器**：`List` 组件，`itemLayout="horizontal"`
@@ -96,13 +97,28 @@
 - **悬停效果**：`hover:shadow-md` 等过渡动画
 
 #### 列表项具体实现规范
-- **主容器**：`flex w-full flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4`
-- **信息区域**：`min-w-0 flex-1 overflow-hidden pr-0 md:pr-4`
-- **标题区域**：`flex min-w-0 flex-row flex-wrap items-center gap-2`
+- **外层容器**：`flex w-full flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4`（小屏上下堆叠，`md` 起左右分布）
+- **信息区域**：`min-w-0 flex-1 overflow-hidden pr-0 md:pr-4`（可伸展，控制溢出不影响布局）
+- **标题行容器**：`flex min-w-0 flex-row flex-wrap items-center gap-2`（名称 + 标签/状态并排）
 - **标题文字**：`block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all`
-- **标签显示**：`shrink-0` 防止压缩
-- **操作区域**：`flex shrink-0 flex-col gap-2 md:flex-row md:items-center`
-- **按钮样式**：`type="link"` 或 `type="primary"`，支持 `danger` 类型
+- **标题交互**：
+  - 可编辑/可跳转：使用 `Button type="link"` 包裹标题或使用 `NavLink`；`style={{ padding: 0, height: 'auto' }}`
+  - 详情跳转：如订单/团购详情页采用 `NavLink`
+- **辅助标签**：如地址、状态、商品类型等使用 `Tag`；为防止挤压，外层加 `shrink-0`
+- **统计/描述区**：`space-y-1`，字段行常用样式：
+  - 文本基色：`text-gray-800`
+  - 描述文本：`max-w-full overflow-hidden break-words text-gray-600 md:break-all`
+  - 数值配色：计数类 `text-blue-600`，金额类 `text-blue-400`，退款 `text-orange-600`，利润类用 `utils/profitColor` 方法
+- **操作区域**：`flex shrink-0 flex-row flex-wrap items-center justify-start gap-2 md:justify-end md:gap-3`（窄屏自动换行）
+- **操作按钮**：
+  - 链接型：`type="link"`
+  - 主要/次要/危险：`<Button color="primary|default|danger" variant="outlined|solid" />`
+  - 危险操作需配合 `Popconfirm`；长操作可为自定义组件（如订单的部分退款）
+- **典型字段展示**（以实际页面为准）：
+  - 团购：名称（可跳详情）、发起时间、商品名、订单量、各状态 `Tag`、总退款、描述
+  - 订单：客户名（可跳详情）+ 状态 `Tag`、规格、数量、部分退款/小计、描述
+  - 客户/地址/供货商：名称（可编辑）、聚合统计（如订单量/销售额/团购单量）、描述
+  - 商品/商品类型：名称（可编辑）、类型标签（商品页）、描述
 
 #### 分页设计
 - **位置**：`position: 'bottom'`，`align: 'end'`
@@ -214,20 +230,20 @@
 ## 📱 响应式设计规范
 
 ### 断点定义
-- **平板尺寸**：768px 及以上（不带前缀）
-- **PC尺寸**：768px 及以上（md: 前缀）
-- **PC尺寸**：1024px 及以上（lg: 前缀）
+- **基础样式**：< 768px（无前缀，移动端）
+- **平板/小型桌面**：≥ 768px（`md:` 前缀）
+- **桌面/宽屏**：≥ 1024px（`lg:` 前缀）
 
 ### 响应式策略
-1. **平板优先**：基础样式针对平板设计
-2. **PC增强**：PC屏幕添加更多功能和样式
+1. **移动端优先**：基础样式先满足移动端
+2. **逐级增强**：`md`/`lg` 断点增强布局与信息密度
 3. **内容优先**：确保核心功能在所有设备上可用
 
 ### 具体应用
-- **文字大小**：`text-xl md:text-2xl` 响应式字体
-- **内边距**：`px-4 py-3 md:px-6 md:py-4` 响应式间距
-- **布局**：`flex-col md:flex-row` 响应式布局方向
-- **显示/隐藏**：`hidden md:block` 响应式显示
+- **文字大小**：`text-xl md:text-2xl`
+- **内边距**：`px-4 py-3 md:px-6 md:py-4`
+- **布局**：`flex-col md:flex-row`
+- **显示/隐藏**：`hidden md:block`
 
 ## 🎯 交互设计规范
 
@@ -254,8 +270,8 @@
 - **Props类型**：PascalCase + Props 后缀
 
 ### 样式规范
-- **优先使用**：Tailwind CSS 类名
-- **备选方案**：Ant Design 组件样式
+- **优先使用**：Ant Design 组件样式（主题、尺寸、间距优先使用组件属性）
+- **辅助使用**：Tailwind CSS 类名（用于布局、间距、响应式与少量色彩）
 - **避免使用**：全局CSS样式
 - **响应式**：使用 Tailwind 响应式前缀
 
