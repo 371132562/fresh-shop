@@ -336,21 +336,20 @@ export const Component = () => {
                       <span className="text-blue-500">{formatDate(item.groupBuyStartDate)}</span>
                     </div>
                     {item.product?.name && (
-                      <div className="max-w-full overflow-hidden break-words text-gray-600 md:break-all">
-                        <span>商品：</span>
-                        <span className="text-blue-600">{item.product.name}</span>
+                      <div className="text-[13px] font-medium text-gray-800">
+                        商品：
+                        <span className="text-blue-500">{item.product.name}</span>
                       </div>
                     )}
-                    {(item.totalRefundAmount || 0) > 0 && (
+                    {item.orderStats.orderCount !== undefined && (
                       <div className="text-[13px] font-medium text-gray-800">
-                        <span>退款：</span>
-                        <span className="font-bold text-orange-600">
-                          ¥{(item.totalRefundAmount || 0).toFixed(2)}
+                        订单量：
+                        <span className="font-bold text-blue-600">
+                          {item.orderStats.orderCount}
                         </span>
                       </div>
                     )}
-                    <div className="my-1 flex flex-wrap items-center font-medium text-gray-800">
-                      <Tag>订单量：{item.orderStats.orderCount}</Tag>
+                    <div className="my-1 flex flex-wrap items-center">
                       {Object.entries(item.orderStats)
                         .filter(([key]) => key !== 'orderCount')
                         .map(([status, count]) => {
@@ -366,6 +365,14 @@ export const Component = () => {
                           )
                         })}
                     </div>
+                    {(item.totalRefundAmount || 0) > 0 && (
+                      <div className="text-[13px] font-medium text-gray-800">
+                        <span>退款：</span>
+                        <span className="font-bold text-orange-600">
+                          ¥{(item.totalRefundAmount || 0).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                     {item.description && (
                       <div className="max-w-full overflow-hidden break-words text-gray-600 md:break-all">
                         <span className="block overflow-hidden text-ellipsis whitespace-nowrap md:whitespace-normal">
