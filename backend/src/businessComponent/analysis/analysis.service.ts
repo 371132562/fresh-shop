@@ -584,6 +584,9 @@ export class AnalysisService {
     // 2) 获取团购及订单数据（含供货商信息）
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: whereCondition,
+      orderBy: {
+        groupBuyStartDate: 'desc',
+      },
       include: {
         supplier: {
           select: {
@@ -841,6 +844,11 @@ export class AnalysisService {
     // 拉取相关订单（仅必要字段），在内存中聚合金额（考虑退款口径）与计数
     const orders = await this.prisma.order.findMany({
       where: whereOrder,
+      orderBy: {
+        groupBuy: {
+          groupBuyStartDate: 'desc',
+        },
+      },
       select: {
         quantity: true,
         unitId: true,
@@ -959,6 +967,9 @@ export class AnalysisService {
     // 2. 查询指定名称的团购单及其订单数据（包含所有状态的订单）
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: whereCondition,
+      orderBy: {
+        groupBuyStartDate: 'desc',
+      },
       include: {
         supplier: true,
         product: true,
@@ -1358,6 +1369,9 @@ export class AnalysisService {
     // 2) 查询指定名称的团购单及其订单数据
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: whereCondition,
+      orderBy: {
+        groupBuyStartDate: 'desc',
+      },
       include: {
         order: {
           where: {
@@ -1461,6 +1475,9 @@ export class AnalysisService {
     // 2) 查询指定名称的团购单及其订单数据
     const groupBuysWithOrders = await this.prisma.groupBuy.findMany({
       where: whereCondition,
+      orderBy: {
+        groupBuyStartDate: 'desc',
+      },
       include: {
         order: {
           where: {
@@ -1815,6 +1832,9 @@ export class AnalysisService {
               lte: endDate, // 团购发起时间 <= 结束时间
             },
           }),
+      },
+      orderBy: {
+        groupBuyStartDate: 'desc',
       },
       include: {
         product: {
@@ -2372,6 +2392,9 @@ export class AnalysisService {
         delete: 0,
         ...timeFilter,
       },
+      orderBy: {
+        groupBuyStartDate: 'desc',
+      },
       include: {
         order: {
           where: {
@@ -2470,6 +2493,9 @@ export class AnalysisService {
         supplierId,
         delete: 0,
         ...timeFilter,
+      },
+      orderBy: {
+        groupBuyStartDate: 'desc',
       },
       select: {
         order: {
