@@ -3,6 +3,8 @@ import { existsSync, mkdirSync } from 'fs';
 import { diskStorage, FileFilterCallback } from 'multer';
 import { v4 as uuid } from 'uuid';
 import { Request } from 'express';
+import { BusinessException } from '../exceptions/businessException';
+import { ErrorCode } from '../../types/response';
 
 // 定义 multer 的回调类型
 type DestinationCallback = (error: Error | null, destination: string) => void;
@@ -53,7 +55,12 @@ export const multerOptions = {
     if (file.mimetype.match(/^image\//)) {
       cb(null, true); // 允许上传
     } else {
-      cb(new Error(`不支持的文件类型: ${extname(file.originalname)}`)); // 拒绝上传
+      cb(
+        new BusinessException(
+          ErrorCode.INVALID_INPUT,
+          `不支持的文件类型: ${extname(file.originalname)}`,
+        ),
+      ); // 拒绝上传
     }
   },
 };

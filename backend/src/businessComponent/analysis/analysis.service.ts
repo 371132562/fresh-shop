@@ -10,6 +10,8 @@ dayjs.extend(timezone);
 dayjs.extend(isSameOrBefore); // 扩展 isSameOrBefore 插件
 
 import { PrismaService } from '../../../prisma/prisma.service';
+import { BusinessException } from '../../exceptions/businessException';
+import { ErrorCode } from '../../../types/response';
 import {
   AnalysisCountParams,
   AnalysisCountResult,
@@ -1810,7 +1812,7 @@ export class AnalysisService {
     });
 
     if (!supplier) {
-      throw new Error('供货商不存在');
+      throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, '供货商不存在');
     }
 
     // ================================================================

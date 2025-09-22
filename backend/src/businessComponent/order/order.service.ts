@@ -11,6 +11,8 @@ import {
   BatchCreateOrdersResult,
   BatchOrderItem,
 } from '../../../types/dto';
+import { BusinessException } from '../../exceptions/businessException';
+import { ErrorCode } from '../../../types/response';
 
 @Injectable()
 export class OrderService {
@@ -37,14 +39,18 @@ export class OrderService {
           !orderData.customerId ||
           !orderData.quantity
         ) {
-          throw new Error(
+          throw new BusinessException(
+            ErrorCode.INVALID_INPUT,
             '缺少必要字段：groupBuyId, unitId, customerId, quantity',
           );
         }
 
         // 验证数量必须大于0
         if (orderData.quantity <= 0) {
-          throw new Error('购买数量必须大于0');
+          throw new BusinessException(
+            ErrorCode.INVALID_INPUT,
+            '购买数量必须大于0',
+          );
         }
 
         // 验证团购是否存在
@@ -52,7 +58,10 @@ export class OrderService {
           where: { id: orderData.groupBuyId, delete: 0 },
         });
         if (!groupBuy) {
-          throw new Error('团购不存在');
+          throw new BusinessException(
+            ErrorCode.RESOURCE_NOT_FOUND,
+            '团购不存在',
+          );
         }
 
         // 验证客户是否存在
@@ -60,14 +69,20 @@ export class OrderService {
           where: { id: orderData.customerId, delete: 0 },
         });
         if (!customer) {
-          throw new Error('客户不存在');
+          throw new BusinessException(
+            ErrorCode.RESOURCE_NOT_FOUND,
+            '客户不存在',
+          );
         }
 
         // 验证规格是否存在
         const units = groupBuy.units as GroupBuyUnit[];
         const unit = units.find((u) => u.id === orderData.unitId);
         if (!unit) {
-          throw new Error('规格不存在');
+          throw new BusinessException(
+            ErrorCode.RESOURCE_NOT_FOUND,
+            '规格不存在',
+          );
         }
 
         // 创建订单
@@ -277,7 +292,7 @@ export class OrderService {
     });
 
     if (!order) {
-      throw new Error('订单不存在');
+      throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, '订单不存在');
     }
 
     // 检查订单状态，只有已付款或已完成的订单才能进行部分退款
@@ -285,7 +300,10 @@ export class OrderService {
       order.status !== OrderStatus.PAID &&
       order.status !== OrderStatus.COMPLETED
     ) {
-      throw new Error('只有已付款或已完成的订单才能进行部分退款');
+      throw new BusinessException(
+        ErrorCode.BUSINESS_FAILED,
+        '只有已付款或已完成的订单才能进行部分退款',
+      );
     }
 
     // 计算订单总金额
@@ -293,7 +311,10 @@ export class OrderService {
     const selectedUnit = units.find((unit) => unit.id === order.unitId);
 
     if (!selectedUnit) {
-      throw new Error('找不到对应的商品规格');
+      throw new BusinessException(
+        ErrorCode.RESOURCE_NOT_FOUND,
+        '找不到对应的商品规格',
+      );
     }
 
     const totalAmount = selectedUnit.price * order.quantity;
@@ -302,11 +323,14 @@ export class OrderService {
 
     // 检查退款金额是否有效
     if (refundAmount <= 0) {
-      throw new Error('退款金额必须大于0');
+      throw new BusinessException(ErrorCode.INVALID_INPUT, '退款金额必须大于0');
     }
 
     if (refundAmount > maxRefundAmount) {
-      throw new Error(`退款金额不能超过剩余可退款金额 ${maxRefundAmount} 元`);
+      throw new BusinessException(
+        ErrorCode.INVALID_INPUT,
+        `退款金额不能超过剩余可退款金额 ${maxRefundAmount} 元`,
+      );
     }
 
     // 更新订单的部分退款金额
