@@ -1,4 +1,4 @@
-import { Form, Input, InputNumber, Modal, notification, Select } from 'antd'
+import { Form, Input, InputNumber, message, Modal, Select } from 'antd'
 import { GroupBuyUnit } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 
@@ -55,18 +55,12 @@ const Modify = (props: params) => {
       .then(async val => {
         const res = id ? await updateOrder({ ...val, id }) : await createOrder(val)
         if (res) {
-          notification.success({
-            message: '成功',
-            description: id ? '编辑成功' : '添加成功'
-          })
+          message.success(id ? '编辑成功' : '添加成功')
           setVisible(false)
         }
       })
       .catch(err => {
-        notification.warning({
-          message: '警告',
-          description: '表单未填写完整'
-        })
+        message.warning('表单未填写完整')
         console.log(err)
       })
   }
@@ -77,12 +71,21 @@ const Modify = (props: params) => {
     setUnits([])
   }
 
-  const filterOption = (input: string, option: any) => {
-    return (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+  // 客户选择器的过滤函数
+  const filterOption = (
+    input: string,
+    option: { label: string; phone?: string | null } | undefined
+  ): boolean => {
+    if (!option) return false
+    return (
+      (option.label?.toLowerCase().includes(input.toLowerCase()) ?? false) ||
+      (option.phone ? option.phone.toLowerCase().includes(input.toLowerCase()) : false)
+    )
   }
 
-  const groupBuyFilterOption = (input: string, option: any) => {
-    return String(option?.label ?? '')
+  const groupBuyFilterOption = (input: string, option: { label: string } | undefined) => {
+    if (!option) return false
+    return String(option.label ?? '')
       .toLowerCase()
       .includes(input.toLowerCase())
   }
@@ -123,23 +126,23 @@ const Modify = (props: params) => {
             rules={[{ required: true, message: '请选择客户' }]}
           >
             <Select
+              placeholder="选择客户"
               loading={getAllCustomerLoading}
               showSearch
               allowClear
-              placeholder="请选择客户"
               filterOption={filterOption}
-            >
-              {allCustomer.map(item => {
-                return (
-                  <Select.Option
-                    key={item.id}
-                    value={item.id}
-                  >
-                    {item.name}
-                  </Select.Option>
-                )
-              })}
-            </Select>
+              options={allCustomer.map(customer => ({
+                value: customer.id,
+                label: customer.name,
+                phone: customer.phone || undefined
+              }))}
+              optionRender={option => (
+                <div>
+                  <div className="font-medium">{option.label}</div>
+                  <div className="text-xs text-gray-500">{option.data.phone}</div>
+                </div>
+              )}
+            />
           </Form.Item>
           <Form.Item
             label="团购单"

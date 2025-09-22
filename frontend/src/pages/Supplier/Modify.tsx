@@ -1,5 +1,5 @@
 import type { UploadFile } from 'antd'
-import { Form, Input, Modal, notification } from 'antd'
+import { Form, Input, message, Modal } from 'antd'
 import { Supplier } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 
@@ -59,18 +59,12 @@ const Modify = (props: params) => {
         }
         const res = id ? await updateSupplier({ ...params, id }) : await createSupplier(params)
         if (res) {
-          notification.success({
-            message: '成功',
-            description: id ? '编辑成功' : '添加成功'
-          })
+          message.success(id ? '编辑成功' : '添加成功')
           setVisible(false)
         }
       })
       .catch(err => {
-        notification.warning({
-          message: '警告',
-          description: '表单未填写完整'
-        })
+        message.warning('表单未填写完整')
         console.log(err)
       })
   }

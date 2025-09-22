@@ -1,4 +1,4 @@
-import { Button, Form, InputNumber, Modal, notification, Popconfirm } from 'antd'
+import { Button, Form, InputNumber, message, Modal, Popconfirm } from 'antd'
 import type { PartialRefundParams } from 'fresh-shop-backend/types/dto.ts'
 import { useState } from 'react'
 
@@ -60,25 +60,16 @@ const PartialRefundModal = ({
       const success = await partialRefundOrder(params)
 
       if (success) {
-        notification.success({
-          message: '成功',
-          description: '部分退款操作成功'
-        })
+        message.success('部分退款操作成功')
         form.resetFields()
         onClose()
         onSuccess?.(values.refundAmount)
       } else {
-        notification.error({
-          message: '失败',
-          description: '部分退款操作失败'
-        })
+        message.error('部分退款操作失败')
       }
     } catch (error: unknown) {
       console.error('部分退款失败:', error)
-      notification.error({
-        message: '失败',
-        description: '部分退款操作失败'
-      })
+      message.error('部分退款操作失败')
     }
   }
 
@@ -181,12 +172,12 @@ const PartialRefundModal = ({
                     if (!canFullRefund) return
                     const ok = await refundOrder({ id: orderId })
                     if (ok) {
-                      notification.success({ message: '成功', description: '退款成功' })
+                      message.success('退款成功')
                       form.resetFields()
                       onClose()
                       onSuccess?.(maxRefundAmount)
                     } else {
-                      notification.error({ message: '失败', description: '退款失败' })
+                      message.error('退款失败')
                     }
                   }}
                   okText="确定"

@@ -43,6 +43,7 @@ export const groupBuyListApi = '/groupBuy/list'
 export const groupBuyListAllApi = '/groupBuy/listAll'
 
 export const orderCreateApi = '/order/create'
+export const orderBatchCreateApi = '/order/batchCreate'
 export const orderUpdateApi = '/order/update'
 export const orderDeleteApi = '/order/delete'
 export const orderDetailApi = '/order/detail'

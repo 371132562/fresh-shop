@@ -1,5 +1,5 @@
 import { ExclamationCircleOutlined } from '@ant-design/icons'
-import { Button, Checkbox, Modal, notification, Tag } from 'antd'
+import { Button, Checkbox, message, Modal, Tag } from 'antd'
 import type { MergedGroupBuyOverviewDetailParams, Order } from 'fresh-shop-backend/types/dto'
 import { useMemo, useState } from 'react'
 
@@ -71,7 +71,7 @@ const DeleteGroupBuyButton = ({
     const ok = await deleteGroupBuy({ id })
     setLoading(false)
     if (ok) {
-      notification.success({ message: '成功', description: '团购单已删除' })
+      message.success('团购单已删除')
       setVisible(false)
       setAck(false)
       onDeleted?.()

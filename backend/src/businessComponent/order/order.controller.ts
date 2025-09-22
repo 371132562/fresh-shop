@@ -2,7 +2,11 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Prisma } from '@prisma/client';
 
-import { OrderPageParams, PartialRefundParams } from '../../../types/dto';
+import {
+  OrderPageParams,
+  PartialRefundParams,
+  BatchCreateOrdersParams,
+} from '../../../types/dto';
 
 @Controller('order')
 export class OrderController {
@@ -10,6 +14,11 @@ export class OrderController {
   @Post('create')
   create(@Body() data: Prisma.OrderCreateInput) {
     return this.orderService.create(data);
+  }
+
+  @Post('batchCreate')
+  batchCreate(@Body() data: BatchCreateOrdersParams) {
+    return this.orderService.batchCreate(data);
   }
 
   @Post('update')

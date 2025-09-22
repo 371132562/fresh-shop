@@ -1,6 +1,6 @@
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { PopconfirmProps, Tag } from 'antd'
-import { Button, Flex, notification, Popconfirm, Skeleton } from 'antd'
+import { Button, Flex, message, Popconfirm, Skeleton } from 'antd'
 import { GroupBuyUnit } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, useNavigate, useParams } from 'react-router'
@@ -49,10 +49,7 @@ export const Component = () => {
   const confirm: PopconfirmProps['onConfirm'] = async () => {
     const res = await deleteOrder({ id: id as string })
     if (res) {
-      notification.success({
-        message: '成功',
-        description: '删除成功'
-      })
+      message.success('删除成功')
       navigate(-1)
     }
   }

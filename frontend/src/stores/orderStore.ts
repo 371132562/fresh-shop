@@ -1,5 +1,7 @@
-import { notification } from 'antd'
+import { message } from 'antd'
 import {
+  BatchCreateOrdersParams,
+  BatchCreateOrdersResult,
   ListByPage,
   Order,
   OrderDetail,
@@ -11,6 +13,7 @@ import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
 
 import {
+  orderBatchCreateApi,
   orderCreateApi,
   orderDeleteApi,
   orderDetailApi,
@@ -82,6 +85,7 @@ type OrderStore = {
 
   createLoading: boolean
   createOrder: (data: OrderCreate) => Promise<boolean>
+  batchCreateOrders: (data: BatchCreateOrdersParams) => Promise<BatchCreateOrdersResult | null>
 
   updateOrder: (data: OrderId & Partial<OrderCreate>) => Promise<boolean>
 
@@ -183,6 +187,21 @@ const useOrderStore = create<OrderStore>((set, get) => ({
     } catch (error) {
       console.error(error)
       return false
+    } finally {
+      set({ createLoading: false })
+      get().getOrderList(get().pageParams)
+      get().getOrderStats()
+    }
+  },
+
+  batchCreateOrders: async data => {
+    try {
+      set({ createLoading: true })
+      const res: ResponseBody<BatchCreateOrdersResult> = await http.post(orderBatchCreateApi, data)
+      return res.data
+    } catch (error) {
+      console.error(error)
+      return null
     } finally {
       set({ createLoading: false })
       get().getOrderList(get().pageParams)
@@ -332,10 +351,7 @@ const useOrderStore = create<OrderStore>((set, get) => ({
 
     const nextStatus = get().getNextOrderStatus(order.status as BackendOrderStatus)
     if (!nextStatus) {
-      notification.info({
-        message: '提示',
-        description: '订单已是最终状态，无法继续修改'
-      })
+      message.info('订单已是最终状态，无法继续修改')
       return
     }
 
@@ -345,16 +361,10 @@ const useOrderStore = create<OrderStore>((set, get) => ({
     })
 
     if (res) {
-      notification.success({
-        message: '成功',
-        description: `订单状态已更新为：${OrderStatusMap[nextStatus].label}`
-      })
+      message.success(`订单状态已更新为：${OrderStatusMap[nextStatus].label}`)
       onSuccess?.()
     } else {
-      notification.error({
-        message: '失败',
-        description: '更新订单状态失败'
-      })
+      message.error('更新订单状态失败')
       onError?.()
     }
   }

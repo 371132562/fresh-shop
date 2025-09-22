@@ -1,16 +1,6 @@
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import type { UploadFile } from 'antd'
-import {
-  Button,
-  DatePicker,
-  Form,
-  Input,
-  InputNumber,
-  Modal,
-  notification,
-  Select,
-  Space
-} from 'antd'
+import { Button, DatePicker, Form, Input, InputNumber, message, Modal, Select, Space } from 'antd'
 import { GroupBuy } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid' // 用于生成单位ID
@@ -115,18 +105,12 @@ const Modify = (props: params) => {
         }
         const res = id ? await updateGroupBuy({ ...params, id }) : await createGroupBuy(params)
         if (res) {
-          notification.success({
-            message: '成功',
-            description: id ? '编辑成功' : '添加成功'
-          })
+          message.success(id ? '编辑成功' : '添加成功')
           handleCancel()
         }
       })
       .catch(err => {
-        notification.warning({
-          message: '警告',
-          description: '表单未填写完整'
-        })
+        message.warning('表单未填写完整')
         console.log(err)
       })
   }

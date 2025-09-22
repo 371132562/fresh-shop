@@ -18,8 +18,8 @@ import {
   Divider,
   Form,
   Image,
+  message,
   Modal,
-  notification,
   Switch,
   Tag,
   Typography
@@ -113,10 +113,7 @@ export const Component: FC = () => {
         const currentOrphanImages = useGlobalSettingStore.getState().orphanImages
         // 根据扫描结果给出友好的交互提示
         if (currentOrphanImages.length === 0) {
-          notification.success({
-            message: '扫描完成',
-            description: '未发现孤立图片，系统运行良好！'
-          })
+          message.success('未发现孤立图片，系统运行良好！')
         } else {
           // 统计不同类型的孤立图片
           const diskOnly = currentOrphanImages.filter(
@@ -166,17 +163,11 @@ export const Component: FC = () => {
             </div>
           )
 
-          notification.info({
-            message: '扫描完成',
-            description
-          })
+          message.info(description)
         }
       }, 0)
     } else {
-      notification.error({
-        message: '扫描失败',
-        description: '无法检索孤立图片，请稍后重试'
-      })
+      message.error('无法检索孤立图片，请稍后重试')
     }
   }
 
@@ -186,30 +177,20 @@ export const Component: FC = () => {
     if (res) {
       const { deleted, skipped } = res
       if (deleted.length) {
-        notification.success({
-          message: '删除成功',
-          description: `成功删除 ${deleted.length} 张孤立图片，释放了存储空间`
-        })
+        message.success(`成功删除 ${deleted.length} 张孤立图片，释放了存储空间`)
       }
       if (skipped.length) {
-        notification.warning({
-          message: '部分跳过',
-          description: `有 ${skipped.length} 张图片因被引用或文件锁定而无法删除，已自动跳过。这些图片可能正在被其他功能使用。`
-        })
+        message.warning(
+          `有 ${skipped.length} 张图片因被引用或文件锁定而无法删除，已自动跳过。这些图片可能正在被其他功能使用。`
+        )
       }
       // 如果没有删除任何文件，给出提示
       if (deleted.length === 0 && skipped.length === 0) {
-        notification.info({
-          message: '删除完成',
-          description: '没有文件被删除，可能是文件已被其他进程占用或权限不足'
-        })
+        message.info('没有文件被删除，可能是文件已被其他进程占用或权限不足')
       }
       setSelectedFilenames([])
     } else {
-      notification.error({
-        message: '删除失败',
-        description: '删除操作失败，请检查网络连接或稍后重试'
-      })
+      message.error('删除操作失败，请检查网络连接或稍后重试')
     }
   }
 

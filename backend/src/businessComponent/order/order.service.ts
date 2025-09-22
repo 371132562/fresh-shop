@@ -7,6 +7,9 @@ import {
   ListByPage,
   PartialRefundParams,
   GroupBuyUnit,
+  BatchCreateOrdersParams,
+  BatchCreateOrdersResult,
+  BatchOrderItem,
 } from '../../../types/dto';
 
 @Injectable()
@@ -15,6 +18,85 @@ export class OrderService {
 
   async create(data: Prisma.OrderCreateInput): Promise<Order> {
     return this.prisma.order.create({ data });
+  }
+
+  async batchCreate(
+    data: BatchCreateOrdersParams,
+  ): Promise<BatchCreateOrdersResult> {
+    const { orders } = data;
+    const successOrders: Order[] = [];
+    const failedOrders: { order: BatchOrderItem; error: string }[] = [];
+
+    // 使用事务处理批量创建
+    for (const orderData of orders) {
+      try {
+        // 验证必要字段
+        if (
+          !orderData.groupBuyId ||
+          !orderData.unitId ||
+          !orderData.customerId ||
+          !orderData.quantity
+        ) {
+          throw new Error(
+            '缺少必要字段：groupBuyId, unitId, customerId, quantity',
+          );
+        }
+
+        // 验证数量必须大于0
+        if (orderData.quantity <= 0) {
+          throw new Error('购买数量必须大于0');
+        }
+
+        // 验证团购是否存在
+        const groupBuy = await this.prisma.groupBuy.findFirst({
+          where: { id: orderData.groupBuyId, delete: 0 },
+        });
+        if (!groupBuy) {
+          throw new Error('团购不存在');
+        }
+
+        // 验证客户是否存在
+        const customer = await this.prisma.customer.findFirst({
+          where: { id: orderData.customerId, delete: 0 },
+        });
+        if (!customer) {
+          throw new Error('客户不存在');
+        }
+
+        // 验证规格是否存在
+        const units = groupBuy.units as GroupBuyUnit[];
+        const unit = units.find((u) => u.id === orderData.unitId);
+        if (!unit) {
+          throw new Error('规格不存在');
+        }
+
+        // 创建订单
+        const order = await this.prisma.order.create({
+          data: {
+            groupBuyId: orderData.groupBuyId,
+            unitId: orderData.unitId,
+            customerId: orderData.customerId,
+            quantity: orderData.quantity,
+            description: orderData.description || null,
+            // status 和 partialRefundAmount 由数据库默认值自动设置
+          },
+        });
+
+        successOrders.push(order);
+      } catch (error) {
+        failedOrders.push({
+          order: orderData,
+          error: error instanceof Error ? error.message : '未知错误',
+        });
+      }
+    }
+
+    return {
+      successCount: successOrders.length,
+      failCount: failedOrders.length,
+      successOrders,
+      failedOrders,
+    };
   }
 
   async update(id: string, data: Prisma.OrderUpdateInput): Promise<Order> {

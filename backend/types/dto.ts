@@ -713,6 +713,40 @@ export type PartialRefundParams = {
 };
 
 /**
+ * 批量创建订单的单个订单数据
+ * 用于批量创建订单接口
+ */
+export type BatchOrderItem = {
+  groupBuyId: string; // 团购ID
+  unitId: string; // 规格ID
+  customerId: string; // 客户ID
+  quantity: number; // 购买数量
+  description?: string; // 备注
+};
+
+/**
+ * 批量创建订单请求参数
+ * 用于批量创建多个订单
+ */
+export type BatchCreateOrdersParams = {
+  orders: BatchOrderItem[]; // 订单列表
+};
+
+/**
+ * 批量创建订单结果
+ * 包含成功和失败的订单信息
+ */
+export type BatchCreateOrdersResult = {
+  successCount: number; // 成功创建的订单数量
+  failCount: number; // 创建失败的订单数量
+  successOrders: Order[]; // 成功创建的订单列表
+  failedOrders: {
+    order: BatchOrderItem; // 失败的订单数据
+    error: string; // 失败原因
+  }[]; // 创建失败的订单列表
+};
+
+/**
  * 订单统计数据
  * 包含待付款和已付款订单的数量及详细列表
  */

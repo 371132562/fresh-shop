@@ -1,5 +1,5 @@
 import { ArrowLeftOutlined } from '@ant-design/icons'
-import { Button, Flex, Image, List, notification, Popconfirm, Skeleton, Spin, Tag } from 'antd'
+import { Button, Flex, Image, List, Popconfirm, Skeleton, Spin, Tag } from 'antd'
 import {
   GroupBuy,
   GroupBuyUnit,
@@ -11,9 +11,9 @@ import { NavLink, useNavigate, useParams } from 'react-router'
 
 import MergedGroupBuyDetailModal from '@/pages/Analysis/components/MergedGroupBuyDetailModal'
 import DeleteGroupBuyButton from '@/pages/GroupBuy/components/DeleteGroupBuyButton'
+import MultiAdd from '@/pages/GroupBuy/components/MultiAdd'
 import Modify from '@/pages/GroupBuy/Modify.tsx'
 import { PartialRefundButton } from '@/pages/Order/components/PartialRefundModal.tsx'
-import OrderModify from '@/pages/Order/Modify.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import useOrderStore, { OrderStatusMap } from '@/stores/orderStore.ts'
@@ -26,7 +26,7 @@ export const Component = () => {
   const [visible, setVisible] = useState(false)
   const [againVisible, setAgainVisible] = useState(false)
   const [againGroupBuy, setAgainGroupBuy] = useState<GroupBuy | null>(null)
-  const [orderModifyVisible, setOrderModifyVisible] = useState(false)
+  const [multiAddVisible, setMultiAddVisible] = useState(false)
   const [detailVisible, setDetailVisible] = useState(false)
 
   const groupBuy = useGroupBuyStore(state => state.groupBuy)
@@ -38,6 +38,7 @@ export const Component = () => {
   const getNextOrderStatus = useOrderStore(state => state.getNextOrderStatus)
   const canUpdateOrderStatus = useOrderStore(state => state.canUpdateOrderStatus)
   const getNextOrderStatusLabel = useOrderStore(state => state.getNextOrderStatusLabel)
+  const handleUpdateOrderStatus = useOrderStore(state => state.handleUpdateOrderStatus)
 
   // 详情模态框相关状态
 
@@ -58,12 +59,6 @@ export const Component = () => {
       setGroupBuy(null)
     }
   }, [id])
-
-  useEffect(() => {
-    if (id) {
-      getGroupBuy({ id })
-    }
-  }, [orderModifyVisible])
 
   // 删除交互由子组件负责
 
@@ -86,40 +81,20 @@ export const Component = () => {
     setDetailParams(undefined)
   }
 
-  const handleUpdateOrderStatus = async (order: Order) => {
-    const nextStatus = getNextOrderStatus(order.status)
-    if (!nextStatus) {
-      notification.info({
-        message: '提示',
-        description: '订单已是最终状态，无法继续修改'
-      })
-      return
-    }
-
-    const res = await updateOrder({
-      id: order.id,
-      status: nextStatus
-    })
-
-    if (res) {
-      notification.success({
-        message: '成功',
-        description: `订单状态已更新为：${OrderStatusMap[nextStatus].label}`
-      })
-
-      // 直接更新本地状态，避免重新获取整个团购数据
+  // 使用 orderStore 中的 handleUpdateOrderStatus，并传入本地状态更新逻辑
+  const handleUpdateOrderStatusLocal = async (order: Order) => {
+    await handleUpdateOrderStatus(order, updateOrder, () => {
+      // 成功回调：直接更新本地状态，避免重新获取整个团购数据
       if (groupBuy && groupBuy.order) {
-        const updatedOrders = groupBuy.order.map(o =>
-          o.id === order.id ? { ...o, status: nextStatus } : o
-        )
-        setGroupBuy({ ...groupBuy, order: updatedOrders })
+        const nextStatus = getNextOrderStatus(order.status)
+        if (nextStatus) {
+          const updatedOrders = groupBuy.order.map(o =>
+            o.id === order.id ? { ...o, status: nextStatus } : o
+          )
+          setGroupBuy({ ...groupBuy, order: updatedOrders })
+        }
       }
-    } else {
-      notification.error({
-        message: '失败',
-        description: '更新订单状态失败'
-      })
-    }
+    })
   }
 
   return (
@@ -169,7 +144,7 @@ export const Component = () => {
                 >
                   <Button
                     type="primary"
-                    onClick={() => setOrderModifyVisible(true)}
+                    onClick={() => setMultiAddVisible(true)}
                   >
                     添加订单
                   </Button>
@@ -387,7 +362,7 @@ export const Component = () => {
                         </div>
                       }
                       placement="left"
-                      onConfirm={() => handleUpdateOrderStatus(order)}
+                      onConfirm={() => handleUpdateOrderStatusLocal(order)}
                       okText="确定"
                       cancelText="取消"
                       okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
@@ -517,11 +492,17 @@ export const Component = () => {
           againGroupBuy={againGroupBuy}
         />
       )}
-      {orderModifyVisible && (
-        <OrderModify
-          visible={orderModifyVisible}
-          setVisible={setOrderModifyVisible}
-          groupBuyId={id}
+      {multiAddVisible && (
+        <MultiAdd
+          visible={multiAddVisible}
+          setVisible={setMultiAddVisible}
+          groupBuy={groupBuy}
+          onSuccess={() => {
+            // 批量添加成功后刷新团购详情
+            if (id) {
+              getGroupBuy({ id })
+            }
+          }}
         />
       )}
       <MergedGroupBuyDetailModal
