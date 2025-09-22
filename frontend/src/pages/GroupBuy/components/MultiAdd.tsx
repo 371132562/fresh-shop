@@ -5,8 +5,9 @@ import { useEffect, useState } from 'react'
 
 import useCustomerStore from '@/stores/customerStore.ts'
 import useOrderStore from '@/stores/orderStore.ts'
+import { formatDate } from '@/utils/day.ts'
 
-const { Title, Text } = Typography
+const { Title } = Typography
 
 // 单个订单的表单数据类型
 type OrderFormData = {
@@ -36,7 +37,7 @@ interface MultiAddProps {
 const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) => {
   const [form] = Form.useForm<MultiAddFormData>()
   const [createLoading, setCreateLoading] = useState(false)
-  const [formVersion, setFormVersion] = useState(0) // 用于强制重新渲染
+  const [, setFormVersion] = useState(0) // 用于强制重新渲染
 
   // 获取客户列表和创建订单的方法
   const allCustomer = useCustomerStore(state => state.allCustomer)
@@ -172,30 +173,40 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
       onCancel={handleCancel}
       width={800}
       confirmLoading={createLoading}
-      okText="批量创建"
-      cancelText="取消"
       style={{ top: 20 }}
     >
       <div className="!space-y-4">
         {/* 团购信息展示 */}
         <Card
           size="small"
-          className="bg-blue-50"
+          className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50"
         >
-          <div className="space-y-1">
-            <Title
-              level={5}
-              className="mb-2"
-            >
-              当前团购：{groupBuy?.name}
-            </Title>
-            <Text
-              type="secondary"
-              className="text-sm"
-            >
-              供货商：{groupBuy?.supplier?.name} | 商品：
-              {groupBuy?.product?.name}
-            </Text>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+              <Title
+                level={5}
+                className="!mb-0 text-blue-800"
+              >
+                当前团购：{groupBuy?.name}
+              </Title>
+            </div>
+            <div className="flex flex-col gap-1 text-sm text-gray-600 md:flex-row md:gap-4">
+              <span className="flex items-center gap-1">
+                <span className="font-medium">供货商：</span>
+                <span className="text-blue-600">{groupBuy?.supplier?.name}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="font-medium">商品：</span>
+                <span className="text-blue-600">{groupBuy?.product?.name}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="font-medium">发起日期：</span>
+                <span className="text-blue-600">
+                  {groupBuy?.createdAt ? formatDate(groupBuy.createdAt) : '-'}
+                </span>
+              </span>
+            </div>
           </div>
         </Card>
 
@@ -222,97 +233,138 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
                       size="small"
                       title={
                         <div className="flex items-center justify-between">
-                          <span className="text-base font-medium">
-                            规格：{unitInfo?.unit} - ¥{unitInfo?.price}
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                            <span className="text-base font-medium text-gray-800">
+                              规格：{unitInfo?.unit} - ¥{unitInfo?.price}
+                            </span>
+                          </div>
+                          <span className="text-sm text-gray-500">
+                            {form.getFieldValue(['units', unitField.name, 'orders'])?.length || 0}{' '}
+                            个订单
                           </span>
                         </div>
                       }
-                      className="border-l-4 border-l-blue-400"
+                      className="border-l-4 border-l-blue-400 shadow-sm"
+                      styles={{
+                        header: {
+                          background: '#f8fafc',
+                          borderBottom: '1px solid #e2e8f0'
+                        }
+                      }}
                     >
                       <Form.List name={[unitField.name, 'orders']}>
                         {(orderFields, { add: addOrder, remove: removeOrder }) => {
                           return (
-                            <div className="!space-y-3">
+                            <div className="!space-y-2">
+                              {/* 订单列表 */}
                               {orderFields.map(orderField => (
-                                <Card
+                                <div
                                   key={orderField.key}
-                                  size="small"
-                                  className="bg-gray-50"
-                                  title={
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-sm font-medium">
+                                  className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all hover:shadow-md"
+                                >
+                                  <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-center md:gap-2">
+                                    {/* 序号 - 移动端显示，桌面端隐藏 */}
+                                    <div className="flex items-center justify-between md:hidden">
+                                      <span className="text-sm font-medium text-gray-700">
                                         订单 {getGlobalOrderIndex(unitField.name, orderField.name)}
-                                        {/* 使用formVersion确保实时更新 */}
-                                        {formVersion && null}
                                       </span>
                                       <Button
                                         type="text"
                                         danger
-                                        size="small"
+                                        size="large"
                                         icon={<MinusCircleOutlined />}
                                         onClick={() => {
                                           removeOrder(orderField.name)
-                                          setFormVersion(prev => prev + 1) // 强制重新渲染
+                                          setFormVersion(prev => prev + 1)
                                         }}
                                       >
                                         删除
                                       </Button>
                                     </div>
-                                  }
-                                >
-                                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+
+                                    {/* 桌面端序号 */}
+                                    <div className="hidden items-center justify-center md:flex">
+                                      <span className="text-sm font-medium text-gray-600">
+                                        {getGlobalOrderIndex(unitField.name, orderField.name)}
+                                      </span>
+                                    </div>
+
                                     {/* 客户选择 */}
-                                    <Form.Item
-                                      name={[orderField.name, 'customerId']}
-                                      label="客户"
-                                      rules={[{ required: true, message: '请选择客户' }]}
-                                    >
-                                      <Select
-                                        placeholder="选择客户"
-                                        loading={getAllCustomerLoading}
-                                        showSearch
-                                        filterOption={filterOption}
-                                        options={allCustomer.map(customer => ({
-                                          value: customer.id,
-                                          label: customer.name,
-                                          phone: customer.phone || undefined
-                                        }))}
-                                        optionRender={option => (
-                                          <div>
-                                            <div className="font-medium">{option.label}</div>
-                                            <div className="text-xs text-gray-500">
-                                              {option.data.phone}
+                                    <div className="md:col-span-4">
+                                      <Form.Item
+                                        name={[orderField.name, 'customerId']}
+                                        label="客户"
+                                        className="!mb-0 md:!mb-0"
+                                        rules={[{ required: true, message: '请选择客户' }]}
+                                      >
+                                        <Select
+                                          placeholder="选择客户"
+                                          loading={getAllCustomerLoading}
+                                          showSearch
+                                          filterOption={filterOption}
+                                          options={allCustomer.map(customer => ({
+                                            value: customer.id,
+                                            label: customer.name,
+                                            phone: customer.phone || undefined
+                                          }))}
+                                          optionRender={option => (
+                                            <div>
+                                              <div className="font-medium">{option.label}</div>
+                                              <div className="text-xs text-gray-500">
+                                                {option.data.phone}
+                                              </div>
                                             </div>
-                                          </div>
-                                        )}
-                                      />
-                                    </Form.Item>
+                                          )}
+                                        />
+                                      </Form.Item>
+                                    </div>
 
                                     {/* 购买数量 */}
-                                    <Form.Item
-                                      name={[orderField.name, 'quantity']}
-                                      label="购买数量"
-                                      rules={[
-                                        { required: true, message: '请输入数量' },
-                                        { type: 'number', min: 1, message: '数量必须大于0' }
-                                      ]}
-                                    >
-                                      <InputNumber
-                                        placeholder="数量"
-                                        min={1}
-                                        className="w-full"
-                                      />
-                                    </Form.Item>
+                                    <div className="md:col-span-2">
+                                      <Form.Item
+                                        name={[orderField.name, 'quantity']}
+                                        label="购买数量"
+                                        className="!mb-0 md:!mb-0"
+                                        rules={[
+                                          { required: true, message: '请输入数量' },
+                                          { type: 'number', min: 1, message: '数量必须大于0' }
+                                        ]}
+                                      >
+                                        <InputNumber
+                                          placeholder="数量"
+                                          min={1}
+                                          className="w-full"
+                                        />
+                                      </Form.Item>
+                                    </div>
 
                                     {/* 备注 */}
-                                    <Form.Item
-                                      name={[orderField.name, 'description']}
-                                      label="备注"
-                                    >
-                                      <Input placeholder="选填" />
-                                    </Form.Item>
+                                    <div className="md:col-span-4">
+                                      <Form.Item
+                                        name={[orderField.name, 'description']}
+                                        label="备注"
+                                        className="!mb-0 md:!mb-0"
+                                      >
+                                        <Input placeholder="选填" />
+                                      </Form.Item>
+                                    </div>
+
+                                    {/* 桌面端删除按钮 */}
+                                    <div className="hidden items-center justify-center md:flex">
+                                      <Button
+                                        type="text"
+                                        danger
+                                        size="large"
+                                        icon={<MinusCircleOutlined />}
+                                        onClick={() => {
+                                          removeOrder(orderField.name)
+                                          setFormVersion(prev => prev + 1)
+                                        }}
+                                      />
+                                    </div>
                                   </div>
-                                </Card>
+                                </div>
                               ))}
 
                               {/* 添加订单按钮 */}
@@ -320,11 +372,11 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
                                 type="dashed"
                                 onClick={() => {
                                   addOrder({ customerId: '', quantity: 1, description: '' })
-                                  setFormVersion(prev => prev + 1) // 强制重新渲染
+                                  setFormVersion(prev => prev + 1)
                                 }}
                                 block
                                 icon={<PlusOutlined />}
-                                className="mt-2"
+                                className="mt-3 border-dashed border-blue-300 text-blue-600 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"
                               >
                                 添加订单
                               </Button>
