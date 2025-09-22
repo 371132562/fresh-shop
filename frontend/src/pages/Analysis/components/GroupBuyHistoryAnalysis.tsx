@@ -1,6 +1,7 @@
 import { HistoryOutlined } from '@ant-design/icons'
 import { Button, Card, Col, Divider, Row, Statistic, Table } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
+import type { SorterResult } from 'antd/es/table/interface'
 import type { GroupBuyLaunchHistory } from 'fresh-shop-backend/types/dto'
 import React, { useState } from 'react'
 import { NavLink } from 'react-router'
@@ -22,7 +23,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
   groupBuyHistory,
   title = '团购历史'
 }) => {
-  // 控制“详细团购记录”展开/收起
+  // 控制"详细团购记录"展开/收起
   const [isExpanded, setIsExpanded] = useState(false)
   const showToggle = groupBuyHistory.length > 5
   const displayedGroupBuyHistory = isExpanded ? groupBuyHistory : groupBuyHistory.slice(0, 5)
@@ -150,6 +151,20 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
   const averageOrderCount =
     groupBuyHistory.length > 0 ? totalOrderCount / groupBuyHistory.length : 0
 
+  // 处理表格排序变化
+  const handleTableChange = (
+    _pagination: unknown,
+    _filters: unknown,
+    sorter:
+      | SorterResult<GroupBuyLaunchHistory & { key: number }>
+      | SorterResult<GroupBuyLaunchHistory & { key: number }>[]
+  ) => {
+    // 如果用户激活了排序功能（非默认状态），自动展开全部数据
+    if (sorter && !Array.isArray(sorter) && sorter.order) {
+      setIsExpanded(true)
+    }
+  }
+
   return (
     <Card
       title={
@@ -242,6 +257,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
             pagination={false}
             size="small"
             className="mt-2"
+            onChange={handleTableChange}
           />
         </div>
       ) : (

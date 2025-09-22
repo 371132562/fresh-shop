@@ -34,7 +34,7 @@ import {
   SupplierOverviewListItem,
   SupplierOverviewDetailParams,
   SupplierOverviewDetail,
-  TopProductItem,
+  ProductStatItem,
   ProductCategoryStat,
   SupplierFrequencyCustomersParams,
   SupplierFrequencyCustomersResult,
@@ -627,6 +627,7 @@ export class AnalysisService {
         uniqueCustomerIds: Set<string>;
         totalQuantity: number;
         groupBuyStartDate?: Date;
+        groupBuyId?: string; // 单期模式下记录团购ID
       }
     >();
 
@@ -656,10 +657,13 @@ export class AnalysisService {
           totalOrderCount: 0,
           uniqueCustomerIds: new Set<string>(),
           totalQuantity: 0,
-          // 单期模式下记录发起时间
+          // 单期模式下记录发起时间和团购ID
           ...(mergeSameName
             ? {}
-            : { groupBuyStartDate: groupBuy.groupBuyStartDate }),
+            : {
+                groupBuyStartDate: groupBuy.groupBuyStartDate,
+                groupBuyId: groupBuy.id,
+              }),
         });
       }
 
@@ -737,6 +741,7 @@ export class AnalysisService {
         uniqueCustomerCount,
         averageCustomerOrderValue,
         groupBuyStartDate: data.groupBuyStartDate,
+        groupBuyId: data.groupBuyId, // 单期模式下返回团购ID
       };
     });
 
@@ -1864,7 +1869,7 @@ export class AnalysisService {
     const uniqueCustomerIds = new Set<string>(); // 去重客户ID集合
     const repeatCustomerIds = new Set<string>(); // 复购客户ID集合
     const customerPurchaseCounts = new Map<string, number>(); // 客户购买次数统计Map
-    const productStats = new Map<string, TopProductItem>(); // 商品统计Map
+    const productStats = new Map<string, ProductStatItem>(); // 商品统计Map
     const categoryStats = new Map<string, ProductCategoryStat>(); // 分类统计Map
     const regionalStats = new Map<
       string,
@@ -2269,12 +2274,12 @@ export class AnalysisService {
       .filter((b) => b.count > 0);
 
     // 步骤十一：列表维度排序与截取
-    // - 商品：按销售额降序取 Top10
+    // - 商品：按销售额降序排序（全部）
     // - 分类：按销售额降序排序（全部）
     // - 地域：按客户数降序排序
-    const topProducts = Array.from(productStats.values())
-      .sort((a, b) => b.totalRevenue - a.totalRevenue)
-      .slice(0, 10);
+    const productStatsList = Array.from(productStats.values()).sort(
+      (a, b) => b.totalRevenue - a.totalRevenue,
+    );
 
     const productCategoryStats = Array.from(categoryStats.values()).sort(
       (a, b) => b.totalRevenue - a.totalRevenue,
@@ -2316,7 +2321,7 @@ export class AnalysisService {
       multiPurchaseCustomerRatio,
       totalGroupBuyCount,
       averageGroupBuyRevenue,
-      topProducts,
+      productStats: productStatsList,
       productCategoryStats,
       regionalSales,
       groupBuyHistory,

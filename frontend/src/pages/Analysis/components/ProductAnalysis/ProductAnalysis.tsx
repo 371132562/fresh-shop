@@ -1,13 +1,13 @@
 import { TrophyOutlined } from '@ant-design/icons'
 import { Card, Col, Row } from 'antd'
-import type { ProductCategoryStat, TopProductItem } from 'fresh-shop-backend/types/dto'
+import type { ProductCategoryStat, ProductStatItem } from 'fresh-shop-backend/types/dto'
 import React from 'react'
 
 import ProductCategoryAnalysis from './ProductCategoryAnalysis'
 import TopProductsAnalysis from './TopProductsAnalysis'
 
 type ProductAnalysisProps = {
-  topProducts: TopProductItem[]
+  productStats: ProductStatItem[]
   productCategoryStats: ProductCategoryStat[]
   title?: string
   loading?: boolean
@@ -15,10 +15,10 @@ type ProductAnalysisProps = {
 
 /**
  * 商品分析综合组件
- * 展示热销产品排行和产品分类统计
+ * 展示商品统计和产品分类统计
  */
 const ProductAnalysis: React.FC<ProductAnalysisProps> = ({
-  topProducts,
+  productStats,
   productCategoryStats,
   title = '商品分析',
   loading = false
@@ -38,8 +38,8 @@ const ProductAnalysis: React.FC<ProductAnalysisProps> = ({
       <Row gutter={16}>
         <Col span={12}>
           <TopProductsAnalysis
-            data={topProducts}
-            title="热销商品排行"
+            data={productStats}
+            title="商品分析"
             loading={loading}
           />
         </Col>

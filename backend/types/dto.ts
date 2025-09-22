@@ -549,6 +549,7 @@ export type MergedGroupBuyOverviewListItem = {
   uniqueCustomerCount: number; // 总参与客户数（去重）
   // 单期模式下提供的附加信息（mergeSameName=false 才会返回）
   groupBuyStartDate?: Date; // 团购开始时间（单期）
+  groupBuyId?: string; // 团购ID（单期模式）
 };
 
 /**
@@ -1007,20 +1008,20 @@ export type SupplierOverviewResult = {
 };
 
 /**
- * 热销产品统计项
- * 用于分析供货商的热销产品排行
+ * 产品统计项
+ * 用于分析供货商所有产品的销售表现
  *
  * 数据说明：
- * - 按销售额排序的热销产品列表
+ * - 按销售额排序的产品统计列表
  * - 包含产品的销售表现和客户覆盖情况
  * - 用于识别供货商的核心产品和市场表现
  *
  * 使用场景：
- * - 供货商详情页面的热销产品排行
+ * - 供货商详情页面的产品分析
  * - 产品表现分析和优化建议
  * - 供货商产品策略制定
  */
-export type TopProductItem = {
+export type ProductStatItem = {
   // 产品基本信息
   productId: string; // 产品唯一标识
   productName: string; // 产品名称
@@ -1119,7 +1120,7 @@ export type SupplierOverviewDetail = {
   averageGroupBuyRevenue: number; // 平均每次团购销售额
 
   // 产品分析
-  topProducts: TopProductItem[]; // 热销产品排行
+  productStats: ProductStatItem[]; // 产品统计
   productCategoryStats: ProductCategoryStat[]; // 产品分类统计
 
   // 地域分析

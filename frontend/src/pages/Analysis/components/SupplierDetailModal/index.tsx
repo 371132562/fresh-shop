@@ -304,7 +304,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
 
           {/* 商品分析 */}
           <ProductAnalysis
-            topProducts={supplierOverviewDetail.topProducts}
+            productStats={supplierOverviewDetail.productStats}
             productCategoryStats={supplierOverviewDetail.productCategoryStats}
             title="商品分析"
           />

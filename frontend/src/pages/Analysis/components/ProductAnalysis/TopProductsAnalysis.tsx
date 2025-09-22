@@ -1,29 +1,30 @@
 import { TrophyOutlined } from '@ant-design/icons'
 import { Badge, Card, Empty, List, Progress, Segmented, Tag, Tooltip } from 'antd'
-import type { TopProductItem } from 'fresh-shop-backend/types/dto'
+import type { ProductStatItem } from 'fresh-shop-backend/types/dto'
 import React, { useMemo, useState } from 'react'
 
 import useGlobalSettingStore from '@/stores/globalSettingStore'
 
 // 组件入参类型定义
-// data: 热销商品数据列表
+// data: 商品统计数据列表
 // title: 卡片标题，可选
 // loading: 加载状态
 
 type TopProductsAnalysisProps = {
-  data: TopProductItem[]
+  data: ProductStatItem[]
   title?: string
   loading?: boolean
 }
 
 /**
- * 热销商品排行分析组件（重设计）
+ * 商品分析组件（重设计）
  * - 使用列表 + 进度条展示占比，适配移动端阅读
  * - 支持销售额占比/利润占比切换
+ * - 显示所有商品的统计数据，按销售额排序
  */
 const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
   data,
-  title = '热销商品排行',
+  title = '商品分析',
   loading = false
 }) => {
   const formatCurrency = (value: number) => `¥${(value || 0).toFixed(2)}`

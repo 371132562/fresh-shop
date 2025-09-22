@@ -6,6 +6,7 @@ import type {
   SortOrder
 } from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
+import { NavLink } from 'react-router'
 
 import SearchToolbar from '@/components/SearchToolbar'
 import useAnalysisStore from '@/stores/analysisStore'
@@ -288,9 +289,20 @@ export const MergedGroupBuyOverview = ({
                   {/* 标题：团购名称与供货商，小屏单行省略，md起允许换行 */}
                   <div className="mb-1">
                     <div className="flex min-w-0 flex-row flex-wrap items-center gap-2">
-                      <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all">
-                        {item.groupBuyName}
-                      </span>
+                      {/* 在单期模式下，如果有团购ID，则使团购名称可点击跳转 */}
+                      {!mergeSameName && item.groupBuyId ? (
+                        <NavLink
+                          to={`/groupBuy/detail/${item.groupBuyId}`}
+                          target="_blank"
+                          className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium text-blue-600 hover:text-blue-800 hover:underline md:overflow-visible md:whitespace-normal md:break-all"
+                        >
+                          {item.groupBuyName}
+                        </NavLink>
+                      ) : (
+                        <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all">
+                          {item.groupBuyName}
+                        </span>
+                      )}
                       <span className="shrink-0 text-sm text-gray-500">({item.supplierName})</span>
                     </div>
                     {!mergeSameName && item.groupBuyStartDate && (
