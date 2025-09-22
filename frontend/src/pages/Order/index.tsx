@@ -292,17 +292,17 @@ export const Component = () => {
                         </div>
                       )}
                       {selectedUnit?.unit && (
-                        <div className="text-[13px] font-medium text-gray-800">
+                        <div className="font-medium text-gray-800">
                           规格：<span className="text-blue-500">{selectedUnit.unit}</span>
                         </div>
                       )}
                       {item.quantity && (
-                        <div className="text-[13px] font-medium text-gray-800">
+                        <div className="font-medium text-gray-800">
                           购买数量：<span className="text-blue-500">{item.quantity}</span>
                         </div>
                       )}
                       {item.partialRefundAmount > 0 && item.status !== 'REFUNDED' && (
-                        <div className="text-[13px] font-medium text-gray-800">
+                        <div className="font-medium text-gray-800">
                           <span>退款：</span>
                           <span className="font-bold text-orange-600">
                             ¥{item.partialRefundAmount.toFixed(2)}

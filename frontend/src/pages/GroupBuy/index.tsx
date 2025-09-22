@@ -331,18 +331,18 @@ export const Component = () => {
                   </div>
                   {/* 统计/描述 */}
                   <div className="space-y-1">
-                    <div className="text-[13px] font-medium text-gray-800">
+                    <div className="font-medium text-gray-800">
                       发起时间：
                       <span className="text-blue-500">{formatDate(item.groupBuyStartDate)}</span>
                     </div>
                     {item.product?.name && (
-                      <div className="text-[13px] font-medium text-gray-800">
+                      <div className="font-medium text-gray-800">
                         商品：
                         <span className="text-blue-500">{item.product.name}</span>
                       </div>
                     )}
                     {item.orderStats.orderCount !== undefined && (
-                      <div className="text-[13px] font-medium text-gray-800">
+                      <div className="font-medium text-gray-800">
                         订单量：
                         <span className="font-bold text-blue-600">
                           {item.orderStats.orderCount}
@@ -366,7 +366,7 @@ export const Component = () => {
                         })}
                     </div>
                     {(item.totalRefundAmount || 0) > 0 && (
-                      <div className="text-[13px] font-medium text-gray-800">
+                      <div className="font-medium text-gray-800">
                         <span>退款：</span>
                         <span className="font-bold text-orange-600">
                           ¥{(item.totalRefundAmount || 0).toFixed(2)}

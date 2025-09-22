@@ -297,14 +297,14 @@ export const Component = () => {
                   {/* 描述/统计：提供订单量与总额，保证不撑坏布局 */}
                   <div className="space-y-1">
                     {item.orderCount !== undefined && (
-                      <div className="text-[13px] font-medium text-gray-800">
+                      <div className="font-medium text-gray-800">
                         订单量：<span className="font-bold text-blue-600">{item.orderCount}</span>
                       </div>
                     )}
                     {item.orderTotalAmount !== undefined && (
-                      <div className="max-w-full overflow-hidden break-words text-gray-600 md:break-all">
-                        <span>订单总额：</span>
-                        <span className="font-bold text-blue-400">
+                      <div className="font-medium text-gray-800">
+                        订单总额：
+                        <span className="font-bold text-blue-600">
                           ¥{item.orderTotalAmount.toFixed(2)}
                         </span>
                       </div>
