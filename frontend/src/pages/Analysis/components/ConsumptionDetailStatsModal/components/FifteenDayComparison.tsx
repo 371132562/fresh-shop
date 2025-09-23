@@ -8,25 +8,28 @@ import {
   UpOutlined
 } from '@ant-design/icons'
 import { Button, Card, Col, Divider, Row, Table, Tag, Tooltip } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
+import type { CustomerConsumptionDetailDto } from 'fresh-shop-backend/types/dto'
 import React, { useMemo, useState } from 'react'
 
 import dayjs from '@/utils/day'
 import { getProfitColor } from '@/utils/profitColor'
 
+// 派生后端 DTO 中已存在的 15 天对比类型，避免前后端重复定义
+type FifteenDayComparisonDto = NonNullable<CustomerConsumptionDetailDto['fifteenDayComparison']>
+// 商品维度对比列表类型
+type FifteenDayProductComparisonListDto = NonNullable<
+  CustomerConsumptionDetailDto['fifteenDayProductComparisons']
+>
+
+// 组件 props 从后端 DTO 字段类型派生
 type FifteenDayComparisonProps = {
-  comparison: {
-    current: { totalAmount: number; orderCount: number }
-    previous: { totalAmount: number; orderCount: number }
-    diff: { totalAmount: number; orderCount: number }
-  }
-  productComparisons: Array<{
-    productId: string
-    productName: string
-    current: { totalAmount: number; orderCount: number }
-    previous: { totalAmount: number; orderCount: number }
-    diff: { totalAmount: number; orderCount: number }
-  }>
+  comparison: FifteenDayComparisonDto
+  productComparisons: FifteenDayProductComparisonListDto
 }
+
+// 用于 Table 泛型的行类型
+type ProductComparisonRow = FifteenDayProductComparisonListDto[number]
 
 // 展示用日期范围（含今日15天窗口与其前一段15天）
 const getWindowRanges = () => {
@@ -94,7 +97,7 @@ const FifteenDayComparison: React.FC<FifteenDayComparisonProps> = ({
   const ranges = getWindowRanges()
   const [showProductTable, setShowProductTable] = useState(false)
 
-  const columns = useMemo(
+  const columns: ColumnsType<ProductComparisonRow> = useMemo(
     () => [
       {
         title: '商品',
@@ -130,6 +133,9 @@ const FifteenDayComparison: React.FC<FifteenDayComparisonProps> = ({
         dataIndex: ['diff', 'totalAmount'],
         key: 'diffAmount',
         align: 'center' as const,
+        sorter: (a: ProductComparisonRow, b: ProductComparisonRow) =>
+          (a.diff?.totalAmount || 0) - (b.diff?.totalAmount || 0),
+        defaultSortOrder: undefined,
         render: (v: number) => (
           <DiffPill
             value={v}
@@ -165,6 +171,9 @@ const FifteenDayComparison: React.FC<FifteenDayComparisonProps> = ({
         dataIndex: ['diff', 'orderCount'],
         key: 'diffOrders',
         align: 'center' as const,
+        sorter: (a: ProductComparisonRow, b: ProductComparisonRow) =>
+          (a.diff?.orderCount || 0) - (b.diff?.orderCount || 0),
+        defaultSortOrder: undefined,
         render: (v: number) => <DiffPill value={v} />
       }
     ],
@@ -245,7 +254,7 @@ const FifteenDayComparison: React.FC<FifteenDayComparisonProps> = ({
       </div>
 
       {showProductTable && (
-        <Table
+        <Table<ProductComparisonRow>
           size="small"
           rowKey="productId"
           columns={columns}
