@@ -24,7 +24,6 @@ export const Component = () => {
   const deleteLoading = useCustomerAddressStore(state => state.deleteLoading)
 
   // 消费详情相关状态
-  const getAddressConsumptionDetail = useCustomerStore(state => state.getAddressConsumptionDetail)
   const setAddressConsumptionDetail = useCustomerStore(state => state.setAddressConsumptionDetail)
 
   useEffect(() => {
@@ -81,8 +80,8 @@ export const Component = () => {
 
   // 查看消费详情
   const handleViewConsumptionDetail = async (id: string) => {
+    setCurrentId(id)
     setConsumptionDetailVisible(true)
-    await getAddressConsumptionDetail(id)
   }
 
   // 关闭消费详情弹窗
@@ -257,14 +256,16 @@ export const Component = () => {
       )}
 
       {/* 消费详情弹窗 */}
-      <ConsumptionDetailStatsModal
-        visible={consumptionDetailVisible}
-        onClose={handleCloseConsumptionDetail}
-        id={currentId || undefined}
-        title="地址消费详情"
-        width={900}
-        type="address"
-      />
+      {currentId && (
+        <ConsumptionDetailStatsModal
+          visible={consumptionDetailVisible}
+          onClose={handleCloseConsumptionDetail}
+          id={currentId}
+          title="地址消费详情"
+          width={900}
+          type="address"
+        />
+      )}
     </>
   )
 }

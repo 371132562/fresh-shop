@@ -198,14 +198,16 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
         />
       </section>
 
-      <ConsumptionDetailStatsModal
-        visible={detailVisible}
-        onClose={closeDetail}
-        id={currentId || undefined}
-        type="customer"
-        startDate={startDate}
-        endDate={endDate}
-      />
+      {currentId && (
+        <ConsumptionDetailStatsModal
+          visible={detailVisible}
+          onClose={closeDetail}
+          id={currentId}
+          type="customer"
+          startDate={startDate}
+          endDate={endDate}
+        />
+      )}
     </>
   )
 }

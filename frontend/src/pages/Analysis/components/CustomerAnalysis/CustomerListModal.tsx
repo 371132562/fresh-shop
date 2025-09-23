@@ -1,4 +1,5 @@
 import { Button, Modal, Table } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
 import React, { useState } from 'react'
 
 import ConsumptionDetailStatsModal from '@/pages/Analysis/components/ConsumptionDetailStatsModal'
@@ -17,13 +18,18 @@ const CustomerListModal: React.FC = () => {
 
   // 客户消费详情弹窗状态与数据
   const [consumptionDetailVisible, setConsumptionDetailVisible] = useState(false)
-  const getConsumptionDetail = useCustomerStore(state => state.getConsumptionDetail)
-  const consumptionDetail = useCustomerStore(state => state.consumptionDetail)
-  const consumptionDetailLoading = useCustomerStore(state => state.consumptionDetailLoading)
+  const [currentId, setCurrentId] = useState<string | null>(null)
   const resetConsumptionDetail = useCustomerStore(state => state.resetConsumptionDetail)
 
+  type CustomerListRow = {
+    key: string
+    customerId: string
+    customerName: string
+    purchaseCount?: number
+  }
+
   // 构建表头
-  const columns: any[] = [
+  const columns: ColumnsType<CustomerListRow> = [
     {
       title: '客户姓名',
       dataIndex: 'customerName',
@@ -43,12 +49,12 @@ const CustomerListModal: React.FC = () => {
   columns.push({
     title: '操作',
     key: 'action',
-    render: (_: any, record: any) => (
+    render: (_: unknown, record: CustomerListRow) => (
       <Button
         type="primary"
         ghost
         onClick={() => {
-          getConsumptionDetail({ id: record.customerId })
+          setCurrentId(record.customerId)
           setConsumptionDetailVisible(true)
         }}
       >
@@ -68,6 +74,9 @@ const CustomerListModal: React.FC = () => {
         }}
         footer={null}
         width={600}
+        style={{
+          top: 20
+        }}
       >
         <Table
           columns={columns}
@@ -83,15 +92,18 @@ const CustomerListModal: React.FC = () => {
         />
       </Modal>
 
-      <ConsumptionDetailStatsModal
-        visible={consumptionDetailVisible}
-        onClose={() => {
-          setConsumptionDetailVisible(false)
-          resetConsumptionDetail()
-        }}
-        consumptionDetail={consumptionDetail}
-        loading={consumptionDetailLoading}
-      />
+      {currentId && (
+        <ConsumptionDetailStatsModal
+          visible={consumptionDetailVisible}
+          onClose={() => {
+            setConsumptionDetailVisible(false)
+            resetConsumptionDetail()
+            setCurrentId(null)
+          }}
+          id={currentId}
+          type="customer"
+        />
+      )}
     </>
   )
 }

@@ -4,7 +4,7 @@ import type {
   CustomerAddressConsumptionDetailDto,
   CustomerConsumptionDetailDto
 } from 'fresh-shop-backend/types/dto'
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect } from 'react'
 
 import useCustomerStore from '@/stores/customerStore'
 import dayjs from '@/utils/day'
@@ -16,14 +16,11 @@ import ProductConsumptionRanks from './components/ProductConsumptionRanks'
 type ConsumptionDetailStatsModalProps = {
   visible: boolean
   onClose: () => void
-  // 改造：支持仅传入 id，由组件内部获取详情
-  id?: string
+  id: string
   type?: 'customer' | 'address'
   startDate?: Date
   endDate?: Date
   // 兼容旧用法：仍可直接传入数据与loading
-  consumptionDetail?: CustomerConsumptionDetailDto | CustomerAddressConsumptionDetailDto | null
-  loading?: boolean
   title?: string
   width?: number
 }
@@ -39,12 +36,9 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
   type = 'customer',
   startDate,
   endDate,
-  consumptionDetail: consumptionDetailProp,
-  loading,
   title = '消费详情',
   width = 1000
 }: ConsumptionDetailStatsModalProps) => {
-  // 组件内获取逻辑（优先使用内部获取，若未传 id 则退回使用外部传入的 consumptionDetailProp）
   const getConsumptionDetail = useCustomerStore(state => state.getConsumptionDetail)
   const getAddressConsumptionDetail = useCustomerStore(state => state.getAddressConsumptionDetail)
   const storeCustomerDetail = useCustomerStore(state => state.consumptionDetail)
@@ -54,12 +48,8 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
 
   const internalDetail = type === 'address' ? storeAddressDetail : storeCustomerDetail
   const internalLoading = type === 'address' ? storeAddressLoading : storeCustomerLoading
-
-  const consumptionDetail = useMemo(
-    () => consumptionDetailProp ?? internalDetail,
-    [consumptionDetailProp, internalDetail]
-  )
-  const effectiveLoading = loading ?? internalLoading
+  const consumptionDetail = internalDetail
+  const effectiveLoading = internalLoading
 
   useEffect(() => {
     if (!visible) return

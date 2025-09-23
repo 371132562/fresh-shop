@@ -23,7 +23,6 @@ export const Component = () => {
   const setPageParams = useCustomerStore(state => state.setPageParams)
   const deleteCustomer = useCustomerStore(state => state.deleteCustomer)
   const deleteLoading = useCustomerStore(state => state.deleteLoading)
-  const getConsumptionDetail = useCustomerStore(state => state.getConsumptionDetail)
   const resetConsumptionDetail = useCustomerStore(state => state.resetConsumptionDetail)
 
   const getAllCustomerAddress = useCustomerAddressStore(state => state.getAllCustomerAddress)
@@ -81,7 +80,6 @@ export const Component = () => {
 
   const handleConsumptionDetail = (id: string) => {
     setCurrentId(id)
-    getConsumptionDetail({ id })
     setConsumptionDetailVisible(true)
   }
 
@@ -364,12 +362,14 @@ export const Component = () => {
         />
       )}
       {/* 消费详情模态框 */}
-      <ConsumptionDetailStatsModal
-        visible={consumptionDetailVisible}
-        onClose={handleCloseConsumptionDetail}
-        id={currentId || undefined}
-        type="customer"
-      />
+      {currentId && (
+        <ConsumptionDetailStatsModal
+          visible={consumptionDetailVisible}
+          onClose={handleCloseConsumptionDetail}
+          id={currentId}
+          type="customer"
+        />
+      )}
     </>
   )
 }
