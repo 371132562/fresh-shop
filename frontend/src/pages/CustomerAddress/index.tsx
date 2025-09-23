@@ -24,8 +24,6 @@ export const Component = () => {
   const deleteLoading = useCustomerAddressStore(state => state.deleteLoading)
 
   // 消费详情相关状态
-  const consumptionDetailLoading = useCustomerStore(state => state.addressConsumptionDetailLoading)
-  const addressConsumptionDetail = useCustomerStore(state => state.addressConsumptionDetail)
   const getAddressConsumptionDetail = useCustomerStore(state => state.getAddressConsumptionDetail)
   const setAddressConsumptionDetail = useCustomerStore(state => state.setAddressConsumptionDetail)
 
@@ -262,8 +260,7 @@ export const Component = () => {
       <ConsumptionDetailStatsModal
         visible={consumptionDetailVisible}
         onClose={handleCloseConsumptionDetail}
-        consumptionDetail={addressConsumptionDetail}
-        loading={consumptionDetailLoading}
+        id={currentId || undefined}
         title="地址消费详情"
         width={900}
         type="address"

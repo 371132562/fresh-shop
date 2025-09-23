@@ -52,6 +52,10 @@ export class CustomerService {
           name: string;
         };
       };
+      customer?: {
+        id: string;
+        name: string;
+      };
     };
     // 根据类型验证资源是否存在并获取基本信息
     let resourceName: string;
@@ -100,6 +104,9 @@ export class CustomerService {
               product: true,
             },
           },
+          customer: {
+            select: { id: true, name: true },
+          },
         },
       })) as SelectedOrder[];
 
@@ -121,6 +128,9 @@ export class CustomerService {
             include: {
               product: true,
             },
+          },
+          customer: {
+            select: { id: true, name: true },
           },
         },
       })) as SelectedOrder[];
@@ -171,6 +181,9 @@ export class CustomerService {
               product: true,
             },
           },
+          customer: {
+            select: { id: true, name: true },
+          },
         },
       })) as SelectedOrder[];
 
@@ -195,6 +208,9 @@ export class CustomerService {
             include: {
               product: true,
             },
+          },
+          customer: {
+            select: { id: true, name: true },
           },
         },
       })) as SelectedOrder[];
@@ -597,7 +613,18 @@ export class CustomerService {
       });
 
     // 根据类型返回对应的结果
-    const baseResult: any = {
+    type AddressCustomerStat = NonNullable<
+      CustomerAddressConsumptionDetailDto['addressCustomerStats']
+    >[number];
+
+    type CommonConsumptionBase = Omit<
+      CustomerConsumptionDetailDto,
+      'customerName'
+    > & {
+      addressCustomerStats?: AddressCustomerStat[];
+    };
+
+    const baseResult: CommonConsumptionBase = {
       orderCount,
       totalAmount,
       averagePricePerOrder,
@@ -616,6 +643,75 @@ export class CustomerService {
       },
       fifteenDayProductComparisons,
     };
+
+    // 地址维度：统计地址下客户聚合
+    if (type === 'address') {
+      const byCustomer: Record<
+        string,
+        {
+          name: string;
+          orderCount: number;
+          totalAmount: number;
+          totalRefundAmount: number;
+          totalPartialRefundAmount: number;
+          partialRefundOrderCount: number;
+          refundedOrderCount: number;
+        }
+      > = {};
+
+      for (const order of orders) {
+        const customerId = order.customer?.id;
+        const customerName = order.customer?.name || '';
+        if (!customerId) continue;
+        if (!byCustomer[customerId]) {
+          byCustomer[customerId] = {
+            name: customerName,
+            orderCount: 0,
+            totalAmount: 0,
+            totalRefundAmount: 0,
+            totalPartialRefundAmount: 0,
+            partialRefundOrderCount: 0,
+            refundedOrderCount: 0,
+          };
+        }
+
+        byCustomer[customerId].orderCount += 1;
+
+        const units = this.parseUnits(order.groupBuy.units);
+        const unit = units.find((u) => u.id === order.unitId);
+        if (!unit) continue;
+        const originalAmount = unit.price * order.quantity;
+        const partial = order.partialRefundAmount || 0;
+
+        const orderAmount =
+          order.status === OrderStatus.REFUNDED ? 0 : originalAmount - partial;
+        byCustomer[customerId].totalAmount += orderAmount;
+
+        if (order.status === OrderStatus.REFUNDED) {
+          byCustomer[customerId].totalRefundAmount += originalAmount;
+          byCustomer[customerId].refundedOrderCount += 1;
+        } else {
+          byCustomer[customerId].totalRefundAmount += partial;
+          if (partial > 0) {
+            byCustomer[customerId].partialRefundOrderCount += 1;
+          }
+        }
+        byCustomer[customerId].totalPartialRefundAmount += partial;
+      }
+
+      baseResult.addressCustomerStats = Object.entries(byCustomer)
+        .map(([customerId, v]) => ({
+          customerId,
+          customerName: v.name,
+          orderCount: v.orderCount,
+          totalAmount: v.totalAmount,
+          totalRefundAmount: v.totalRefundAmount,
+          totalPartialRefundAmount: v.totalPartialRefundAmount,
+          partialRefundOrderCount: v.partialRefundOrderCount,
+          refundedOrderCount: v.refundedOrderCount,
+        }))
+        .sort((a, b) => b.totalAmount - a.totalAmount);
+    }
 
     if (type === 'customer') {
       return {

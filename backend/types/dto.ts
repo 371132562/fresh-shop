@@ -312,6 +312,17 @@ export type CustomerAddressConsumptionDetailDto = {
   totalPartialRefundAmount: number; // 总部分退款金额
   totalRefundedOrderCount: number; // 总全额退款订单数
   totalPartialRefundOrderCount: number; // 总部分退款订单数
+  // 地址下客户聚合（用于地址维度展示客户榜单）
+  addressCustomerStats?: {
+    customerId: string; // 客户ID
+    customerName: string; // 客户名称
+    orderCount: number; // 订单数量（包含退款订单）
+    totalAmount: number; // 消费额（已扣除部分退款；全额退款订单记0）
+    totalRefundAmount: number; // 退款总额（部分退款+全额退款）
+    totalPartialRefundAmount: number; // 部分退款总金额
+    partialRefundOrderCount: number; // 部分退款订单数
+    refundedOrderCount: number; // 全额退款订单数
+  }[];
   // 15天窗口对比（总体）：最近15天 vs 再往前15天
   fifteenDayComparison?: {
     current: { totalAmount: number; orderCount: number }; // 最近15天

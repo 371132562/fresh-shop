@@ -28,12 +28,10 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
   const getCustomerOverview = useAnalysisStore(state => state.getCustomerOverview)
   const setCustomerOverviewPage = useAnalysisStore(state => state.setCustomerOverviewPage)
 
-  const getConsumptionDetail = useCustomerStore(state => state.getConsumptionDetail)
-  const consumptionDetail = useCustomerStore(state => state.consumptionDetail)
-  const consumptionDetailLoading = useCustomerStore(state => state.consumptionDetailLoading)
   const resetConsumptionDetail = useCustomerStore(state => state.resetConsumptionDetail)
 
   const [detailVisible, setDetailVisible] = useState(false)
+  const [currentId, setCurrentId] = useState<string | null>(null)
 
   const fetchData = (page: number = customerOverviewPage) => {
     const fieldKey = sortField
@@ -61,8 +59,7 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
   }, [startDate, endDate, sortField, sortOrder, customerName])
 
   const openDetail = (id: string) => {
-    // 统一对象参数形式
-    getConsumptionDetail(startDate && endDate ? { id, startDate, endDate } : { id })
+    setCurrentId(id)
     setDetailVisible(true)
   }
 
@@ -204,8 +201,8 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
       <ConsumptionDetailStatsModal
         visible={detailVisible}
         onClose={closeDetail}
-        consumptionDetail={consumptionDetail}
-        loading={consumptionDetailLoading}
+        id={currentId || undefined}
+        type="customer"
         startDate={startDate}
         endDate={endDate}
       />

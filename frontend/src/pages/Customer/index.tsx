@@ -24,8 +24,6 @@ export const Component = () => {
   const deleteCustomer = useCustomerStore(state => state.deleteCustomer)
   const deleteLoading = useCustomerStore(state => state.deleteLoading)
   const getConsumptionDetail = useCustomerStore(state => state.getConsumptionDetail)
-  const consumptionDetail = useCustomerStore(state => state.consumptionDetail)
-  const consumptionDetailLoading = useCustomerStore(state => state.consumptionDetailLoading)
   const resetConsumptionDetail = useCustomerStore(state => state.resetConsumptionDetail)
 
   const getAllCustomerAddress = useCustomerAddressStore(state => state.getAllCustomerAddress)
@@ -369,8 +367,8 @@ export const Component = () => {
       <ConsumptionDetailStatsModal
         visible={consumptionDetailVisible}
         onClose={handleCloseConsumptionDetail}
-        consumptionDetail={consumptionDetail}
-        loading={consumptionDetailLoading}
+        id={currentId || undefined}
+        type="customer"
       />
     </>
   )

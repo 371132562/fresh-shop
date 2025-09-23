@@ -2,7 +2,6 @@ import {
   ArrowDownOutlined,
   ArrowUpOutlined,
   DownOutlined,
-  InfoCircleOutlined,
   QuestionCircleOutlined,
   TableOutlined,
   TrophyOutlined,
@@ -53,7 +52,6 @@ const DiffPill: React.FC<{ value: number; unit?: string }> = ({ value, unit }) =
     >
       {isUp && <ArrowUpOutlined />}
       {isDown && <ArrowDownOutlined />}
-      {isUp ? '+' : '-'}
       {unit === 'amount' ? Math.abs(value).toFixed(2) : Math.abs(value)}
       {unit === 'amount' ? '' : ''}
     </span>
@@ -182,6 +180,7 @@ const FifteenDayComparison: React.FC<FifteenDayComparisonProps> = ({
     <Card
       size="small"
       className="overflow-hidden"
+      styles={{ header: { background: '#f0f5ff' } }}
       title={
         <div className="flex h-12 items-center justify-between">
           <div className="flex items-center gap-2">
@@ -194,18 +193,6 @@ const FifteenDayComparison: React.FC<FifteenDayComparisonProps> = ({
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-1">
-            <Tooltip
-              className="text-lg"
-              title={
-                <div style={{ maxWidth: 420, lineHeight: 1.6 }}>
-                  <div>时间：按团购发起日期</div>
-                  <div>金额：已扣除部分退款</div>
-                  <div>订单：仅统计已支付/已完成</div>
-                </div>
-              }
-            >
-              <InfoCircleOutlined className="text-gray-400" />
-            </Tooltip>
             <Tag color="blue">近15天（含今日）：{ranges.currentLabel}</Tag>
             <Tag color="blue">前15天：{ranges.previousLabel}</Tag>
           </div>
@@ -243,7 +230,7 @@ const FifteenDayComparison: React.FC<FifteenDayComparisonProps> = ({
 
       <div className="mb-2 flex items-center justify-between gap-2 text-sm text-gray-600">
         <TableOutlined className="text-blue-500" />
-        <span>详细商品维度对比</span>
+        <span>近15天与前15天 详细商品维度对比</span>
         <div className="ml-auto flex items-center gap-2">
           <span className="text-xs text-gray-400">共 {dataSource.length} 项</span>
           <Button
