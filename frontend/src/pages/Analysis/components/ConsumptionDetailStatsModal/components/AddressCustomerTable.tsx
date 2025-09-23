@@ -80,6 +80,8 @@ const AddressCustomerTable: React.FC<AddressCustomerTableProps> = ({ stats }) =>
         pagination={false}
         dataSource={dataSource}
         columns={columns}
+        scroll={{ y: 500 }}
+        virtual
       />
     </Card>
   )

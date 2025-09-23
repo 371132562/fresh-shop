@@ -83,7 +83,7 @@ const ProductConsumptionRanks: React.FC<ProductConsumptionRanksProps> = ({ ranks
       className="overflow-hidden"
       styles={{ header: { background: '#f0f5ff' } }}
     >
-      <div className="space-y-3">
+      <div className="max-h-[500px] space-y-3 overflow-y-auto">
         {ranks.map((product: ProductItem, index: number) => {
           const totalGroupBuys = product.groupBuys?.length || 0
           const totalGroupBuyAmount =
