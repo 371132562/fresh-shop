@@ -1,8 +1,9 @@
 import { CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons'
-import { Button, Modal, Popconfirm } from 'antd'
+import { Modal } from 'antd'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
+import UpdateOrderStatusButton from '@/pages/Order/components/UpdateOrderStatusButton'
 import useOrderStore from '@/stores/orderStore'
 import dayjs from '@/utils/day'
 
@@ -15,10 +16,6 @@ const OrderStatsButton = () => {
 
   const orderStats = useOrderStore(state => state.orderStats)
   const getOrderStats = useOrderStore(state => state.getOrderStats)
-  const updateOrder = useOrderStore(state => state.updateOrder)
-  const canUpdateOrderStatus = useOrderStore(state => state.canUpdateOrderStatus)
-  const getNextOrderStatusLabel = useOrderStore(state => state.getNextOrderStatusLabel)
-  const handleUpdateOrderStatus = useOrderStore(state => state.handleUpdateOrderStatus)
 
   // 组件挂载时获取订单统计数据
   useEffect(() => {
@@ -125,42 +122,20 @@ const OrderStatsButton = () => {
                               <span className="rounded-full bg-orange-500 px-3 py-1 text-xs font-medium text-white">
                                 待付款
                               </span>
-                              {canUpdateOrderStatus(order.status) && (
-                                <Popconfirm
-                                  title={
-                                    <div>
-                                      确定要将订单状态变更为{' '}
-                                      <span className="text-blue-500">
-                                        {getNextOrderStatusLabel(order.status)}
-                                      </span>{' '}
-                                      吗？
-                                    </div>
-                                  }
-                                  onConfirm={e => {
-                                    e?.preventDefault()
-                                    e?.stopPropagation()
-                                    handleUpdateOrderStatus(order, updateOrder)
+                              <div
+                                onClick={e => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                }}
+                              >
+                                <UpdateOrderStatusButton
+                                  orderId={order.id}
+                                  status={order.status}
+                                  onSuccess={() => {
+                                    // 成功后自动刷新统计：store.updateOrder 已在 finally 调用了 getOrderStats
                                   }}
-                                  onCancel={e => {
-                                    e?.preventDefault()
-                                    e?.stopPropagation()
-                                  }}
-                                  okText="确定"
-                                  cancelText="取消"
-                                >
-                                  <Button
-                                    type="primary"
-                                    size="small"
-                                    className="bg-blue-500 hover:bg-blue-600"
-                                    onClick={e => {
-                                      e.preventDefault()
-                                      e.stopPropagation()
-                                    }}
-                                  >
-                                    更新状态
-                                  </Button>
-                                </Popconfirm>
-                              )}
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -213,42 +188,20 @@ const OrderStatsButton = () => {
                               <span className="rounded-full bg-green-500 px-3 py-1 text-xs font-medium text-white">
                                 已付款
                               </span>
-                              {canUpdateOrderStatus(order.status) && (
-                                <Popconfirm
-                                  title={
-                                    <div>
-                                      确定要将订单状态变更为{' '}
-                                      <span className="text-blue-500">
-                                        {getNextOrderStatusLabel(order.status)}
-                                      </span>{' '}
-                                      吗？
-                                    </div>
-                                  }
-                                  onConfirm={e => {
-                                    e?.preventDefault()
-                                    e?.stopPropagation()
-                                    handleUpdateOrderStatus(order, updateOrder)
+                              <div
+                                onClick={e => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                }}
+                              >
+                                <UpdateOrderStatusButton
+                                  orderId={order.id}
+                                  status={order.status}
+                                  onSuccess={() => {
+                                    // 成功后自动刷新统计：store.updateOrder 已在 finally 调用了 getOrderStats
                                   }}
-                                  onCancel={e => {
-                                    e?.preventDefault()
-                                    e?.stopPropagation()
-                                  }}
-                                  okText="确定"
-                                  cancelText="取消"
-                                >
-                                  <Button
-                                    type="primary"
-                                    size="small"
-                                    className="bg-blue-500 hover:bg-blue-600"
-                                    onClick={e => {
-                                      e.preventDefault()
-                                      e.stopPropagation()
-                                    }}
-                                  >
-                                    更新状态
-                                  </Button>
-                                </Popconfirm>
-                              )}
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>

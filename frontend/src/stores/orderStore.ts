@@ -1,4 +1,3 @@
-import { message } from 'antd'
 import {
   BatchCreateOrdersParams,
   BatchCreateOrdersResult,
@@ -118,12 +117,6 @@ type OrderStore = {
   getNextOrderStatus: (currentStatus: BackendOrderStatus) => OrderStatus | null
   canUpdateOrderStatus: (currentStatus: BackendOrderStatus) => boolean
   getNextOrderStatusLabel: (currentStatus: BackendOrderStatus) => string
-  handleUpdateOrderStatus: (
-    order: { id: string; status: BackendOrderStatus | OrderStatus },
-    updateOrderFn: (data: { id: string; status: OrderStatus }) => Promise<boolean>,
-    onSuccess?: () => void,
-    onError?: () => void
-  ) => Promise<void>
 }
 
 const useOrderStore = create<OrderStore>((set, get) => ({
@@ -343,34 +336,6 @@ const useOrderStore = create<OrderStore>((set, get) => ({
   getNextOrderStatusLabel: (currentStatus: BackendOrderStatus): string => {
     const nextStatus = get().getNextOrderStatus(currentStatus)
     return nextStatus ? OrderStatusMap[nextStatus].label : '无'
-  },
-
-  handleUpdateOrderStatus: async (
-    order: { id: string; status: BackendOrderStatus | OrderStatus },
-    updateOrderFn: (data: { id: string; status: OrderStatus }) => Promise<boolean>,
-    onSuccess?: () => void,
-    onError?: () => void
-  ) => {
-    if (!order.id) return
-
-    const nextStatus = get().getNextOrderStatus(order.status as BackendOrderStatus)
-    if (!nextStatus) {
-      message.info('订单已是最终状态，无法继续修改')
-      return
-    }
-
-    const res = await updateOrderFn({
-      id: order.id,
-      status: nextStatus
-    })
-
-    if (res) {
-      message.success(`订单状态已更新为：${OrderStatusMap[nextStatus].label}`)
-      onSuccess?.()
-    } else {
-      message.error('更新订单状态失败')
-      onError?.()
-    }
   }
 }))
 

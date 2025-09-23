@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 import useOrderStore from '@/stores/orderStore.ts'
 
-type PartialRefundModalProps = {
+type RefundModalProps = {
   visible: boolean
   onClose: () => void
   onSuccess?: (refundAmount: number) => void
@@ -14,7 +14,7 @@ type PartialRefundModalProps = {
   orderStatus: string
 }
 
-type PartialRefundButtonProps = {
+type RefundButtonProps = {
   orderId: string
   orderTotalAmount: number
   currentRefundAmount?: number
@@ -22,7 +22,7 @@ type PartialRefundButtonProps = {
   onSuccess?: (refundAmount: number) => void
 }
 
-const PartialRefundModal = ({
+const RefundModal = ({
   visible,
   onClose,
   onSuccess,
@@ -30,7 +30,7 @@ const PartialRefundModal = ({
   orderTotalAmount,
   currentRefundAmount = 0,
   orderStatus
-}: PartialRefundModalProps) => {
+}: RefundModalProps) => {
   const [form] = Form.useForm()
 
   const partialRefundOrder = useOrderStore(state => state.partialRefundOrder)
@@ -42,8 +42,6 @@ const PartialRefundModal = ({
   const canFullRefund = orderStatus === 'COMPLETED'
 
   const maxRefundAmount = orderTotalAmount - currentRefundAmount
-
-  // 去除退款类型切换，统一通过输入金额或点击全额退款按钮
 
   const handleSubmit = async () => {
     try {
@@ -191,13 +189,13 @@ const PartialRefundModal = ({
   )
 }
 
-const PartialRefundButton = ({
+const RefundButton = ({
   orderId,
   orderTotalAmount,
   currentRefundAmount = 0,
   orderStatus,
   onSuccess
-}: PartialRefundButtonProps) => {
+}: RefundButtonProps) => {
   const [modalVisible, setModalVisible] = useState(false)
 
   const handleClick = () => {
@@ -224,7 +222,7 @@ const PartialRefundButton = ({
         退款
       </Button>
 
-      <PartialRefundModal
+      <RefundModal
         visible={modalVisible}
         onClose={handleModalClose}
         onSuccess={handleSuccess}
@@ -237,5 +235,4 @@ const PartialRefundButton = ({
   )
 }
 
-export default PartialRefundModal
-export { PartialRefundButton }
+export default RefundButton

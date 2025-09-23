@@ -5,7 +5,7 @@ import { GroupBuyUnit } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, useNavigate, useParams } from 'react-router'
 
-import { PartialRefundButton } from '@/pages/Order/components/PartialRefundModal.tsx'
+import RefundButton from '@/pages/Order/components/RefundButton.tsx'
 import UpdateOrderStatusButton from '@/pages/Order/components/UpdateOrderStatusButton.tsx'
 import Modify from '@/pages/Order/Modify.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
@@ -116,7 +116,7 @@ export const Component = () => {
                   编辑
                 </Button>
                 {order && (
-                  <PartialRefundButton
+                  <RefundButton
                     orderId={order.id}
                     orderTotalAmount={unit ? unit.price * order.quantity : 0}
                     currentRefundAmount={order.partialRefundAmount || 0}

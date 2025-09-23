@@ -13,7 +13,7 @@ import MergedGroupBuyDetailModal from '@/pages/Analysis/components/MergedGroupBu
 import DeleteGroupBuyButton from '@/pages/GroupBuy/components/DeleteGroupBuyButton'
 import MultiAdd from '@/pages/GroupBuy/components/MultiAdd'
 import Modify from '@/pages/GroupBuy/Modify.tsx'
-import { PartialRefundButton } from '@/pages/Order/components/PartialRefundModal.tsx'
+import RefundButton from '@/pages/Order/components/RefundButton.tsx'
 import UpdateOrderStatusButton from '@/pages/Order/components/UpdateOrderStatusButton.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
@@ -35,9 +35,7 @@ export const Component = () => {
   const getLoading = useGroupBuyStore(state => state.getLoading)
   const setGroupBuy = useGroupBuyStore(state => state.setGroupBuy)
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
-  const updateOrder = useOrderStore(state => state.updateOrder)
   const getNextOrderStatus = useOrderStore(state => state.getNextOrderStatus)
-  const handleUpdateOrderStatus = useOrderStore(state => state.handleUpdateOrderStatus)
 
   // 详情模态框相关状态
 
@@ -80,20 +78,17 @@ export const Component = () => {
     setDetailParams(undefined)
   }
 
-  // 使用 orderStore 中的 handleUpdateOrderStatus，并传入本地状态更新逻辑
-  const handleUpdateOrderStatusLocal = async (order: Order) => {
-    await handleUpdateOrderStatus(order, updateOrder, () => {
-      // 成功回调：直接更新本地状态，避免重新获取整个团购数据
-      if (groupBuy && groupBuy.order) {
-        const nextStatus = getNextOrderStatus(order.status)
-        if (nextStatus) {
-          const updatedOrders = groupBuy.order.map(o =>
-            o.id === order.id ? { ...o, status: nextStatus } : o
-          )
-          setGroupBuy({ ...groupBuy, order: updatedOrders })
-        }
+  // 仅进行本地状态推进，网络更新由按钮组件完成
+  const handleUpdateOrderStatusLocal = (order: Order) => {
+    if (groupBuy && groupBuy.order) {
+      const nextStatus = getNextOrderStatus(order.status)
+      if (nextStatus) {
+        const updatedOrders = groupBuy.order.map(o =>
+          o.id === order.id ? { ...o, status: nextStatus } : o
+        )
+        setGroupBuy({ ...groupBuy, order: updatedOrders })
       }
-    })
+    }
   }
 
   return (
@@ -357,7 +352,7 @@ export const Component = () => {
                   />
                 )
                 actions.push(
-                  <PartialRefundButton
+                  <RefundButton
                     key="partial-refund"
                     orderId={order.id}
                     orderTotalAmount={orderTotalAmount}

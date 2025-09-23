@@ -13,7 +13,7 @@ import useOrderStore, {
 } from '@/stores/orderStore.ts'
 import { formatDate } from '@/utils'
 
-import { PartialRefundButton } from './components/PartialRefundModal.tsx'
+import RefundButton from './components/RefundButton.tsx'
 import Modify from './Modify.tsx'
 
 export const Component = () => {
@@ -329,7 +329,7 @@ export const Component = () => {
                     >
                       编辑
                     </Button>
-                    <PartialRefundButton
+                    <RefundButton
                       key="partial-refund"
                       orderId={item.id}
                       orderTotalAmount={itemTotalAmount}
