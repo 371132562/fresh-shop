@@ -119,7 +119,7 @@ type OrderStore = {
   canUpdateOrderStatus: (currentStatus: BackendOrderStatus) => boolean
   getNextOrderStatusLabel: (currentStatus: BackendOrderStatus) => string
   handleUpdateOrderStatus: (
-    order: Order,
+    order: { id: string; status: BackendOrderStatus | OrderStatus },
     updateOrderFn: (data: { id: string; status: OrderStatus }) => Promise<boolean>,
     onSuccess?: () => void,
     onError?: () => void
@@ -333,7 +333,11 @@ const useOrderStore = create<OrderStore>((set, get) => ({
   },
 
   canUpdateOrderStatus: (currentStatus: BackendOrderStatus): boolean => {
-    return get().getNextOrderStatus(currentStatus) !== null
+    const frontendStatus = convertBackendToFrontendStatus(currentStatus)
+    if (frontendStatus === OrderStatus.COMPLETED || frontendStatus === OrderStatus.REFUNDED) {
+      return false
+    }
+    return true
   },
 
   getNextOrderStatusLabel: (currentStatus: BackendOrderStatus): string => {
@@ -342,7 +346,7 @@ const useOrderStore = create<OrderStore>((set, get) => ({
   },
 
   handleUpdateOrderStatus: async (
-    order: Order,
+    order: { id: string; status: BackendOrderStatus | OrderStatus },
     updateOrderFn: (data: { id: string; status: OrderStatus }) => Promise<boolean>,
     onSuccess?: () => void,
     onError?: () => void

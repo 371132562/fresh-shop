@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
 import SearchToolbar from '@/components/SearchToolbar'
+import UpdateOrderStatusButton from '@/pages/Order/components/UpdateOrderStatusButton.tsx'
 import useCustomerStore from '@/stores/customerStore.ts'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import useOrderStore, {
@@ -32,12 +33,8 @@ export const Component = () => {
   const getAllGroupBuy = useGroupBuyStore(state => state.getAllGroupBuy)
   const getAllGroupBuyLoading = useGroupBuyStore(state => state.getAllGroupBuyLoading)
   const getOrder = useOrderStore(state => state.getOrder)
-  const updateOrder = useOrderStore(state => state.updateOrder)
   const deleteOrder = useOrderStore(state => state.deleteOrder)
   const deleteLoading = useOrderStore(state => state.deleteLoading)
-  const canUpdateOrderStatus = useOrderStore(state => state.canUpdateOrderStatus)
-  const getNextOrderStatusLabel = useOrderStore(state => state.getNextOrderStatusLabel)
-  const handleUpdateOrderStatus = useOrderStore(state => state.handleUpdateOrderStatus)
 
   useEffect(() => {
     getAllCustomer()
@@ -239,9 +236,6 @@ export const Component = () => {
           }}
           dataSource={ordersList}
           renderItem={item => {
-            const nextStatusLabel = getNextOrderStatusLabel(item.status)
-            const canUpdate = canUpdateOrderStatus(item.status)
-
             // 计算订单总金额
             const units =
               (item.groupBuy?.units as Array<{ id: string; unit: string; price: number }>) || []
@@ -322,38 +316,11 @@ export const Component = () => {
 
                   {/* 右侧操作区：更新状态、部分退款、编辑、删除 */}
                   <div className="flex shrink-0 flex-row flex-wrap items-center justify-start gap-2 md:justify-end md:gap-3">
-                    {canUpdate && (
-                      <Popconfirm
-                        key="update-status"
-                        title={
-                          <div className="text-lg">
-                            确定要将订单状态变更为{' '}
-                            <span className="text-blue-500">{nextStatusLabel}</span> 吗？
-                          </div>
-                        }
-                        placement="left"
-                        onConfirm={() =>
-                          handleUpdateOrderStatus(item, updateOrder, () => {
-                            pageChange()
-                          })
-                        }
-                        okText="确定"
-                        cancelText="取消"
-                        okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
-                        cancelButtonProps={{
-                          size: 'large',
-                          color: 'primary',
-                          variant: 'outlined'
-                        }}
-                      >
-                        <Button
-                          color="primary"
-                          variant="outlined"
-                        >
-                          更新状态
-                        </Button>
-                      </Popconfirm>
-                    )}
+                    <UpdateOrderStatusButton
+                      orderId={item.id}
+                      status={item.status}
+                      onSuccess={() => pageChange()}
+                    />
                     <Button
                       key="edit"
                       color="primary"
@@ -362,16 +329,14 @@ export const Component = () => {
                     >
                       编辑
                     </Button>
-                    {canUpdate && (
-                      <PartialRefundButton
-                        key="partial-refund"
-                        orderId={item.id}
-                        orderTotalAmount={itemTotalAmount}
-                        currentRefundAmount={item.partialRefundAmount || 0}
-                        orderStatus={item.status}
-                        onSuccess={() => pageChange()}
-                      />
-                    )}
+                    <PartialRefundButton
+                      key="partial-refund"
+                      orderId={item.id}
+                      orderTotalAmount={itemTotalAmount}
+                      currentRefundAmount={item.partialRefundAmount || 0}
+                      orderStatus={item.status}
+                      onSuccess={() => pageChange()}
+                    />
                     <Popconfirm
                       key="delete"
                       title="确定要删除这个订单吗？"

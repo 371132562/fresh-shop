@@ -1,5 +1,5 @@
 import { ArrowLeftOutlined } from '@ant-design/icons'
-import { Button, Flex, Image, List, Popconfirm, Skeleton, Spin, Tag } from 'antd'
+import { Button, Flex, Image, List, Skeleton, Spin, Tag } from 'antd'
 import {
   GroupBuy,
   GroupBuyUnit,
@@ -14,6 +14,7 @@ import DeleteGroupBuyButton from '@/pages/GroupBuy/components/DeleteGroupBuyButt
 import MultiAdd from '@/pages/GroupBuy/components/MultiAdd'
 import Modify from '@/pages/GroupBuy/Modify.tsx'
 import { PartialRefundButton } from '@/pages/Order/components/PartialRefundModal.tsx'
+import UpdateOrderStatusButton from '@/pages/Order/components/UpdateOrderStatusButton.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import useOrderStore, { OrderStatusMap } from '@/stores/orderStore.ts'
@@ -36,8 +37,6 @@ export const Component = () => {
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
   const updateOrder = useOrderStore(state => state.updateOrder)
   const getNextOrderStatus = useOrderStore(state => state.getNextOrderStatus)
-  const canUpdateOrderStatus = useOrderStore(state => state.canUpdateOrderStatus)
-  const getNextOrderStatusLabel = useOrderStore(state => state.getNextOrderStatusLabel)
   const handleUpdateOrderStatus = useOrderStore(state => state.handleUpdateOrderStatus)
 
   // 详情模态框相关状态
@@ -343,63 +342,46 @@ export const Component = () => {
                 const unit = (groupBuy?.units as GroupBuyUnit[])?.find(
                   item => item.id === order.unitId
                 )
-                const nextStatusLabel = getNextOrderStatusLabel(order.status)
-                const canUpdate = canUpdateOrderStatus(order.status)
 
                 // 计算订单总金额
                 const orderTotalAmount = unit ? unit.price * order.quantity : 0
 
                 const actions = []
 
-                if (canUpdate) {
-                  actions.push(
-                    <Popconfirm
-                      key="update-status"
-                      title={
-                        <div className="text-lg">
-                          确定要将订单状态变更为{' '}
-                          <span className="text-blue-500">{nextStatusLabel}</span> 吗？
-                        </div>
+                actions.push(
+                  <UpdateOrderStatusButton
+                    key="update-status"
+                    orderId={order.id}
+                    status={order.status}
+                    onSuccess={() => handleUpdateOrderStatusLocal(order)}
+                  />
+                )
+                actions.push(
+                  <PartialRefundButton
+                    key="partial-refund"
+                    orderId={order.id}
+                    orderTotalAmount={orderTotalAmount}
+                    currentRefundAmount={order.partialRefundAmount || 0}
+                    orderStatus={order.status}
+                    onSuccess={(refundAmount: number) => {
+                      // 局部更新：更新该订单的部分退款金额；若累计退款达到总额，则置为已退款
+                      if (groupBuy && groupBuy.order) {
+                        const updatedOrders = groupBuy.order.map(o => {
+                          if (o.id !== order.id) return o
+                          const prevRefund = o.partialRefundAmount || 0
+                          const newRefund = prevRefund + refundAmount
+                          const isFullyRefunded = newRefund >= orderTotalAmount
+                          return {
+                            ...o,
+                            partialRefundAmount: newRefund,
+                            status: isFullyRefunded ? 'REFUNDED' : o.status
+                          }
+                        })
+                        setGroupBuy({ ...groupBuy, order: updatedOrders })
                       }
-                      placement="left"
-                      onConfirm={() => handleUpdateOrderStatusLocal(order)}
-                      okText="确定"
-                      cancelText="取消"
-                      okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
-                      cancelButtonProps={{
-                        size: 'large',
-                        color: 'primary',
-                        variant: 'outlined'
-                      }}
-                    >
-                      <Button type="primary">更新状态</Button>
-                    </Popconfirm>
-                  )
-                  // 添加部分退款按钮
-                  actions.push(
-                    <PartialRefundButton
-                      key="partial-refund"
-                      orderId={order.id}
-                      orderTotalAmount={orderTotalAmount}
-                      currentRefundAmount={order.partialRefundAmount || 0}
-                      orderStatus={order.status}
-                      onSuccess={(refundAmount: number) => {
-                        // 局部更新：仅更新该订单的部分退款金额，避免滚动位置丢失
-                        if (groupBuy && groupBuy.order) {
-                          const updatedOrders = groupBuy.order.map(o =>
-                            o.id === order.id
-                              ? {
-                                  ...o,
-                                  partialRefundAmount: (o.partialRefundAmount || 0) + refundAmount
-                                }
-                              : o
-                          )
-                          setGroupBuy({ ...groupBuy, order: updatedOrders })
-                        }
-                      }}
-                    />
-                  )
-                }
+                    }}
+                  />
+                )
 
                 return (
                   <List.Item actions={actions}>

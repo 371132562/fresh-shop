@@ -1,14 +1,15 @@
 import { ArrowLeftOutlined } from '@ant-design/icons'
-import { PopconfirmProps, Tag } from 'antd'
-import { Button, Flex, message, Popconfirm, Skeleton } from 'antd'
+import type { PopconfirmProps } from 'antd'
+import { Button, Flex, message, Popconfirm, Skeleton, Tag } from 'antd'
 import { GroupBuyUnit } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, useNavigate, useParams } from 'react-router'
 
 import { PartialRefundButton } from '@/pages/Order/components/PartialRefundModal.tsx'
+import UpdateOrderStatusButton from '@/pages/Order/components/UpdateOrderStatusButton.tsx'
 import Modify from '@/pages/Order/Modify.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
-import useOrderStore, { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
+import useOrderStore, { OrderStatusMap } from '@/stores/orderStore.ts'
 import { formatDate } from '@/utils'
 
 export const Component = () => {
@@ -22,10 +23,6 @@ export const Component = () => {
   const deleteOrder = useOrderStore(state => state.deleteOrder)
   const deleteLoading = useOrderStore(state => state.deleteLoading)
   const setOrder = useOrderStore(state => state.setOrder)
-  const updateOrder = useOrderStore(state => state.updateOrder)
-  const canUpdateOrderStatus = useOrderStore(state => state.canUpdateOrderStatus)
-  const getNextOrderStatusLabel = useOrderStore(state => state.getNextOrderStatusLabel)
-  const handleUpdateOrderStatus = useOrderStore(state => state.handleUpdateOrderStatus)
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
 
   const unit = useMemo(() => {
@@ -100,37 +97,16 @@ export const Component = () => {
                 wrap
                 justify="end"
               >
-                {order && canUpdateOrderStatus(order.status) && (
-                  <Popconfirm
-                    title={
-                      <div className="text-lg">
-                        确定要将订单状态变更为{' '}
-                        <span className="text-blue-500">
-                          {getNextOrderStatusLabel(order.status)}
-                        </span>{' '}
-                        吗？
-                      </div>
-                    }
-                    placement="left"
-                    onConfirm={() =>
-                      handleUpdateOrderStatus(order, updateOrder, () => {
-                        // 更新成功后重新获取订单详情和统计数据
-                        if (id) {
-                          getOrder({ id })
-                        }
-                      })
-                    }
-                    okText="确定"
-                    cancelText="取消"
-                    okButtonProps={{ size: 'large', color: 'primary', variant: 'solid' }}
-                    cancelButtonProps={{
-                      size: 'large',
-                      color: 'primary',
-                      variant: 'outlined'
+                {order && (
+                  <UpdateOrderStatusButton
+                    orderId={order.id}
+                    status={order.status}
+                    onSuccess={() => {
+                      if (id) {
+                        getOrder({ id })
+                      }
                     }}
-                  >
-                    <Button type="primary">更新状态</Button>
-                  </Popconfirm>
+                  />
                 )}
                 <Button
                   color="primary"
@@ -139,7 +115,7 @@ export const Component = () => {
                 >
                   编辑
                 </Button>
-                {order && order?.status !== OrderStatus.REFUNDED && (
+                {order && (
                   <PartialRefundButton
                     orderId={order.id}
                     orderTotalAmount={unit ? unit.price * order.quantity : 0}
