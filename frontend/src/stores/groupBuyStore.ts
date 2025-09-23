@@ -46,7 +46,7 @@ type GroupBuyStore = {
 
   groupBuy: GroupBuyDetail | null
   getLoading: boolean
-  getGroupBuy: (data: GroupBuyId) => Promise<void>
+  getGroupBuy: (data: GroupBuyId, options?: { silent?: boolean }) => Promise<void>
   setGroupBuy: (data: GroupBuyDetail | null) => void
 
   getAllGroupBuyLoading: boolean
@@ -159,13 +159,14 @@ const useGroupBuyStore = create<GroupBuyStore>((set, get) => ({
 
   groupBuy: null,
   getLoading: false,
-  getGroupBuy: async data => {
+  getGroupBuy: async (data, options) => {
+    const silent = options?.silent === true
     try {
-      set({ getLoading: true })
+      if (!silent) set({ getLoading: true })
       const res = await http.post(groupBuyDetailApi, data)
       set({ groupBuy: res.data })
     } finally {
-      set({ getLoading: false })
+      if (!silent) set({ getLoading: false })
     }
   },
   setGroupBuy: data => {

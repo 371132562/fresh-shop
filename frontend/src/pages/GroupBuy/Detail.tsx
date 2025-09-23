@@ -3,8 +3,7 @@ import { Button, Flex, Image, List, Skeleton, Spin, Tag } from 'antd'
 import {
   GroupBuy,
   GroupBuyUnit,
-  MergedGroupBuyOverviewDetailParams,
-  Order
+  MergedGroupBuyOverviewDetailParams
 } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, useNavigate, useParams } from 'react-router'
@@ -17,7 +16,7 @@ import RefundButton from '@/pages/Order/components/RefundButton.tsx'
 import UpdateOrderStatusButton from '@/pages/Order/components/UpdateOrderStatusButton.tsx'
 import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
-import useOrderStore, { OrderStatusMap } from '@/stores/orderStore.ts'
+import { OrderStatusMap } from '@/stores/orderStore.ts'
 import { buildImageUrl, formatDate } from '@/utils'
 import { getProfitColor } from '@/utils/profitColor'
 
@@ -35,9 +34,6 @@ export const Component = () => {
   const getLoading = useGroupBuyStore(state => state.getLoading)
   const setGroupBuy = useGroupBuyStore(state => state.setGroupBuy)
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
-  const getNextOrderStatus = useOrderStore(state => state.getNextOrderStatus)
-
-  // 详情模态框相关状态
 
   const images: string[] = useMemo(() => {
     return Array.isArray(groupBuy?.images)
@@ -78,17 +74,9 @@ export const Component = () => {
     setDetailParams(undefined)
   }
 
-  // 仅进行本地状态推进，网络更新由按钮组件完成
-  const handleUpdateOrderStatusLocal = (order: Order) => {
-    if (groupBuy && groupBuy.order) {
-      const nextStatus = getNextOrderStatus(order.status)
-      if (nextStatus) {
-        const updatedOrders = groupBuy.order.map(o =>
-          o.id === order.id ? { ...o, status: nextStatus } : o
-        )
-        setGroupBuy({ ...groupBuy, order: updatedOrders })
-      }
-    }
+  // 操作完成后直接静默刷新（不切换 loading，避免页面跳动）
+  const refreshDetailSilently = async () => {
+    await getGroupBuy({ id: id as string }, { silent: true })
   }
 
   return (
@@ -348,7 +336,9 @@ export const Component = () => {
                     key="update-status"
                     orderId={order.id}
                     status={order.status}
-                    onSuccess={() => handleUpdateOrderStatusLocal(order)}
+                    onSuccess={async () => {
+                      await refreshDetailSilently()
+                    }}
                   />
                 )
                 actions.push(
@@ -358,22 +348,8 @@ export const Component = () => {
                     orderTotalAmount={orderTotalAmount}
                     currentRefundAmount={order.partialRefundAmount || 0}
                     orderStatus={order.status}
-                    onSuccess={(refundAmount: number) => {
-                      // 局部更新：更新该订单的部分退款金额；若累计退款达到总额，则置为已退款
-                      if (groupBuy && groupBuy.order) {
-                        const updatedOrders = groupBuy.order.map(o => {
-                          if (o.id !== order.id) return o
-                          const prevRefund = o.partialRefundAmount || 0
-                          const newRefund = prevRefund + refundAmount
-                          const isFullyRefunded = newRefund >= orderTotalAmount
-                          return {
-                            ...o,
-                            partialRefundAmount: newRefund,
-                            status: isFullyRefunded ? 'REFUNDED' : o.status
-                          }
-                        })
-                        setGroupBuy({ ...groupBuy, order: updatedOrders })
-                      }
+                    onSuccess={async () => {
+                      await refreshDetailSilently()
                     }}
                   />
                 )

@@ -28,8 +28,7 @@ const RefundModal = ({
   onSuccess,
   orderId,
   orderTotalAmount,
-  currentRefundAmount = 0,
-  orderStatus
+  currentRefundAmount = 0
 }: RefundModalProps) => {
   const [form] = Form.useForm()
 
@@ -37,9 +36,6 @@ const RefundModal = ({
   const partialRefundLoading = useOrderStore(state => state.partialRefundLoading)
   const refundOrder = useOrderStore(state => state.refundOrder)
   const refundLoading = useOrderStore(state => state.refundLoading)
-
-  // 只有已完成的订单允许全额退款（维持原有业务约束）
-  const canFullRefund = orderStatus === 'COMPLETED'
 
   const maxRefundAmount = orderTotalAmount - currentRefundAmount
 
@@ -154,33 +150,31 @@ const RefundModal = ({
             className="w-full"
             addonBefore="￥"
             addonAfter={
-              canFullRefund ? (
-                <Popconfirm
-                  title={<div className="text-base">确定对该订单进行全额退款吗？</div>}
-                  onConfirm={async () => {
-                    const ok = await refundOrder({ id: orderId })
-                    if (ok) {
-                      message.success('退款成功')
-                      form.resetFields()
-                      onClose()
-                      onSuccess?.(maxRefundAmount)
-                    } else {
-                      message.error('退款失败')
-                    }
-                  }}
-                  okText="确定"
-                  cancelText="取消"
-                  okButtonProps={{ size: 'middle', color: 'danger', variant: 'solid' }}
+              <Popconfirm
+                title={<div className="text-base">确定对该订单进行全额退款吗？</div>}
+                onConfirm={async () => {
+                  const ok = await refundOrder({ id: orderId })
+                  if (ok) {
+                    message.success('退款成功')
+                    form.resetFields()
+                    onClose()
+                    onSuccess?.(maxRefundAmount)
+                  } else {
+                    message.error('退款失败')
+                  }
+                }}
+                okText="确定"
+                cancelText="取消"
+                okButtonProps={{ size: 'middle', color: 'danger', variant: 'solid' }}
+              >
+                <Button
+                  color="danger"
+                  variant="link"
+                  loading={refundLoading}
                 >
-                  <Button
-                    color="danger"
-                    variant="link"
-                    loading={refundLoading}
-                  >
-                    全额退款
-                  </Button>
-                </Popconfirm>
-              ) : null
+                  全额退款
+                </Button>
+              </Popconfirm>
             }
           />
         </Form.Item>
