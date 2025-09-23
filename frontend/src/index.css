@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 html {
-    font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Heiti SC", "WenQuanYi Micro Hei", sans-serif;
+    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Heiti SC", "WenQuanYi Micro Hei", sans-serif;
     /* 防止滚动条影响布局宽度 */
     scrollbar-gutter: stable;
 }

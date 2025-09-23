@@ -290,7 +290,7 @@ export const Component = () => {
                       </div>
                     </Button>
                   </div>
-                  {/* 描述/统计：提供订单量与总额，保证不撑坏布局 */}……
+                  {/* 描述/统计：提供订单量与总额，保证不撑坏布局 */}
                   <div className="space-y-1">
                     {item.orderCount !== undefined && (
                       <div className="text-gray-800">

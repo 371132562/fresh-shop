@@ -4,7 +4,7 @@ import type {
   CustomerAddressConsumptionDetailDto,
   CustomerConsumptionDetailDto
 } from 'fresh-shop-backend/types/dto'
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 
 import useCustomerStore from '@/stores/customerStore'
 import dayjs from '@/utils/day'
@@ -20,7 +20,6 @@ type ConsumptionDetailStatsModalProps = {
   type?: 'customer' | 'address'
   startDate?: Date
   endDate?: Date
-  // 兼容旧用法：仍可直接传入数据与loading
   title?: string
   width?: number
 }
@@ -46,10 +45,11 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
   const storeAddressDetail = useCustomerStore(state => state.addressConsumptionDetail)
   const storeAddressLoading = useCustomerStore(state => state.addressConsumptionDetailLoading)
 
-  const internalDetail = type === 'address' ? storeAddressDetail : storeCustomerDetail
-  const internalLoading = type === 'address' ? storeAddressLoading : storeCustomerLoading
-  const consumptionDetail = internalDetail
-  const effectiveLoading = internalLoading
+  const { consumptionDetail, loading } = useMemo(() => {
+    const detail = type === 'address' ? storeAddressDetail : storeCustomerDetail
+    const ld = type === 'address' ? storeAddressLoading : storeCustomerLoading
+    return { consumptionDetail: detail, loading: ld }
+  }, [type, storeAddressDetail, storeCustomerDetail, storeAddressLoading, storeCustomerLoading])
 
   useEffect(() => {
     if (!visible) return
@@ -140,7 +140,7 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
       }}
       destroyOnHidden
     >
-      {effectiveLoading ? (
+      {loading ? (
         <div className="space-y-3 py-2">
           <Skeleton
             active
