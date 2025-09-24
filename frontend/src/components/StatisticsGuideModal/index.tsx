@@ -90,7 +90,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
               </div>
               <p className="mb-2 text-base text-gray-600">统计期间内的总利润</p>
               <p className="flex-1 text-sm text-gray-500">
-                销售额减去成本，退款订单会减少利润。正常订单：销售额-(成本价×数量)-部分退款金额；全额退款订单利润为负成本
+                销售额减去成本，退款订单会减少利润。正常订单：利润=(单价-成本价)×数量-部分退款金额；全额退款订单利润为负成本
               </p>
             </div>
             <div className="flex h-full flex-col rounded-lg bg-orange-50 p-4">
