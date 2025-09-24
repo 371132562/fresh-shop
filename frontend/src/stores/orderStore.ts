@@ -116,7 +116,6 @@ type OrderStore = {
   // 订单状态工具函数
   getNextOrderStatus: (currentStatus: BackendOrderStatus) => OrderStatus | null
   canUpdateOrderStatus: (currentStatus: BackendOrderStatus) => boolean
-  getNextOrderStatusLabel: (currentStatus: BackendOrderStatus) => string
 }
 
 const useOrderStore = create<OrderStore>((set, get) => ({
@@ -331,11 +330,6 @@ const useOrderStore = create<OrderStore>((set, get) => ({
       return false
     }
     return true
-  },
-
-  getNextOrderStatusLabel: (currentStatus: BackendOrderStatus): string => {
-    const nextStatus = get().getNextOrderStatus(currentStatus)
-    return nextStatus ? OrderStatusMap[nextStatus].label : '无'
   }
 }))
 

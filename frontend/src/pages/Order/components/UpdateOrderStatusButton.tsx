@@ -1,4 +1,4 @@
-import { Button, Popconfirm } from 'antd'
+import { Button, Popconfirm, Tag } from 'antd'
 import { message } from 'antd'
 import React from 'react'
 
@@ -14,16 +14,28 @@ const UpdateOrderStatusButton: React.FC<Props> = ({ orderId, status, onSuccess }
   const updateOrder = useOrderStore(state => state.updateOrder)
   const canUpdateOrderStatus = useOrderStore(state => state.canUpdateOrderStatus)
   const getNextOrderStatus = useOrderStore(state => state.getNextOrderStatus)
-  const getNextOrderStatusLabel = useOrderStore(state => state.getNextOrderStatusLabel)
 
   if (!orderId) return null
 
   return (
     <Popconfirm
       title={
-        <div className="text-lg">
+        <div className="!text-lg">
           确定要将订单状态变更为{' '}
-          <span className="text-blue-500">{getNextOrderStatusLabel(status)}</span> 吗？
+          {(() => {
+            const next = getNextOrderStatus(status)
+            return next ? (
+              <Tag
+                className="!text-base"
+                color={OrderStatusMap[next].color}
+              >
+                {OrderStatusMap[next].label}
+              </Tag>
+            ) : (
+              <span className="text-gray-500">不可变更</span>
+            )
+          })()}
+          吗？
         </div>
       }
       placement="left"
@@ -35,7 +47,14 @@ const UpdateOrderStatusButton: React.FC<Props> = ({ orderId, status, onSuccess }
         }
         const ok = await updateOrder({ id: orderId, status: next })
         if (ok) {
-          message.success(`订单状态已更新为：${OrderStatusMap[next].label}`)
+          message.success({
+            content: (
+              <div>
+                订单状态已更新为：
+                <Tag color={OrderStatusMap[next].color}>{OrderStatusMap[next].label}</Tag>
+              </div>
+            )
+          })
           onSuccess?.()
         } else {
           message.error('更新订单状态失败')
