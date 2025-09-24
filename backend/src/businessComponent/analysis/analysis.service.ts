@@ -13,6 +13,9 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { BusinessException } from '../../exceptions/businessException';
 import { ErrorCode } from '../../../types/response';
 import {
+  AddressOverviewParams,
+  AddressOverviewResult,
+  AddressOverviewListItem,
   AnalysisCountParams,
   AnalysisCountResult,
   GroupBuyUnit,
@@ -884,8 +887,6 @@ export class AnalysisService {
       if (!unit) continue;
       const originalRevenue = unit.price * o.quantity;
       const partial = o.partialRefundAmount || 0;
-      const revenue =
-        o.status === OrderStatus.REFUNDED ? 0 : originalRevenue - partial;
 
       if (!aggMap.has(o.customerId)) {
         aggMap.set(o.customerId, {
@@ -897,17 +898,17 @@ export class AnalysisService {
         });
       }
       const agg = aggMap.get(o.customerId)!;
-      agg.totalRevenue += revenue;
 
-      // 统计退款金额
-      if (o.status === OrderStatus.REFUNDED) {
-        agg.totalRefundAmount += originalRevenue; // 全额退款
-      } else {
+      // 已支付/已完成订单：销售额扣除部分退款，计入订单量
+      if (o.status === OrderStatus.PAID || o.status === OrderStatus.COMPLETED) {
+        const revenue = originalRevenue - partial;
+        agg.totalRevenue += revenue;
+        agg.totalOrderCount += 1;
         agg.totalRefundAmount += partial; // 部分退款
       }
-
-      if (o.status === OrderStatus.PAID || o.status === OrderStatus.COMPLETED) {
-        agg.totalOrderCount += 1;
+      // 已退款订单：销售额为0，不计入订单量，但计入退款金额
+      else if (o.status === OrderStatus.REFUNDED) {
+        agg.totalRefundAmount += originalRevenue; // 全额退款
       }
     }
 
@@ -915,6 +916,145 @@ export class AnalysisService {
       (x) => ({
         customerId: x.customerId,
         customerName: x.customerName,
+        totalRevenue: x.totalRevenue,
+        totalOrderCount: x.totalOrderCount,
+        averageOrderAmount: x.totalOrderCount
+          ? x.totalRevenue / x.totalOrderCount
+          : 0,
+        totalRefundAmount: x.totalRefundAmount,
+      }),
+    );
+
+    // 排序
+    list.sort((a, b) => {
+      const field = sortField;
+      const av = a[field];
+      const bv = b[field];
+      return sortOrder === 'asc' ? av - bv : bv - av;
+    });
+
+    const total = list.length;
+    const start = (page - 1) * pageSize;
+    const endIdx = start + pageSize;
+    list = list.slice(start, endIdx);
+
+    return { list, total, page, pageSize };
+  }
+
+  // 地址概况：按地址聚合订单金额与数量，并支持时间范围/搜索/排序/分页
+  async getAddressOverview(
+    params: AddressOverviewParams,
+  ): Promise<AddressOverviewResult> {
+    const {
+      startDate,
+      endDate,
+      page = 1,
+      pageSize = 10,
+      addressName = '',
+      sortField = 'totalRevenue',
+      sortOrder = 'desc',
+    } = params;
+
+    const whereOrder: Prisma.OrderWhereInput = {
+      delete: 0,
+      status: {
+        in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
+      },
+      ...(startDate && endDate
+        ? {
+            groupBuy: {
+              groupBuyStartDate: {
+                gte: new Date(startDate),
+                lte: new Date(endDate),
+              },
+            },
+          }
+        : {}),
+      customer: {
+        delete: 0,
+        ...(addressName
+          ? {
+              customerAddress: {
+                name: { contains: addressName },
+                delete: 0,
+              },
+            }
+          : {
+              customerAddress: { delete: 0 },
+            }),
+      },
+    };
+
+    // 拉取相关订单（仅必要字段），在内存中聚合金额（考虑退款口径）与计数
+    const orders = await this.prisma.order.findMany({
+      where: whereOrder,
+      orderBy: {
+        groupBuy: {
+          groupBuyStartDate: 'desc',
+        },
+      },
+      select: {
+        quantity: true,
+        unitId: true,
+        partialRefundAmount: true,
+        status: true,
+        customer: {
+          select: {
+            customerAddressId: true,
+            customerAddress: { select: { name: true } },
+          },
+        },
+        groupBuy: { select: { units: true } },
+      },
+    });
+
+    type Agg = {
+      addressId: string;
+      addressName: string;
+      totalRevenue: number;
+      totalOrderCount: number;
+      totalRefundAmount: number;
+    };
+    const aggMap = new Map<string, Agg>();
+
+    for (const o of orders) {
+      if (!o.customer?.customerAddressId) continue;
+
+      const units = (o.groupBuy.units as unknown as Array<GroupBuyUnit>) || [];
+      const unit = units.find((u) => u.id === o.unitId);
+      if (!unit) continue;
+      const originalRevenue = unit.price * o.quantity;
+      const partial = o.partialRefundAmount || 0;
+
+      const addressId = o.customer.customerAddressId;
+      if (!aggMap.has(addressId)) {
+        aggMap.set(addressId, {
+          addressId: addressId,
+          addressName: o.customer.customerAddress?.name || '未知地址',
+          totalRevenue: 0,
+          totalOrderCount: 0,
+          totalRefundAmount: 0,
+        });
+      }
+      const agg = aggMap.get(addressId)!;
+
+      // 已支付/已完成订单：销售额扣除部分退款，计入订单量
+      if (o.status === OrderStatus.PAID || o.status === OrderStatus.COMPLETED) {
+        const revenue = originalRevenue - partial;
+        agg.totalRevenue += revenue;
+        agg.totalOrderCount += 1;
+        agg.totalRefundAmount += partial; // 部分退款
+      }
+      // 已退款订单：销售额为0，不计入订单量，但计入退款金额
+      else if (o.status === OrderStatus.REFUNDED) {
+        agg.totalRefundAmount += originalRevenue; // 全额退款
+      }
+    }
+
+    let list: AddressOverviewListItem[] = Array.from(aggMap.values()).map(
+      (x) => ({
+        addressId: x.addressId,
+        addressName: x.addressName,
         totalRevenue: x.totalRevenue,
         totalOrderCount: x.totalOrderCount,
         averageOrderAmount: x.totalOrderCount

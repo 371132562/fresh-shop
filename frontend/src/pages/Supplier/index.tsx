@@ -1,4 +1,4 @@
-import { Button, Col, Divider, Form, Input, List, Popconfirm, Row } from 'antd'
+import { Button, Card, Col, Form, Input, List, Popconfirm, Row } from 'antd'
 import type { SupplierListItem } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 
@@ -93,91 +93,94 @@ export const Component = () => {
 
   return (
     <>
-      {/* 搜索表单区域：遵循 DESIGN_GUIDE 的断点与最小宽规范，采用垂直布局 */}
-      <Form
-        form={form}
-        layout="vertical"
-        name="searchForm"
-        autoComplete="off"
+      {/* 搜索表单区域 */}
+      <Card
+        className="mb-4 w-full"
+        size="small"
       >
-        {/* 栅格：xs=24 / md=12 / lg=8，小屏单列，中屏两列，宽屏三列 */}
-        <Row gutter={[16, 8]}>
-          <Col
-            xs={24}
-            md={12}
-            lg={8}
-          >
-            <Form.Item
-              label="供货商名称"
-              name="name"
-              className="!mb-1"
+        <Form
+          form={form}
+          layout="vertical"
+          name="searchForm"
+          autoComplete="off"
+        >
+          <Row gutter={[16, 8]}>
+            <Col
+              xs={24}
+              md={12}
+              lg={8}
             >
-              <Input
-                placeholder="请输入供货商名称"
-                allowClear
-                onPressEnter={handleSearch}
-                onClear={handleSearch}
-              />
-            </Form.Item>
-          </Col>
-          <Col
-            xs={24}
-            md={12}
-            lg={8}
-          >
-            <Form.Item
-              label="手机号"
-              name="phone"
-              className="!mb-1"
-              rules={[
-                {
-                  required: false,
-                  message: '请输入手机号！'
-                },
-                {
-                  validator: validatePhoneNumber
-                }
-              ]}
+              <Form.Item
+                label="供货商名称"
+                name="name"
+                className="!mb-1"
+              >
+                <Input
+                  placeholder="请输入供货商名称"
+                  allowClear
+                  onPressEnter={handleSearch}
+                  onClear={handleSearch}
+                />
+              </Form.Item>
+            </Col>
+            <Col
+              xs={24}
+              md={12}
+              lg={8}
             >
-              <Input
-                placeholder="请输入手机号"
-                maxLength={11}
-                allowClear
-                onPressEnter={handleSearch}
-                onClear={handleSearch}
-              />
-            </Form.Item>
-          </Col>
-          <Col
-            xs={24}
-            md={12}
-            lg={8}
-          >
-            <Form.Item
-              label="微信号"
-              name="wechat"
-              className="!mb-1"
+              <Form.Item
+                label="手机号"
+                name="phone"
+                className="!mb-1"
+                rules={[
+                  {
+                    required: false,
+                    message: '请输入手机号！'
+                  },
+                  {
+                    validator: validatePhoneNumber
+                  }
+                ]}
+              >
+                <Input
+                  placeholder="请输入手机号"
+                  maxLength={11}
+                  allowClear
+                  onPressEnter={handleSearch}
+                  onClear={handleSearch}
+                />
+              </Form.Item>
+            </Col>
+            <Col
+              xs={24}
+              md={12}
+              lg={8}
             >
-              <Input
-                placeholder="请输入微信号"
-                allowClear
-                onPressEnter={handleSearch}
-                onClear={handleSearch}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-        {/* 工具栏：左侧统计+新增，右侧排序+搜索/重置（封装在 SearchToolbar） */}
-        <SearchToolbar
-          onSearch={handleSearch}
-          onReset={resetSearch}
-          searchLoading={listLoading}
-          totalCount={listCount.totalCount}
-          countLabel="家供货商"
-          onAdd={() => setVisible(true)}
-        />
-      </Form>
-      <Divider className="!mb-0 !mt-4" />
+              <Form.Item
+                label="微信号"
+                name="wechat"
+                className="!mb-1"
+              >
+                <Input
+                  placeholder="请输入微信号"
+                  allowClear
+                  onPressEnter={handleSearch}
+                  onClear={handleSearch}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          {/* 工具栏区域 */}
+          <SearchToolbar
+            onSearch={handleSearch}
+            onReset={resetSearch}
+            searchLoading={listLoading}
+            totalCount={listCount.totalCount}
+            countLabel="家供货商"
+            onAdd={() => setVisible(true)}
+          />
+        </Form>
+      </Card>
 
       {/* 列表区域：自定义容器将标题/描述/操作按钮放入同一行内，统一响应式控制 */}
       <section className="box-border flex w-full items-center justify-between">

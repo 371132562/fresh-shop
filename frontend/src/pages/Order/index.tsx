@@ -2,10 +2,10 @@ import { Button, Card, Col, Form, List, Popconfirm, Row, Select, Tag } from 'ant
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
+import CustomerSelector from '@/components/CustomerSelector'
+import GroupBuySelector from '@/components/GroupBuySelector'
 import SearchToolbar from '@/components/SearchToolbar'
 import UpdateOrderStatusButton from '@/pages/Order/components/UpdateOrderStatusButton.tsx'
-import useCustomerStore from '@/stores/customerStore.ts'
-import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import useOrderStore, {
   ExtendedOrderStatusOptions,
   OrderStatusMap,
@@ -26,19 +26,11 @@ export const Component = () => {
   const listCount = useOrderStore(state => state.listCount)
   const pageParams = useOrderStore(state => state.pageParams)
   const setPageParams = useOrderStore(state => state.setPageParams)
-  const allCustomer = useCustomerStore(state => state.allCustomer)
-  const getAllCustomer = useCustomerStore(state => state.getAllCustomer)
-  const getAllCustomerLoading = useCustomerStore(state => state.getAllCustomerLoading)
-  const allGroupBuy = useGroupBuyStore(state => state.allGroupBuy)
-  const getAllGroupBuy = useGroupBuyStore(state => state.getAllGroupBuy)
-  const getAllGroupBuyLoading = useGroupBuyStore(state => state.getAllGroupBuyLoading)
   const getOrder = useOrderStore(state => state.getOrder)
   const deleteOrder = useOrderStore(state => state.deleteOrder)
   const deleteLoading = useOrderStore(state => state.deleteLoading)
 
   useEffect(() => {
-    getAllCustomer()
-    getAllGroupBuy()
     pageChange()
     form.setFieldsValue(pageParams)
   }, [])
@@ -115,30 +107,11 @@ export const Component = () => {
                 name="customerIds"
                 className="!mb-1"
               >
-                <Select
-                  loading={getAllCustomerLoading}
-                  showSearch
+                <CustomerSelector
                   mode="multiple"
-                  allowClear
-                  placeholder="请选择客户"
                   onChange={handleSearch}
                   onClear={handleSearch}
-                  filterOption={(input, option) =>
-                    String(option?.children || '')
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
-                  popupMatchSelectWidth={300}
-                >
-                  {allCustomer.map(item => (
-                    <Select.Option
-                      key={item.id}
-                      value={item.id}
-                    >
-                      {item.name}
-                    </Select.Option>
-                  ))}
-                </Select>
+                />
               </Form.Item>
             </Col>
             <Col
@@ -151,30 +124,12 @@ export const Component = () => {
                 name="groupBuyIds"
                 className="!mb-1"
               >
-                <Select
-                  loading={getAllGroupBuyLoading}
-                  showSearch
+                <GroupBuySelector
                   mode="multiple"
-                  allowClear
-                  placeholder="请选择团购单"
                   onChange={handleSearch}
                   onClear={handleSearch}
-                  filterOption={(input, option) =>
-                    String(option?.children || '')
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
                   popupMatchSelectWidth={300}
-                >
-                  {allGroupBuy.map(item => (
-                    <Select.Option
-                      key={item.id}
-                      value={item.id}
-                    >
-                      {item.name}
-                    </Select.Option>
-                  ))}
-                </Select>
+                />
               </Form.Item>
             </Col>
             <Col

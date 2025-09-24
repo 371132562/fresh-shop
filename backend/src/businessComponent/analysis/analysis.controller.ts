@@ -1,6 +1,7 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { AnalysisService } from './analysis.service';
 import {
+  AddressOverviewParams,
   AnalysisCountParams,
   MergedGroupBuyOverviewParams,
   MergedGroupBuyOverviewDetailParams,
@@ -100,6 +101,12 @@ export class AnalysisController {
   @Post('customerOverview')
   getCustomerOverview(@Body() params: CustomerOverviewParams) {
     return this.analysisService.getCustomerOverview(params);
+  }
+
+  // 地址概况
+  @Post('addressOverview')
+  getAddressOverview(@Body() params: AddressOverviewParams) {
+    return this.analysisService.getAddressOverview(params);
   }
 
   /**

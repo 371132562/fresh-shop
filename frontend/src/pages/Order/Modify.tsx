@@ -2,20 +2,19 @@ import { Form, Input, InputNumber, message, Modal, Select } from 'antd'
 import { GroupBuyUnit } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 
-import useCustomerStore from '@/stores/customerStore.ts'
+import CustomerSelector from '@/components/CustomerSelector'
+import GroupBuySelector from '@/components/GroupBuySelector'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import useOrderStore from '@/stores/orderStore.ts'
-import { formatDate } from '@/utils'
 
 interface params {
   visible: boolean
   setVisible: (value: boolean) => void
   id?: string //编辑时会提供此id
-  groupBuyId?: string
 }
 
 const Modify = (props: params) => {
-  const { visible, setVisible, id, groupBuyId } = props
+  const { visible, setVisible, id } = props
   const [form] = Form.useForm()
 
   const [units, setUnits] = useState<GroupBuyUnit[]>([])
@@ -24,16 +23,9 @@ const Modify = (props: params) => {
   const createOrder = useOrderStore(state => state.createOrder)
   const updateOrder = useOrderStore(state => state.updateOrder)
   const order = useOrderStore(state => state.order)
-  const allCustomer = useCustomerStore(state => state.allCustomer)
-  const getAllCustomer = useCustomerStore(state => state.getAllCustomer)
-  const getAllCustomerLoading = useCustomerStore(state => state.getAllCustomerLoading)
   const allGroupBuy = useGroupBuyStore(state => state.allGroupBuy)
-  const getAllGroupBuy = useGroupBuyStore(state => state.getAllGroupBuy)
-  const getAllGroupBuyLoading = useGroupBuyStore(state => state.getAllGroupBuyLoading)
 
   useEffect(() => {
-    getAllGroupBuy()
-    getAllCustomer()
     if (id && order) {
       form.setFieldsValue(order)
     }
@@ -43,11 +35,8 @@ const Modify = (props: params) => {
     if (id && order) {
       groupBuyChange(order.groupBuyId)
       form.setFieldsValue({ unitId: order.unitId })
-    } else if (groupBuyId) {
-      form.setFieldsValue({ groupBuyId })
-      groupBuyChange(groupBuyId)
     }
-  }, [allGroupBuy, groupBuyId])
+  }, [allGroupBuy])
 
   const handleOk = () => {
     form
@@ -71,33 +60,16 @@ const Modify = (props: params) => {
     setUnits([])
   }
 
-  // 客户选择器的过滤函数
-  const filterOption = (
-    input: string,
-    option: { label: string; phone?: string | null } | undefined
-  ): boolean => {
-    if (!option) return false
-    return (
-      (option.label?.toLowerCase().includes(input.toLowerCase()) ?? false) ||
-      (option.phone ? option.phone.toLowerCase().includes(input.toLowerCase()) : false)
-    )
-  }
-
-  const groupBuyFilterOption = (input: string, option: { label: string } | undefined) => {
-    if (!option) return false
-    return String(option.label ?? '')
-      .toLowerCase()
-      .includes(input.toLowerCase())
-  }
-
-  const groupBuyChange = (val: string) => {
-    const groupBuy = allGroupBuy.find(item => item.id === val)
-    const newUnits = (groupBuy?.units as GroupBuyUnit[]) || []
-    setUnits(newUnits)
-    if (newUnits.length === 1) {
-      form.setFieldsValue({ unitId: newUnits[0].id })
-    } else {
-      form.setFieldsValue({ unitId: undefined })
+  const groupBuyChange = (val: string | string[] | undefined) => {
+    if (typeof val === 'string') {
+      const groupBuy = allGroupBuy.find(item => item.id === val)
+      const newUnits = (groupBuy?.units as GroupBuyUnit[]) || []
+      setUnits(newUnits)
+      if (newUnits.length === 1) {
+        form.setFieldsValue({ unitId: newUnits[0].id })
+      } else {
+        form.setFieldsValue({ unitId: undefined })
+      }
     }
   }
 
@@ -125,56 +97,14 @@ const Modify = (props: params) => {
             name="customerId"
             rules={[{ required: true, message: '请选择客户' }]}
           >
-            <Select
-              placeholder="选择客户"
-              loading={getAllCustomerLoading}
-              showSearch
-              allowClear
-              filterOption={filterOption}
-              options={allCustomer.map(customer => ({
-                value: customer.id,
-                label: customer.name,
-                phone: customer.phone || undefined
-              }))}
-              optionRender={option => (
-                <div>
-                  <div className="font-medium">{option.label}</div>
-                  <div className="text-xs text-gray-500">{option.data.phone}</div>
-                </div>
-              )}
-            />
+            <CustomerSelector />
           </Form.Item>
           <Form.Item
             label="团购单"
             name="groupBuyId"
             rules={[{ required: true, message: '请选择团购单' }]}
           >
-            <Select
-              loading={getAllGroupBuyLoading}
-              showSearch
-              allowClear
-              placeholder="请选择团购单"
-              filterOption={groupBuyFilterOption}
-              onChange={groupBuyChange}
-              disabled={!!groupBuyId}
-            >
-              {allGroupBuy.map(item => {
-                return (
-                  <Select.Option
-                    key={item.id}
-                    value={item.id}
-                    label={item.name}
-                  >
-                    <div>
-                      {item.name}
-                      <span className="text-gray-500">
-                        （发起日期：{formatDate(item.groupBuyStartDate)}）
-                      </span>
-                    </div>
-                  </Select.Option>
-                )
-              })}
-            </Select>
+            <GroupBuySelector onChange={groupBuyChange} />
           </Form.Item>
           <Form.Item
             label="选择规格"
@@ -182,7 +112,6 @@ const Modify = (props: params) => {
             rules={[{ required: true, message: '请选择规格' }]}
           >
             <Select
-              loading={getAllGroupBuyLoading}
               allowClear
               placeholder="请选择团购单后选择一个规格"
             >

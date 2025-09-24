@@ -449,7 +449,7 @@ export class GroupBuyService {
         units: true,
       },
       orderBy: {
-        createdAt: 'asc',
+        groupBuyStartDate: 'desc',
       },
     });
   }

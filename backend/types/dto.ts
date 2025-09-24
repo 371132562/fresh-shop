@@ -916,6 +916,43 @@ export type CustomerOverviewResult = {
 };
 
 // ===================================================================
+// 地址概况分析模块 (Address Overview)
+// 支持按时间范围的地址维度统计、搜索、排序与分页
+// ===================================================================
+
+export type AddressOverviewSortField =
+  | 'totalRevenue'
+  | 'totalOrderCount'
+  | 'averageOrderAmount'
+  | 'totalRefundAmount';
+
+export type AddressOverviewParams = {
+  startDate?: Date;
+  endDate?: Date;
+  page?: number;
+  pageSize?: number;
+  addressName?: string;
+  sortField?: AddressOverviewSortField;
+  sortOrder?: SortOrder;
+};
+
+export type AddressOverviewListItem = {
+  addressId: string;
+  addressName: string;
+  totalRevenue: number;
+  totalOrderCount: number;
+  averageOrderAmount: number;
+  totalRefundAmount: number; // 总退款金额（部分退款+全额退款）
+};
+
+export type AddressOverviewResult = {
+  list: AddressOverviewListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+// ===================================================================
 // 供货商概况分析模块
 // 包含供货商维度统计、概况分析相关的数据传输对象
 //

@@ -5,6 +5,7 @@ import { CalendarPicker } from 'antd-mobile'
 import useAnalysisStore from '@/stores/analysisStore.ts'
 import dayjs from '@/utils/day'
 
+import { AddressOverview } from './components/AddressOverview'
 import { CustomerOverview } from './components/CustomerOverview'
 import { MergedGroupBuyOverview } from './components/MergedGroupBuyOverview'
 import { Overview } from './components/Overview'
@@ -89,6 +90,16 @@ export const Component = () => {
     ),
     'customer-rankings': (
       <CustomerOverview
+        {...(isAllData
+          ? {}
+          : {
+              startDate: calendarValue[0],
+              endDate: calendarValue[1]
+            })}
+      />
+    ),
+    'address-rankings': (
+      <AddressOverview
         {...(isAllData
           ? {}
           : {
@@ -220,6 +231,10 @@ export const Component = () => {
           {
             value: 'customer-rankings',
             label: '客户统计'
+          },
+          {
+            value: 'address-rankings',
+            label: '地址（小区）统计'
           }
         ]}
       />

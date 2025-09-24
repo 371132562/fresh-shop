@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 
 import {
+  analysisAddressOverviewApi,
   analysisCountApi,
   analysisCustomerOverviewApi,
   analysisMergedGroupBuyFrequencyCustomersApi,
@@ -15,6 +16,8 @@ import {
 import http from '@/services/base'
 
 import type {
+  AddressOverviewParams,
+  AddressOverviewResult,
   AnalysisCountParams,
   AnalysisCountResult,
   CustomerBasicInfo,
@@ -138,6 +141,15 @@ type AnalysisStore = {
   customerOverviewLoading: boolean
   getCustomerOverview: (data: CustomerOverviewParams) => Promise<void>
   setCustomerOverviewPage: (page: number) => void
+
+  // 地址概况数据
+  addressOverviewList: AddressOverviewResult['list']
+  addressOverviewTotal: number
+  addressOverviewPage: number
+  addressOverviewPageSize: number
+  addressOverviewLoading: boolean
+  getAddressOverview: (data: AddressOverviewParams) => Promise<void>
+  setAddressOverviewPage: (page: number) => void
 }
 
 const useAnalysisStore = create<AnalysisStore>((set, get) => ({
@@ -498,7 +510,29 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
       set({ customerOverviewLoading: false })
     }
   },
-  setCustomerOverviewPage: page => set({ customerOverviewPage: page })
+  setCustomerOverviewPage: page => set({ customerOverviewPage: page }),
+
+  // 地址概况数据
+  addressOverviewList: [],
+  addressOverviewTotal: 0,
+  addressOverviewPage: 1,
+  addressOverviewPageSize: 10,
+  addressOverviewLoading: false,
+  getAddressOverview: async data => {
+    try {
+      set({ addressOverviewLoading: true })
+      const res = await http.post<AddressOverviewResult>(analysisAddressOverviewApi, data)
+      set({
+        addressOverviewList: res.data.list,
+        addressOverviewTotal: res.data.total,
+        addressOverviewPage: res.data.page,
+        addressOverviewPageSize: res.data.pageSize
+      })
+    } finally {
+      set({ addressOverviewLoading: false })
+    }
+  },
+  setAddressOverviewPage: page => set({ addressOverviewPage: page })
 }))
 
 export default useAnalysisStore

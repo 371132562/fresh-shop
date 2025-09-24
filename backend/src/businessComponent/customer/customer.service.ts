@@ -216,7 +216,11 @@ export class CustomerService {
       })) as SelectedOrder[];
     }
 
-    const orderCount = orders.length;
+    // 订单量仅统计已支付和已完成的订单，不包括已退款订单
+    const orderCount = orders.filter(
+      (o) =>
+        o.status === OrderStatus.PAID || o.status === OrderStatus.COMPLETED,
+    ).length;
     if (orderCount === 0) {
       const baseResult = {
         orderCount: 0,
@@ -675,27 +679,31 @@ export class CustomerService {
           };
         }
 
-        byCustomer[customerId].orderCount += 1;
-
         const units = this.parseUnits(order.groupBuy.units);
         const unit = units.find((u) => u.id === order.unitId);
         if (!unit) continue;
         const originalAmount = unit.price * order.quantity;
         const partial = order.partialRefundAmount || 0;
 
-        const orderAmount =
-          order.status === OrderStatus.REFUNDED ? 0 : originalAmount - partial;
-        byCustomer[customerId].totalAmount += orderAmount;
-
-        if (order.status === OrderStatus.REFUNDED) {
-          byCustomer[customerId].totalRefundAmount += originalAmount;
-          byCustomer[customerId].refundedOrderCount += 1;
-        } else {
-          byCustomer[customerId].totalRefundAmount += partial;
+        // 已支付/已完成订单：计入订单量和销售额
+        if (
+          order.status === OrderStatus.PAID ||
+          order.status === OrderStatus.COMPLETED
+        ) {
+          byCustomer[customerId].orderCount += 1;
+          const orderAmount = originalAmount - partial;
+          byCustomer[customerId].totalAmount += orderAmount;
+          byCustomer[customerId].totalRefundAmount += partial; // 部分退款
           if (partial > 0) {
             byCustomer[customerId].partialRefundOrderCount += 1;
           }
         }
+        // 已退款订单：不计入订单量，销售额为0，但计入退款金额
+        else if (order.status === OrderStatus.REFUNDED) {
+          byCustomer[customerId].totalRefundAmount += originalAmount;
+          byCustomer[customerId].refundedOrderCount += 1;
+        }
+
         byCustomer[customerId].totalPartialRefundAmount += partial;
       }
 
@@ -1041,7 +1049,7 @@ export class CustomerService {
         delete: 0,
       },
       orderBy: {
-        createdAt: 'asc',
+        createdAt: 'desc',
       },
     });
   }

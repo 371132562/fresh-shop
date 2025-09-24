@@ -1,9 +1,9 @@
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
-import { Button, Card, Form, Input, InputNumber, message, Modal, Select, Typography } from 'antd'
+import { Button, Card, Form, Input, InputNumber, message, Modal, Typography } from 'antd'
 import { BatchOrderItem, GroupBuyDetail, GroupBuyUnit } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 
-import useCustomerStore from '@/stores/customerStore.ts'
+import CustomerSelector from '@/components/CustomerSelector'
 import useOrderStore from '@/stores/orderStore.ts'
 import { formatDate } from '@/utils/day.ts'
 
@@ -11,7 +11,7 @@ const { Title } = Typography
 
 // 单个订单的表单数据类型
 type OrderFormData = {
-  customerId: string
+  customerId: string | undefined
   quantity: number
   description?: string
 }
@@ -39,18 +39,8 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
   const [createLoading, setCreateLoading] = useState(false)
   const [, setFormVersion] = useState(0) // 用于强制重新渲染
 
-  // 获取客户列表和创建订单的方法
-  const allCustomer = useCustomerStore(state => state.allCustomer)
-  const getAllCustomer = useCustomerStore(state => state.getAllCustomer)
-  const getAllCustomerLoading = useCustomerStore(state => state.getAllCustomerLoading)
+  // 获取创建订单的方法
   const batchCreateOrders = useOrderStore(state => state.batchCreateOrders)
-
-  // 初始化客户列表
-  useEffect(() => {
-    if (visible) {
-      getAllCustomer()
-    }
-  }, [visible])
 
   // 初始化表单数据
   useEffect(() => {
@@ -151,18 +141,6 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
     }
 
     return previousOrdersCount + orderIndex + 1
-  }
-
-  // 客户选择器的过滤函数
-  const filterOption = (
-    input: string,
-    option: { label: string; phone?: string | null } | undefined
-  ): boolean => {
-    if (!option) return false
-    return (
-      (option.label?.toLowerCase().includes(input.toLowerCase()) ?? false) ||
-      (option.phone ? option.phone.toLowerCase().includes(input.toLowerCase()) : false)
-    )
   }
 
   return (
@@ -298,25 +276,7 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
                                         className="!mb-0 md:!mb-0"
                                         rules={[{ required: true, message: '请选择客户' }]}
                                       >
-                                        <Select
-                                          placeholder="选择客户"
-                                          loading={getAllCustomerLoading}
-                                          showSearch
-                                          filterOption={filterOption}
-                                          options={allCustomer.map(customer => ({
-                                            value: customer.id,
-                                            label: customer.name,
-                                            phone: customer.phone || undefined
-                                          }))}
-                                          optionRender={option => (
-                                            <div>
-                                              <div className="font-medium">{option.label}</div>
-                                              <div className="text-xs text-gray-500">
-                                                {option.data.phone}
-                                              </div>
-                                            </div>
-                                          )}
-                                        />
+                                        <CustomerSelector />
                                       </Form.Item>
                                     </div>
 
@@ -371,7 +331,7 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
                               <Button
                                 type="dashed"
                                 onClick={() => {
-                                  addOrder({ customerId: '', quantity: 1, description: '' })
+                                  addOrder({ customerId: undefined, quantity: 1, description: '' })
                                   setFormVersion(prev => prev + 1)
                                 }}
                                 block

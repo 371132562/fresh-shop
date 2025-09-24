@@ -54,15 +54,14 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
   useEffect(() => {
     if (!visible) return
     if (!id) return
+
+    // 统一参数格式：支持带时间范围
+    const params = startDate && endDate ? { id, startDate, endDate } : { id }
+
     if (type === 'address') {
-      getAddressConsumptionDetail(id)
+      getAddressConsumptionDetail(params)
     } else {
-      // 支持带时间范围
-      if (startDate && endDate) {
-        getConsumptionDetail({ id, startDate, endDate })
-      } else {
-        getConsumptionDetail({ id })
-      }
+      getConsumptionDetail(params)
     }
   }, [visible, id, type, startDate, endDate])
 

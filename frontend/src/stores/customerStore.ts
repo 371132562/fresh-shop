@@ -54,15 +54,17 @@ type CustomerStore = {
 
   consumptionDetail: CustomerConsumptionDetailDto | null
   consumptionDetailLoading: boolean
-  getConsumptionDetail: (
-    data: string | { id: string; startDate?: Date; endDate?: Date }
-  ) => Promise<void>
+  getConsumptionDetail: (data: { id: string; startDate?: Date; endDate?: Date }) => Promise<void>
   resetConsumptionDetail: () => void
 
   // 地址消费详情相关
   addressConsumptionDetail: CustomerAddressConsumptionDetailDto | null
   addressConsumptionDetailLoading: boolean
-  getAddressConsumptionDetail: (id: string) => Promise<void>
+  getAddressConsumptionDetail: (data: {
+    id: string
+    startDate?: Date
+    endDate?: Date
+  }) => Promise<void>
   setAddressConsumptionDetail: (data: CustomerAddressConsumptionDetailDto | null) => void
 }
 
@@ -191,14 +193,10 @@ const useCustomerStore = create<CustomerStore>((set, get) => ({
 
   consumptionDetail: null as CustomerConsumptionDetailDto | null,
   consumptionDetailLoading: false,
-  getConsumptionDetail: async (data: string | { id: string; startDate?: Date; endDate?: Date }) => {
+  getConsumptionDetail: async (data: { id: string; startDate?: Date; endDate?: Date }) => {
     set({ consumptionDetailLoading: true })
     try {
-      const payload = typeof data === 'string' ? { id: data } : data
-      const res = await http.post<CustomerConsumptionDetailDto>(
-        customerConsumptionDetailApi,
-        payload
-      )
+      const res = await http.post<CustomerConsumptionDetailDto>(customerConsumptionDetailApi, data)
       set({ consumptionDetail: res.data, consumptionDetailLoading: false })
     } catch (error) {
       console.error(error)
@@ -215,14 +213,12 @@ const useCustomerStore = create<CustomerStore>((set, get) => ({
   // 地址消费详情相关
   addressConsumptionDetail: null as CustomerAddressConsumptionDetailDto | null,
   addressConsumptionDetailLoading: false,
-  getAddressConsumptionDetail: async (id: string) => {
+  getAddressConsumptionDetail: async (data: { id: string; startDate?: Date; endDate?: Date }) => {
     set({ addressConsumptionDetailLoading: true })
     try {
       const res = await http.post<CustomerAddressConsumptionDetailDto>(
         customerAddressConsumptionDetailApi,
-        {
-          id
-        }
+        data
       )
       set({ addressConsumptionDetail: res.data, addressConsumptionDetailLoading: false })
     } catch (error) {
