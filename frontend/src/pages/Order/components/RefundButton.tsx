@@ -51,7 +51,34 @@ const RefundModal = ({
       const success = await partialRefundOrder(params)
 
       if (success) {
-        message.success('部分退款操作成功')
+        const isFullAfterThis = values.refundAmount >= maxRefundAmount
+        if (isFullAfterThis) {
+          message.success({
+            content: (
+              <div>
+                已达到全额退款金额，本单已全额退款，金额：
+                <span className="font-semibold text-orange-600">
+                  ￥{orderTotalAmount.toFixed(2)}
+                </span>
+              </div>
+            )
+          })
+        } else {
+          message.success({
+            content: (
+              <div>
+                已部分退款，金额：
+                <span className="font-semibold text-orange-600">
+                  ￥{values.refundAmount.toFixed(2)}
+                </span>
+                ，剩余可退：
+                <span className="font-semibold text-blue-600">
+                  ￥{(maxRefundAmount - values.refundAmount).toFixed(2)}
+                </span>
+              </div>
+            )
+          })
+        }
         form.resetFields()
         onClose()
         onSuccess?.(values.refundAmount)
@@ -155,7 +182,16 @@ const RefundModal = ({
                 onConfirm={async () => {
                   const ok = await refundOrder({ id: orderId })
                   if (ok) {
-                    message.success('退款成功')
+                    message.success({
+                      content: (
+                        <div>
+                          已全额退款，金额：
+                          <span className="font-semibold text-orange-600">
+                            ￥{orderTotalAmount.toFixed(2)}
+                          </span>
+                        </div>
+                      )
+                    })
                     form.resetFields()
                     onClose()
                     onSuccess?.(maxRefundAmount)
