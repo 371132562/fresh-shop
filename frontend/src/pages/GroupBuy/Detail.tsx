@@ -1,5 +1,5 @@
 import { ArrowLeftOutlined } from '@ant-design/icons'
-import { Button, Flex, Image, List, Skeleton, Spin, Tag } from 'antd'
+import { Button, Flex, Image, List, Spin, Tag } from 'antd'
 import {
   GroupBuy,
   GroupBuyUnit,
@@ -74,30 +74,12 @@ export const Component = () => {
     setDetailParams(undefined)
   }
 
-  // 操作完成后直接静默刷新（不切换 loading，避免页面跳动）
-  const refreshDetailSilently = async () => {
-    await getGroupBuy({ id: id as string }, { silent: true })
-  }
-
   return (
     <div className="w-full">
-      {getLoading ? (
-        <div className="space-y-4">
-          <Skeleton
-            active
-            title={{ width: 200 }}
-            paragraph={{ rows: 2 }}
-          />
-          <Skeleton
-            active
-            paragraph={{ rows: 6 }}
-          />
-          <Skeleton
-            active
-            paragraph={{ rows: 10 }}
-          />
-        </div>
-      ) : (
+      <Spin
+        spinning={getLoading}
+        delay={300}
+      >
         <>
           {/* 主要信息卡片 */}
           <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
@@ -336,8 +318,8 @@ export const Component = () => {
                     key="update-status"
                     orderId={order.id}
                     status={order.status}
-                    onSuccess={async () => {
-                      await refreshDetailSilently()
+                    onSuccess={() => {
+                      getGroupBuy({ id: id as string })
                     }}
                   />
                 )
@@ -348,8 +330,8 @@ export const Component = () => {
                     orderTotalAmount={orderTotalAmount}
                     currentRefundAmount={order.partialRefundAmount || 0}
                     orderStatus={order.status}
-                    onSuccess={async () => {
-                      await refreshDetailSilently()
+                    onSuccess={() => {
+                      getGroupBuy({ id: id as string })
                     }}
                   />
                 )
@@ -430,7 +412,7 @@ export const Component = () => {
             </div>
           )}
         </>
-      )}
+      </Spin>
       {visible && (
         <Modify
           id={id}
@@ -453,7 +435,7 @@ export const Component = () => {
           onSuccess={() => {
             // 批量添加成功后刷新团购详情
             if (id) {
-              getGroupBuy({ id })
+              getGroupBuy({ id: id as string })
             }
           }}
         />

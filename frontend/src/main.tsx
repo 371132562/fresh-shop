@@ -1,5 +1,4 @@
 import './index.css'
-import 'normalize.css'
 import 'dayjs/locale/zh-cn'
 
 import { ConfigProvider } from 'antd'
