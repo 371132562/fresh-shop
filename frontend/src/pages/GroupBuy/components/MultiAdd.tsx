@@ -292,7 +292,7 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
                                         ]}
                                       >
                                         <InputNumber
-                                          placeholder="数量"
+                                          placeholder="请输入购买数量"
                                           min={1}
                                           className="w-full"
                                         />
@@ -306,7 +306,7 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
                                         label="备注"
                                         className="!mb-0 md:!mb-0"
                                       >
-                                        <Input placeholder="选填" />
+                                        <Input placeholder="请输入订单备注" />
                                       </Form.Item>
                                     </div>
 

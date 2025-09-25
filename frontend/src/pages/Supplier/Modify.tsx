@@ -97,7 +97,7 @@ const Modify = (props: params) => {
             name="name"
             rules={[{ required: true, message: '请输入供货商名称' }]}
           >
-            <Input placeholder="必填" />
+            <Input placeholder="请输入供货商名称" />
           </Form.Item>
           <Form.Item
             label="手机号"
@@ -113,7 +113,7 @@ const Modify = (props: params) => {
             ]}
           >
             <Input
-              placeholder="选填"
+              placeholder="请输入联系电话"
               maxLength={11}
             />
           </Form.Item>
@@ -121,19 +121,19 @@ const Modify = (props: params) => {
             label="微信号"
             name="wechat"
           >
-            <Input placeholder="选填" />
+            <Input placeholder="请输入微信账号" />
           </Form.Item>
           <Form.Item
             label="备注"
             name="description"
           >
-            <Input placeholder="选填" />
+            <Input placeholder="请输入供货商描述" />
           </Form.Item>
           <Form.Item
             label="评价"
             name="rating"
           >
-            <Input placeholder="选填，如过往印象等" />
+            <Input placeholder="请输入供货商评价" />
           </Form.Item>
           <ImagesUpload
             id={id || ''}

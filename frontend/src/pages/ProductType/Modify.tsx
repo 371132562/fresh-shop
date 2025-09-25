@@ -76,13 +76,13 @@ const Modify = (props: params) => {
             name="name"
             rules={[{ required: true, message: '请输入商品类型名称' }]}
           >
-            <Input placeholder="必填" />
+            <Input placeholder="请输入商品类型名称" />
           </Form.Item>
           <Form.Item
             label="备注"
             name="description"
           >
-            <Input placeholder="选填" />
+            <Input placeholder="请输入商品类型描述" />
           </Form.Item>
         </Form>
       </Modal>

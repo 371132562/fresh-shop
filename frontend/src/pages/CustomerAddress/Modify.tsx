@@ -78,7 +78,7 @@ const Modify = (props: params) => {
             name="name"
             rules={[{ required: true, message: '请输入地址' }]}
           >
-            <Input placeholder="必填" />
+            <Input placeholder="请输入地址名称" />
           </Form.Item>
         </Form>
       </Modal>

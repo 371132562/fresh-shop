@@ -21,9 +21,9 @@ import { PSEUDO_STATUS_PARTIAL_REFUND } from '@/stores/orderStore.ts'
 
 import useOrderStore from './orderStore'
 
-type GroupBuyCreate = Omit<GroupBuy, 'id' | 'delete' | 'createdAt' | 'updatedAt'>
+export type GroupBuyCreate = Omit<GroupBuy, 'id' | 'delete' | 'createdAt' | 'updatedAt'>
 
-type GroupBuyId = Pick<GroupBuy, 'id'>
+export type GroupBuyId = Pick<GroupBuy, 'id'>
 
 type GroupBuyStore = {
   groupBuyList: GroupBuyListItem[]

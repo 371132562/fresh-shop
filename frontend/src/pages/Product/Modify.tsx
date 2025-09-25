@@ -79,7 +79,7 @@ const Modify = (props: params) => {
             name="name"
             rules={[{ required: true, message: '请输入商品名称' }]}
           >
-            <Input placeholder="必填" />
+            <Input placeholder="请输入商品名称" />
           </Form.Item>
           <Form.Item
             label="商品类型"
@@ -90,6 +90,7 @@ const Modify = (props: params) => {
               loading={getAllProductTypesLoading}
               showSearch
               allowClear
+              placeholder="请选择商品类型"
             >
               {allProductTypes.map(item => {
                 return (
@@ -107,7 +108,7 @@ const Modify = (props: params) => {
             label="备注"
             name="description"
           >
-            <Input placeholder="选填" />
+            <Input placeholder="请输入商品描述" />
           </Form.Item>
         </Form>
       </Modal>

@@ -207,18 +207,18 @@ export const Component: FC = () => {
           <header className="mb-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3 shadow-lg md:px-6 md:py-4">
             <div className="flex items-center justify-between">
               {/* 左侧：菜单按钮和标题 */}
-              <div className="flex min-w-0 flex-1 items-center space-x-3">
-                <p className="text-xl font-bold text-white md:text-2xl">团购管理平台</p>
+              <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
+                <p className="text-base font-bold text-white md:text-2xl">团购管理平台</p>
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="!mr-3 flex cursor-pointer items-center space-x-1 rounded-lg bg-white/20 p-3 text-white transition-colors hover:bg-white/30 lg:hidden"
+                  className="flex h-12 cursor-pointer items-center space-x-1 rounded-lg bg-white/20 p-3 text-white transition-colors hover:bg-white/30 lg:hidden"
                 >
                   <MenuOutlined className="!mr-0 text-lg" />
                   <span className="hidden px-1 sm:inline">菜单</span>
                 </button>
                 <button
                   onClick={() => setStatisticsGuideOpen(true)}
-                  className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/20 p-3 text-white transition-colors hover:bg-white/30"
+                  className="flex h-12 cursor-pointer items-center space-x-1 rounded-lg bg-white/20 p-3 text-white transition-colors hover:bg-white/30"
                   title="统计字段说明"
                 >
                   <InfoCircleOutlined className="!mr-0 text-lg" />
@@ -227,11 +227,11 @@ export const Component: FC = () => {
               </div>
 
               {/* 右侧：功能按钮组 */}
-              <div className="flex flex-shrink-0 items-center gap-2 md:gap-3">
+              <div className="ml-2 flex flex-shrink-0 items-center gap-2 md:ml-3 md:gap-3">
                 <OrderStatsButton />
                 <button
                   onClick={() => setSettingOpen(true)}
-                  className="flex cursor-pointer items-center space-x-1 rounded-lg bg-white/20 p-3 text-white transition-colors hover:bg-white/30"
+                  className="flex h-12 cursor-pointer items-center space-x-1 rounded-lg bg-white/20 p-3 text-white transition-colors hover:bg-white/30"
                 >
                   <SettingOutlined className="!mr-0 text-lg" />
                   <span className="hidden px-1 lg:inline">系统功能</span>

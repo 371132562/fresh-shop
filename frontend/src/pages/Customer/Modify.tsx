@@ -84,7 +84,7 @@ const Modify = (props: params) => {
             name="name"
             rules={[{ required: true, message: '请输入客户名称' }]}
           >
-            <Input placeholder="必填" />
+            <Input placeholder="请输入客户姓名" />
           </Form.Item>
           <Form.Item
             label="地址"
@@ -94,6 +94,7 @@ const Modify = (props: params) => {
               loading={getAllCustomerAddressLoading}
               showSearch
               allowClear
+              placeholder="请选择客户地址"
             >
               {allCustomerAddress.map(item => {
                 return (
@@ -121,7 +122,7 @@ const Modify = (props: params) => {
             ]}
           >
             <Input
-              placeholder="选填"
+              placeholder="请输入联系电话"
               maxLength={11}
             />
           </Form.Item>
@@ -129,13 +130,13 @@ const Modify = (props: params) => {
             label="微信号"
             name="wechat"
           >
-            <Input placeholder="选填" />
+            <Input placeholder="请输入微信账号" />
           </Form.Item>
           <Form.Item
             label="备注"
             name="description"
           >
-            <Input placeholder="选填，如客户偏好等" />
+            <Input placeholder="请输入客户备注" />
           </Form.Item>
         </Form>
       </Modal>

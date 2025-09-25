@@ -136,7 +136,7 @@ const Modify = (props: params) => {
           >
             <InputNumber
               style={{ width: '100%' }}
-              placeholder="数量"
+              placeholder="请输入购买数量"
               min={1}
             />
           </Form.Item>
@@ -144,7 +144,7 @@ const Modify = (props: params) => {
             label="备注"
             name="description"
           >
-            <Input placeholder="选填" />
+            <Input placeholder="请输入订单备注" />
           </Form.Item>
         </Form>
       </Modal>

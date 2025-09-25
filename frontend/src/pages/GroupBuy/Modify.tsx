@@ -1,12 +1,12 @@
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import type { UploadFile } from 'antd'
 import { Button, DatePicker, Form, Input, InputNumber, message, Modal, Select, Space } from 'antd'
-import { GroupBuy } from 'fresh-shop-backend/types/dto.ts'
+import { GroupBuy, GroupBuyUnit } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid' // 用于生成单位ID
 
 import ImagesUpload from '@/components/ImagesUpload'
-import useGroupBuyStore from '@/stores/groupBuyStore.ts'
+import useGroupBuyStore, { GroupBuyCreate, GroupBuyId } from '@/stores/groupBuyStore.ts'
 import useProductStore from '@/stores/productStore.ts'
 import useSupplierStore from '@/stores/supplierStore.ts'
 import { buildImageUrl } from '@/utils'
@@ -24,6 +24,11 @@ const Modify = (props: params) => {
   const [form] = Form.useForm()
 
   const [fileList, setFileList] = useState<UploadFile[] | Array<{ filename: string }>>([])
+  const [showPriceConfirm, setShowPriceConfirm] = useState(false)
+  const [pendingFormData, setPendingFormData] = useState<GroupBuyCreate | null>(null)
+  const [problematicUnits, setProblematicUnits] = useState<
+    Array<{ unit: string; price: number; costPrice: number }>
+  >([])
 
   const createLoading = useGroupBuyStore(state => state.createLoading)
   const createGroupBuy = useGroupBuyStore(state => state.createGroupBuy)
@@ -79,34 +84,79 @@ const Modify = (props: params) => {
     }
   }, [])
 
+  // 检查是否有售价低于成本价的情况，并收集有问题的规格信息
+  const checkPriceValidation = (units: GroupBuyUnit[]) => {
+    const problematicUnits: Array<{ unit: string; price: number; costPrice: number }> = []
+
+    units.forEach((unit: GroupBuyUnit) => {
+      const price = parseFloat(String(unit.price)) || 0
+      const costPrice = parseFloat(String(unit.costPrice)) || 0
+      if (price < costPrice) {
+        problematicUnits.push({
+          unit: unit.unit,
+          price,
+          costPrice
+        })
+      }
+    })
+
+    return {
+      hasProblems: problematicUnits.length > 0,
+      problematicUnits
+    }
+  }
+
+  // 执行实际的保存操作
+  const executeSave = async (formData: GroupBuyCreate) => {
+    const params: GroupBuyCreate = {
+      name: formData.name,
+      description: formData.description,
+      groupBuyStartDate: formData.groupBuyStartDate,
+      supplierId: formData.supplierId,
+      productId: formData.productId,
+      units: (formData.units as GroupBuyUnit[]).map((item: GroupBuyUnit & { id?: string }) => {
+        if (!item.id) {
+          return {
+            id: uuidv4(),
+            unit: item.unit,
+            price: item.price,
+            costPrice: item.costPrice
+          }
+        }
+        return item
+      }),
+      images: fileList.map(item => {
+        if ('response' in item) {
+          // 检查 item 是否包含 'response' 属性
+          return (item as UploadFile).response.data.filename
+        } else {
+          return (item as { filename: string }).filename
+        }
+      })
+    }
+    const res = id
+      ? await updateGroupBuy({ ...params, id } as GroupBuyId & Partial<GroupBuyCreate>)
+      : await createGroupBuy(params)
+    if (res) {
+      message.success(id ? '编辑成功' : '添加成功')
+      handleCancel()
+    }
+  }
+
   const handleOk = () => {
     form
       .validateFields()
       .then(async val => {
-        const params = {
-          ...val,
-          units: val.units.map((item: any) => {
-            if (!item.id) {
-              return {
-                id: uuidv4(),
-                ...item
-              }
-            }
-            return item
-          }),
-          images: fileList.map(item => {
-            if ('response' in item) {
-              // 检查 item 是否包含 'response' 属性
-              return (item as UploadFile).response.data.filename
-            } else {
-              return (item as { filename: string }).filename
-            }
-          })
-        }
-        const res = id ? await updateGroupBuy({ ...params, id }) : await createGroupBuy(params)
-        if (res) {
-          message.success(id ? '编辑成功' : '添加成功')
-          handleCancel()
+        // 检查是否有售价低于成本价的情况
+        const validationResult = checkPriceValidation(val.units)
+        if (validationResult.hasProblems) {
+          // 保存待提交的数据和问题规格信息，并显示确认弹框
+          setPendingFormData(val)
+          setProblematicUnits(validationResult.problematicUnits)
+          setShowPriceConfirm(true)
+        } else {
+          // 直接保存
+          await executeSave(val)
         }
       })
       .catch(err => {
@@ -115,11 +165,27 @@ const Modify = (props: params) => {
       })
   }
 
+  // 确认继续保存（忽略价格警告）
+  const handleConfirmSave = async () => {
+    setShowPriceConfirm(false)
+    if (pendingFormData) {
+      await executeSave(pendingFormData)
+      setPendingFormData(null)
+    }
+  }
+
+  // 取消保存
+  const handleCancelSave = () => {
+    setShowPriceConfirm(false)
+    setPendingFormData(null)
+    setProblematicUnits([])
+  }
+
   const handleCancel = () => {
     setVisible(false)
   }
 
-  const filterOption = (input: string, option: any) => {
+  const filterOption = (input: string, option?: { children?: string }) => {
     return (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
   }
 
@@ -147,7 +213,7 @@ const Modify = (props: params) => {
             name="name"
             rules={[{ required: true, message: '请输入团购名称' }]}
           >
-            <Input placeholder="必填" />
+            <Input placeholder="请输入团购名称" />
           </Form.Item>
           <Form.Item
             label="发起时间"
@@ -221,7 +287,7 @@ const Modify = (props: params) => {
                       name={[name, 'unit']}
                       rules={[{ required: true, message: '请输入计量单位' }]}
                     >
-                      <Input placeholder="计量单位" />
+                      <Input placeholder="请输入计量单位" />
                     </Form.Item>
                     <Form.Item
                       {...restField}
@@ -230,7 +296,7 @@ const Modify = (props: params) => {
                     >
                       <InputNumber
                         prefix="￥"
-                        placeholder="售价"
+                        placeholder="请输入售价"
                         precision={2}
                       />
                     </Form.Item>
@@ -241,7 +307,7 @@ const Modify = (props: params) => {
                     >
                       <InputNumber
                         prefix="￥"
-                        placeholder="成本价"
+                        placeholder="请输入成本价"
                         precision={2}
                       />
                     </Form.Item>
@@ -265,7 +331,7 @@ const Modify = (props: params) => {
             label="备注"
             name="description"
           >
-            <Input placeholder="选填" />
+            <Input placeholder="请输入团购描述" />
           </Form.Item>
           <ImagesUpload
             id={id || ''}
@@ -274,6 +340,49 @@ const Modify = (props: params) => {
             type="groupBuy"
           />
         </Form>
+      </Modal>
+
+      {/* 价格确认弹框 */}
+      <Modal
+        title="价格确认"
+        open={showPriceConfirm}
+        onOk={handleConfirmSave}
+        onCancel={handleCancelSave}
+        okText="确认继续"
+        cancelText="取消"
+        confirmLoading={createLoading}
+        width={500}
+      >
+        <div className="py-4">
+          <div className="mb-4 text-center">
+            <div className="mb-2 text-lg text-orange-500">⚠️ 价格警告</div>
+            <div className="text-gray-600">检测到以下规格的售价低于成本价，这可能会导致亏损：</div>
+          </div>
+
+          {/* 显示有问题的规格详情 */}
+          <div className="mb-4">
+            {problematicUnits.map((unit, index) => (
+              <div
+                key={index}
+                className="mb-3 rounded-lg border border-orange-200 bg-orange-50 p-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="font-medium text-gray-800">{unit.unit}</div>
+                  <div className="text-sm text-gray-600">
+                    <span className="text-blue-600">售价: ￥{unit.price.toFixed(2)}</span>
+                    <span className="mx-2">vs</span>
+                    <span className="text-blue-600">成本: ￥{unit.costPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+                <div className="mt-1 text-xs text-orange-600">
+                  亏损: ￥{(unit.costPrice - unit.price).toFixed(2)} / 单位
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center text-sm text-gray-500">确定要继续保存吗？</div>
+        </div>
       </Modal>
     </>
   )
