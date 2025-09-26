@@ -202,7 +202,7 @@ export const Component: FC = () => {
         style={{ scrollbarGutter: 'stable' }}
       >
         {/* 主容器：最大宽度限制，居中布局，响应式内边距 */}
-        <div className="mx-auto max-w-7xl px-4 py-4 md:px-6 md:px-8">
+        <div className="mx-auto max-w-screen-2xl px-4 py-4 md:px-6 md:px-8">
           {/* Header 容器：悬浮设计，蓝色背景，白色文字，阴影效果 */}
           <header className="mb-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3 shadow-lg md:px-6 md:py-4">
             <div className="flex items-center justify-between">

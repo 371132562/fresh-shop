@@ -94,6 +94,8 @@ export const UnifiedTrendChart = () => {
       end: item.endDate ? dayjs(item.endDate).format('YYYY-MM-DD') : null,
       label: dayjs(item.date).format(dateFormat)
     }))
+    // 统一控制是否显示数值标签：按月 或 任意点有区间信息（分桶）
+    const labelShow = showMonthly || ranges.some(r => !!r.start && !!r.end)
 
     return {
       tooltip: {
@@ -109,8 +111,8 @@ export const UnifiedTrendChart = () => {
           const p = Array.isArray(params) ? params[0] : params
           const idx = p?.dataIndex ?? 0
           const r = ranges[idx]
-          // 累计趋势或按月统计一律显示单日期/月份；仅当按日且分桶生效时显示区间
-          const showRange = !!r.start && !!r.end && !showCumulative && !(isAllData && showMonthly)
+          // 累计趋势或按月统计一律显示单日期/月份；仅当非累计且分桶生效时显示区间
+          const showRange = !!r.start && !!r.end && !showCumulative && !showMonthly
           const title = showRange ? `${r.start} ~ ${r.end}` : r.label
           const val = counts[idx]
           const valText = seriesConfig.formatter
@@ -151,20 +153,22 @@ export const UnifiedTrendChart = () => {
               borderColor: seriesConfig.color
             }
           },
-          // 当勾选按月统计时显示数值标签
           label: {
-            show: isAllData && showMonthly,
+            show: labelShow,
             position: 'top' as const,
             formatter: '{c}',
             fontSize: 12,
-            fontWeight: 'bold' as const,
             color: seriesConfig.color,
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            backgroundColor: 'rgba(255, 255, 255, 0.85)',
             borderColor: seriesConfig.color,
-            borderWidth: 1,
-            borderRadius: 4,
-            padding: [2, 6, 2, 6],
-            distance: 8
+            borderWidth: 0.5,
+            borderRadius: 3,
+            padding: [1, 4, 1, 4],
+            distance: 6
+          },
+          labelLayout: {
+            moveOverlap: 'shiftY' as const,
+            hideOverlap: true
           }
         }
       ]
@@ -204,7 +208,7 @@ export const UnifiedTrendChart = () => {
     () =>
       generateChartOption(currentData.groupBuy, {
         name: '团购单',
-        color: '#5470C6'
+        color: '#2563EB'
       }),
     [currentData.groupBuy, isAllData, showMonthly]
   )
@@ -213,7 +217,7 @@ export const UnifiedTrendChart = () => {
     () =>
       generateChartOption(currentData.order, {
         name: '订单',
-        color: '#91CC75'
+        color: '#2563EB'
       }),
     [currentData.order, isAllData, showMonthly]
   )
@@ -222,7 +226,7 @@ export const UnifiedTrendChart = () => {
     () =>
       generateChartOption(currentData.price, {
         name: '销售额',
-        color: '#0fb82c',
+        color: '#2563EB',
         formatter: (params: { value: number }) => `¥${params.value.toLocaleString()}`
       }),
     [currentData.price, isAllData, showMonthly]
@@ -232,7 +236,7 @@ export const UnifiedTrendChart = () => {
     () =>
       generateChartOption(currentData.profit, {
         name: '利润',
-        color: '#EE6666',
+        color: '#16A34A',
         formatter: (params: { value: number }) => `¥${params.value.toLocaleString()}`
       }),
     [currentData.profit, isAllData, showMonthly]
@@ -286,10 +290,10 @@ export const UnifiedTrendChart = () => {
       {/* 四个图表容器 - 每个图表单独占一行 */}
       <Card
         loading={getCountLoading}
-        title="团购单趋势"
+        title="团购单"
       >
         <FullscreenChart
-          title="团购单趋势"
+          title="团购单"
           option={groupBuyOption}
           height="300px"
           onChartReady={chart => {
@@ -302,10 +306,10 @@ export const UnifiedTrendChart = () => {
 
       <Card
         loading={getCountLoading}
-        title="订单趋势"
+        title="订单"
       >
         <FullscreenChart
-          title="订单趋势"
+          title="订单"
           option={orderOption}
           height="300px"
           onChartReady={chart => {
@@ -318,10 +322,10 @@ export const UnifiedTrendChart = () => {
 
       <Card
         loading={getCountLoading}
-        title="销售额趋势"
+        title="销售额"
       >
         <FullscreenChart
-          title="销售额趋势"
+          title="销售额"
           option={priceOption}
           height="300px"
           onChartReady={chart => {
@@ -334,10 +338,10 @@ export const UnifiedTrendChart = () => {
 
       <Card
         loading={getCountLoading}
-        title="利润趋势"
+        title="利润"
       >
         <FullscreenChart
-          title="利润趋势"
+          title="利润"
           option={profitOption}
           height="300px"
           onChartReady={chart => {

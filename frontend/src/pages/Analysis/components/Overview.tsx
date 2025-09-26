@@ -50,7 +50,11 @@ export const Overview = ({ startDate, endDate }: OverviewProps) => {
       className="w-full"
       gutter={[8, 8]}
     >
-      <Col span={12}>
+      <Col
+        xs={24}
+        md={12}
+        lg={8}
+      >
         <Card
           size="small"
           loading={getCountLoading}
@@ -68,7 +72,11 @@ export const Overview = ({ startDate, endDate }: OverviewProps) => {
           />
         </Card>
       </Col>
-      <Col span={12}>
+      <Col
+        xs={24}
+        md={12}
+        lg={8}
+      >
         <Card
           size="small"
           loading={getCountLoading}
@@ -86,7 +94,11 @@ export const Overview = ({ startDate, endDate }: OverviewProps) => {
           />
         </Card>
       </Col>
-      <Col span={12}>
+      <Col
+        xs={24}
+        md={12}
+        lg={8}
+      >
         <Card
           size="small"
           loading={getCountLoading}
@@ -101,7 +113,11 @@ export const Overview = ({ startDate, endDate }: OverviewProps) => {
         </Card>
       </Col>
       {!globalSetting?.value?.sensitive && (
-        <Col span={12}>
+        <Col
+          xs={24}
+          md={12}
+          lg={8}
+        >
           <Card
             size="small"
             loading={getCountLoading}
@@ -116,7 +132,11 @@ export const Overview = ({ startDate, endDate }: OverviewProps) => {
           </Card>
         </Col>
       )}
-      <Col span={12}>
+      <Col
+        xs={24}
+        md={12}
+        lg={8}
+      >
         <Card
           size="small"
           loading={getCountLoading}
@@ -132,7 +152,11 @@ export const Overview = ({ startDate, endDate }: OverviewProps) => {
           />
         </Card>
       </Col>
-      <Col span={12}>
+      <Col
+        xs={24}
+        md={12}
+        lg={8}
+      >
         <Card
           size="small"
           loading={getCountLoading}
