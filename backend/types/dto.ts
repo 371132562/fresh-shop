@@ -817,23 +817,31 @@ export type AnalysisCountResult = {
 
   // 趋势数据（用于图表展示）
   groupBuyTrend: {
-    date: Date; // 日期
-    count: number; // 团购数量
+    date: Date; // 日期（当触发分桶时为区间结束日）
+    count: number; // 团购数量或区间聚合值
+    startDate?: Date; // 可选：当触发分桶时的区间起始日（闭区间）
+    endDate?: Date; // 可选：当触发分桶时的区间结束日（闭区间）
   }[]; // 团购发起趋势
 
   orderTrend: {
-    date: Date; // 日期
-    count: number; // 订单数量
+    date: Date; // 日期（当触发分桶时为区间结束日）
+    count: number; // 订单数量或区间聚合值
+    startDate?: Date; // 可选：当触发分桶时的区间起始日（闭区间）
+    endDate?: Date; // 可选：当触发分桶时的区间结束日（闭区间）
   }[]; // 订单创建趋势
 
   priceTrend: {
-    date: Date; // 日期
-    count: number; // 销售额
+    date: Date; // 日期（当触发分桶时为区间结束日）
+    count: number; // 销售额或区间聚合值
+    startDate?: Date; // 可选：当触发分桶时的区间起始日（闭区间）
+    endDate?: Date; // 可选：当触发分桶时的区间结束日（闭区间）
   }[]; // 销售额趋势
 
   profitTrend: {
-    date: Date; // 日期
-    count: number; // 利润
+    date: Date; // 日期（当触发分桶时为区间结束日）
+    count: number; // 利润或区间聚合值
+    startDate?: Date; // 可选：当触发分桶时的区间起始日（闭区间）
+    endDate?: Date; // 可选：当触发分桶时的区间结束日（闭区间）
   }[]; // 利润趋势
 
   // 累计趋势数据（用于在“全部”时间范围下切换展示）

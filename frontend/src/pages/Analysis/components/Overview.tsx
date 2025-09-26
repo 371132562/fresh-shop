@@ -6,8 +6,7 @@ import CountUp from 'react-countup'
 import useAnalysisStore from '@/stores/analysisStore'
 import useGlobalSettingStore from '@/stores/globalSettingStore'
 
-import { GroupBuyOrderTrendChart } from './GroupBuyOrderTrendChart'
-import { PriceProfitTrendChart } from './PriceProfitTrendChart'
+import { UnifiedTrendChart } from './UnifiedTrendChart'
 
 type OverviewProps = {
   startDate?: Date
@@ -148,10 +147,7 @@ export const Overview = ({ startDate, endDate }: OverviewProps) => {
         </Card>
       </Col>
       <Col span={24}>
-        <GroupBuyOrderTrendChart />
-      </Col>
-      <Col span={24}>
-        <PriceProfitTrendChart />
+        <UnifiedTrendChart />
       </Col>
     </Row>
   )

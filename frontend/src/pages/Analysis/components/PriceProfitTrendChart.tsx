@@ -56,7 +56,22 @@ export const PriceProfitTrendChart = () => {
         type: 'line' as const,
         data: priceCounts,
         smooth: true,
-        itemStyle: { color: '#0fb82c' }
+        itemStyle: { color: '#0fb82c' },
+        // 当勾选按月统计时显示数值标签
+        label: {
+          show: isAllData && showMonthly,
+          position: 'top' as const,
+          formatter: (params: any) => `¥${params.value.toLocaleString()}`,
+          fontSize: 12,
+          fontWeight: 'bold' as const,
+          color: '#0fb82c',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          borderColor: '#0fb82c',
+          borderWidth: 1,
+          borderRadius: 4,
+          padding: [2, 6, 2, 6],
+          distance: 8
+        }
       }
     ]
     if (!sensitive) {
@@ -65,7 +80,22 @@ export const PriceProfitTrendChart = () => {
         type: 'line' as const,
         data: profitCounts,
         smooth: true,
-        itemStyle: { color: '#EE6666' }
+        itemStyle: { color: '#EE6666' },
+        // 当勾选按月统计时显示数值标签
+        label: {
+          show: isAllData && showMonthly,
+          position: 'top' as const,
+          formatter: (params: any) => `¥${params.value.toLocaleString()}`,
+          fontSize: 12,
+          fontWeight: 'bold' as const,
+          color: '#EE6666',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          borderColor: '#EE6666',
+          borderWidth: 1,
+          borderRadius: 4,
+          padding: [2, 6, 2, 6],
+          distance: 8
+        }
       })
     }
 

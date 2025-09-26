@@ -1,13 +1,7 @@
 // src/analysis/analysis.service.ts
 import { Injectable } from '@nestjs/common';
-import * as dayjs from 'dayjs'; // 导入 dayjs
-import * as utc from 'dayjs/plugin/utc';
-import * as timezone from 'dayjs/plugin/timezone';
-import * as isSameOrBefore from 'dayjs/plugin/isSameOrBefore'; // 导入 isSameOrBefore 插件
+import dayjs from '../../utils/dayjs'; // 集中管理的 dayjs 实例
 import { OrderStatus, Prisma } from '@prisma/client';
-dayjs.extend(utc);
-dayjs.extend(timezone);
-dayjs.extend(isSameOrBefore); // 扩展 isSameOrBefore 插件
 
 import { PrismaService } from '../../../prisma/prisma.service';
 import { BusinessException } from '../../exceptions/businessException';
@@ -256,102 +250,100 @@ export class AnalysisService {
       }
     }
 
-    // ================================================================
-    // 步骤三：从映射生成"每日序列"与"累计序列"
-    // - 无时间范围：仅返回有数据的日期（自然排序），序列更紧凑
-    // - 有时间范围：从 startDate 连续补齐到 endDate，缺失值按 0 处理
-    // - 此处仅生成"每日序列"；累计序列先基于每日做一次原始累计
-    // ================================================================
-    const groupBuyTrend: { date: Date; count: number }[] = [];
-    const orderTrend: { date: Date; count: number }[] = [];
-    const priceTrend: { date: Date; count: number }[] = [];
-    const profitTrend: { date: Date; count: number }[] = [];
+    // 统一：从映射生成每日与累计序列（内部方法，不导出）
+    const buildDailyAndCumulative = (
+      maps: {
+        groupBuy: Map<string, number>;
+        order: Map<string, number>;
+        price: Map<string, number>;
+        profit: Map<string, number>;
+      },
+      start?: Date,
+      end?: Date,
+    ) => {
+      const daily = {
+        groupBuy: [] as { date: Date; count: number }[],
+        order: [] as { date: Date; count: number }[],
+        price: [] as { date: Date; count: number }[],
+        profit: [] as { date: Date; count: number }[],
+      };
+      const cumulative = {
+        groupBuy: [] as { date: Date; count: number }[],
+        order: [] as { date: Date; count: number }[],
+        price: [] as { date: Date; count: number }[],
+        profit: [] as { date: Date; count: number }[],
+      };
 
-    // ------------------------------------------------
-    // 对应的"原始累计"序列（在分桶前的累计结果）
-    // ------------------------------------------------
-    const cumulativeGroupBuyTrend: { date: Date; count: number }[] = [];
-    const cumulativeOrderTrend: { date: Date; count: number }[] = [];
-    const cumulativePriceTrend: { date: Date; count: number }[] = [];
-    const cumulativeProfitTrend: { date: Date; count: number }[] = [];
+      let cursor: import('dayjs').Dayjs | null = null;
+      let endDay: import('dayjs').Dayjs | null = null;
 
-    // 情况A：未传时间范围（仅返回实际出现过数据的日期）
-    if (!startDate || !endDate) {
-      // 收集各趋势映射中出现过的日期集合
-      const allDates = new Set<string>();
-      groupBuyTrendMap.forEach((_, date) => allDates.add(date));
-      orderTrendMap.forEach((_, date) => allDates.add(date));
-      priceTrendMap.forEach((_, date) => allDates.add(date));
-      profitTrendMap.forEach((_, date) => allDates.add(date));
-
-      // 排序后逐日生成：每日值 + 原始累计值
-      const sortedDates = Array.from(allDates).sort();
-      let cumulativeGroupBuy = 0;
-      let cumulativeOrder = 0;
-      let cumulativePrice = 0;
-      let cumulativeProfit = 0;
-      for (const dateStr of sortedDates) {
-        const date = dayjs(dateStr).toDate();
-        const gb = groupBuyTrendMap.get(dateStr) || 0;
-        const od = orderTrendMap.get(dateStr) || 0;
-        const pr = round2(priceTrendMap.get(dateStr) || 0);
-        const pf = round2(profitTrendMap.get(dateStr) || 0);
-        groupBuyTrend.push({ date, count: gb });
-        orderTrend.push({ date, count: od });
-        priceTrend.push({ date, count: pr });
-        profitTrend.push({ date, count: pf });
-
-        cumulativeGroupBuy += gb;
-        cumulativeOrder += od;
-        cumulativePrice = round2(cumulativePrice + pr);
-        cumulativeProfit = round2(cumulativeProfit + pf);
-        cumulativeGroupBuyTrend.push({ date, count: cumulativeGroupBuy });
-        cumulativeOrderTrend.push({ date, count: cumulativeOrder });
-        cumulativePriceTrend.push({ date, count: cumulativePrice });
-        cumulativeProfitTrend.push({ date, count: cumulativeProfit });
+      if (!start || !end) {
+        // 无范围：以数据实际最早/最晚日补齐
+        const all = new Set<string>();
+        maps.groupBuy.forEach((_, d) => all.add(d));
+        maps.order.forEach((_, d) => all.add(d));
+        maps.price.forEach((_, d) => all.add(d));
+        maps.profit.forEach((_, d) => all.add(d));
+        if (all.size === 0) return { daily, cumulative };
+        const sorted = Array.from(all).sort();
+        cursor = dayjs(sorted[0]).startOf('day');
+        endDay = dayjs(sorted[sorted.length - 1]).startOf('day');
+      } else {
+        cursor = dayjs(start).startOf('day');
+        endDay = dayjs(end).startOf('day');
       }
-    } else {
-      // 情况B：传入时间范围（严格补齐每一天）
-      let currentDate = dayjs(startDate).startOf('day');
-      const endDay = dayjs(endDate).startOf('day');
-      let cumulativeGroupBuy = 0;
-      let cumulativeOrder = 0;
-      let cumulativePrice = 0;
-      let cumulativeProfit = 0;
-      while (currentDate.isSameOrBefore(endDay, 'day')) {
-        const dateString = currentDate.format('YYYY-MM-DD');
-        const gb = groupBuyTrendMap.get(dateString) || 0;
-        const od = orderTrendMap.get(dateString) || 0;
-        const pr = round2(priceTrendMap.get(dateString) || 0);
-        const pf = round2(profitTrendMap.get(dateString) || 0);
-        groupBuyTrend.push({ date: currentDate.toDate(), count: gb });
-        orderTrend.push({ date: currentDate.toDate(), count: od });
-        priceTrend.push({ date: currentDate.toDate(), count: pr });
-        profitTrend.push({ date: currentDate.toDate(), count: pf });
 
-        cumulativeGroupBuy += gb;
-        cumulativeOrder += od;
-        cumulativePrice = round2(cumulativePrice + pr);
-        cumulativeProfit = round2(cumulativeProfit + pf);
-        cumulativeGroupBuyTrend.push({
-          date: currentDate.toDate(),
-          count: cumulativeGroupBuy,
-        });
-        cumulativeOrderTrend.push({
-          date: currentDate.toDate(),
-          count: cumulativeOrder,
-        });
-        cumulativePriceTrend.push({
-          date: currentDate.toDate(),
-          count: cumulativePrice,
-        });
-        cumulativeProfitTrend.push({
-          date: currentDate.toDate(),
-          count: cumulativeProfit,
-        });
-        currentDate = currentDate.add(1, 'day');
+      let accGB = 0;
+      let accOD = 0;
+      let accPR = 0;
+      let accPF = 0;
+
+      while (cursor && endDay && cursor.isSameOrBefore(endDay, 'day')) {
+        const key = cursor.format('YYYY-MM-DD');
+        const gb = maps.groupBuy.get(key) || 0;
+        const od = maps.order.get(key) || 0;
+        const pr = round2(maps.price.get(key) || 0);
+        const pf = round2(maps.profit.get(key) || 0);
+        const date = cursor.toDate();
+
+        daily.groupBuy.push({ date, count: gb });
+        daily.order.push({ date, count: od });
+        daily.price.push({ date, count: pr });
+        daily.profit.push({ date, count: pf });
+
+        accGB += gb;
+        accOD += od;
+        accPR = round2(accPR + pr);
+        accPF = round2(accPF + pf);
+        cumulative.groupBuy.push({ date, count: accGB });
+        cumulative.order.push({ date, count: accOD });
+        cumulative.price.push({ date, count: accPR });
+        cumulative.profit.push({ date, count: accPF });
+
+        cursor = cursor.add(1, 'day');
       }
-    }
+
+      return { daily, cumulative };
+    };
+
+    const { daily, cumulative } = buildDailyAndCumulative(
+      {
+        groupBuy: groupBuyTrendMap,
+        order: orderTrendMap,
+        price: priceTrendMap,
+        profit: profitTrendMap,
+      },
+      startDate,
+      endDate,
+    );
+
+    const groupBuyTrend: { date: Date; count: number }[] = daily.groupBuy;
+    const orderTrend: { date: Date; count: number }[] = daily.order;
+    const priceTrend: { date: Date; count: number }[] = daily.price;
+    const profitTrend: { date: Date; count: number }[] = daily.profit;
+
+    // 原始累计序列已体现在 dailySeries 上，cumulative 仅用于中间校验，避免未使用告警：
+    void cumulative;
 
     // ================================================================
     // 步骤四：动态分桶（仅用于"累计趋势"的降采样展示）
@@ -379,7 +371,12 @@ export class AnalysisService {
     const aggregateByBucket = (
       series: { date: Date; count: number }[],
       bucketSize: number,
-    ): { date: Date; count: number }[] => {
+    ): {
+      date: Date;
+      count: number;
+      startDate?: Date;
+      endDate?: Date;
+    }[] => {
       if (bucketSize <= 1 || series.length === 0) return series; // 桶大小为1或序列为空时，直接返回
       const sorted = [...series].sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
@@ -387,6 +384,7 @@ export class AnalysisService {
       const firstDate = dayjs(sorted[0].date).startOf('day');
       const bucketIndexToSum = new Map<number, number>();
       const bucketIndexToLastDate = new Map<number, Date>();
+      const bucketIndexToFirstDate = new Map<number, Date>();
       for (const item of sorted) {
         const daysSinceStart = dayjs(item.date)
           .startOf('day')
@@ -394,20 +392,31 @@ export class AnalysisService {
         const bucketIndex = Math.floor(daysSinceStart / bucketSize);
         const prev = bucketIndexToSum.get(bucketIndex) || 0;
         bucketIndexToSum.set(bucketIndex, round2(prev + item.count));
-        // 保留桶内"最后一天"用于展示（代表该段的时间末尾）
+        // 保留桶内首尾日期，作为区间边界
         const currentDay = dayjs(item.date).startOf('day');
         const candidateEnd = currentDay.toDate();
+        const candidateStart = currentDay.toDate();
+        if (!bucketIndexToFirstDate.get(bucketIndex)) {
+          bucketIndexToFirstDate.set(bucketIndex, candidateStart);
+        }
         const existing = bucketIndexToLastDate.get(bucketIndex);
         if (!existing || dayjs(candidateEnd).isAfter(existing)) {
           bucketIndexToLastDate.set(bucketIndex, candidateEnd);
         }
       }
-      const result: { date: Date; count: number }[] = [];
+      const result: {
+        date: Date;
+        count: number;
+        startDate?: Date;
+        endDate?: Date;
+      }[] = [];
       const indices = Array.from(bucketIndexToSum.keys()).sort((a, b) => a - b);
       for (const idx of indices) {
         result.push({
           date: bucketIndexToLastDate.get(idx)!,
           count: bucketIndexToSum.get(idx) || 0,
+          startDate: bucketIndexToFirstDate.get(idx),
+          endDate: bucketIndexToLastDate.get(idx),
         });
       }
       return result;
@@ -484,15 +493,31 @@ export class AnalysisService {
         monthlyMap.set(monthKey, round2(current + item.count));
       }
 
-      // 转换为数组并按月份排序
-      return Array.from(monthlyMap.entries())
-        .map(([monthKey, count]) => ({
-          date: dayjs(monthKey + '-01').toDate(), // 使用每月第一天作为日期
+      // 找到最早和最晚的月份，填充缺失的月份
+      const monthKeys = Array.from(monthlyMap.keys()).sort();
+      if (monthKeys.length === 0) return [];
+
+      const earliestMonth = dayjs(monthKeys[0] + '-01').startOf('month');
+      const latestMonth = dayjs(
+        monthKeys[monthKeys.length - 1] + '-01',
+      ).startOf('month');
+
+      const result: { date: Date; count: number }[] = [];
+      let currentMonth = earliestMonth;
+
+      while (currentMonth.isSameOrBefore(latestMonth, 'month')) {
+        const monthKey = currentMonth.format('YYYY-MM');
+        const count = monthlyMap.get(monthKey) || 0;
+
+        result.push({
+          date: currentMonth.toDate(), // 使用每月第一天作为日期
           count,
-        }))
-        .sort(
-          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-        );
+        });
+
+        currentMonth = currentMonth.add(1, 'month');
+      }
+
+      return result;
     };
 
     const monthlyGroupBuyTrend = aggregateByMonth(groupBuyTrend);
@@ -502,10 +527,20 @@ export class AnalysisService {
 
     // ================================================================
     // 步骤五：返回结果（保持既有返回结构与字段命名）
-    // - groupBuyTrend/orderTrend/priceTrend/profitTrend：逐日原始序列
-    // - cumulativeXXXTrend：分桶后的累计序列（用于前端"累计趋势"展示）
-    // - monthlyXXXTrend：按月聚合序列（用于前端"按月统计"展示）
+    // - 当未传入时间范围（前端“全部”场景）时：每日序列采用【分桶后】的结果以降低点位密度
+    // - 当传入时间范围时：每日序列返回逐日完整数据
+    // - 累计序列始终基于分桶后重建累计（已在上方计算）
+    // - 月度序列按月聚合且补齐缺失月份（已在上方计算）
     // ================================================================
+    const effectiveGroupBuyTrend =
+      !startDate || !endDate ? aggGroupBuyTrend : groupBuyTrend;
+    const effectiveOrderTrend =
+      !startDate || !endDate ? aggOrderTrend : orderTrend;
+    const effectivePriceTrend =
+      !startDate || !endDate ? aggPriceTrend : priceTrend;
+    const effectiveProfitTrend =
+      !startDate || !endDate ? aggProfitTrend : profitTrend;
+
     return {
       groupBuyCount,
       orderCount,
@@ -514,10 +549,10 @@ export class AnalysisService {
       totalRefundAmount,
       totalRefundedOrderCount,
       totalPartialRefundOrderCount,
-      groupBuyTrend,
-      orderTrend,
-      priceTrend,
-      profitTrend,
+      groupBuyTrend: effectiveGroupBuyTrend,
+      orderTrend: effectiveOrderTrend,
+      priceTrend: effectivePriceTrend,
+      profitTrend: effectiveProfitTrend,
       cumulativeGroupBuyTrend: aggCumulativeGroupBuyTrend,
       cumulativeOrderTrend: aggCumulativeOrderTrend,
       cumulativePriceTrend: aggCumulativePriceTrend,

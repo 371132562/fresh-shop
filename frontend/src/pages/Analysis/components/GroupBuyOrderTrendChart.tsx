@@ -83,14 +83,44 @@ export const GroupBuyOrderTrendChart = () => {
           type: 'line' as const,
           data: groupBuyCounts,
           smooth: true,
-          itemStyle: { color: '#5470C6' } // 蓝色
+          itemStyle: { color: '#5470C6' }, // 蓝色
+          // 当勾选按月统计时显示数值标签
+          label: {
+            show: isAllData && showMonthly,
+            position: 'top' as const,
+            formatter: '{c}',
+            fontSize: 12,
+            fontWeight: 'bold' as const,
+            color: '#5470C6',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            borderColor: '#5470C6',
+            borderWidth: 1,
+            borderRadius: 4,
+            padding: [2, 6, 2, 6],
+            distance: 8
+          }
         },
         {
           name: '订单',
           type: 'line' as const,
           data: orderCounts,
           smooth: true,
-          itemStyle: { color: '#91CC75' } // 绿色
+          itemStyle: { color: '#91CC75' }, // 绿色
+          // 当勾选按月统计时显示数值标签
+          label: {
+            show: isAllData && showMonthly,
+            position: 'top' as const,
+            formatter: '{c}',
+            fontSize: 12,
+            fontWeight: 'bold' as const,
+            color: '#91CC75',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            borderColor: '#91CC75',
+            borderWidth: 1,
+            borderRadius: 4,
+            padding: [2, 6, 2, 6],
+            distance: 8
+          }
         }
       ]
     }

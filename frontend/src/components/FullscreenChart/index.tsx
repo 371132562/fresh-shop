@@ -10,6 +10,7 @@ type FullscreenChartProps = {
   height?: string
   className?: string
   onChartClick?: (params: echarts.ECElementEvent) => void
+  onChartReady?: (chart: echarts.ECharts) => void
 }
 
 /**
@@ -21,7 +22,8 @@ export const FullscreenChart = ({
   option,
   height = '300px',
   className = '',
-  onChartClick
+  onChartClick,
+  onChartReady
 }: FullscreenChartProps) => {
   const chartRef = useRef<HTMLDivElement>(null)
   const fullscreenChartRef = useRef<HTMLDivElement>(null)
@@ -44,6 +46,11 @@ export const FullscreenChart = ({
       chartInstance.on('click', onChartClick)
     }
 
+    // 调用图表就绪回调
+    if (onChartReady) {
+      onChartReady(chartInstance)
+    }
+
     // 监听容器大小变化
     const resizeObserver = new ResizeObserver(() => {
       chartInstance.resize()
@@ -62,9 +69,8 @@ export const FullscreenChart = ({
 
     const fullscreenInstance = echarts.init(fullscreenChartRef.current)
 
-    // 深拷贝option，确保完全独立
-    const fullscreenOption = JSON.parse(JSON.stringify(option))
-    fullscreenInstance.setOption(fullscreenOption, true)
+    // 直接使用当前 option，保留其中的 formatter 等函数引用
+    fullscreenInstance.setOption(option, true)
 
     // 添加点击事件监听
     if (onChartClick) {
