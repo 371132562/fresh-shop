@@ -338,11 +338,11 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
             }
           />
 
-          {/* 地域销售分析 */}
+          {/* 客户地址分布 */}
           <RegionalSalesAnalysis
             regionalSales={mergedGroupBuyOverviewDetail.regionalSales}
             onRegionalClick={handleRegionalClick}
-            title="地域销售分析"
+            title="客户地址分布"
           />
         </div>
       ) : (

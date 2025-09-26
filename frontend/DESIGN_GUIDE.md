@@ -201,7 +201,7 @@
 - **分析组件**：使用预定义的分析组件，如：
   - `CustomerStatsAnalysis`：客户统计信息
   - `CustomerLoyaltyAnalysis`：客户忠诚度分析
-  - `RegionalSalesAnalysis`：地域销售分析
+  - `RegionalSalesAnalysis`：客户地址分布
   - `GroupBuyHistoryAnalysis`：团购历史分析
   - `ProductAnalysis`：商品分析
 - **组件传参**：统一传递 `title` 属性用于标题显示

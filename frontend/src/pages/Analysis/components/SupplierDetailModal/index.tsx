@@ -342,11 +342,11 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
             }
           />
 
-          {/* 地域销售分析 */}
+          {/* 客户地址分布 */}
           <RegionalSalesAnalysis
             regionalSales={supplierOverviewDetail.regionalSales}
             onRegionalClick={handleRegionalClick}
-            title="地域销售分析"
+            title="客户地址分布"
           />
         </div>
       ) : (

@@ -616,7 +616,7 @@ export type MergedGroupBuyOverviewDetail = {
   customerPurchaseFrequency: CustomerPurchaseFrequency[]; // 客户购买次数分布
   multiPurchaseCustomerCount: number; // 多次购买客户总数
   multiPurchaseCustomerRatio: number; // 多次购买客户比例
-  regionalSales: RegionalSalesItem[]; // 地域销售分析
+  regionalSales: RegionalSalesItem[]; // 客户地址分布
   groupBuyLaunchHistory: GroupBuyLaunchHistory[]; // 团购发起历史记录
 };
 

@@ -106,28 +106,34 @@ const CustomerLoyaltyAnalysis: React.FC<CustomerLoyaltyAnalysisProps> = ({
         <span className="text-sm text-gray-600">客户购买次数分布</span>
       </Divider>
 
-      {/* 购买次数分布图表和表格 */}
-      <Row gutter={16}>
-        <Col span={12}>
-          <PurchaseFrequencyChart
-            data={customerPurchaseFrequency}
-            onFrequencyClick={onFrequencyClick}
-          />
-        </Col>
-        <Col span={12}>
-          <Table
-            columns={purchaseFrequencyColumns}
-            dataSource={customerPurchaseFrequency.map((item, index) => ({
-              key: index,
-              minFrequency: item.minFrequency,
-              maxFrequency: item.maxFrequency ?? null,
-              count: item.count
-            }))}
-            pagination={false}
-            size="small"
-          />
-        </Col>
-      </Row>
+      {/* 说明：购买次数仅统计订单状态为 PAID/COMPLETED 的订单；退款订单不计入次数。 */}
+      {customerPurchaseFrequency && customerPurchaseFrequency.length > 0 ? (
+        <Row gutter={16}>
+          <Col span={12}>
+            <PurchaseFrequencyChart
+              data={customerPurchaseFrequency}
+              onFrequencyClick={onFrequencyClick}
+            />
+          </Col>
+          <Col span={12}>
+            <Table
+              columns={purchaseFrequencyColumns}
+              dataSource={customerPurchaseFrequency.map((item, index) => ({
+                key: index,
+                minFrequency: item.minFrequency,
+                maxFrequency: item.maxFrequency ?? null,
+                count: item.count
+              }))}
+              pagination={false}
+              size="small"
+            />
+          </Col>
+        </Row>
+      ) : (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-gray-500">暂无客户忠诚度数据</div>
+        </div>
+      )}
     </Card>
   )
 }

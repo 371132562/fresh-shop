@@ -187,20 +187,24 @@ export class AnalysisService {
       );
 
       // 同日下订单处理：
-      // - 订单计数 +1
-      // - 订单趋势 +1（按团购发起日归档）
-      // - 依据规格计算收入/利润，并更新当日销售额/利润
+      // - 订单量与订单趋势：仅计 PAID/COMPLETED（按团购发起日归档）
+      // - 金额口径：退款订单销售额=0、利润=-成本；部分退款按绝对额冲减
+      // - 无论金额口径如何，趋势中的金额按上述规则累计
       for (const order of groupBuy.order as (SelectedOrder & {
         partialRefundAmount: number;
         status: OrderStatus;
       })[]) {
-        orderCount++; // 每找到一个订单就计数
-
-        // 订单趋势（按团购发起日归属）
         const orderDate = dayjs(groupBuy.groupBuyStartDate).format(
           'YYYY-MM-DD',
         );
-        orderTrendMap.set(orderDate, (orderTrendMap.get(orderDate) || 0) + 1);
+        // 订单量与订单趋势仅计入已支付/已完成
+        if (
+          order.status === OrderStatus.PAID ||
+          order.status === OrderStatus.COMPLETED
+        ) {
+          orderCount++;
+          orderTrendMap.set(orderDate, (orderTrendMap.get(orderDate) || 0) + 1);
+        }
 
         // 依据订单 unitId 关联团购规格，得到单价/成本用于金额口径计算
         const selectedUnit = units.find((unit) => unit.id === order.unitId);
@@ -1229,7 +1233,8 @@ export class AnalysisService {
         supplierNamesSet.add(groupBuy.supplier.name);
       }
 
-      // 遍历当前团购单的所有订单（只统计已支付和已完成的订单）
+      // 遍历当前团购单的所有订单（金额统计覆盖 PAID/COMPLETED/REFUNDED；
+      // 客户购买次数与地域去重仅计 PAID/COMPLETED）
       for (const order of groupBuy.order) {
         // 收入与利润统计：包含已支付、已完成、已退款
         if (
@@ -1278,21 +1283,33 @@ export class AnalysisService {
             ) {
               totalOrderCount += 1;
             }
-            uniqueCustomerIds.add(order.customerId);
+            // 参与客户去重：仅在订单为 PAID/COMPLETED 时计入
+            if (
+              order.status === OrderStatus.PAID ||
+              order.status === OrderStatus.COMPLETED
+            ) {
+              uniqueCustomerIds.add(order.customerId);
+            }
 
-            // 统计客户购买次数
-            const currentCount =
-              customerPurchaseCounts.get(order.customerId) || 0;
-            customerPurchaseCounts.set(order.customerId, currentCount + 1);
+            // 仅对已支付/已完成订单统计“购买次数”和“地域客户去重”
+            if (
+              order.status === OrderStatus.PAID ||
+              order.status === OrderStatus.COMPLETED
+            ) {
+              // 统计客户购买次数
+              const currentCount =
+                customerPurchaseCounts.get(order.customerId) || 0;
+              customerPurchaseCounts.set(order.customerId, currentCount + 1);
 
-            // 统计地域销售数据
-            const customerAddress = order.customer.customerAddress;
-            if (customerAddress) {
-              const addressKey = `${customerAddress.id}|${customerAddress.name}`;
-              if (!regionalCustomers.has(addressKey)) {
-                regionalCustomers.set(addressKey, new Set<string>());
+              // 统计地域销售数据（客户去重）
+              const customerAddress = order.customer.customerAddress;
+              if (customerAddress) {
+                const addressKey = `${customerAddress.id}|${customerAddress.name}`;
+                if (!regionalCustomers.has(addressKey)) {
+                  regionalCustomers.set(addressKey, new Set<string>());
+                }
+                regionalCustomers.get(addressKey)!.add(order.customerId);
               }
-              regionalCustomers.get(addressKey)!.add(order.customerId);
             }
           }
         }
@@ -1394,7 +1411,7 @@ export class AnalysisService {
         ? (multiPurchaseCustomerCount / uniqueCustomerCount) * 100
         : 0;
 
-    // 6. 地域销售分析
+    // 6. 客户地址分布
     const regionalSalesResult: RegionalSalesItem[] = Array.from(
       regionalCustomers.entries(),
     ).map(([addressKey, customerSet]) => {
@@ -2248,7 +2265,13 @@ export class AnalysisService {
             });
           }
           const regionalStat = regionalStats.get(addressId)!;
-          regionalStat.customerIds.add(order.customerId);
+          // 仅在有效订单时计入地域去重客户
+          if (
+            order.status === OrderStatus.PAID ||
+            order.status === OrderStatus.COMPLETED
+          ) {
+            regionalStat.customerIds.add(order.customerId);
+          }
         }
       }
 

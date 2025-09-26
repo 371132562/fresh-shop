@@ -1,5 +1,5 @@
-import { BarChartOutlined } from '@ant-design/icons'
-import { Card, Col, Row, Table } from 'antd'
+import { BarChartOutlined, QuestionCircleOutlined } from '@ant-design/icons'
+import { Card, Col, Row, Table, Tooltip } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import type { RegionalSalesItem } from 'fresh-shop-backend/types/dto'
 import React from 'react'
@@ -13,15 +13,15 @@ type RegionalSalesAnalysisProps = {
 }
 
 /**
- * 地域销售分析组件
+ * 客户地址分布组件
  * 展示地域销售分布图表和表格
  */
 const RegionalSalesAnalysis: React.FC<RegionalSalesAnalysisProps> = ({
   regionalSales,
   onRegionalClick,
-  title = '地域销售分析'
+  title = '客户地址分布'
 }) => {
-  // 地域销售分析表格列定义
+  // 客户地址分布表格列定义
   const regionalSalesColumns: ColumnsType<RegionalSalesItem & { key: number }> = [
     {
       title: '地址',
@@ -53,6 +53,18 @@ const RegionalSalesAnalysis: React.FC<RegionalSalesAnalysisProps> = ({
         <div className="flex h-12 items-center gap-2">
           <BarChartOutlined className="text-orange-500" />
           <span className="text-lg font-medium">{title}</span>
+          <Tooltip
+            title={
+              <div>
+                <div>时间口径：按团购发起时间筛选。</div>
+                <div>客户量：基于订单集合，仅统计已支付/已完成（不含已退款）。</div>
+                <div>退款规则：退款订单不计入订单量；金额口径详见后端统计规范。</div>
+              </div>
+            }
+            placement="right"
+          >
+            <QuestionCircleOutlined className="text-gray-400" />
+          </Tooltip>
         </div>
       }
       size="small"

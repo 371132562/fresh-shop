@@ -15,7 +15,7 @@ type RegionalSalesChartProps = {
 }
 
 /**
- * 地域销售分析柱状图组件
+ * 客户地址分布柱状图组件
  * 展示不同地区的客户量分布
  */
 const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({
@@ -39,9 +39,11 @@ const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({
             color: 'rgba(150,150,150,0.15)'
           }
         },
-        formatter: (params: any) => {
-          const dataIndex = params[0].dataIndex
-          const item = data[dataIndex]
+        formatter: (params: unknown) => {
+          type AxisPoint = { dataIndex: number }
+          const arr = Array.isArray(params) ? (params as AxisPoint[]) : []
+          const dataIndex = arr[0]?.dataIndex ?? 0
+          const item = data[dataIndex] ?? { addressName: '未知地址', customerCount: 0 }
           return `${item.addressName || '未知地址'}<br/>客户量: ${item.customerCount}人`
         }
       },
@@ -112,16 +114,21 @@ const RegionalSalesChart: React.FC<RegionalSalesChartProps> = ({
     <Card
       size="small"
       loading={loading}
-      title="地域销售分布图"
+      title="客户地址分布"
       className="h-80"
     >
       <FullscreenChart
-        title="地域销售分布图"
+        title="客户地址分布"
         option={option}
         height="250px"
         onChartClick={params => {
-          if (onRegionalClick && params.data && (params.data as any).addressId) {
-            onRegionalClick((params.data as any).addressId, (params.data as any).addressName)
+          const payload = (
+            params as unknown as {
+              data?: { addressId?: string; addressName?: string }
+            }
+          ).data
+          if (onRegionalClick && payload && payload.addressId) {
+            onRegionalClick(payload.addressId, payload.addressName || '未知地址')
           }
         }}
       />
