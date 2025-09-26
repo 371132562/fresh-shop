@@ -50,7 +50,6 @@ const CustomerSelector = ({
 
   // 自定义选项渲染
   // 显示客户名称和手机号，手机号以灰色小字显示
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const optionRender = (option: any) => (
     <div>
       <div className="font-medium">{option.label}</div>

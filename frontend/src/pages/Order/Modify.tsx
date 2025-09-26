@@ -135,9 +135,10 @@ const Modify = (props: params) => {
             rules={[{ required: true, message: '请输入数量' }]}
           >
             <InputNumber
-              style={{ width: '100%' }}
+              className="w-full"
               placeholder="请输入购买数量"
               min={1}
+              precision={0}
             />
           </Form.Item>
           <Form.Item

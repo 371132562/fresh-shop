@@ -355,8 +355,8 @@ const Modify = (props: params) => {
       >
         <div className="py-4">
           <div className="mb-4 text-center">
-            <div className="mb-2 text-lg text-orange-500">⚠️ 价格警告</div>
-            <div className="text-gray-600">检测到以下规格的售价低于成本价，这可能会导致亏损：</div>
+            <div className="mb-2 text-lg text-orange-500">⚠️ 警告</div>
+            <div className="text-gray-600">检测到以下规格的售价低于成本价，这会导致亏损：</div>
           </div>
 
           {/* 显示有问题的规格详情 */}

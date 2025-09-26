@@ -270,7 +270,7 @@ export const Component: FC = () => {
 
             {/* Content 主内容区：悬浮设计，白色背景，阴影效果，可滚动，防止滚动条影响布局 */}
             <main
-              className="flex-1 rounded-xl bg-white p-6 shadow-lg"
+              className="flex-1 rounded-xl bg-white p-4 shadow-lg md:p-6"
               style={{ scrollbarGutter: 'stable' }}
             >
               <div className="h-full">

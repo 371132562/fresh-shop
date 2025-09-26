@@ -152,6 +152,7 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
       width={800}
       confirmLoading={createLoading}
       style={{ top: 20 }}
+      maskClosable={false}
     >
       <div className="!space-y-4">
         {/* 团购信息展示 */}
@@ -273,7 +274,7 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
                                       <Form.Item
                                         name={[orderField.name, 'customerId']}
                                         label="客户"
-                                        className="!mb-0 md:!mb-0"
+                                        className="!mb-0"
                                         rules={[{ required: true, message: '请选择客户' }]}
                                       >
                                         <CustomerSelector />
@@ -285,16 +286,17 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
                                       <Form.Item
                                         name={[orderField.name, 'quantity']}
                                         label="购买数量"
-                                        className="!mb-0 md:!mb-0"
+                                        className="!mb-0"
                                         rules={[
                                           { required: true, message: '请输入数量' },
                                           { type: 'number', min: 1, message: '数量必须大于0' }
                                         ]}
                                       >
                                         <InputNumber
+                                          className="w-full"
                                           placeholder="请输入购买数量"
                                           min={1}
-                                          className="w-full"
+                                          precision={0}
                                         />
                                       </Form.Item>
                                     </div>
@@ -304,7 +306,7 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
                                       <Form.Item
                                         name={[orderField.name, 'description']}
                                         label="备注"
-                                        className="!mb-0 md:!mb-0"
+                                        className="!mb-0"
                                       >
                                         <Input placeholder="请输入订单备注" />
                                       </Form.Item>
