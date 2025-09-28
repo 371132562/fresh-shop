@@ -112,14 +112,9 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
                     <div className="min-w-0 flex-1">
                       {/* 标题行：分类名 + 金额（随占比切换显示利润或销售额） */}
                       <div className="flex items-center justify-between gap-2">
-                        <Tooltip
-                          title={item.categoryName}
-                          placement="top"
-                        >
-                          <div className="truncate text-base font-medium text-gray-800">
-                            {item.categoryName}
-                          </div>
-                        </Tooltip>
+                        <div className="truncate text-base font-medium text-gray-800">
+                          {item.categoryName}
+                        </div>
                         <div className="whitespace-nowrap text-base font-bold text-blue-400">
                           {formatCurrency(titleAmount)}
                         </div>
@@ -141,7 +136,7 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
                       </div>
 
                       {/* 辅助指标：按顺序 渲染（缺失自动跳过） */}
-                      <div className="mt-2 flex flex-wrap gap-2">
+                      <div className="mt-2 flex flex-wrap">
                         {!globalSetting?.value?.sensitive && (
                           <Tag
                             color="blue"

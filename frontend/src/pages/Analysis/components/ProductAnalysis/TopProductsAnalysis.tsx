@@ -122,19 +122,14 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                     <div className="min-w-0 flex-1">
                       {/* 标题行：商品名 + 金额（随占比切换显示利润或销售额） */}
                       <div className="flex items-center justify-between gap-2">
-                        <Tooltip
-                          title={item.productName}
-                          placement="top"
-                        >
-                          <div className="truncate text-base font-medium text-gray-800">
-                            {item.productName}
-                            {item.categoryName ? (
-                              <span className="ml-1 text-sm text-gray-500">
-                                ({item.categoryName})
-                              </span>
-                            ) : null}
-                          </div>
-                        </Tooltip>
+                        <div className="truncate text-base font-medium text-gray-800">
+                          {item.productName}
+                          {item.categoryName ? (
+                            <span className="ml-1 text-sm text-gray-500">
+                              ({item.categoryName})
+                            </span>
+                          ) : null}
+                        </div>
                         <div className="whitespace-nowrap text-base font-bold text-blue-400">
                           {formatCurrency(titleAmount)}
                         </div>
@@ -156,7 +151,7 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                       </div>
 
                       {/* 辅助指标：按顺序 渲染（不支持的数据跳过） */}
-                      <div className="mt-2 flex flex-wrap gap-2">
+                      <div className="mt-2 flex flex-wrap">
                         {!globalSetting?.value?.sensitive && (
                           <Tag
                             color="blue"
@@ -177,7 +172,6 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                         >
                           订单 {orders}
                         </Tag>
-                        {/* 客户字段已移除，跳过 */}
                       </div>
                     </div>
                   </div>
