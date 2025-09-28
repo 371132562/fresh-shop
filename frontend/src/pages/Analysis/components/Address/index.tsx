@@ -2,38 +2,38 @@ import { Button, Card, Col, Form, Input, List, Row } from 'antd'
 import { useEffect, useState } from 'react'
 
 import SearchToolbar from '@/components/SearchToolbar'
-import ConsumptionDetailStatsModal from '@/pages/Analysis/components/ConsumptionDetailStatsModal'
+import ConsumptionDetailStatsModal from '@/pages/Analysis/components/ConsumptionDetail'
 import useAnalysisStore from '@/stores/analysisStore'
 import useCustomerStore from '@/stores/customerStore'
 
-type CustomerOverviewProps = {
+type AddressOverviewProps = {
   startDate?: Date
   endDate?: Date
 }
 
-// 客户概况：以 List 形式展示客户概况，支持搜索、排序、分页和查看详情
-export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) => {
+// 地址概况：以 List 形式展示地址概况，支持搜索、排序、分页和查看详情
+export const AddressOverview = ({ startDate, endDate }: AddressOverviewProps) => {
   const [sortField, setSortField] = useState<
     'orderCount' | 'totalAmount' | 'averageOrderAmount' | 'totalRefundAmount'
   >('totalAmount')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [form] = Form.useForm()
-  const [customerName, setCustomerName] = useState('')
+  const [addressName, setAddressName] = useState('')
 
-  const customerOverviewList = useAnalysisStore(state => state.customerOverviewList)
-  const customerOverviewLoading = useAnalysisStore(state => state.customerOverviewLoading)
-  const customerOverviewTotal = useAnalysisStore(state => state.customerOverviewTotal)
-  const customerOverviewPage = useAnalysisStore(state => state.customerOverviewPage)
-  const customerOverviewPageSize = useAnalysisStore(state => state.customerOverviewPageSize)
-  const getCustomerOverview = useAnalysisStore(state => state.getCustomerOverview)
-  const setCustomerOverviewPage = useAnalysisStore(state => state.setCustomerOverviewPage)
+  const addressOverviewList = useAnalysisStore(state => state.addressOverviewList)
+  const addressOverviewLoading = useAnalysisStore(state => state.addressOverviewLoading)
+  const addressOverviewTotal = useAnalysisStore(state => state.addressOverviewTotal)
+  const addressOverviewPage = useAnalysisStore(state => state.addressOverviewPage)
+  const addressOverviewPageSize = useAnalysisStore(state => state.addressOverviewPageSize)
+  const getAddressOverview = useAnalysisStore(state => state.getAddressOverview)
+  const setAddressOverviewPage = useAnalysisStore(state => state.setAddressOverviewPage)
 
   const resetConsumptionDetail = useCustomerStore(state => state.resetConsumptionDetail)
 
   const [detailVisible, setDetailVisible] = useState(false)
   const [currentId, setCurrentId] = useState<string | null>(null)
 
-  const fetchData = (page: number = customerOverviewPage) => {
+  const fetchData = (page: number = addressOverviewPage) => {
     const fieldKey = sortField
     const order = sortOrder
     const sortFieldMap = {
@@ -42,21 +42,21 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
       averageOrderAmount: 'averageOrderAmount',
       totalRefundAmount: 'totalRefundAmount'
     } as const
-    getCustomerOverview({
+    getAddressOverview({
       startDate,
       endDate,
       page,
-      pageSize: customerOverviewPageSize,
-      customerName,
+      pageSize: addressOverviewPageSize,
+      addressName,
       sortField: sortFieldMap[fieldKey],
       sortOrder: order
     })
   }
 
-  // 拉取客户概况（支持时间范围/搜索/排序）
+  // 拉取地址概况（支持时间范围/搜索/排序）
   useEffect(() => {
     fetchData(1)
-  }, [startDate, endDate, sortField, sortOrder, customerName])
+  }, [startDate, endDate, sortField, sortOrder, addressName])
 
   const openDetail = (id: string) => {
     setCurrentId(id)
@@ -78,7 +78,7 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
         <Form
           form={form}
           layout="vertical"
-          name="customerOverviewSearchForm"
+          name="addressOverviewSearchForm"
           autoComplete="off"
         >
           <Row gutter={[16, 8]}>
@@ -88,15 +88,15 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
               lg={8}
             >
               <Form.Item
-                label="客户名称"
-                name="customerName"
+                label="地址名称"
+                name="addressName"
                 className="!mb-1"
               >
                 <Input
-                  placeholder="请输入客户名称"
+                  placeholder="请输入地址名称"
                   allowClear
-                  onPressEnter={() => setCustomerName(form.getFieldValue('customerName') || '')}
-                  onClear={() => setCustomerName('')}
+                  onPressEnter={() => setAddressName(form.getFieldValue('addressName') || '')}
+                  onClear={() => setAddressName('')}
                 />
               </Form.Item>
             </Col>
@@ -112,14 +112,14 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
             onSortFieldChange={v => setSortField(v as typeof sortField)}
             sortOrderValue={sortOrder}
             onSortOrderChange={v => setSortOrder(v)}
-            onSearch={() => setCustomerName(form.getFieldValue('customerName') || '')}
+            onSearch={() => setAddressName(form.getFieldValue('addressName') || '')}
             onReset={() => {
-              form.setFieldsValue({ customerName: '' })
-              setCustomerName('')
+              form.setFieldsValue({ addressName: '' })
+              setAddressName('')
             }}
-            searchLoading={customerOverviewLoading}
-            totalCount={customerOverviewTotal}
-            countLabel="个客户"
+            searchLoading={addressOverviewLoading}
+            totalCount={addressOverviewTotal}
+            countLabel="个地址"
           />
         </Form>
       </Card>
@@ -128,29 +128,29 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
         <List
           className="w-full"
           itemLayout="horizontal"
-          loading={customerOverviewLoading}
+          loading={addressOverviewLoading}
           pagination={{
             position: 'bottom',
             align: 'end',
-            total: customerOverviewTotal,
-            current: customerOverviewPage,
-            pageSize: customerOverviewPageSize,
+            total: addressOverviewTotal,
+            current: addressOverviewPage,
+            pageSize: addressOverviewPageSize,
             onChange: p => {
-              setCustomerOverviewPage(p)
+              setAddressOverviewPage(p)
               fetchData(p)
             }
           }}
-          dataSource={customerOverviewList}
+          dataSource={addressOverviewList}
           renderItem={item => (
             <List.Item>
               {/* 自定义容器：左侧信息 + 右侧操作，避免溢出导致响应式混乱 */}
               <div className="flex w-full flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
                 {/* 左侧信息区：可伸展，溢出隐藏，md起自动换行 */}
                 <div className="min-w-0 flex-1 overflow-hidden pr-0 md:pr-4">
-                  {/* 标题：客户名称，小屏单行省略，md起允许换行 */}
+                  {/* 标题：地址名称，小屏单行省略，md起允许换行 */}
                   <div className="mb-1">
                     <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all">
-                      {item.customerName}
+                      {item.addressName}
                     </span>
                   </div>
                   {/* 统计信息：网格布局，保证不撑坏容器 */}
@@ -187,7 +187,7 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
                   <Button
                     color="default"
                     variant="outlined"
-                    onClick={() => openDetail(item.customerId)}
+                    onClick={() => openDetail(item.addressId)}
                   >
                     查看数据
                   </Button>
@@ -203,7 +203,7 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
           visible={detailVisible}
           onClose={closeDetail}
           id={currentId}
-          type="customer"
+          type="address"
           startDate={startDate}
           endDate={endDate}
         />
@@ -212,4 +212,4 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
   )
 }
 
-export default CustomerOverview
+export default AddressOverview

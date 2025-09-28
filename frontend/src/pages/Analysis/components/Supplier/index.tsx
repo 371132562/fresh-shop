@@ -12,7 +12,7 @@ import useAnalysisStore from '@/stores/analysisStore'
 import useGlobalSettingStore from '@/stores/globalSettingStore'
 import { getProfitColor, getProfitMarginColor } from '@/utils/profitColor'
 
-import SupplierDetailModal from './SupplierDetailModal'
+import SupplierDetailModal from './components/SupplierDetailModal'
 
 type SupplierOverviewProps = {
   startDate?: Date

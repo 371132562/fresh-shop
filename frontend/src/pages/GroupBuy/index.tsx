@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
 import SearchToolbar from '@/components/SearchToolbar'
-import MergedGroupBuyDetailModal from '@/pages/Analysis/components/MergedGroupBuyDetailModal'
+import MergedGroupBuyDetailModal from '@/pages/Analysis/components/GroupBuy/components/MergedGroupBuyDetailModal'
 import DeleteGroupBuyButton from '@/pages/GroupBuy/components/DeleteGroupBuyButton'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import {

@@ -6,7 +6,7 @@ import CountUp from 'react-countup'
 import useAnalysisStore from '@/stores/analysisStore'
 import useGlobalSettingStore from '@/stores/globalSettingStore'
 
-import { UnifiedTrendChart } from './UnifiedTrendChart'
+import { UnifiedTrendChart } from './components/UnifiedTrendChart'
 
 type OverviewProps = {
   startDate?: Date

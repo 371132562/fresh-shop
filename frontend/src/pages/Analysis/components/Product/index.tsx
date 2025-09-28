@@ -3,8 +3,8 @@ import { Card, Col, Row } from 'antd'
 import type { ProductCategoryStat, ProductStatItem } from 'fresh-shop-backend/types/dto'
 import React from 'react'
 
-import ProductCategoryAnalysis from './ProductCategoryAnalysis'
-import TopProductsAnalysis from './TopProductsAnalysis'
+import ProductCategoryAnalysis from './components/ProductCategoryAnalysis'
+import TopProductsAnalysis from './components/TopProductsAnalysis'
 
 type ProductAnalysisProps = {
   productStats: ProductStatItem[]

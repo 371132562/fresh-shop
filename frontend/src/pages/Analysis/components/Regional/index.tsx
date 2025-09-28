@@ -4,7 +4,7 @@ import type { ColumnsType } from 'antd/es/table'
 import type { RegionalSalesItem } from 'fresh-shop-backend/types/dto'
 import React from 'react'
 
-import RegionalSalesChart from './RegionalSalesChart'
+import RegionalSalesChart from './components/RegionalSalesChart'
 
 type RegionalSalesAnalysisProps = {
   regionalSales: RegionalSalesItem[]

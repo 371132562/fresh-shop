@@ -3,7 +3,7 @@ import type { CustomerAddressSortField, SortOrder } from 'fresh-shop-backend/typ
 import { useEffect, useState } from 'react'
 
 import SearchToolbar from '@/components/SearchToolbar'
-import ConsumptionDetailStatsModal from '@/pages/Analysis/components/ConsumptionDetailStatsModal/index.tsx'
+import ConsumptionDetailStatsModal from '@/pages/Analysis/components/ConsumptionDetail'
 import useCustomerAddressStore from '@/stores/customerAddressStore.ts'
 import useCustomerStore from '@/stores/customerStore.ts'
 

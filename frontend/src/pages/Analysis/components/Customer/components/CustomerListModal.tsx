@@ -2,7 +2,7 @@ import { Button, Modal, Table } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import React, { useState } from 'react'
 
-import ConsumptionDetailStatsModal from '@/pages/Analysis/components/ConsumptionDetailStatsModal'
+import ConsumptionDetailStatsModal from '@/pages/Analysis/components/ConsumptionDetail'
 import useAnalysisStore from '@/stores/analysisStore'
 import useCustomerStore from '@/stores/customerStore'
 

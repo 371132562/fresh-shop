@@ -8,7 +8,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, useNavigate, useParams } from 'react-router'
 
-import MergedGroupBuyDetailModal from '@/pages/Analysis/components/MergedGroupBuyDetailModal'
+import MergedGroupBuyDetailModal from '@/pages/Analysis/components/GroupBuy/components/MergedGroupBuyDetailModal'
 import DeleteGroupBuyButton from '@/pages/GroupBuy/components/DeleteGroupBuyButton'
 import MultiAdd from '@/pages/GroupBuy/components/MultiAdd'
 import Modify from '@/pages/GroupBuy/Modify.tsx'

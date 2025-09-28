@@ -15,7 +15,7 @@ import useSupplierStore from '@/stores/supplierStore'
 import dayjs from '@/utils/day'
 import { getProfitColor, getProfitMarginColor } from '@/utils/profitColor'
 
-import MergedGroupBuyDetailModal from './MergedGroupBuyDetailModal'
+import MergedGroupBuyDetailModal from './components/MergedGroupBuyDetailModal'
 
 type MergedGroupBuyOverviewProps = {
   startDate?: Date
