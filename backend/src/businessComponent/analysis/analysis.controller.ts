@@ -1,5 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { AnalysisService } from './analysis.service';
+import { CustomerService } from '../customer/customer.service';
 import {
   AddressOverviewParams,
   AnalysisCountParams,
@@ -16,7 +17,10 @@ import {
 
 @Controller('analysis')
 export class AnalysisController {
-  constructor(private readonly analysisService: AnalysisService) {}
+  constructor(
+    private readonly analysisService: AnalysisService,
+    private readonly customerService: CustomerService,
+  ) {}
 
   @Post('count')
   count(@Body() data: AnalysisCountParams) {
@@ -145,5 +149,31 @@ export class AnalysisController {
     @Body() params: SupplierRegionalCustomersParams,
   ) {
     return this.analysisService.getSupplierRegionalCustomers(params);
+  }
+
+  // 客户消费详情
+  @Post('consumptionDetail')
+  consumptionDetail(
+    @Body() data: { id: string; startDate?: Date; endDate?: Date },
+  ) {
+    return this.customerService.getConsumptionDetail(
+      data.id,
+      'customer',
+      data.startDate,
+      data.endDate,
+    );
+  }
+
+  // 地址消费详情
+  @Post('addressConsumptionDetail')
+  addressConsumptionDetail(
+    @Body() data: { id: string; startDate?: Date; endDate?: Date },
+  ) {
+    return this.customerService.getConsumptionDetail(
+      data.id,
+      'address',
+      data.startDate,
+      data.endDate,
+    );
   }
 }

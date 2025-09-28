@@ -85,7 +85,7 @@
 - 订单集：按时间与口径筛选该供货商全部团购与订单。
 - 金额与利润：同统一口径，包含商品/分类/地域等多维统计。
 
-8) /customer/consumptionDetail（客户消费详情）
+8) /analysis/consumptionDetail（客户消费详情，原 /customer/consumptionDetail）
 - 输入：`{ id, startDate?, endDate? }`（客户 ID）。
 - 订单量：仅计 `PAID/COMPLETED`；
 - 金额：退款订单金额=0；非退款订单金额=原价−部分退款；
@@ -98,7 +98,7 @@
   - 订单量仅计 `PAID/COMPLETED`，金额按统一口径；
   - 对比基于“全量订单集合”并按窗口划分。
 
-9) /customer/addressConsumptionDetail（地址消费详情）
+9) /analysis/addressConsumptionDetail（地址消费详情，原 /customer/addressConsumptionDetail）
 - 输入：`{ id, startDate?, endDate? }`（地址 ID）。
 - 口径与 `/customer/consumptionDetail` 一致；
 - 附加：按地址下的客户聚合（`addressCustomerStats`）时：

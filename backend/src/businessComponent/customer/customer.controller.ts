@@ -37,28 +37,4 @@ export class CustomerController {
   listAll() {
     return this.customerService.listAll();
   }
-
-  @Post('consumptionDetail')
-  consumptionDetail(
-    @Body() data: { id: string; startDate?: Date; endDate?: Date },
-  ) {
-    return this.customerService.getConsumptionDetail(
-      data.id,
-      'customer',
-      data.startDate,
-      data.endDate,
-    );
-  }
-
-  @Post('addressConsumptionDetail')
-  addressConsumptionDetail(
-    @Body() data: { id: string; startDate?: Date; endDate?: Date },
-  ) {
-    return this.customerService.getConsumptionDetail(
-      data.id,
-      'address',
-      data.startDate,
-      data.endDate,
-    );
-  }
 }
