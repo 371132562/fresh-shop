@@ -1,6 +1,9 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { AnalysisService } from './analysis.service';
 import { CustomerService } from '../customer/customer.service';
+import { CustomerAddressService } from '../customerAddress/customerAddress.service';
+import { SupplierService } from '../supplier/supplier.service';
+import { GroupBuyService } from '../groupBuy/groupBuy.service';
 import {
   AddressOverviewParams,
   AnalysisCountParams,
@@ -20,6 +23,9 @@ export class AnalysisController {
   constructor(
     private readonly analysisService: AnalysisService,
     private readonly customerService: CustomerService,
+    private readonly customerAddressService: CustomerAddressService,
+    private readonly supplierService: SupplierService,
+    private readonly groupBuyService: GroupBuyService,
   ) {}
 
   @Post('count')
@@ -32,7 +38,7 @@ export class AnalysisController {
    */
   @Post('mergedGroupBuyOverview')
   getMergedGroupBuyOverview(@Body() params: MergedGroupBuyOverviewParams) {
-    return this.analysisService.getMergedGroupBuyOverview(params);
+    return this.groupBuyService.getMergedGroupBuyOverview(params);
   }
 
   /**
@@ -42,7 +48,7 @@ export class AnalysisController {
   getMergedGroupBuyOverviewDetail(
     @Body() params: MergedGroupBuyOverviewDetailParams,
   ) {
-    return this.analysisService.getMergedGroupBuyOverviewDetail(params);
+    return this.groupBuyService.getMergedGroupBuyOverviewDetail(params);
   }
 
   /**
@@ -52,7 +58,7 @@ export class AnalysisController {
   getMergedGroupBuyFrequencyCustomers(
     @Body() params: MergedGroupBuyFrequencyCustomersParams,
   ) {
-    return this.analysisService.getMergedGroupBuyFrequencyCustomers(params);
+    return this.customerService.getMergedGroupBuyFrequencyCustomers(params);
   }
 
   /**
@@ -62,7 +68,7 @@ export class AnalysisController {
   getMergedGroupBuyRegionalCustomers(
     @Body() params: MergedGroupBuyRegionalCustomersParams,
   ) {
-    return this.analysisService.getMergedGroupBuyRegionalCustomers(params);
+    return this.customerService.getMergedGroupBuyRegionalCustomers(params);
   }
 
   /**
@@ -80,7 +86,7 @@ export class AnalysisController {
    */
   @Post('supplierOverview')
   getSupplierOverview(@Body() params: SupplierOverviewParams) {
-    return this.analysisService.getSupplierOverview(params);
+    return this.supplierService.getSupplierOverview(params);
   }
 
   /**
@@ -98,19 +104,19 @@ export class AnalysisController {
    */
   @Post('supplierOverviewDetail')
   getSupplierOverviewDetail(@Body() params: SupplierOverviewDetailParams) {
-    return this.analysisService.getSupplierOverviewDetail(params);
+    return this.supplierService.getSupplierOverviewDetail(params);
   }
 
   // 客户概况
   @Post('customerOverview')
   getCustomerOverview(@Body() params: CustomerOverviewParams) {
-    return this.analysisService.getCustomerOverview(params);
+    return this.customerService.getCustomerOverview(params);
   }
 
   // 地址概况
   @Post('addressOverview')
   getAddressOverview(@Body() params: AddressOverviewParams) {
-    return this.analysisService.getAddressOverview(params);
+    return this.customerAddressService.getAddressOverview(params);
   }
 
   /**
@@ -129,7 +135,7 @@ export class AnalysisController {
   getSupplierFrequencyCustomers(
     @Body() params: SupplierFrequencyCustomersParams,
   ) {
-    return this.analysisService.getSupplierFrequencyCustomers(params);
+    return this.supplierService.getSupplierFrequencyCustomers(params);
   }
 
   /**
@@ -148,7 +154,7 @@ export class AnalysisController {
   getSupplierRegionalCustomers(
     @Body() params: SupplierRegionalCustomersParams,
   ) {
-    return this.analysisService.getSupplierRegionalCustomers(params);
+    return this.supplierService.getSupplierRegionalCustomers(params);
   }
 
   // 客户消费详情
