@@ -172,6 +172,24 @@ export type SupplierListItem = Supplier & {
  */
 export type ProductTypePageParams = CommonPageParams & {
   name: string; // 商品类型名称（模糊搜索）
+  sortField?:
+    | 'createdAt'
+    | 'productCount'
+    | 'orderCount'
+    | 'orderTotalAmount'
+    | 'groupBuyCount'; // 排序字段（可选）
+  sortOrder?: SortOrder; // 排序方向（可选）
+};
+
+/**
+ * 商品类型列表项
+ * 扩展基础商品类型信息，包含统计数据
+ */
+export type ProductTypeListItem = ProductType & {
+  productCount: number; // 商品数量
+  orderCount: number; // 订单数量
+  orderTotalAmount: number; // 订单总额
+  groupBuyCount: number; // 团购单数量
 };
 
 // ===================================================================
@@ -186,6 +204,19 @@ export type ProductTypePageParams = CommonPageParams & {
 export type ProductPageParams = CommonPageParams & {
   name: string; // 商品名称（模糊搜索）
   productTypeIds: ProductType['id'][]; // 商品类型ID数组（精确匹配）
+  sortField?: 'createdAt' | 'orderCount' | 'orderTotalAmount' | 'groupBuyCount'; // 排序字段（可选）
+  sortOrder?: SortOrder; // 排序方向（可选）
+};
+
+/**
+ * 商品列表项
+ * 扩展基础商品信息，包含统计数据
+ */
+export type ProductListItem = Product & {
+  productTypeName: string; // 商品类型名称
+  orderCount: number; // 订单数量
+  orderTotalAmount: number; // 订单总额
+  groupBuyCount: number; // 团购单数量
 };
 
 // ===================================================================

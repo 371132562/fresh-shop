@@ -1,5 +1,9 @@
 import { Button, Card, Col, Form, Input, List, Popconfirm, Row, Select, Tag } from 'antd'
-import type { ProductOverviewDetailParams } from 'fresh-shop-backend/types/dto'
+import type {
+  ProductListItem,
+  ProductOverviewDetailParams,
+  SortOrder
+} from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
 
 import SearchToolbar from '@/components/SearchToolbar'
@@ -76,7 +80,7 @@ export const Component = () => {
   }
 
   // 处理查看数据（统计详情）
-  const handleViewDetail = (item: any) => {
+  const handleViewDetail = (item: ProductListItem) => {
     setDetailParams({
       productId: item.id,
       dimension: 'product'
@@ -164,6 +168,32 @@ export const Component = () => {
           </Row>
           {/* 工具栏区域 */}
           <SearchToolbar
+            sortFieldOptions={[
+              { label: '添加时间', value: 'createdAt' },
+              { label: '订单量', value: 'orderCount' },
+              { label: '订单总额', value: 'orderTotalAmount' },
+              { label: '团购单量', value: 'groupBuyCount' }
+            ]}
+            sortFieldValue={pageParams.sortField}
+            onSortFieldChange={value => {
+              setPageParams({
+                sortField: value as
+                  | 'createdAt'
+                  | 'orderCount'
+                  | 'orderTotalAmount'
+                  | 'groupBuyCount',
+                sortOrder: pageParams.sortOrder,
+                page: 1
+              })
+            }}
+            sortOrderValue={pageParams.sortOrder}
+            onSortOrderChange={order => {
+              setPageParams({
+                sortField: pageParams.sortField,
+                sortOrder: order as SortOrder,
+                page: 1
+              })
+            }}
             onSearch={handleSearch}
             onReset={resetSearch}
             searchLoading={listLoading}
@@ -215,14 +245,32 @@ export const Component = () => {
                       </div>
                     </Button>
                   </div>
-                  {/* 描述：不撑坏布局，按断点换行 */}
-                  {item.description && (
-                    <div className="max-w-full overflow-hidden break-words text-gray-600 md:break-all">
-                      <span className="block overflow-hidden text-ellipsis whitespace-nowrap md:whitespace-normal">
-                        {item.description}
-                      </span>
-                    </div>
-                  )}
+                  {/* 描述/统计：提供订单量与总额，保证不撑坏布局 */}
+                  <div className="space-y-1">
+                    {item.orderCount !== undefined && (
+                      <div className="text-gray-800">
+                        订单量：<span className="text-blue-600">{item.orderCount}</span>
+                      </div>
+                    )}
+                    {item.orderTotalAmount !== undefined && (
+                      <div className="text-gray-800">
+                        订单总额：
+                        <span className="text-blue-600">¥{item.orderTotalAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {item.groupBuyCount !== undefined && (
+                      <div className="text-gray-800">
+                        团购单量：<span className="text-blue-600">{item.groupBuyCount}</span>
+                      </div>
+                    )}
+                    {item.description && (
+                      <div className="max-w-full overflow-hidden break-words text-gray-600 md:break-all">
+                        <span className="block overflow-hidden text-ellipsis whitespace-nowrap md:whitespace-normal">
+                          {item.description}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* 右侧操作区：不收缩，允许换行；窄屏下按钮自然换行 */}

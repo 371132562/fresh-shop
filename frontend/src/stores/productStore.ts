@@ -1,4 +1,4 @@
-import { Product } from 'fresh-shop-backend/types/dto.ts'
+import { Product, ProductListItem } from 'fresh-shop-backend/types/dto.ts'
 import { ListByPage, ProductPageParams } from 'fresh-shop-backend/types/dto.ts'
 import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
@@ -16,8 +16,6 @@ import http from '@/services/base.ts'
 type ProductId = Pick<Product, 'id'>
 
 type ProductCreate = Omit<Product, 'id' | 'delete' | 'createdAt' | 'updatedAt'>
-
-type ProductListItem = Product & { productTypeName: string }
 
 type ProductStore = {
   productsList: ProductListItem[]
@@ -58,7 +56,9 @@ const useProductStore = create<ProductStore>((set, get) => ({
     name: '',
     productTypeIds: [],
     page: 1,
-    pageSize: 10
+    pageSize: 10,
+    sortField: 'createdAt' as const,
+    sortOrder: 'desc' as const
   },
   getProductList: async (data = get().pageParams) => {
     try {

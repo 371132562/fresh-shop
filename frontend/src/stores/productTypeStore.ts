@@ -1,4 +1,4 @@
-import { ProductType } from 'fresh-shop-backend/types/dto.ts'
+import { ProductType, ProductTypeListItem } from 'fresh-shop-backend/types/dto.ts'
 import { ListByPage, ProductTypePageParams } from 'fresh-shop-backend/types/dto.ts'
 import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
@@ -18,7 +18,7 @@ type ProductTypeId = Pick<ProductType, 'id'>
 type ProductTypeCreate = Omit<ProductType, 'id' | 'delete' | 'createdAt' | 'updatedAt'>
 
 type ProductTypeStore = {
-  productTypesList: ProductType[]
+  productTypesList: ProductTypeListItem[]
   listCount: {
     totalCount: number
     totalPages: number
@@ -55,7 +55,9 @@ const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
   pageParams: {
     name: '',
     page: 1,
-    pageSize: 10
+    pageSize: 10,
+    sortField: 'createdAt' as const,
+    sortOrder: 'desc' as const
   },
   getProductTypeList: async (data = get().pageParams) => {
     try {

@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { ProductType, Prisma } from '@prisma/client';
+import { ProductType, Prisma, OrderStatus } from '@prisma/client';
 
-import { ProductTypePageParams, ListByPage } from '../../../types/dto';
+import {
+  ProductTypePageParams,
+  ListByPage,
+  ProductTypeListItem,
+  GroupBuyUnit,
+} from '../../../types/dto';
 import { BusinessException } from '../../exceptions/businessException';
 import { ErrorCode } from '../../../types/response';
 
@@ -24,12 +29,20 @@ export class ProductTypeService {
     });
   }
 
-  async list(data: ProductTypePageParams): Promise<ListByPage<ProductType[]>> {
-    const { page, pageSize, name } = data;
-    const skip = (page - 1) * pageSize; // 计算要跳过的记录数
+  async list(
+    data: ProductTypePageParams,
+  ): Promise<ListByPage<ProductTypeListItem[]>> {
+    const {
+      page,
+      pageSize,
+      name,
+      sortField = 'createdAt',
+      sortOrder = 'desc',
+    } = data;
+    const skip = (page - 1) * pageSize;
 
     const where: Prisma.ProductTypeWhereInput = {
-      delete: 0, // 仅查询未删除的商品类型
+      delete: 0,
     };
 
     if (name) {
@@ -38,25 +51,204 @@ export class ProductTypeService {
       };
     }
 
-    const [productType, totalCount] = await this.prisma.$transaction([
-      this.prisma.productType.findMany({
-        skip: skip,
-        take: pageSize,
-        orderBy: {
-          createdAt: 'desc', // 假设您的表中有一个名为 'createdAt' 的字段
-        },
-        where,
-      }),
-      this.prisma.productType.count({ where }), // 获取总记录数
-    ]);
+    // 对于统计字段，需要先获取所有数据进行全局排序，再分页
+    if (
+      sortField === 'productCount' ||
+      sortField === 'orderCount' ||
+      sortField === 'orderTotalAmount' ||
+      sortField === 'groupBuyCount'
+    ) {
+      // 获取所有符合条件的商品类型数据（不分页）
+      const [allProductTypes, totalCount] = await this.prisma.$transaction([
+        this.prisma.productType.findMany({
+          where,
+          include: {
+            product: {
+              where: {
+                delete: 0,
+              },
+              include: {
+                groupBuy: {
+                  where: {
+                    delete: 0,
+                  },
+                  include: {
+                    order: {
+                      where: {
+                        delete: 0,
+                        status: {
+                          in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }),
+        this.prisma.productType.count({ where }),
+      ]);
 
-    return {
-      data: productType,
-      page: page,
-      pageSize: pageSize,
-      totalCount: totalCount,
-      totalPages: Math.ceil(totalCount / pageSize), // 计算总页数
-    };
+      // 计算每个商品类型的统计数据
+      const productTypesWithStats = allProductTypes.map((productType) => {
+        let productCount = 0;
+        let orderCount = 0;
+        let orderTotalAmount = 0;
+        let groupBuyCount = 0;
+
+        for (const product of productType.product) {
+          productCount++;
+          for (const groupBuy of product.groupBuy) {
+            groupBuyCount++;
+            // 解析units JSON数据
+            const units = Array.isArray(groupBuy.units)
+              ? (groupBuy.units as GroupBuyUnit[])
+              : [];
+
+            for (const order of groupBuy.order) {
+              orderCount++;
+              // 通过unitId找到对应的unit，计算金额
+              const unit = units.find((u) => u.id === order.unitId);
+              if (unit) {
+                orderTotalAmount += unit.price * order.quantity;
+              }
+            }
+          }
+        }
+
+        return {
+          ...productType,
+          productCount,
+          orderCount,
+          orderTotalAmount,
+          groupBuyCount,
+          product: undefined,
+        };
+      });
+
+      // 全局排序
+      const sortedProductTypes = productTypesWithStats.sort((a, b) => {
+        const aValue =
+          sortField === 'productCount'
+            ? a.productCount
+            : sortField === 'orderCount'
+              ? a.orderCount
+              : sortField === 'orderTotalAmount'
+                ? a.orderTotalAmount
+                : a.groupBuyCount;
+        const bValue =
+          sortField === 'productCount'
+            ? b.productCount
+            : sortField === 'orderCount'
+              ? b.orderCount
+              : sortField === 'orderTotalAmount'
+                ? b.orderTotalAmount
+                : b.groupBuyCount;
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      });
+
+      // 分页处理
+      const paginatedProductTypes = sortedProductTypes.slice(
+        skip,
+        skip + pageSize,
+      );
+
+      return {
+        data: paginatedProductTypes,
+        page: page,
+        pageSize: pageSize,
+        totalCount: totalCount,
+        totalPages: Math.ceil(totalCount / pageSize),
+      };
+    } else {
+      // 对于非统计字段（如createdAt），可以直接在数据库层面排序和分页
+      let orderBy: Prisma.ProductTypeOrderByWithRelationInput = {
+        createdAt: 'desc',
+      };
+      if (sortField === 'createdAt') {
+        orderBy = { createdAt: sortOrder };
+      }
+
+      const [productTypes, totalCount] = await this.prisma.$transaction([
+        this.prisma.productType.findMany({
+          skip: skip,
+          take: pageSize,
+          orderBy,
+          where,
+          include: {
+            product: {
+              where: {
+                delete: 0,
+              },
+              include: {
+                groupBuy: {
+                  where: {
+                    delete: 0,
+                  },
+                  include: {
+                    order: {
+                      where: {
+                        delete: 0,
+                        status: {
+                          in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }),
+        this.prisma.productType.count({ where }),
+      ]);
+
+      // 计算每个商品类型的统计数据
+      const productTypesWithStats = productTypes.map((productType) => {
+        let productCount = 0;
+        let orderCount = 0;
+        let orderTotalAmount = 0;
+        let groupBuyCount = 0;
+
+        for (const product of productType.product) {
+          productCount++;
+          for (const groupBuy of product.groupBuy) {
+            groupBuyCount++;
+            // 解析units JSON数据
+            const units = Array.isArray(groupBuy.units)
+              ? (groupBuy.units as GroupBuyUnit[])
+              : [];
+
+            for (const order of groupBuy.order) {
+              orderCount++;
+              // 通过unitId找到对应的unit，计算金额
+              const unit = units.find((u) => u.id === order.unitId);
+              if (unit) {
+                orderTotalAmount += unit.price * order.quantity;
+              }
+            }
+          }
+        }
+
+        return {
+          ...productType,
+          productCount,
+          orderCount,
+          orderTotalAmount,
+          groupBuyCount,
+          product: undefined,
+        };
+      });
+
+      return {
+        data: productTypesWithStats,
+        page: page,
+        pageSize: pageSize,
+        totalCount: totalCount,
+        totalPages: Math.ceil(totalCount / pageSize),
+      };
+    }
   }
 
   async listAll() {

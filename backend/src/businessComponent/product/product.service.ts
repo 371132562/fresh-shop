@@ -5,6 +5,7 @@ import { Product, Prisma, OrderStatus } from '@prisma/client';
 import {
   ProductPageParams,
   ListByPage,
+  ProductListItem,
   ProductOverviewParams,
   ProductOverviewResult,
   ProductOverviewListItem,
@@ -43,12 +44,19 @@ export class ProductService {
     });
   }
 
-  async list(data: ProductPageParams): Promise<ListByPage<Product[]>> {
-    const { page, pageSize, name, productTypeIds } = data; // 从 data 中解构 productTypeIds
-    const skip = (page - 1) * pageSize; // 计算要跳过的记录数
+  async list(data: ProductPageParams): Promise<ListByPage<ProductListItem[]>> {
+    const {
+      page,
+      pageSize,
+      name,
+      productTypeIds,
+      sortField = 'createdAt',
+      sortOrder = 'desc',
+    } = data;
+    const skip = (page - 1) * pageSize;
 
     const where: Prisma.ProductWhereInput = {
-      delete: 0, // 仅查询未删除的商品
+      delete: 0,
     };
 
     if (name) {
@@ -59,42 +67,190 @@ export class ProductService {
 
     if (productTypeIds && productTypeIds.length > 0) {
       where.productTypeId = {
-        in: productTypeIds, // 使用 Prisma 的 in 操作符
+        in: productTypeIds,
       };
     }
 
-    const [product, totalCount] = await this.prisma.$transaction([
-      this.prisma.product.findMany({
-        skip: skip,
-        take: pageSize,
-        orderBy: {
-          createdAt: 'desc', // 假设您的表中有一个名为 'createdAt' 的字段
-        },
-        where,
-        include: {
-          // 新增：包含 productType 信息
-          productType: {
-            select: {
-              name: true, // 只选择 productType 的 name 字段
+    // 对于统计字段，需要先获取所有数据进行全局排序，再分页
+    if (
+      sortField === 'orderCount' ||
+      sortField === 'orderTotalAmount' ||
+      sortField === 'groupBuyCount'
+    ) {
+      // 获取所有符合条件的商品数据（不分页）
+      const [allProducts, totalCount] = await this.prisma.$transaction([
+        this.prisma.product.findMany({
+          where,
+          include: {
+            productType: {
+              select: {
+                name: true,
+              },
+            },
+            groupBuy: {
+              where: {
+                delete: 0,
+              },
+              include: {
+                order: {
+                  where: {
+                    delete: 0,
+                    status: {
+                      in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+                    },
+                  },
+                },
+              },
             },
           },
-        },
-      }),
-      this.prisma.product.count({ where }), // 获取总记录数
-    ]);
+        }),
+        this.prisma.product.count({ where }),
+      ]);
 
-    return {
-      data: product.map((product) => ({
-        // 映射结果，将 productType.name 添加到每个产品对象中
-        ...product,
-        productTypeName: product.productType?.name, // 添加 productTypeName
-        productType: undefined, // 移除原始的 productType 对象，如果不需要
-      })),
-      page: page,
-      pageSize: pageSize,
-      totalCount: totalCount,
-      totalPages: Math.ceil(totalCount / pageSize), // 计算总页数
-    };
+      // 计算每个商品的统计数据
+      const productsWithStats = allProducts.map((product) => {
+        let orderCount = 0;
+        let orderTotalAmount = 0;
+        let groupBuyCount = 0;
+
+        for (const groupBuy of product.groupBuy) {
+          groupBuyCount++;
+          // 解析units JSON数据
+          const units = Array.isArray(groupBuy.units)
+            ? (groupBuy.units as GroupBuyUnit[])
+            : [];
+
+          for (const order of groupBuy.order) {
+            orderCount++;
+            // 通过unitId找到对应的unit，计算金额
+            const unit = units.find((u) => u.id === order.unitId);
+            if (unit) {
+              orderTotalAmount += unit.price * order.quantity;
+            }
+          }
+        }
+
+        return {
+          ...product,
+          productTypeName: product.productType?.name || '',
+          orderCount,
+          orderTotalAmount,
+          groupBuyCount,
+          productType: undefined,
+          groupBuy: undefined,
+        };
+      });
+
+      // 全局排序
+      const sortedProducts = productsWithStats.sort((a, b) => {
+        const aValue =
+          sortField === 'orderCount'
+            ? a.orderCount
+            : sortField === 'orderTotalAmount'
+              ? a.orderTotalAmount
+              : a.groupBuyCount;
+        const bValue =
+          sortField === 'orderCount'
+            ? b.orderCount
+            : sortField === 'orderTotalAmount'
+              ? b.orderTotalAmount
+              : b.groupBuyCount;
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      });
+
+      // 分页处理
+      const paginatedProducts = sortedProducts.slice(skip, skip + pageSize);
+
+      return {
+        data: paginatedProducts,
+        page: page,
+        pageSize: pageSize,
+        totalCount: totalCount,
+        totalPages: Math.ceil(totalCount / pageSize),
+      };
+    } else {
+      // 对于非统计字段（如createdAt），可以直接在数据库层面排序和分页
+      let orderBy: Prisma.ProductOrderByWithRelationInput = {
+        createdAt: 'desc',
+      };
+      if (sortField === 'createdAt') {
+        orderBy = { createdAt: sortOrder };
+      }
+
+      const [products, totalCount] = await this.prisma.$transaction([
+        this.prisma.product.findMany({
+          skip: skip,
+          take: pageSize,
+          orderBy,
+          where,
+          include: {
+            productType: {
+              select: {
+                name: true,
+              },
+            },
+            groupBuy: {
+              where: {
+                delete: 0,
+              },
+              include: {
+                order: {
+                  where: {
+                    delete: 0,
+                    status: {
+                      in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }),
+        this.prisma.product.count({ where }),
+      ]);
+
+      // 计算每个商品的统计数据
+      const productsWithStats = products.map((product) => {
+        let orderCount = 0;
+        let orderTotalAmount = 0;
+        let groupBuyCount = 0;
+
+        for (const groupBuy of product.groupBuy) {
+          groupBuyCount++;
+          // 解析units JSON数据
+          const units = Array.isArray(groupBuy.units)
+            ? (groupBuy.units as GroupBuyUnit[])
+            : [];
+
+          for (const order of groupBuy.order) {
+            orderCount++;
+            // 通过unitId找到对应的unit，计算金额
+            const unit = units.find((u) => u.id === order.unitId);
+            if (unit) {
+              orderTotalAmount += unit.price * order.quantity;
+            }
+          }
+        }
+
+        return {
+          ...product,
+          productTypeName: product.productType?.name || '',
+          orderCount,
+          orderTotalAmount,
+          groupBuyCount,
+          productType: undefined,
+          groupBuy: undefined,
+        };
+      });
+
+      return {
+        data: productsWithStats,
+        page: page,
+        pageSize: pageSize,
+        totalCount: totalCount,
+        totalPages: Math.ceil(totalCount / pageSize),
+      };
+    }
   }
 
   async detail(id: string) {
@@ -255,7 +411,7 @@ export class ProductService {
 
     for (const product of productsWithData) {
       // 初始化统计容器
-      const units = new Map<string, any>(); // 存储团购规格信息，用于计算价格和利润
+      const units = new Map<string, GroupBuyUnit>(); // 存储团购规格信息，用于计算价格和利润
       const uniqueCustomerIds = new Set<string>(); // 去重客户ID，用于统计参与客户数
       let totalRevenue = 0; // 总销售额
       let totalProfit = 0; // 总利润
@@ -267,7 +423,7 @@ export class ProductService {
 
       // 遍历该商品的所有团购单
       for (const groupBuy of product.groupBuy) {
-        const groupBuyUnits = groupBuy.units as Array<GroupBuyUnit>;
+        const groupBuyUnits = groupBuy.units as GroupBuyUnit[];
 
         // 规格信息缓存到 Map（用于后续快速查价/成本）
         for (const unit of groupBuyUnits) {
@@ -276,7 +432,7 @@ export class ProductService {
 
         // 遍历该团购单的所有订单，计算各项统计数据
         for (const order of groupBuy.order) {
-          const unit = units.get(order.unitId) as GroupBuyUnit | undefined;
+          const unit = units.get(order.unitId);
           if (unit) {
             // 金额计算（仅退款不退货规则）
             const originalRevenue = unit.price * order.quantity;
@@ -509,7 +665,7 @@ export class ProductService {
 
     for (const productType of productTypesWithData) {
       // 初始化统计容器
-      const units = new Map<string, any>(); // 存储团购规格信息，用于计算价格和利润
+      const units = new Map<string, GroupBuyUnit>(); // 存储团购规格信息，用于计算价格和利润
       const uniqueCustomerIds = new Set<string>(); // 去重客户ID，用于统计参与客户数
       let totalRevenue = 0; // 总销售额
       let totalProfit = 0; // 总利润
@@ -525,7 +681,7 @@ export class ProductService {
         // 遍历该商品的所有团购单
         for (const groupBuy of product.groupBuy) {
           totalGroupBuyCount++; // 累计团购单数
-          const groupBuyUnits = groupBuy.units as Array<GroupBuyUnit>;
+          const groupBuyUnits = groupBuy.units as GroupBuyUnit[];
 
           // 规格信息缓存到 Map（用于后续快速查价/成本）
           for (const unit of groupBuyUnits) {
@@ -534,7 +690,7 @@ export class ProductService {
 
           // 遍历该团购单的所有订单，计算各项统计数据
           for (const order of groupBuy.order) {
-            const unit = units.get(order.unitId) as GroupBuyUnit | undefined;
+            const unit = units.get(order.unitId);
             if (unit) {
               // 金额计算（仅退款不退货规则）
               const originalRevenue = unit.price * order.quantity;
@@ -754,7 +910,7 @@ export class ProductService {
     });
 
     // 3. 计算统计数据
-    const units = new Map<string, any>();
+    const units = new Map<string, GroupBuyUnit>();
     const uniqueCustomerIds = new Set<string>();
     const supplierStats = new Map<string, SupplierStatItem>();
     const regionalStats = new Map<
@@ -774,7 +930,7 @@ export class ProductService {
 
     for (const groupBuy of groupBuysWithOrders) {
       totalGroupBuyCount++;
-      const groupBuyUnits = groupBuy.units as Array<GroupBuyUnit>;
+      const groupBuyUnits = groupBuy.units as GroupBuyUnit[];
 
       for (const unit of groupBuyUnits) {
         units.set(unit.id, unit);
@@ -783,14 +939,13 @@ export class ProductService {
       let groupBuyRevenue = 0;
       let groupBuyProfit = 0;
       let groupBuyRefundAmount = 0;
-      let groupBuyPartialRefundAmount = 0;
       let groupBuyRefundedOrderCount = 0;
       let groupBuyPartialRefundOrderCount = 0;
       let groupBuyOrderCount = 0;
       const groupBuyCustomerIds = new Set<string>();
 
       for (const order of groupBuy.order) {
-        const unit = units.get(order.unitId) as GroupBuyUnit | undefined;
+        const unit = units.get(order.unitId);
         if (!unit) continue;
 
         const originalRevenue = unit.price * order.quantity;
@@ -819,7 +974,6 @@ export class ProductService {
           totalPartialRefundAmount += partial;
           totalPartialRefundOrderCount += 1;
           groupBuyRefundAmount += partial;
-          groupBuyPartialRefundAmount += partial;
           groupBuyPartialRefundOrderCount += 1;
         }
 
@@ -1139,7 +1293,7 @@ export class ProductService {
     });
 
     // 3. 计算统计数据（类似商品详情，但按商品类型聚合）
-    const units = new Map<string, any>();
+    const units = new Map<string, GroupBuyUnit>();
     const uniqueCustomerIds = new Set<string>();
     const supplierStats = new Map<string, SupplierStatItem>();
     const regionalStats = new Map<
@@ -1173,7 +1327,7 @@ export class ProductService {
       for (const groupBuy of product.groupBuy) {
         totalGroupBuyCount++;
         productGroupBuyCount++;
-        const groupBuyUnits = groupBuy.units as Array<GroupBuyUnit>;
+        const groupBuyUnits = groupBuy.units as GroupBuyUnit[];
 
         for (const unit of groupBuyUnits) {
           units.set(unit.id, unit);
@@ -1182,14 +1336,13 @@ export class ProductService {
         let groupBuyRevenue = 0;
         let groupBuyProfit = 0;
         let groupBuyRefundAmount = 0;
-        let groupBuyPartialRefundAmount = 0;
         let groupBuyRefundedOrderCount = 0;
         let groupBuyPartialRefundOrderCount = 0;
         let groupBuyOrderCount = 0;
         const groupBuyCustomerIds = new Set<string>();
 
         for (const order of groupBuy.order) {
-          const unit = units.get(order.unitId) as GroupBuyUnit | undefined;
+          const unit = units.get(order.unitId);
           if (!unit) continue;
 
           const originalRevenue = unit.price * order.quantity;
@@ -1227,7 +1380,6 @@ export class ProductService {
             productPartialRefundAmount += partial;
             productPartialRefundOrderCount += 1;
             groupBuyRefundAmount += partial;
-            groupBuyPartialRefundAmount += partial;
             groupBuyPartialRefundOrderCount += 1;
           }
 
