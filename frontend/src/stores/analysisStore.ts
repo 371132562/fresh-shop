@@ -8,6 +8,11 @@ import {
   analysisMergedGroupBuyOverviewApi,
   analysisMergedGroupBuyOverviewDetailApi,
   analysisMergedGroupBuyRegionalCustomersApi,
+  analysisProductFrequencyCustomersApi,
+  analysisProductOverviewApi,
+  analysisProductOverviewDetailApi,
+  analysisProductRegionalCustomersApi,
+  analysisProductTypeOverviewApi,
   analysisSupplierFrequencyCustomersApi,
   analysisSupplierOverviewApi,
   analysisSupplierOverviewDetailApi,
@@ -31,6 +36,18 @@ import type {
   MergedGroupBuyOverviewResult,
   MergedGroupBuyRegionalCustomersParams,
   MergedGroupBuyRegionalCustomersResult,
+  ProductFrequencyCustomersParams,
+  ProductFrequencyCustomersResult,
+  ProductOverviewDetail,
+  ProductOverviewDetailParams,
+  ProductOverviewListItem,
+  ProductOverviewParams,
+  ProductOverviewResult,
+  ProductRegionalCustomersParams,
+  ProductRegionalCustomersResult,
+  ProductTypeOverviewListItem,
+  ProductTypeOverviewParams,
+  ProductTypeOverviewResult,
   SupplierFrequencyCustomersParams,
   SupplierFrequencyCustomersResult,
   SupplierOverviewDetail,
@@ -112,6 +129,10 @@ type AnalysisStore = {
   // 处理地域点击事件
   handleRegionalClick: (addressId: string, addressName: string) => Promise<void>
 
+  // 商品相关客户查询方法
+  getProductFrequencyCustomers: (params: ProductFrequencyCustomersParams) => Promise<void>
+  getProductRegionalCustomers: (params: ProductRegionalCustomersParams) => Promise<void>
+
   // 供货商概况数据
   supplierOverviewList: SupplierOverviewListItem[]
   supplierOverviewTotal: number
@@ -132,6 +153,30 @@ type AnalysisStore = {
 
   // 获取供货商特定区域的客户列表
   getSupplierRegionalCustomers: (params: SupplierRegionalCustomersParams) => Promise<void>
+
+  // 商品概况数据
+  productOverviewList: ProductOverviewListItem[]
+  productOverviewTotal: number
+  productOverviewPage: number
+  productOverviewPageSize: number
+  productOverviewLoading: boolean
+  getProductOverview: (data: ProductOverviewParams) => Promise<void>
+  setProductOverviewPage: (page: number) => void
+
+  // 商品类型概况数据
+  productTypeOverviewList: ProductTypeOverviewListItem[]
+  productTypeOverviewTotal: number
+  productTypeOverviewPage: number
+  productTypeOverviewPageSize: number
+  productTypeOverviewLoading: boolean
+  getProductTypeOverview: (data: ProductTypeOverviewParams) => Promise<void>
+  setProductTypeOverviewPage: (page: number) => void
+
+  // 商品概况详情数据（共享）
+  productOverviewDetail: ProductOverviewDetail | null
+  productOverviewDetailLoading: boolean
+  getProductOverviewDetail: (params: ProductOverviewDetailParams) => Promise<void>
+  resetProductOverviewDetail: () => void
 
   // 客户概况数据
   customerOverviewList: CustomerOverviewResult['list']
@@ -339,8 +384,9 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
     const state = get()
     const detail = state.mergedGroupBuyOverviewDetail
     const supplierDetail = state.supplierOverviewDetail
+    const productDetail = state.productOverviewDetail
 
-    if (!detail && !supplierDetail) return
+    if (!detail && !supplierDetail && !productDetail) return
 
     const titleLabel = (() => {
       if (maxFrequency == null) return `购买${minFrequency}次及以上 的客户列表`
@@ -376,6 +422,17 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
         startDate: supplierDetail.startDate,
         endDate: supplierDetail.endDate
       })
+    } else if (productDetail) {
+      // 商品详情
+      await state.getProductFrequencyCustomers({
+        productId: productDetail.productId,
+        productTypeId: productDetail.productTypeId,
+        dimension: productDetail.dimension,
+        minFrequency,
+        maxFrequency: maxFrequency ?? undefined,
+        startDate: productDetail.startDate,
+        endDate: productDetail.endDate
+      })
     }
   },
 
@@ -384,8 +441,9 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
     const state = get()
     const detail = state.mergedGroupBuyOverviewDetail
     const supplierDetail = state.supplierOverviewDetail
+    const productDetail = state.productOverviewDetail
 
-    if (!detail && !supplierDetail) return
+    if (!detail && !supplierDetail && !productDetail) return
 
     set({
       customerListTitle: `${addressName} 地址的客户列表`,
@@ -412,6 +470,55 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
         addressId,
         startDate: supplierDetail.startDate,
         endDate: supplierDetail.endDate
+      })
+    } else if (productDetail) {
+      // 商品详情
+      await state.getProductRegionalCustomers({
+        productId: productDetail.productId,
+        productTypeId: productDetail.productTypeId,
+        dimension: productDetail.dimension,
+        addressId,
+        startDate: productDetail.startDate,
+        endDate: productDetail.endDate
+      })
+    }
+  },
+
+  // 商品相关客户查询方法
+  getProductFrequencyCustomers: async (params: ProductFrequencyCustomersParams) => {
+    try {
+      const res = await http.post<ProductFrequencyCustomersResult>(
+        analysisProductFrequencyCustomersApi,
+        params
+      )
+      set({
+        customerListData: res.data.customers,
+        customerListLoading: false
+      })
+    } catch (error) {
+      console.error('获取商品频次客户数据失败:', error)
+      set({
+        customerListData: [],
+        customerListLoading: false
+      })
+    }
+  },
+
+  getProductRegionalCustomers: async (params: ProductRegionalCustomersParams) => {
+    try {
+      const res = await http.post<ProductRegionalCustomersResult>(
+        analysisProductRegionalCustomersApi,
+        params
+      )
+      set({
+        customerListData: res.data.customers,
+        customerListLoading: false
+      })
+    } catch (error) {
+      console.error('获取商品地域客户数据失败:', error)
+      set({
+        customerListData: [],
+        customerListLoading: false
       })
     }
   },
@@ -488,6 +595,70 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
     } finally {
       set({ customerListLoading: false })
     }
+  },
+
+  // 商品概况数据
+  productOverviewList: [],
+  productOverviewTotal: 0,
+  productOverviewPage: 1,
+  productOverviewPageSize: 10,
+  productOverviewLoading: false,
+  getProductOverview: async data => {
+    try {
+      set({ productOverviewLoading: true })
+      const res = await http.post<ProductOverviewResult>(analysisProductOverviewApi, data)
+      set({
+        productOverviewList: res.data.list,
+        productOverviewTotal: res.data.total,
+        productOverviewPage: res.data.page,
+        productOverviewPageSize: res.data.pageSize
+      })
+    } finally {
+      set({ productOverviewLoading: false })
+    }
+  },
+  setProductOverviewPage: page => {
+    set({ productOverviewPage: page })
+  },
+
+  // 商品类型概况数据
+  productTypeOverviewList: [],
+  productTypeOverviewTotal: 0,
+  productTypeOverviewPage: 1,
+  productTypeOverviewPageSize: 10,
+  productTypeOverviewLoading: false,
+  getProductTypeOverview: async data => {
+    try {
+      set({ productTypeOverviewLoading: true })
+      const res = await http.post<ProductTypeOverviewResult>(analysisProductTypeOverviewApi, data)
+      set({
+        productTypeOverviewList: res.data.list,
+        productTypeOverviewTotal: res.data.total,
+        productTypeOverviewPage: res.data.page,
+        productTypeOverviewPageSize: res.data.pageSize
+      })
+    } finally {
+      set({ productTypeOverviewLoading: false })
+    }
+  },
+  setProductTypeOverviewPage: page => {
+    set({ productTypeOverviewPage: page })
+  },
+
+  // 商品概况详情数据（共享）
+  productOverviewDetail: null,
+  productOverviewDetailLoading: false,
+  getProductOverviewDetail: async params => {
+    set({ productOverviewDetailLoading: true })
+    try {
+      const res = await http.post(analysisProductOverviewDetailApi, params)
+      set({ productOverviewDetail: res.data })
+    } finally {
+      set({ productOverviewDetailLoading: false })
+    }
+  },
+  resetProductOverviewDetail: () => {
+    set({ productOverviewDetail: null })
   },
 
   // 客户概况数据

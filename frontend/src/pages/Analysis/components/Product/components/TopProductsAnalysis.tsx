@@ -102,7 +102,7 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
               const titleAmount = effectiveMetric === 'profit' ? profit : revenue
 
               return (
-                <List.Item className="px-2 py-2">
+                <List.Item className="border-b border-gray-100 px-2 py-3 last:border-b-0">
                   <div className="flex w-full items-start gap-3">
                     <div className="pt-1">
                       <Badge
@@ -122,13 +122,18 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                     <div className="min-w-0 flex-1">
                       {/* 标题行：商品名 + 金额（随占比切换显示利润或销售额） */}
                       <div className="flex items-center justify-between gap-2">
-                        <div className="truncate text-base font-medium text-gray-800">
-                          {item.productName}
-                          {item.categoryName ? (
-                            <span className="ml-1 text-sm text-gray-500">
-                              ({item.categoryName})
-                            </span>
-                          ) : null}
+                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                          <span className="truncate text-base font-medium text-gray-800">
+                            {item.productName}
+                          </span>
+                          {item.categoryName && (
+                            <Tag
+                              color="blue"
+                              className="m-0 flex-shrink-0"
+                            >
+                              {item.categoryName}
+                            </Tag>
+                          )}
                         </div>
                         <div className="whitespace-nowrap text-base font-bold text-blue-400">
                           {formatCurrency(titleAmount)}
@@ -151,7 +156,7 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                       </div>
 
                       {/* 辅助指标：按顺序 渲染（不支持的数据跳过） */}
-                      <div className="mt-2 flex flex-wrap">
+                      <div className="mt-3 flex flex-wrap gap-2">
                         {!globalSetting?.value?.sensitive && (
                           <Tag
                             color="blue"
@@ -172,6 +177,24 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                         >
                           订单 {orders}
                         </Tag>
+                        {item.totalRefundAmount > 0 && (
+                          <Tag
+                            color="orange"
+                            className="m-0"
+                          >
+                            退款 ¥{item.totalRefundAmount.toFixed(2)}
+                          </Tag>
+                        )}
+                        {(item.totalPartialRefundOrderCount > 0 ||
+                          item.totalRefundedOrderCount > 0) && (
+                          <Tag
+                            color="orange"
+                            className="m-0"
+                          >
+                            部分/全额退款 {item.totalPartialRefundOrderCount}/
+                            {item.totalRefundedOrderCount} 单
+                          </Tag>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -13,6 +13,13 @@ import { getProfitColor, getProfitMarginColor } from '@/utils/profitColor'
 type GroupBuyHistoryAnalysisProps = {
   groupBuyHistory: GroupBuyLaunchHistory[]
   title?: string
+  // 团购统计数据（从接口直接获取，避免前端计算）
+  averageGroupBuyRevenue?: number
+  averageGroupBuyProfit?: number
+  averageGroupBuyOrderCount?: number
+  totalRefundAmount?: number
+  totalPartialRefundOrderCount?: number
+  totalRefundedOrderCount?: number
 }
 
 /**
@@ -21,7 +28,13 @@ type GroupBuyHistoryAnalysisProps = {
  */
 const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
   groupBuyHistory,
-  title = '团购历史'
+  title = '团购历史',
+  averageGroupBuyRevenue,
+  averageGroupBuyProfit,
+  averageGroupBuyOrderCount,
+  totalRefundAmount,
+  totalPartialRefundOrderCount,
+  totalRefundedOrderCount
 }) => {
   // 控制"详细团购记录"展开/收起
   const [isExpanded, setIsExpanded] = useState(false)
@@ -130,26 +143,13 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
     }
   ]
 
-  // 计算统计指标
-  const totalRevenue = groupBuyHistory.reduce((sum, item) => sum + item.revenue, 0)
-  const totalProfit = groupBuyHistory.reduce((sum, item) => sum + item.profit, 0)
-  const totalRefundAmount = groupBuyHistory.reduce(
-    (sum, item) => sum + (item.totalRefundAmount || 0),
-    0
-  )
-  const totalOrderCount = groupBuyHistory.reduce((sum, item) => sum + item.orderCount, 0)
-  const totalPartialRefundOrderCount = groupBuyHistory.reduce(
-    (sum, item) => sum + (item.partialRefundOrderCount || 0),
-    0
-  )
-  const totalRefundedOrderCount = groupBuyHistory.reduce(
-    (sum, item) => sum + (item.refundedOrderCount || 0),
-    0
-  )
-  const averageRevenue = groupBuyHistory.length > 0 ? totalRevenue / groupBuyHistory.length : 0
-  const averageProfit = groupBuyHistory.length > 0 ? totalProfit / groupBuyHistory.length : 0
-  const averageOrderCount =
-    groupBuyHistory.length > 0 ? totalOrderCount / groupBuyHistory.length : 0
+  // 使用接口返回的统计数据，避免前端重复计算
+  const averageRevenue = averageGroupBuyRevenue || 0
+  const averageProfit = averageGroupBuyProfit || 0
+  const averageOrderCount = averageGroupBuyOrderCount || 0
+  const refundAmount = totalRefundAmount || 0
+  const partialRefundOrderCount = totalPartialRefundOrderCount || 0
+  const refundedOrderCount = totalRefundedOrderCount || 0
 
   // 处理表格排序变化
   const handleTableChange = (
@@ -212,7 +212,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
             <Col span={5}>
               <Statistic
                 title="退款金额"
-                value={totalRefundAmount}
+                value={refundAmount}
                 precision={2}
                 prefix="¥"
                 valueStyle={{ color: '#ea580c' }}
@@ -221,7 +221,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
             <Col span={4}>
               <Statistic
                 title="部分退款/退款订单量"
-                value={`${totalPartialRefundOrderCount}/${totalRefundedOrderCount}`}
+                value={`${partialRefundOrderCount}/${refundedOrderCount}`}
                 suffix="单"
                 valueStyle={{ color: '#ea580c' }}
               />

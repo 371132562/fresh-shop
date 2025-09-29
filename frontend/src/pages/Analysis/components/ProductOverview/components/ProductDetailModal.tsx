@@ -1,6 +1,6 @@
 import { InfoCircleOutlined, QuestionCircleOutlined, TrophyOutlined } from '@ant-design/icons'
 import { Card, Col, Modal, Row, Skeleton, Tooltip } from 'antd'
-import type { SupplierOverviewDetailParams } from 'fresh-shop-backend/types/dto'
+import type { ProductOverviewDetailParams } from 'fresh-shop-backend/types/dto'
 import React, { useEffect } from 'react'
 
 import useAnalysisStore from '@/stores/analysisStore'
@@ -21,33 +21,31 @@ import GroupBuyHistoryAnalysis from '../../GroupBuyOverview/components/GroupBuyH
 import ProductAnalysis from '../../Product'
 import RegionalSalesAnalysis from '../../Regional'
 
-type SupplierDetailModalProps = {
+type ProductDetailModalProps = {
   visible: boolean
   onClose: () => void
-  params?: SupplierOverviewDetailParams
+  params?: ProductOverviewDetailParams
   width?: number
 }
 
 /**
- * 供货商详情模态框组件
- * 展示供货商的详细数据分析，包括销售统计、客户分析、产品分析等
+ * 商品详情模态框组件
+ * 展示商品或商品类型的详细数据分析，包括销售统计、客户分析、产品分析等
+ * 通过 dimension 参数区分是商品维度还是商品类型维度
  */
-const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
+const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   visible,
   onClose,
   params,
   width = 1000
-}: SupplierDetailModalProps) => {
+}: ProductDetailModalProps) => {
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
-  // 客户列表模态框状态
 
   // 从 Zustand store 中获取分析数据的方法和状态
-  const getSupplierOverviewDetail = useAnalysisStore(state => state.getSupplierOverviewDetail)
-  const supplierOverviewDetail = useAnalysisStore(state => state.supplierOverviewDetail)
-  const supplierOverviewDetailLoading = useAnalysisStore(
-    state => state.supplierOverviewDetailLoading
-  )
-  const resetSupplierOverviewDetail = useAnalysisStore(state => state.resetSupplierOverviewDetail)
+  const getProductOverviewDetail = useAnalysisStore(state => state.getProductOverviewDetail)
+  const productOverviewDetail = useAnalysisStore(state => state.productOverviewDetail)
+  const productOverviewDetailLoading = useAnalysisStore(state => state.productOverviewDetailLoading)
+  const resetProductOverviewDetail = useAnalysisStore(state => state.resetProductOverviewDetail)
   const resetMergedGroupBuyOverviewDetail = useAnalysisStore(
     state => state.resetMergedGroupBuyOverviewDetail
   )
@@ -59,23 +57,44 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
     if (visible && params) {
       // 清理团购单详情数据，避免状态冲突
       resetMergedGroupBuyOverviewDetail()
-      getSupplierOverviewDetail(params)
+      getProductOverviewDetail(params)
     } else if (!visible) {
       // 当模态框关闭时，清理数据
-      resetSupplierOverviewDetail()
+      resetProductOverviewDetail()
     }
   }, [visible, params])
+
+  // 根据维度获取标题和描述
+  const getTitleAndDescription = () => {
+    if (!productOverviewDetail) return { title: '', description: '' }
+
+    if (productOverviewDetail.dimension === 'product') {
+      return {
+        title: `商品：${productOverviewDetail.productName}`,
+        description:
+          '按当前选择的时间；未选择则统计全部时间。只计算已支付和已完成的订单，范围为该商品的所有团购单。'
+      }
+    } else {
+      return {
+        title: `商品类型：${productOverviewDetail.productTypeName}`,
+        description:
+          '按当前选择的时间；未选择则统计全部时间。只计算已支付和已完成的订单，范围为该商品类型下所有商品的所有团购单。'
+      }
+    }
+  }
+
+  const { title, description } = getTitleAndDescription()
 
   return (
     <Modal
       title={
         <div className="flex items-center gap-2">
-          <span>供货商详细数据</span>
+          <span>{title}</span>
           <Tooltip
             title={
               <div style={{ maxWidth: 500, lineHeight: 1.6 }}>
                 <b>统计范围：</b>
-                按当前选择的时间；未选择则统计全部时间。只计算已支付和已完成的订单，范围为该供货商名下的所有团购单。
+                {description}
               </div>
             }
           >
@@ -87,12 +106,12 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
       onCancel={onClose}
       footer={null}
       width={width}
-      className="supplier-detail-modal"
+      className="product-detail-modal"
       style={{
         top: 20
       }}
     >
-      {supplierOverviewDetailLoading ? (
+      {productOverviewDetailLoading ? (
         <div className="space-y-3 py-2">
           <Skeleton
             active
@@ -108,22 +127,20 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
             paragraph={{ rows: 6 }}
           />
         </div>
-      ) : supplierOverviewDetail ? (
+      ) : productOverviewDetail ? (
         <div className="!space-y-2">
-          {/* 供货商基本信息 */}
+          {/* 基本信息 */}
           <Card
             title={
               <div className="flex h-12 items-center justify-between">
                 <div className="flex items-center gap-2">
                   <TrophyOutlined className="text-blue-500" />
-                  <span className="text-lg font-medium">
-                    供货商：{supplierOverviewDetail.supplierName}
-                  </span>
+                  <span className="text-lg font-medium">{title}</span>
                 </div>
-                {supplierOverviewDetail.startDate && supplierOverviewDetail.endDate ? (
+                {productOverviewDetail.startDate && productOverviewDetail.endDate ? (
                   <span className="text-sm text-orange-500">
-                    统计时间：{dayjs(supplierOverviewDetail.startDate).format('YYYY-MM-DD')} -{' '}
-                    {dayjs(supplierOverviewDetail.endDate).format('YYYY-MM-DD')}
+                    统计时间：{dayjs(productOverviewDetail.startDate).format('YYYY-MM-DD')} -{' '}
+                    {dayjs(productOverviewDetail.endDate).format('YYYY-MM-DD')}
                   </span>
                 ) : (
                   <span className="text-sm text-orange-500">当前为全部时间统计</span>
@@ -158,7 +175,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                           </Tooltip>
                         </div>
                         <div className="mt-1 text-xl font-bold text-blue-400">
-                          ¥{supplierOverviewDetail.totalRevenue.toFixed(2)}
+                          ¥{productOverviewDetail.totalRevenue.toFixed(2)}
                         </div>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-100">
@@ -185,18 +202,18 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                             </Tooltip>
                           </div>
                           <div
-                            className={`mt-1 text-xl font-bold ${getProfitColor(supplierOverviewDetail.totalProfit)}`}
+                            className={`mt-1 text-xl font-bold ${getProfitColor(productOverviewDetail.totalProfit)}`}
                           >
-                            ¥{supplierOverviewDetail.totalProfit.toFixed(2)}
+                            ¥{productOverviewDetail.totalProfit.toFixed(2)}
                           </div>
                         </div>
                         <div
-                          className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(supplierOverviewDetail.totalProfit)}`}
+                          className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(productOverviewDetail.totalProfit)}`}
                         >
                           <span
-                            className={`text-xl ${getProfitIconColor(supplierOverviewDetail.totalProfit)}`}
+                            className={`text-xl ${getProfitIconColor(productOverviewDetail.totalProfit)}`}
                           >
-                            {getProfitIcon(supplierOverviewDetail.totalProfit)}
+                            {getProfitIcon(productOverviewDetail.totalProfit)}
                           </span>
                         </div>
                       </div>
@@ -204,7 +221,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                   </Col>
                 )}
 
-                {/* 平均利润率 */}
+                {/* 利润率 */}
                 {!globalSetting?.value?.sensitive && (
                   <Col
                     xs={24}
@@ -214,18 +231,18 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                     <div className="rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-sm font-medium text-gray-600">平均利润率</div>
+                          <div className="text-sm font-medium text-gray-600">利润率</div>
                           <div
-                            className={`mt-1 text-xl font-bold ${getProfitMarginColor(supplierOverviewDetail.averageProfitMargin)}`}
+                            className={`mt-1 text-xl font-bold ${getProfitMarginColor(productOverviewDetail.totalProfitMargin)}`}
                           >
-                            {supplierOverviewDetail.averageProfitMargin.toFixed(1)}%
+                            {productOverviewDetail.totalProfitMargin.toFixed(1)}%
                           </div>
                         </div>
                         <div
-                          className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(supplierOverviewDetail.averageProfitMargin)}`}
+                          className={`flex h-12 w-12 items-center justify-center rounded-full ${getProfitBgColor(productOverviewDetail.totalProfitMargin)}`}
                         >
                           <span
-                            className={`text-xl ${getProfitIconColor(supplierOverviewDetail.averageProfitMargin)}`}
+                            className={`text-xl ${getProfitIconColor(productOverviewDetail.totalProfitMargin)}`}
                           >
                             📊
                           </span>
@@ -246,7 +263,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                       <div>
                         <div className="text-sm font-medium text-gray-600">团购单量</div>
                         <div className="mt-1 text-xl font-bold text-blue-600">
-                          {supplierOverviewDetail.totalGroupBuyCount}个
+                          {productOverviewDetail.totalGroupBuyCount}个
                         </div>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
@@ -267,7 +284,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                       <div>
                         <div className="text-sm font-medium text-gray-600">订单量</div>
                         <div className="mt-1 text-xl font-bold text-blue-600">
-                          {supplierOverviewDetail.totalOrderCount}单
+                          {productOverviewDetail.totalOrderCount}单
                         </div>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
@@ -288,8 +305,8 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                       <div>
                         <div className="text-sm font-medium text-gray-600">部分退款/退款订单量</div>
                         <div className="mt-1 text-xl font-bold text-orange-600">
-                          {supplierOverviewDetail.totalPartialRefundOrderCount || 0}/
-                          {supplierOverviewDetail.totalRefundedOrderCount || 0} 单
+                          {productOverviewDetail.totalPartialRefundOrderCount || 0}/
+                          {productOverviewDetail.totalRefundedOrderCount || 0} 单
                         </div>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
@@ -302,55 +319,64 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
             </div>
           </Card>
 
-          {/* 商品分析 */}
-          <ProductAnalysis
-            productStats={supplierOverviewDetail.productStats}
-            productCategoryStats={supplierOverviewDetail.productCategoryStats}
-            title="商品分析"
-          />
+          {/* 商品类型维度特有：商品统计 */}
+          {productOverviewDetail.dimension === 'productType' &&
+            productOverviewDetail.productStats && (
+              <ProductAnalysis
+                productStats={productOverviewDetail.productStats}
+                productCategoryStats={[]} // 商品类型详情不需要分类统计
+                title="商品统计"
+                showCategoryStats={false} // 不显示商品分类统计
+              />
+            )}
 
           {/* 团购历史 */}
           <GroupBuyHistoryAnalysis
-            groupBuyHistory={supplierOverviewDetail.groupBuyHistory}
+            groupBuyHistory={productOverviewDetail.groupBuyHistory}
             title="团购历史"
-            averageGroupBuyRevenue={supplierOverviewDetail.averageGroupBuyRevenue}
-            averageGroupBuyProfit={supplierOverviewDetail.averageGroupBuyProfit}
-            averageGroupBuyOrderCount={supplierOverviewDetail.averageGroupBuyOrderCount}
-            totalRefundAmount={supplierOverviewDetail.totalRefundAmount}
-            totalPartialRefundOrderCount={supplierOverviewDetail.totalPartialRefundOrderCount}
-            totalRefundedOrderCount={supplierOverviewDetail.totalRefundedOrderCount}
+            averageGroupBuyRevenue={productOverviewDetail.averageGroupBuyRevenue}
+            averageGroupBuyProfit={productOverviewDetail.averageGroupBuyProfit}
+            averageGroupBuyOrderCount={productOverviewDetail.averageGroupBuyOrderCount}
+            totalRefundAmount={productOverviewDetail.totalRefundAmount}
+            totalPartialRefundOrderCount={productOverviewDetail.totalPartialRefundOrderCount}
+            totalRefundedOrderCount={productOverviewDetail.totalRefundedOrderCount}
           />
 
           {/* 客户统计信息 */}
           <CustomerStatsAnalysis
-            uniqueCustomerCount={supplierOverviewDetail.uniqueCustomerCount}
-            averageCustomerOrderValue={supplierOverviewDetail.averageCustomerOrderValue}
+            uniqueCustomerCount={productOverviewDetail.uniqueCustomerCount}
+            averageCustomerOrderValue={productOverviewDetail.averageCustomerOrderValue}
             title="客户统计"
           />
 
           {/* 客户忠诚度分析 */}
           <CustomerLoyaltyAnalysis
-            multiPurchaseCustomerCount={supplierOverviewDetail.multiPurchaseCustomerCount}
-            multiPurchaseCustomerRatio={supplierOverviewDetail.multiPurchaseCustomerRatio}
-            customerPurchaseFrequency={supplierOverviewDetail.customerPurchaseFrequency}
+            multiPurchaseCustomerCount={productOverviewDetail.multiPurchaseCustomerCount}
+            multiPurchaseCustomerRatio={productOverviewDetail.multiPurchaseCustomerRatio}
+            customerPurchaseFrequency={productOverviewDetail.customerPurchaseFrequency}
             onFrequencyClick={handleFrequencyClick}
             title="客户忠诚度分析"
             tooltip={
               <div style={{ maxWidth: 320, lineHeight: 1.5 }}>
                 <div>说明：</div>
                 <div>1）时间：仅统计当前选择的时间范围；若未选择则统计全部时间。</div>
-                <div>2）范围：当前供货商的所有团购单。</div>
+                <div>
+                  2）范围：
+                  {productOverviewDetail.dimension === 'product'
+                    ? '当前商品的所有团购单。'
+                    : '当前商品类型下所有商品的所有团购单。'}
+                </div>
                 <div>3）订单：只计算已支付/已完成的订单。</div>
                 <div>4）去重：同一个客户只统计一次。</div>
                 <div>5）判定：多次购买指有效订单笔数≥2。</div>
-                <div>6）分布：按有效订单次数分段统计，如“3-4次”表示下过3到4单的客户量。</div>
+                <div>6）分布：按有效订单次数分段统计，如"3-4次"表示下过3到4单的客户量。</div>
               </div>
             }
           />
 
           {/* 客户地址分布 */}
           <RegionalSalesAnalysis
-            regionalSales={supplierOverviewDetail.regionalSales}
+            regionalSales={productOverviewDetail.regionalSales}
             onRegionalClick={handleRegionalClick}
             title="客户地址分布"
           />
@@ -366,4 +392,4 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
   )
 }
 
-export default SupplierDetailModal
+export default ProductDetailModal

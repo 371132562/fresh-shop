@@ -580,14 +580,16 @@ export type RegionalSalesItem = {
  */
 export type GroupBuyLaunchHistory = {
   groupBuyId: string; // 团购单ID
+  groupBuyName: string; // 团购名称
+  supplierId?: string; // 供货商ID
+  supplierName?: string; // 供货商名称
   launchDate: Date; // 发起时间
   orderCount: number; // 该次发起的订单数量
   revenue: number; // 该次发起的销售额（已扣除退款）
   profit: number; // 该次发起的利润（已扣除退款）
+  customerCount: number; // 该次发起的客户数
   totalRefundAmount: number; // 该次发起的总退款金额（部分退款+全额退款）
   partialRefundOrderCount: number; // 该次发起的部分退款订单数
-  groupBuyName: string; // 团购名称
-  customerCount: number; // 该次发起的客户数
   refundedOrderCount: number; // 该次发起的全额退款订单数
   totalRefundOrderCount: number; // 该次发起的总退款订单数（部分退款+全额退款）
 };
@@ -613,6 +615,9 @@ export type MergedGroupBuyOverviewDetail = {
   uniqueCustomerCount: number; // 总参与客户数（去重）
   averageCustomerOrderValue: number; // 平均客单价
   totalGroupBuyCount: number; // 该名称团购单总发起次数
+  averageGroupBuyRevenue: number; // 平均每次团购销售额
+  averageGroupBuyProfit: number; // 平均每次团购利润
+  averageGroupBuyOrderCount: number; // 平均每次团购订单量
   customerPurchaseFrequency: CustomerPurchaseFrequency[]; // 客户购买次数分布
   multiPurchaseCustomerCount: number; // 多次购买客户总数
   multiPurchaseCustomerRatio: number; // 多次购买客户比例
@@ -1088,6 +1093,26 @@ export type ProductStatItem = {
   // 销售表现指标
   totalRevenue: number; // 总销售额（元）
   totalProfit: number; // 总利润（元）
+  totalRefundAmount: number; // 总退款金额（元）
+  totalPartialRefundAmount: number; // 总部分退款金额（元）
+  totalRefundedOrderCount: number; // 总全额退款订单数（单）
+  totalPartialRefundOrderCount: number; // 总部分退款订单数（单）
+  orderCount: number; // 订单数量（单）
+  groupBuyCount: number; // 团购单数量（个）
+};
+
+/**
+ * 供货商统计项
+ * 用于商品概况详情中的供货商维度统计
+ */
+export type SupplierStatItem = {
+  // 供货商基本信息
+  supplierId: string; // 供货商唯一标识
+  supplierName: string; // 供货商名称
+
+  // 销售表现指标
+  totalRevenue: number; // 总销售额（元）
+  totalProfit: number; // 总利润（元）
   orderCount: number; // 订单数量（单）
   groupBuyCount: number; // 团购单数量（个）
 };
@@ -1114,6 +1139,10 @@ export type ProductCategoryStat = {
   // 销售表现指标
   totalRevenue: number; // 总销售额（元）
   totalProfit: number; // 总利润（元）
+  totalRefundAmount: number; // 总退款金额（元）
+  totalPartialRefundAmount: number; // 总部分退款金额（元）
+  totalRefundedOrderCount: number; // 总全额退款订单数（单）
+  totalPartialRefundOrderCount: number; // 总部分退款订单数（单）
   orderCount: number; // 订单数量（单）
   productCount: number; // 产品数量（个）
   groupBuyCount: number; // 团购单数量（个）
@@ -1175,6 +1204,8 @@ export type SupplierOverviewDetail = {
   // 团购分析
   totalGroupBuyCount: number; // 发起的团购单总数
   averageGroupBuyRevenue: number; // 平均每次团购销售额
+  averageGroupBuyProfit: number; // 平均每次团购利润
+  averageGroupBuyOrderCount: number; // 平均每次团购订单量
 
   // 产品分析
   productStats: ProductStatItem[]; // 产品统计
@@ -1225,4 +1256,229 @@ export type SupplierRegionalCustomersParams = {
  */
 export type SupplierRegionalCustomersResult = {
   customers: CustomerBasicInfo[]; // 客户基本信息列表
+};
+
+// ===================================================================
+// 商品概况模块 (Product Overview)
+// 包含商品维度和商品类型维度的概况分析相关的数据传输对象
+// ===================================================================
+
+/**
+ * 商品概况查询参数
+ * 用于获取商品维度的概况分析数据，支持分页、搜索、排序等功能
+ */
+export type ProductOverviewParams = {
+  // 时间范围参数（可选）
+  startDate?: Date; // 统计开始时间，不提供则查询全部历史数据
+  endDate?: Date; // 统计结束时间，不提供则查询全部历史数据
+
+  // 分页参数（可选）
+  page?: number; // 页码，默认为1
+  pageSize?: number; // 每页数量，默认为10
+
+  // 搜索参数
+  productName?: string; // 商品名称模糊搜索
+  productTypeIds?: string[]; // 商品类型ID列表，支持多选筛选
+
+  // 排序参数
+  sortField?: ProductOverviewSortField; // 排序字段
+  sortOrder?: SortOrder; // 排序方向
+};
+
+/**
+ * 商品概况排序字段枚举
+ * 定义商品概况列表支持的排序字段
+ */
+export type ProductOverviewSortField =
+  | 'totalRevenue' // 总销售额
+  | 'totalProfit' // 总利润
+  | 'totalProfitMargin' // 利润率
+  | 'totalOrderCount' // 总订单量
+  | 'totalRefundAmount' // 总退款金额
+  | 'uniqueCustomerCount' // 参与客户数
+  | 'totalGroupBuyCount'; // 团购单数
+
+/**
+ * 商品概况列表项
+ * 包含单个商品的概况统计数据
+ */
+export type ProductOverviewListItem = {
+  productId: string; // 商品ID
+  productName: string; // 商品名称
+  productTypeId: string; // 商品类型ID
+  productTypeName: string; // 商品类型名称
+
+  // 核心业绩指标
+  totalRevenue: number; // 总销售额
+  totalProfit: number; // 总利润
+  totalProfitMargin: number; // 利润率
+  totalOrderCount: number; // 总订单量
+  totalRefundAmount: number; // 总退款金额
+  totalPartialRefundAmount: number; // 总部分退款金额
+  totalRefundedOrderCount: number; // 总全额退款订单数
+  totalPartialRefundOrderCount: number; // 总部分退款订单数
+  uniqueCustomerCount: number; // 参与客户数
+  totalGroupBuyCount: number; // 团购单数
+};
+
+/**
+ * 商品概况查询结果
+ * 包含分页信息的商品概况列表响应
+ */
+export type ProductOverviewResult = {
+  list: ProductOverviewListItem[]; // 概况列表
+  total: number; // 总记录数
+  page: number; // 当前页码
+  pageSize: number; // 每页数量
+};
+
+/**
+ * 商品类型概况查询参数
+ * 用于获取商品类型维度的概况分析数据，支持分页、搜索、排序等功能
+ */
+export type ProductTypeOverviewParams = {
+  // 时间范围参数（可选）
+  startDate?: Date; // 统计开始时间，不提供则查询全部历史数据
+  endDate?: Date; // 统计结束时间，不提供则查询全部历史数据
+
+  // 分页参数（可选）
+  page?: number; // 页码，默认为1
+  pageSize?: number; // 每页数量，默认为10
+
+  // 搜索参数
+  productTypeName?: string; // 商品类型名称模糊搜索
+
+  // 排序参数
+  sortField?: ProductTypeOverviewSortField; // 排序字段
+  sortOrder?: SortOrder; // 排序方向
+};
+
+/**
+ * 商品类型概况排序字段枚举
+ * 定义商品类型概况列表支持的排序字段
+ */
+export type ProductTypeOverviewSortField =
+  | 'totalRevenue' // 总销售额
+  | 'totalProfit' // 总利润
+  | 'totalProfitMargin' // 利润率
+  | 'totalOrderCount' // 总订单量
+  | 'totalRefundAmount' // 总退款金额
+  | 'uniqueCustomerCount' // 参与客户数
+  | 'totalGroupBuyCount' // 团购单数
+  | 'productCount'; // 商品数量（商品类型特有字段）
+
+/**
+ * 商品类型概况列表项
+ * 包含单个商品类型的概况统计数据
+ */
+export type ProductTypeOverviewListItem = {
+  productTypeId: string; // 商品类型ID
+  productTypeName: string; // 商品类型名称
+  productCount: number; // 该类型下的商品数量
+
+  // 核心业绩指标
+  totalRevenue: number; // 总销售额
+  totalProfit: number; // 总利润
+  totalProfitMargin: number; // 利润率
+  totalOrderCount: number; // 总订单量
+  totalRefundAmount: number; // 总退款金额
+  totalPartialRefundAmount: number; // 总部分退款金额
+  totalRefundedOrderCount: number; // 总全额退款订单数
+  totalPartialRefundOrderCount: number; // 总部分退款订单数
+  uniqueCustomerCount: number; // 参与客户数
+  totalGroupBuyCount: number; // 团购单数
+};
+
+/**
+ * 商品类型概况查询结果
+ * 包含分页信息的商品类型概况列表响应
+ */
+export type ProductTypeOverviewResult = {
+  list: ProductTypeOverviewListItem[]; // 概况列表
+  total: number; // 总记录数
+  page: number; // 当前页码
+  pageSize: number; // 每页数量
+};
+
+/**
+ * 商品概况详情查询参数
+ * 用于获取商品或商品类型的详细分析数据
+ * 通过dimension参数区分是商品维度还是商品类型维度
+ */
+export type ProductOverviewDetailParams = {
+  productId?: string; // 商品ID（商品维度时使用）
+  productTypeId?: string; // 商品类型ID（商品类型维度时使用）
+  dimension: 'product' | 'productType'; // 区分维度
+  startDate?: Date; // 统计开始时间（可选）
+  endDate?: Date; // 统计结束时间（可选）
+};
+
+/**
+ * 商品概况详情数据
+ * 包含商品或商品类型的详细统计分析数据
+ */
+export type ProductFrequencyCustomersParams = {
+  productId?: string; // 商品ID（商品维度时使用）
+  productTypeId?: string; // 商品类型ID（商品类型维度时使用）
+  dimension: 'product' | 'productType'; // 维度类型
+  minFrequency: number; // 最小购买次数
+  maxFrequency?: number; // 最大购买次数（可选）
+  startDate?: Date; // 统计开始时间
+  endDate?: Date; // 统计结束时间
+};
+
+export type ProductRegionalCustomersParams = {
+  productId?: string; // 商品ID（商品维度时使用）
+  productTypeId?: string; // 商品类型ID（商品类型维度时使用）
+  dimension: 'product' | 'productType'; // 维度类型
+  addressId: string; // 地址ID
+  startDate?: Date; // 统计开始时间
+  endDate?: Date; // 统计结束时间
+};
+
+export type ProductFrequencyCustomersResult = {
+  customers: CustomerBasicInfo[]; // 客户列表
+};
+
+export type ProductRegionalCustomersResult = {
+  customers: CustomerBasicInfo[]; // 客户列表
+};
+
+export type ProductOverviewDetail = {
+  // 基本信息
+  productId?: string; // 商品ID（商品维度时使用）
+  productName?: string; // 商品名称（商品维度时使用）
+  productTypeId?: string; // 商品类型ID（商品类型维度时使用）
+  productTypeName?: string; // 商品类型名称（商品类型维度时使用）
+  dimension: 'product' | 'productType'; // 维度类型
+  startDate?: Date; // 统计开始时间
+  endDate?: Date; // 统计结束时间
+
+  // 核心业绩指标
+  totalRevenue: number; // 总销售额
+  totalProfit: number; // 总利润
+  totalProfitMargin: number; // 利润率
+  totalOrderCount: number; // 总订单量
+  totalRefundAmount: number; // 总退款金额
+  totalPartialRefundAmount: number; // 总部分退款金额
+  totalRefundedOrderCount: number; // 总全额退款订单数
+  totalPartialRefundOrderCount: number; // 总部分退款订单数
+  uniqueCustomerCount: number; // 参与客户数
+  totalGroupBuyCount: number; // 团购单数
+  averageGroupBuyRevenue: number; // 平均每次团购销售额
+  averageGroupBuyProfit: number; // 平均每次团购利润
+  averageGroupBuyOrderCount: number; // 平均每次团购订单量
+  averageCustomerOrderValue: number; // 平均客单价
+  multiPurchaseCustomerCount: number; // 多次购买客户数
+  multiPurchaseCustomerRatio: number; // 多次购买客户占比
+
+  // 商品类型维度特有数据
+  productStats?: ProductStatItem[]; // 该类型下的商品统计
+  productCount?: number; // 该类型下的商品数量
+
+  // 通用分析数据（复用现有结构）
+  supplierStats: SupplierStatItem[]; // 供货商统计
+  customerPurchaseFrequency: CustomerPurchaseFrequency[]; // 客户购买频次
+  regionalSales: RegionalSalesItem[]; // 地域销售分布
+  groupBuyHistory: GroupBuyLaunchHistory[]; // 团购历史
 };

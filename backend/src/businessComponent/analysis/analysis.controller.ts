@@ -4,6 +4,7 @@ import { CustomerService } from '../customer/customer.service';
 import { CustomerAddressService } from '../customerAddress/customerAddress.service';
 import { SupplierService } from '../supplier/supplier.service';
 import { GroupBuyService } from '../groupBuy/groupBuy.service';
+import { ProductService } from '../product/product.service';
 import {
   AddressOverviewParams,
   AnalysisCountParams,
@@ -16,6 +17,11 @@ import {
   SupplierFrequencyCustomersParams,
   SupplierRegionalCustomersParams,
   CustomerOverviewParams,
+  ProductOverviewParams,
+  ProductTypeOverviewParams,
+  ProductOverviewDetailParams,
+  ProductFrequencyCustomersParams,
+  ProductRegionalCustomersParams,
 } from '../../../types/dto';
 
 @Controller('analysis')
@@ -26,6 +32,7 @@ export class AnalysisController {
     private readonly customerAddressService: CustomerAddressService,
     private readonly supplierService: SupplierService,
     private readonly groupBuyService: GroupBuyService,
+    private readonly productService: ProductService,
   ) {}
 
   @Post('count')
@@ -181,5 +188,86 @@ export class AnalysisController {
       data.startDate,
       data.endDate,
     );
+  }
+
+  /**
+   * 获取商品概况数据
+   * 提供商品维度的概况分析接口，支持分页、搜索、排序等功能
+   *
+   * @param params 查询参数，包含时间范围、分页、搜索、排序等条件
+   * @returns 商品概况分页结果
+   *
+   * 接口功能：
+   * - 按商品维度统计销售、订单、客户等数据
+   * - 支持按商品名称搜索
+   * - 支持按商品类型筛选
+   * - 支持多字段排序（销售额、利润、订单量等）
+   * - 支持分页查询
+   */
+  @Post('productOverview')
+  getProductOverview(@Body() params: ProductOverviewParams) {
+    return this.productService.getProductOverview(params);
+  }
+
+  /**
+   * 获取商品类型概况数据
+   * 提供商品类型维度的概况分析接口，支持分页、搜索、排序等功能
+   *
+   * @param params 查询参数，包含时间范围、分页、搜索、排序等条件
+   * @returns 商品类型概况分页结果
+   *
+   * 接口功能：
+   * - 按商品类型维度统计销售、订单、客户等数据
+   * - 支持按商品类型名称搜索
+   * - 支持多字段排序（销售额、利润、订单量等）
+   * - 支持分页查询
+   */
+  @Post('productTypeOverview')
+  getProductTypeOverview(@Body() params: ProductTypeOverviewParams) {
+    return this.productService.getProductTypeOverview(params);
+  }
+
+  /**
+   * 获取商品概况详情数据
+   * 提供商品或商品类型的详细分析接口，包含多维度统计数据
+   *
+   * @param params 查询参数，包含商品ID或商品类型ID、维度类型和时间范围
+   * @returns 商品概况详情数据，包含多维度分析结果
+   *
+   * 接口功能：
+   * - 获取特定商品或商品类型的详细统计数据
+   * - 包含核心业绩、客户分析、产品分析、地域分析等
+   * - 提供团购历史记录和热销产品排行
+   * - 支持时间范围过滤
+   */
+  @Post('productOverviewDetail')
+  getProductOverviewDetail(@Body() params: ProductOverviewDetailParams) {
+    return this.productService.getProductOverviewDetail(params);
+  }
+
+  /**
+   * 获取商品相关客户购买频次数据
+   * 根据商品或商品类型维度查询特定购买频次的客户列表
+   *
+   * @param params 查询参数，包含商品ID或商品类型ID、维度类型、购买频次范围等
+   * @returns 客户列表数据
+   */
+  @Post('productFrequencyCustomers')
+  getProductFrequencyCustomers(
+    @Body() params: ProductFrequencyCustomersParams,
+  ) {
+    return this.productService.getProductFrequencyCustomers(params);
+  }
+
+  /**
+   * 获取商品相关客户地域数据
+   * 根据商品或商品类型维度和地址查询客户列表
+   *
+   * @param params 查询参数，包含商品ID或商品类型ID、维度类型、地址ID等
+   * @returns 客户列表数据
+   */
+  @Post('productRegionalCustomers')
+  getProductRegionalCustomers(@Body() params: ProductRegionalCustomersParams) {
+    return this.productService.getProductRegionalCustomers(params);
   }
 }

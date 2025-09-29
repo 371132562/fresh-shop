@@ -833,6 +833,9 @@ export class GroupBuyService {
         uniqueCustomerCount: 0,
         averageCustomerOrderValue: 0,
         totalGroupBuyCount: 0,
+        averageGroupBuyRevenue: 0,
+        averageGroupBuyProfit: 0,
+        averageGroupBuyOrderCount: 0,
         customerPurchaseFrequency: [],
         multiPurchaseCustomerCount: 0,
         multiPurchaseCustomerRatio: 0,
@@ -950,6 +953,12 @@ export class GroupBuyService {
     const averageCustomerOrderValue =
       uniqueCustomerCount > 0 ? totalRevenue / uniqueCustomerCount : 0;
     const totalGroupBuyCount = groupBuysWithOrders.length;
+    const averageGroupBuyRevenue =
+      totalGroupBuyCount > 0 ? totalRevenue / totalGroupBuyCount : 0;
+    const averageGroupBuyProfit =
+      totalGroupBuyCount > 0 ? totalProfit / totalGroupBuyCount : 0;
+    const averageGroupBuyOrderCount =
+      totalGroupBuyCount > 0 ? totalOrderCount / totalGroupBuyCount : 0;
     const totalProfitMargin =
       totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
@@ -1146,6 +1155,9 @@ export class GroupBuyService {
       uniqueCustomerCount,
       averageCustomerOrderValue,
       totalGroupBuyCount,
+      averageGroupBuyRevenue,
+      averageGroupBuyProfit,
+      averageGroupBuyOrderCount,
       customerPurchaseFrequency,
       multiPurchaseCustomerCount,
       multiPurchaseCustomerRatio,

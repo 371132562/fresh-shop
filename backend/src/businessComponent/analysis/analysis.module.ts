@@ -5,6 +5,7 @@ import { CustomerService } from '../customer/customer.service';
 import { CustomerAddressService } from '../customerAddress/customerAddress.service';
 import { SupplierService } from '../supplier/supplier.service';
 import { GroupBuyService } from '../groupBuy/groupBuy.service';
+import { ProductService } from '../product/product.service';
 import { UploadService } from '../../upload/upload.service';
 
 @Module({
@@ -15,6 +16,7 @@ import { UploadService } from '../../upload/upload.service';
     CustomerAddressService,
     SupplierService,
     GroupBuyService,
+    ProductService,
     UploadService,
   ],
 })

@@ -1,15 +1,21 @@
 import { Button, Card, Col, Form, Input, List, Popconfirm, Row } from 'antd'
+import type { ProductOverviewDetailParams } from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
 
 import SearchToolbar from '@/components/SearchToolbar'
 import useProductTypeStore from '@/stores/productTypeStore.ts'
 
+import ProductDetailModal from '../Analysis/components/ProductOverview/components/ProductDetailModal'
 import Modify from './Modify.tsx'
 
 export const Component = () => {
   const [visible, setVisible] = useState(false)
   const [currentId, setCurrentId] = useState<string | null>(null)
   const [form] = Form.useForm()
+
+  // 商品分类详情模态框状态
+  const [detailVisible, setDetailVisible] = useState(false)
+  const [detailParams, setDetailParams] = useState<ProductOverviewDetailParams | undefined>()
 
   const listLoading = useProductTypeStore(state => state.listLoading)
   const productTypesList = useProductTypeStore(state => state.productTypesList)
@@ -60,6 +66,15 @@ export const Component = () => {
   const handleModify = (id: string) => {
     setCurrentId(id)
     setVisible(true)
+  }
+
+  // 处理查看数据（统计详情）
+  const handleViewDetail = (item: any) => {
+    setDetailParams({
+      productTypeId: item.id,
+      dimension: 'productType'
+    })
+    setDetailVisible(true)
   }
 
   // 处理删除商品类型
@@ -163,6 +178,14 @@ export const Component = () => {
                 {/* 右侧操作区：不收缩，允许换行；窄屏下按钮自然换行 */}
                 <div className="flex shrink-0 flex-row flex-wrap items-center justify-start gap-2 md:justify-end md:gap-3">
                   <Button
+                    key="detail"
+                    color="default"
+                    variant="outlined"
+                    onClick={() => handleViewDetail(item)}
+                  >
+                    查看数据
+                  </Button>
+                  <Button
                     key="edit"
                     color="primary"
                     variant="outlined"
@@ -198,6 +221,13 @@ export const Component = () => {
           visible={visible}
           setVisible={setVisible}
           setCurrentId={setCurrentId}
+        />
+      )}
+      {detailVisible && (
+        <ProductDetailModal
+          visible={detailVisible}
+          onClose={() => setDetailVisible(false)}
+          params={detailParams}
         />
       )}
     </>

@@ -9,6 +9,8 @@ import { AddressOverview } from './components/AddressOverview'
 import { CustomerOverview } from './components/CustomerOverview'
 import { MergedGroupBuyOverview } from './components/GroupBuyOverview'
 import { Overview } from './components/Overview'
+import { ProductOverview } from './components/ProductOverview'
+import { ProductTypeOverview } from './components/ProductTypeOverview'
 import { SupplierOverview } from './components/SupplierOverview'
 
 export const Component = () => {
@@ -100,6 +102,26 @@ export const Component = () => {
     ),
     'address-rankings': (
       <AddressOverview
+        {...(isAllData
+          ? {}
+          : {
+              startDate: calendarValue[0],
+              endDate: calendarValue[1]
+            })}
+      />
+    ),
+    'product-overview': (
+      <ProductOverview
+        {...(isAllData
+          ? {}
+          : {
+              startDate: calendarValue[0],
+              endDate: calendarValue[1]
+            })}
+      />
+    ),
+    'product-type-overview': (
+      <ProductTypeOverview
         {...(isAllData
           ? {}
           : {
@@ -227,6 +249,14 @@ export const Component = () => {
           {
             value: 'supplier-overview',
             label: '供货商统计'
+          },
+          {
+            value: 'product-overview',
+            label: '商品统计'
+          },
+          {
+            value: 'product-type-overview',
+            label: '商品（分类）统计'
           },
           {
             value: 'customer-rankings',

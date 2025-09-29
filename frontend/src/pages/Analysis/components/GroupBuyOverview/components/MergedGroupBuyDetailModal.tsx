@@ -309,6 +309,14 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
           <GroupBuyHistoryAnalysis
             groupBuyHistory={mergedGroupBuyOverviewDetail?.groupBuyLaunchHistory || []}
             title="团购历史"
+            averageGroupBuyRevenue={mergedGroupBuyOverviewDetail?.averageGroupBuyRevenue}
+            averageGroupBuyProfit={mergedGroupBuyOverviewDetail?.averageGroupBuyProfit}
+            averageGroupBuyOrderCount={mergedGroupBuyOverviewDetail?.averageGroupBuyOrderCount}
+            totalRefundAmount={mergedGroupBuyOverviewDetail?.totalRefundAmount}
+            totalPartialRefundOrderCount={
+              mergedGroupBuyOverviewDetail?.totalPartialRefundOrderCount
+            }
+            totalRefundedOrderCount={mergedGroupBuyOverviewDetail?.totalRefundedOrderCount}
           />
 
           {/* 客户统计信息 */}

@@ -8,9 +8,10 @@ import TopProductsAnalysis from './components/TopProductsAnalysis'
 
 type ProductAnalysisProps = {
   productStats: ProductStatItem[]
-  productCategoryStats: ProductCategoryStat[]
+  productCategoryStats?: ProductCategoryStat[]
   title?: string
   loading?: boolean
+  showCategoryStats?: boolean // 是否显示商品分类统计，默认为true
 }
 
 /**
@@ -19,9 +20,10 @@ type ProductAnalysisProps = {
  */
 const ProductAnalysis: React.FC<ProductAnalysisProps> = ({
   productStats,
-  productCategoryStats,
+  productCategoryStats = [],
   title = '商品分析',
-  loading = false
+  loading = false,
+  showCategoryStats = true
 }) => {
   return (
     <Card
@@ -35,22 +37,30 @@ const ProductAnalysis: React.FC<ProductAnalysisProps> = ({
       styles={{ header: { background: '#fff7e6' } }}
       loading={loading}
     >
-      <Row gutter={16}>
-        <Col span={12}>
-          <TopProductsAnalysis
-            data={productStats}
-            title="商品分析"
-            loading={loading}
-          />
-        </Col>
-        <Col span={12}>
-          <ProductCategoryAnalysis
-            data={productCategoryStats}
-            title="商品分类统计"
-            loading={loading}
-          />
-        </Col>
-      </Row>
+      {showCategoryStats ? (
+        <Row gutter={16}>
+          <Col span={12}>
+            <TopProductsAnalysis
+              data={productStats}
+              title="商品分析"
+              loading={loading}
+            />
+          </Col>
+          <Col span={12}>
+            <ProductCategoryAnalysis
+              data={productCategoryStats}
+              title="商品分类统计"
+              loading={loading}
+            />
+          </Col>
+        </Row>
+      ) : (
+        <TopProductsAnalysis
+          data={productStats}
+          title="商品分析"
+          loading={loading}
+        />
+      )}
     </Card>
   )
 }

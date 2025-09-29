@@ -102,7 +102,7 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
               const titleAmount = effectiveMetric === 'profit' ? profit : revenue
 
               return (
-                <List.Item className="px-2 py-2">
+                <List.Item className="border-b border-gray-100 px-2 py-3 last:border-b-0">
                   <div className="flex w-full items-start gap-3">
                     {/* 分类徽标（根据盈利率高低轻量提示） */}
                     <div className="pt-1">
@@ -136,7 +136,7 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
                       </div>
 
                       {/* 辅助指标：按顺序 渲染（缺失自动跳过） */}
-                      <div className="mt-2 flex flex-wrap">
+                      <div className="mt-3 flex flex-wrap gap-2">
                         {!globalSetting?.value?.sensitive && (
                           <Tag
                             color="blue"
@@ -169,6 +169,24 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
                             订单 {orders}
                           </Tag>
                         ) : null}
+                        {item.totalRefundAmount > 0 && (
+                          <Tag
+                            color="orange"
+                            className="m-0"
+                          >
+                            退款 ¥{item.totalRefundAmount.toFixed(2)}
+                          </Tag>
+                        )}
+                        {(item.totalPartialRefundOrderCount > 0 ||
+                          item.totalRefundedOrderCount > 0) && (
+                          <Tag
+                            color="orange"
+                            className="m-0"
+                          >
+                            部分/全额退款 {item.totalPartialRefundOrderCount}/
+                            {item.totalRefundedOrderCount} 单
+                          </Tag>
+                        )}
                         {/* 客户字段无，跳过 */}
                       </div>
                     </div>

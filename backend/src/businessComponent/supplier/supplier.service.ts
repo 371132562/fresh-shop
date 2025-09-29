@@ -794,6 +794,10 @@ export class SupplierService {
               categoryName: groupBuy.product.productType.name,
               totalRevenue: 0,
               totalProfit: 0,
+              totalRefundAmount: 0,
+              totalPartialRefundAmount: 0,
+              totalRefundedOrderCount: 0,
+              totalPartialRefundOrderCount: 0,
               orderCount: 0,
               groupBuyCount: 0,
             });
@@ -801,6 +805,8 @@ export class SupplierService {
           const productStatRefund = productStats.get(productKey)!;
           // 商品维度：收入不变（0），利润累加负成本
           productStatRefund.totalProfit += -refundedCost;
+          productStatRefund.totalRefundAmount += originalRevenue;
+          productStatRefund.totalRefundedOrderCount += 1;
 
           const categoryKey = groupBuy.product.productType.id;
           if (!categoryStats.has(categoryKey)) {
@@ -809,6 +815,10 @@ export class SupplierService {
               categoryName: groupBuy.product.productType.name,
               totalRevenue: 0,
               totalProfit: 0,
+              totalRefundAmount: 0,
+              totalPartialRefundAmount: 0,
+              totalRefundedOrderCount: 0,
+              totalPartialRefundOrderCount: 0,
               orderCount: 0,
               productCount: 0,
               groupBuyCount: 0,
@@ -817,6 +827,8 @@ export class SupplierService {
           const categoryStatRefund = categoryStats.get(categoryKey)!;
           // 分类维度：收入不变（0），利润累加负成本
           categoryStatRefund.totalProfit += -refundedCost;
+          categoryStatRefund.totalRefundAmount += originalRevenue;
+          categoryStatRefund.totalRefundedOrderCount += 1;
 
           continue;
         }
@@ -858,6 +870,10 @@ export class SupplierService {
             categoryName: groupBuy.product.productType.name,
             totalRevenue: 0,
             totalProfit: 0,
+            totalRefundAmount: 0,
+            totalPartialRefundAmount: 0,
+            totalRefundedOrderCount: 0,
+            totalPartialRefundOrderCount: 0,
             orderCount: 0,
             groupBuyCount: 0,
           });
@@ -867,6 +883,13 @@ export class SupplierService {
         productStat.totalProfit += orderProfit;
         productStat.orderCount++;
 
+        // 商品级别退款统计
+        if (partialRefundAmount > 0) {
+          productStat.totalRefundAmount += partialRefundAmount;
+          productStat.totalPartialRefundAmount += partialRefundAmount;
+          productStat.totalPartialRefundOrderCount += 1;
+        }
+
         // 分类维度累计
         const categoryKey = groupBuy.product.productType.id;
         if (!categoryStats.has(categoryKey)) {
@@ -875,6 +898,10 @@ export class SupplierService {
             categoryName: groupBuy.product.productType.name,
             totalRevenue: 0,
             totalProfit: 0,
+            totalRefundAmount: 0,
+            totalPartialRefundAmount: 0,
+            totalRefundedOrderCount: 0,
+            totalPartialRefundOrderCount: 0,
             orderCount: 0,
             productCount: 0,
             groupBuyCount: 0,
@@ -884,6 +911,13 @@ export class SupplierService {
         categoryStat.totalRevenue += orderRevenue;
         categoryStat.totalProfit += orderProfit;
         categoryStat.orderCount++;
+
+        // 分类级别退款统计
+        if (partialRefundAmount > 0) {
+          categoryStat.totalRefundAmount += partialRefundAmount;
+          categoryStat.totalPartialRefundAmount += partialRefundAmount;
+          categoryStat.totalPartialRefundOrderCount += 1;
+        }
 
         // 记录分类下出现过的商品ID（用于后续去重统计 productCount）
         if (!categoryProductIds.has(categoryKey)) {
@@ -1064,6 +1098,10 @@ export class SupplierService {
     const totalGroupBuyCount = groupBuysWithOrders.length;
     const averageGroupBuyRevenue =
       totalGroupBuyCount > 0 ? totalRevenue / totalGroupBuyCount : 0;
+    const averageGroupBuyProfit =
+      totalGroupBuyCount > 0 ? totalProfit / totalGroupBuyCount : 0;
+    const averageGroupBuyOrderCount =
+      totalGroupBuyCount > 0 ? totalOrderCount / totalGroupBuyCount : 0;
 
     // 步骤九：客户购买次数分布（用于频次分布图）
     const purchaseFrequencyMap = new Map<number, number>();
@@ -1186,6 +1224,8 @@ export class SupplierService {
       multiPurchaseCustomerRatio,
       totalGroupBuyCount,
       averageGroupBuyRevenue,
+      averageGroupBuyProfit,
+      averageGroupBuyOrderCount,
       productStats: productStatsList,
       productCategoryStats,
       regionalSales,
