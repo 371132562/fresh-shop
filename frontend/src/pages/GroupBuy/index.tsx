@@ -335,21 +335,17 @@ export const Component = () => {
                       发起时间：
                       <span className="text-blue-500">{formatDate(item.groupBuyStartDate)}</span>
                     </div>
-                    {item.product?.name && (
-                      <div className="text-gray-800">
-                        商品：
-                        <span className="text-blue-500">{item.product.name}</span>
-                      </div>
-                    )}
-                    {item.orderStats.orderCount !== undefined && (
-                      <div className="text-gray-800">
-                        订单量：
-                        <span className="text-blue-600">{item.orderStats.orderCount}</span>
-                      </div>
-                    )}
+                    <div className="text-gray-800">
+                      商品：
+                      <span className="text-blue-500">{item.product.name}</span>
+                    </div>
+                    <div className="text-gray-800">
+                      订单量：
+                      <span className="text-blue-500">{item.orderStats.orderCount}</span>
+                    </div>
                     <div className="text-gray-800">
                       订单总额：
-                      <span className="text-blue-600">
+                      <span className="text-blue-500">
                         ¥{(item.totalSalesAmount || 0).toFixed(2)}
                       </span>
                     </div>
@@ -408,7 +404,7 @@ export const Component = () => {
                   <DeleteGroupBuyButton
                     id={item.id}
                     name={item.name}
-                    orderStats={item.orderStats as unknown as Record<string, number>}
+                    orderStats={item.orderStats}
                     size="middle"
                     onDeleted={() => pageChange()}
                   />

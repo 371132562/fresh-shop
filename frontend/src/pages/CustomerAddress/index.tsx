@@ -194,13 +194,13 @@ export const Component = () => {
                   <div className="space-y-1">
                     {item.orderCount !== undefined && (
                       <div className="text-gray-800">
-                        订单量：<span className="text-blue-600">{item.orderCount}</span>
+                        订单量：<span className="text-blue-500">{item.orderCount}</span>
                       </div>
                     )}
                     {item.orderTotalAmount !== undefined && (
                       <div className="text-gray-800">
                         订单总额：
-                        <span className="text-blue-600">¥{item.orderTotalAmount.toFixed(2)}</span>
+                        <span className="text-blue-500">¥{item.orderTotalAmount.toFixed(2)}</span>
                       </div>
                     )}
                   </div>

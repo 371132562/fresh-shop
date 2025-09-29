@@ -256,7 +256,7 @@ export const Component = () => {
                           <span className="text-orange-600">
                             ¥{item.partialRefundAmount.toFixed(2)}
                           </span>
-                          /<span className="text-cyan-600">¥{itemTotalAmount.toFixed(2)}</span>
+                          /<span className="text-blue-500">¥{itemTotalAmount.toFixed(2)}</span>
                         </div>
                       )}
                       {item.description && (
