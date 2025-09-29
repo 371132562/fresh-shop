@@ -72,3 +72,5 @@ export const analysisSupplierFrequencyCustomersApi = '/analysis/supplierFrequenc
 export const analysisSupplierRegionalCustomersApi = '/analysis/supplierRegionalCustomers'
 
 export const analysisAddressOverviewApi = '/analysis/addressOverview'
+export const analysisProductOverviewApi = '/analysis/productOverview'
+export const analysisProductOverviewDetailApi = '/analysis/productOverviewDetail'

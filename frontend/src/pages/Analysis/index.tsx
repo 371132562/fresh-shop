@@ -5,11 +5,11 @@ import { CalendarPicker } from 'antd-mobile'
 import useAnalysisStore from '@/stores/analysisStore.ts'
 import dayjs from '@/utils/day'
 
-import { AddressOverview } from './components/Address'
-import { CustomerOverview } from './components/Customer'
-import { MergedGroupBuyOverview } from './components/GroupBuy'
+import { AddressOverview } from './components/AddressOverview'
+import { CustomerOverview } from './components/CustomerOverview'
+import { MergedGroupBuyOverview } from './components/GroupBuyOverview'
 import { Overview } from './components/Overview'
-import { SupplierOverview } from './components/Supplier'
+import { SupplierOverview } from './components/SupplierOverview'
 
 export const Component = () => {
   // 从store中获取状态

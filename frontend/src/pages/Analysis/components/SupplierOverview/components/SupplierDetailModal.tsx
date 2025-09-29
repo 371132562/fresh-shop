@@ -14,10 +14,10 @@ import {
   getProfitMarginColor
 } from '@/utils/profitColor'
 
-import CustomerListModal from '../../Customer/components/CustomerListModal'
-import CustomerLoyaltyAnalysis from '../../Customer/components/CustomerLoyaltyAnalysis'
-import CustomerStatsAnalysis from '../../Customer/components/CustomerStatsAnalysis'
-import GroupBuyHistoryAnalysis from '../../GroupBuy/components/GroupBuyHistoryAnalysis'
+import CustomerListModal from '../../CustomerOverview/components/CustomerListModal'
+import CustomerLoyaltyAnalysis from '../../CustomerOverview/components/CustomerLoyaltyAnalysis'
+import CustomerStatsAnalysis from '../../CustomerOverview/components/CustomerStatsAnalysis'
+import GroupBuyHistoryAnalysis from '../../GroupBuyOverview/components/GroupBuyHistoryAnalysis'
 import ProductAnalysis from '../../Product'
 import RegionalSalesAnalysis from '../../Regional'
 

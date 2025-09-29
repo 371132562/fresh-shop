@@ -3,7 +3,7 @@ import { Button, Checkbox, message, Modal, Tag } from 'antd'
 import type { MergedGroupBuyOverviewDetailParams, Order } from 'fresh-shop-backend/types/dto'
 import { useMemo, useState } from 'react'
 
-import MergedGroupBuyDetailModal from '@/pages/Analysis/components/GroupBuy/components/MergedGroupBuyDetailModal'
+import MergedGroupBuyDetailModal from '@/pages/Analysis/components/GroupBuyOverview/components/MergedGroupBuyDetailModal'
 import useGroupBuyStore from '@/stores/groupBuyStore'
 import { OrderStatus, OrderStatusMap } from '@/stores/orderStore'
 
