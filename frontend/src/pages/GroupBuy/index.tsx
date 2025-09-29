@@ -347,6 +347,12 @@ export const Component = () => {
                         <span className="text-blue-600">{item.orderStats.orderCount}</span>
                       </div>
                     )}
+                    <div className="text-gray-800">
+                      订单总额：
+                      <span className="text-blue-600">
+                        ¥{(item.totalSalesAmount || 0).toFixed(2)}
+                      </span>
+                    </div>
                     <div className="my-1 flex flex-wrap items-center">
                       {Object.entries(item.orderStats)
                         .filter(([key]) => key !== 'orderCount')

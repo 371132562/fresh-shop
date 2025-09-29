@@ -239,32 +239,32 @@ export const Component = () => {
             label: '整体统计'
           },
           {
-            value: 'merged-group-buy-overview',
-            label: '团购单（合并）统计'
-          },
-          {
-            value: 'group-buy-overview',
-            label: '团购单（单期）统计'
-          },
-          {
             value: 'supplier-overview',
             label: '供货商统计'
-          },
-          {
-            value: 'product-overview',
-            label: '商品统计'
           },
           {
             value: 'product-type-overview',
             label: '商品（分类）统计'
           },
           {
-            value: 'customer-rankings',
-            label: '客户统计'
+            value: 'product-overview',
+            label: '商品统计'
           },
           {
             value: 'address-rankings',
             label: '地址（小区）统计'
+          },
+          {
+            value: 'customer-rankings',
+            label: '客户统计'
+          },
+          {
+            value: 'merged-group-buy-overview',
+            label: '团购单（合并）统计'
+          },
+          {
+            value: 'group-buy-overview',
+            label: '团购单（单期）统计'
           }
         ]}
       />

@@ -435,6 +435,7 @@ export type GroupBuyListItem = GroupBuy & {
   product: Product; // 商品信息
   orderStats: GroupBuyOrderStats; // 订单统计
   totalRefundAmount: number; // 总退款金额（部分退款+全额退款）
+  totalSalesAmount: number; // 订单总额（仅计PAID/COMPLETED，扣除部分退款；已退款订单记0）
 };
 
 /**

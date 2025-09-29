@@ -247,6 +247,44 @@ export class GroupBuyService {
       totalRefundAmountMap.set(id, partialRefund + fullRefund);
     });
 
+    // 统计每个团购的有效销售额（PAID/COMPLETED，扣除部分退款；已退款记0）
+    const validOrders = await this.prisma.order.findMany({
+      where: {
+        groupBuyId: { in: groupBuyIds },
+        delete: 0,
+        status: {
+          in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
+        },
+      },
+      select: {
+        groupBuyId: true,
+        unitId: true,
+        quantity: true,
+        status: true,
+        partialRefundAmount: true,
+        groupBuy: { select: { units: true } },
+      },
+    });
+
+    const salesMap = new Map<string, number>();
+    validOrders.forEach((order) => {
+      const units = order.groupBuy.units as Array<{
+        id: string;
+        price: number;
+      }>;
+      const unit = units.find((u) => u.id === order.unitId);
+      if (!unit) return;
+      const gross = unit.price * order.quantity;
+      const net =
+        order.status === OrderStatus.REFUNDED
+          ? 0
+          : Math.max(0, gross - (order.partialRefundAmount || 0));
+      salesMap.set(
+        order.groupBuyId,
+        (salesMap.get(order.groupBuyId) || 0) + net,
+      );
+    });
+
     const groupBuysWithStats = groupBuys.map((gb) => {
       const stats = statsMap.get(gb.id) || {
         orderCount: 0,
@@ -259,6 +297,7 @@ export class GroupBuyService {
         ...gb,
         orderStats: stats,
         totalRefundAmount: totalRefundAmountMap.get(gb.id) || 0,
+        totalSalesAmount: salesMap.get(gb.id) || 0,
       };
     });
 

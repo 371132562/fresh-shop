@@ -1,9 +1,8 @@
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { Button, Checkbox, message, Modal, Tag } from 'antd'
-import type { MergedGroupBuyOverviewDetailParams, Order } from 'fresh-shop-backend/types/dto'
+import type { Order } from 'fresh-shop-backend/types/dto'
 import { useMemo, useState } from 'react'
 
-import MergedGroupBuyDetailModal from '@/pages/Analysis/components/GroupBuyOverview/components/MergedGroupBuyDetailModal'
 import useGroupBuyStore from '@/stores/groupBuyStore'
 import { OrderStatus, OrderStatusMap } from '@/stores/orderStore'
 
@@ -28,8 +27,6 @@ const DeleteGroupBuyButton = ({
   const [visible, setVisible] = useState(false)
   const [ack, setAck] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [detailVisible, setDetailVisible] = useState(false)
-  const [detailParams] = useState<MergedGroupBuyOverviewDetailParams | undefined>()
 
   const { countsByLabel, totalOrders } = useMemo(() => {
     // 优先使用 orders 精确统计；否则使用列表提供的 orderStats
@@ -176,12 +173,6 @@ const DeleteGroupBuyButton = ({
           </div>
         </div>
       </Modal>
-
-      <MergedGroupBuyDetailModal
-        visible={detailVisible}
-        onClose={() => setDetailVisible(false)}
-        params={detailParams}
-      />
     </>
   )
 }

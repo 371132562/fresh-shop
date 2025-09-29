@@ -1,9 +1,5 @@
 import { Button, Card, Col, Form, Input, List, Popconfirm, Row, Select, Tag } from 'antd'
-import type {
-  ProductListItem,
-  ProductOverviewDetailParams,
-  SortOrder
-} from 'fresh-shop-backend/types/dto'
+import type { ProductListItem, ProductOverviewDetailParams } from 'fresh-shop-backend/types/dto'
 import { useEffect, useState } from 'react'
 
 import SearchToolbar from '@/components/SearchToolbar'
@@ -190,7 +186,7 @@ export const Component = () => {
             onSortOrderChange={order => {
               setPageParams({
                 sortField: pageParams.sortField,
-                sortOrder: order as SortOrder,
+                sortOrder: order,
                 page: 1
               })
             }}

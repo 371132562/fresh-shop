@@ -311,7 +311,10 @@ export const MergedGroupBuyOverview = ({
                     </div>
                     {!mergeSameName && item.groupBuyStartDate && (
                       <div className="mt-1 text-sm text-gray-600">
-                        发起时间：{dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')}
+                        发起时间：
+                        <span className="text-blue-600">
+                          {dayjs(item.groupBuyStartDate).format('YYYY-MM-DD')}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -385,6 +388,7 @@ export const MergedGroupBuyOverview = ({
         visible={detailVisible}
         onClose={handleDetailClose}
         params={detailParams}
+        mergeSameName={mergeSameName}
       />
     </>
   )
