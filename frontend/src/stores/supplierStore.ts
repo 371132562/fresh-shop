@@ -56,7 +56,9 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
     pageSize: 10,
     name: '',
     phone: '',
-    wechat: ''
+    wechat: '',
+    sortField: 'createdAt',
+    sortOrder: 'desc'
   },
   getSuppliersList: async (data = get().pageParams) => {
     try {

@@ -252,7 +252,7 @@ export const Component = () => {
           },
           {
             value: 'address-rankings',
-            label: '地址（小区）统计'
+            label: '客户地址（小区）统计'
           },
           {
             value: 'customer-rankings',

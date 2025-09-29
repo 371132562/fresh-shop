@@ -70,7 +70,7 @@ export class SupplierService {
   async list(
     data: SupplierPageParams,
   ): Promise<ListByPage<SupplierListItem[]>> {
-    const { page, pageSize, name, phone, wechat } = data;
+    const { page, pageSize, name, phone, wechat, sortField, sortOrder } = data;
     const skip = (page - 1) * pageSize; // 计算要跳过的记录数
 
     const where: Prisma.SupplierWhereInput = {
@@ -100,7 +100,7 @@ export class SupplierService {
         skip: skip,
         take: pageSize,
         orderBy: {
-          createdAt: 'desc', // 假设您的表中有一个名为 'createdAt' 的字段
+          createdAt: 'desc', // 默认按创建时间降序
         },
         where,
         include: {
@@ -113,16 +113,105 @@ export class SupplierService {
               },
             },
           },
+          groupBuy: {
+            where: { delete: 0 },
+            select: {
+              id: true,
+              units: true,
+              order: {
+                where: {
+                  delete: 0,
+                  status: {
+                    in: [
+                      OrderStatus.PAID,
+                      OrderStatus.COMPLETED,
+                      OrderStatus.REFUNDED,
+                    ],
+                  },
+                },
+                select: {
+                  quantity: true,
+                  unitId: true,
+                  status: true,
+                  partialRefundAmount: true,
+                },
+              },
+            },
+          },
         },
       }),
       this.prisma.supplier.count({ where }), // 获取总记录数
     ]);
 
-    return {
-      data: suppliers.map((supplier) => ({
+    // 计算每个供货商的订单量与订单总额
+    const items: SupplierListItem[] = suppliers.map((supplier) => {
+      let orderCount = 0;
+      let orderTotalAmount = 0;
+      const groupBuyCount = supplier._count.groupBuy;
+      for (const gb of supplier.groupBuy as Array<{
+        id: string;
+        units: any;
+        order: Array<{
+          quantity: number;
+          unitId: string;
+          status: OrderStatus;
+          partialRefundAmount: number | null;
+        }>;
+      }>) {
+        const units = gb.units as Array<{
+          id: string;
+          price: number;
+          costPrice?: number;
+        }>;
+        for (const order of gb.order) {
+          const unit = units.find((u) => u.id === order.unitId);
+          if (!unit) continue;
+          const gross = unit.price * order.quantity;
+          if (
+            order.status === OrderStatus.PAID ||
+            order.status === OrderStatus.COMPLETED
+          ) {
+            orderCount += 1;
+            orderTotalAmount += Math.max(
+              0,
+              gross - (order.partialRefundAmount || 0),
+            );
+          }
+          // REFUNDED 订单总额按0计入
+        }
+      }
+      return {
         ...supplier,
-        groupBuyCount: supplier._count.groupBuy,
-      })),
+        orderCount,
+        orderTotalAmount,
+        groupBuyCount,
+      } as unknown as SupplierListItem;
+    });
+
+    // 按需排序（后端排序，字段来自前端可选项）
+    if (sortField) {
+      const order = sortOrder === 'asc' ? 1 : -1;
+      items.sort((a, b) => {
+        const pick = (x: SupplierListItem) => {
+          switch (sortField) {
+            case 'orderCount':
+              return x.orderCount;
+            case 'orderTotalAmount':
+              return x.orderTotalAmount;
+            case 'groupBuyCount':
+              return x.groupBuyCount;
+            case 'createdAt':
+              return x.createdAt ? new Date(x.createdAt).getTime() : 0;
+            default:
+              return 0;
+          }
+        };
+        return (pick(a) - pick(b)) * order;
+      });
+    }
+
+    return {
+      data: items,
       page: page,
       pageSize: pageSize,
       totalCount: totalCount,

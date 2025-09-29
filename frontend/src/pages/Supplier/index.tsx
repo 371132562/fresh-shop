@@ -62,6 +62,15 @@ export const Component = () => {
     }
   }
 
+  // 排序处理
+  const handleSortChange = (value: string) => {
+    const [field, order] = value.split('_') as [
+      'orderCount' | 'orderTotalAmount' | 'groupBuyCount' | 'createdAt',
+      'asc' | 'desc'
+    ]
+    setPageParams({ sortField: field, sortOrder: order })
+  }
+
   // 搜索：校验表单后将参数写回全局分页参数，触发列表刷新
   const handleSearch = () => {
     form
@@ -172,6 +181,20 @@ export const Component = () => {
           </Row>
           {/* 工具栏区域 */}
           <SearchToolbar
+            sortFieldOptions={[
+              { label: '添加时间', value: 'createdAt' },
+              { label: '订单量', value: 'orderCount' },
+              { label: '订单总额', value: 'orderTotalAmount' },
+              { label: '团购单量', value: 'groupBuyCount' }
+            ]}
+            sortFieldValue={pageParams.sortField || 'createdAt'}
+            onSortFieldChange={field =>
+              handleSortChange(`${field}_${pageParams.sortOrder || 'desc'}`)
+            }
+            sortOrderValue={(pageParams.sortOrder as 'asc' | 'desc') || 'desc'}
+            onSortOrderChange={order =>
+              handleSortChange(`${pageParams.sortField || 'createdAt'}_${order}`)
+            }
             onSearch={handleSearch}
             onReset={resetSearch}
             searchLoading={listLoading}
@@ -221,6 +244,16 @@ export const Component = () => {
                   </div>
                   {/* 描述信息：先显示聚合统计，其次显示描述；小屏单行省略，md 起自动换行 */}
                   <div className="space-y-1">
+                    <div className="text-gray-800">
+                      订单量：
+                      <span className="text-blue-500">{item.orderCount}</span>
+                    </div>
+                    <div className="text-gray-800">
+                      订单总额：
+                      <span className="text-blue-500">
+                        ¥{(item.orderTotalAmount || 0).toFixed(2)}
+                      </span>
+                    </div>
                     {item.groupBuyCount !== undefined && (
                       <div className="text-gray-800">
                         团购单量：

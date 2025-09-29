@@ -131,6 +131,8 @@ export type SupplierPageParams = CommonPageParams & {
   name: string; // 供货商名称（模糊搜索）
   phone: string; // 联系电话（模糊搜索）
   wechat: string; // 微信号（模糊搜索）
+  sortField?: 'createdAt' | 'orderCount' | 'orderTotalAmount' | 'groupBuyCount'; // 排序字段（可选）
+  sortOrder?: SortOrder; // 排序方向（可选）
 };
 
 /**
@@ -138,6 +140,8 @@ export type SupplierPageParams = CommonPageParams & {
  * 扩展基础供货商信息，包含统计数据
  */
 export type SupplierListItem = Supplier & {
+  orderCount: number; // 订单数量（仅计PAID/COMPLETED）
+  orderTotalAmount: number; // 订单总额（PAID/COMPLETED，扣除部分退款；REFUNDED=0）
   groupBuyCount: number; // 该供货商发起的团购数量
 };
 

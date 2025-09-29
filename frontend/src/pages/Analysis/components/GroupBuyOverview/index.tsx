@@ -353,15 +353,15 @@ export const MergedGroupBuyOverview = ({
                       </span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm text-gray-500">退款金额</span>
-                      <span className="text-lg font-bold text-orange-600">
-                        ¥{item.totalRefundAmount.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
                       <span className="text-sm text-gray-500">参与客户数</span>
                       <span className="text-lg font-bold text-blue-600">
                         {item.uniqueCustomerCount}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-500">退款金额</span>
+                      <span className="text-lg font-bold text-orange-600">
+                        ¥{item.totalRefundAmount.toFixed(2)}
                       </span>
                     </div>
                   </div>
