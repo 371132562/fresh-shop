@@ -20,6 +20,8 @@ type GroupBuyHistoryAnalysisProps = {
   totalRefundAmount?: number
   totalPartialRefundOrderCount?: number
   totalRefundedOrderCount?: number
+  // 是否显示供货商列（仅在商品/商品类型维度时显示）
+  showSupplierColumn?: boolean
 }
 
 /**
@@ -34,7 +36,8 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
   averageGroupBuyOrderCount,
   totalRefundAmount,
   totalPartialRefundOrderCount,
-  totalRefundedOrderCount
+  totalRefundedOrderCount,
+  showSupplierColumn = false
 }) => {
   // 控制"详细团购记录"展开/收起
   const [isExpanded, setIsExpanded] = useState(false)
@@ -45,7 +48,22 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
   const sensitive = useGlobalSettingStore.getState().globalSetting?.value?.sensitive
 
   // 团购历史表格列定义（按敏感开关动态拼装列）
-  let groupBuyHistoryColumns: ColumnsType<GroupBuyLaunchHistory & { key: number }> = [
+  let groupBuyHistoryColumns: ColumnsType<GroupBuyLaunchHistory & { key: number }> = []
+
+  // 根据参数决定是否添加供货商列（放在第一列）
+  if (showSupplierColumn) {
+    groupBuyHistoryColumns.push({
+      title: '供货商',
+      dataIndex: 'supplierName',
+      key: 'supplierName',
+      render: (supplierName: string) => (
+        <span className="font-medium text-gray-600">{supplierName || '-'}</span>
+      )
+    })
+  }
+
+  // 添加发起时间列
+  groupBuyHistoryColumns.push(
     {
       title: '发起时间',
       dataIndex: 'launchDate',
@@ -69,25 +87,23 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
       dataIndex: 'orderCount',
       key: 'orderCount',
       sorter: (a, b) => (a.orderCount || 0) - (b.orderCount || 0),
-      render: (count: number) => <span className="font-bold text-blue-600">{count}单</span>
+      render: (count: number) => <span className="text-blue-500">{count}单</span>
     },
     {
       title: '客户量',
       dataIndex: 'customerCount',
       key: 'customerCount',
       sorter: (a, b) => (a.customerCount || 0) - (b.customerCount || 0),
-      render: (count: number) => <span className="font-bold text-blue-600">{count}人</span>
+      render: (count: number) => <span className="text-blue-500">{count}人</span>
     },
     {
       title: '销售额',
       dataIndex: 'revenue',
       key: 'revenue',
       sorter: (a, b) => (a.revenue || 0) - (b.revenue || 0),
-      render: (revenue: number) => (
-        <span className="font-bold text-blue-400">¥{revenue.toFixed(2)}</span>
-      )
+      render: (revenue: number) => <span className="text-blue-500">¥{revenue.toFixed(2)}</span>
     }
-  ]
+  )
 
   if (!sensitive) {
     groupBuyHistoryColumns.push(

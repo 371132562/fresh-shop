@@ -20,6 +20,7 @@ import CustomerStatsAnalysis from '../../CustomerOverview/components/CustomerSta
 import GroupBuyHistoryAnalysis from '../../GroupBuyOverview/components/GroupBuyHistoryAnalysis'
 import ProductAnalysis from '../../Product'
 import RegionalSalesAnalysis from '../../Regional'
+import SupplierAnalysis from '../../Supplier'
 
 type ProductDetailModalProps = {
   visible: boolean
@@ -340,6 +341,14 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             totalRefundAmount={productOverviewDetail.totalRefundAmount}
             totalPartialRefundOrderCount={productOverviewDetail.totalPartialRefundOrderCount}
             totalRefundedOrderCount={productOverviewDetail.totalRefundedOrderCount}
+            showSupplierColumn={true}
+          />
+
+          {/* 供货商分析 */}
+          <SupplierAnalysis
+            supplierStats={productOverviewDetail.supplierStats}
+            title="供货商分析"
+            loading={productOverviewDetailLoading}
           />
 
           {/* 客户统计信息 */}
