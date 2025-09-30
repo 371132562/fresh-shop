@@ -191,7 +191,7 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                             color="orange"
                             className="m-0"
                           >
-                            部分/全额退款 {item.totalPartialRefundOrderCount}/
+                            部分退款/退款 {item.totalPartialRefundOrderCount}/
                             {item.totalRefundedOrderCount} 单
                           </Tag>
                         )}
