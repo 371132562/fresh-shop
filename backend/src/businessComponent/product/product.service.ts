@@ -977,6 +977,37 @@ export class ProductService {
           groupBuyPartialRefundOrderCount += 1;
         }
 
+        // 统计供货商数据（所有订单都统计）
+        const supplierKey = groupBuy.supplier.id;
+        if (!supplierStats.has(supplierKey)) {
+          supplierStats.set(supplierKey, {
+            supplierId: groupBuy.supplier.id,
+            supplierName: groupBuy.supplier.name,
+            totalRevenue: 0,
+            totalProfit: 0,
+            orderCount: 0,
+            groupBuyCount: 0,
+            totalRefundAmount: 0,
+            totalPartialRefundAmount: 0,
+            totalRefundedOrderCount: 0,
+            totalPartialRefundOrderCount: 0,
+          });
+        }
+        const supplierStat = supplierStats.get(supplierKey)!;
+        supplierStat.totalRevenue += orderRevenue;
+        supplierStat.totalProfit += orderProfit;
+        supplierStat.orderCount += 1;
+
+        // 统计退款数据
+        if (order.status === OrderStatus.REFUNDED) {
+          supplierStat.totalRefundAmount += originalRevenue;
+          supplierStat.totalRefundedOrderCount += 1;
+        } else if (partial > 0) {
+          supplierStat.totalRefundAmount += partial;
+          supplierStat.totalPartialRefundAmount += partial;
+          supplierStat.totalPartialRefundOrderCount += 1;
+        }
+
         if (
           order.status === OrderStatus.PAID ||
           order.status === OrderStatus.COMPLETED
@@ -985,23 +1016,6 @@ export class ProductService {
           groupBuyOrderCount++;
           uniqueCustomerIds.add(order.customerId);
           groupBuyCustomerIds.add(order.customerId);
-
-          // 统计供货商数据
-          const supplierKey = groupBuy.supplier.id;
-          if (!supplierStats.has(supplierKey)) {
-            supplierStats.set(supplierKey, {
-              supplierId: groupBuy.supplier.id,
-              supplierName: groupBuy.supplier.name,
-              totalRevenue: 0,
-              totalProfit: 0,
-              orderCount: 0,
-              groupBuyCount: 0,
-            });
-          }
-          const supplierStat = supplierStats.get(supplierKey)!;
-          supplierStat.totalRevenue += orderRevenue;
-          supplierStat.totalProfit += orderProfit;
-          supplierStat.orderCount += 1;
 
           // 统计地域数据
           if (order.customer?.customerAddress) {
@@ -1383,6 +1397,37 @@ export class ProductService {
             groupBuyPartialRefundOrderCount += 1;
           }
 
+          // 统计供货商数据（所有订单都统计）
+          const supplierKey = groupBuy.supplier.id;
+          if (!supplierStats.has(supplierKey)) {
+            supplierStats.set(supplierKey, {
+              supplierId: groupBuy.supplier.id,
+              supplierName: groupBuy.supplier.name,
+              totalRevenue: 0,
+              totalProfit: 0,
+              orderCount: 0,
+              groupBuyCount: 0,
+              totalRefundAmount: 0,
+              totalPartialRefundAmount: 0,
+              totalRefundedOrderCount: 0,
+              totalPartialRefundOrderCount: 0,
+            });
+          }
+          const supplierStat = supplierStats.get(supplierKey)!;
+          supplierStat.totalRevenue += orderRevenue;
+          supplierStat.totalProfit += orderProfit;
+          supplierStat.orderCount += 1;
+
+          // 统计退款数据
+          if (order.status === OrderStatus.REFUNDED) {
+            supplierStat.totalRefundAmount += originalRevenue;
+            supplierStat.totalRefundedOrderCount += 1;
+          } else if (partial > 0) {
+            supplierStat.totalRefundAmount += partial;
+            supplierStat.totalPartialRefundAmount += partial;
+            supplierStat.totalPartialRefundOrderCount += 1;
+          }
+
           if (
             order.status === OrderStatus.PAID ||
             order.status === OrderStatus.COMPLETED
@@ -1392,23 +1437,6 @@ export class ProductService {
             groupBuyOrderCount++;
             uniqueCustomerIds.add(order.customerId);
             groupBuyCustomerIds.add(order.customerId);
-
-            // 统计供货商数据
-            const supplierKey = groupBuy.supplier.id;
-            if (!supplierStats.has(supplierKey)) {
-              supplierStats.set(supplierKey, {
-                supplierId: groupBuy.supplier.id,
-                supplierName: groupBuy.supplier.name,
-                totalRevenue: 0,
-                totalProfit: 0,
-                orderCount: 0,
-                groupBuyCount: 0,
-              });
-            }
-            const supplierStat = supplierStats.get(supplierKey)!;
-            supplierStat.totalRevenue += orderRevenue;
-            supplierStat.totalProfit += orderProfit;
-            supplierStat.orderCount += 1;
 
             // 统计地域数据
             if (order.customer?.customerAddress) {

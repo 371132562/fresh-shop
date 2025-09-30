@@ -51,7 +51,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
   let groupBuyHistoryColumns: ColumnsType<GroupBuyLaunchHistory & { key: number }> = []
 
   // 根据参数决定是否添加供货商列（放在第一列）
-  if (showSupplierColumn) {
+  if (showSupplierColumn && !sensitive) {
     groupBuyHistoryColumns.push({
       title: '供货商',
       dataIndex: 'supplierName',

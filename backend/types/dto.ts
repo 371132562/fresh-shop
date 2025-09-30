@@ -1151,6 +1151,12 @@ export type SupplierStatItem = {
   totalProfit: number; // 总利润（元）
   orderCount: number; // 订单数量（单）
   groupBuyCount: number; // 团购单数量（个）
+
+  // 退款相关指标
+  totalRefundAmount: number; // 总退款金额（元）
+  totalPartialRefundAmount: number; // 总部分退款金额（元）
+  totalRefundedOrderCount: number; // 总退款订单数（单）
+  totalPartialRefundOrderCount: number; // 总部分退款订单数（单）
 };
 
 /**
