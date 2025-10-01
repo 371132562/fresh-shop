@@ -34,9 +34,9 @@ RUN pnpm install --frozen-lockfile
 # --- 后端构建步骤 (在 builder 阶段完成) ---
 WORKDIR /app/backend
 
-# 生成 Prisma 客户端
+# 生成 Prisma 客户端（使用本地 pnpm 环境，避免 npx 在线安装）
 # 这将在 backend/node_modules/.prisma 目录下生成客户端
-RUN npx prisma generate
+RUN pnpm exec prisma generate
 
 # 构建后端项目
 RUN pnpm build
@@ -72,6 +72,8 @@ COPY --from=builder /app/frontend/dist ./frontend/dist
 
 # 复制后端打包产物
 COPY --from=builder /app/backend ./backend
+## 复制后端依赖，确保运行时可使用本地 Prisma CLI 与依赖
+COPY --from=builder /app/backend/node_modules ./backend/node_modules
 
 # 复制entrypoint脚本
 COPY entrypoint.sh .
