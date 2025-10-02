@@ -163,11 +163,24 @@ const ConsumptionDetailStatsModal: React.FC<ConsumptionDetailStatsModalProps> = 
               <div className="flex h-12 items-center justify-between">
                 <div className="flex items-center gap-2">
                   <TrophyOutlined className="text-blue-500" />
-                  <span className="text-lg font-medium">
-                    {type === 'address'
-                      ? (consumptionDetail as CustomerAddressConsumptionDetailDto).addressName
-                      : (consumptionDetail as CustomerConsumptionDetailDto).customerName}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-lg font-medium">
+                      {type === 'address'
+                        ? (consumptionDetail as CustomerAddressConsumptionDetailDto).addressName
+                        : (consumptionDetail as CustomerConsumptionDetailDto).customerName}
+                      {type === 'customer' &&
+                        (consumptionDetail as CustomerConsumptionDetailDto).customerAddressName && (
+                          <span className="text-gray-500">
+                            （
+                            {
+                              (consumptionDetail as CustomerConsumptionDetailDto)
+                                .customerAddressName
+                            }
+                            ）
+                          </span>
+                        )}
+                    </span>
+                  </div>
                 </div>
                 {startDate && endDate ? (
                   <span className="text-sm text-orange-500">

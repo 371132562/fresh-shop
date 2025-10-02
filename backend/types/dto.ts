@@ -296,6 +296,7 @@ export type CustomerListItem = Customer & {
  */
 export type CustomerConsumptionDetailDto = {
   customerName: string; // 客户名称
+  customerAddressName?: string; // 客户地址名称
   orderCount: number; // 订单数量
   totalAmount: number; // 订单总额（已扣除退款）
   averagePricePerOrder: number; // 每单平均价格
@@ -694,6 +695,7 @@ export type MergedGroupBuyRegionalCustomersParams = {
 export type CustomerBasicInfo = {
   customerId: string; // 客户ID
   customerName: string; // 客户名称
+  customerAddressName?: string; // 客户地址名称
   purchaseCount?: number; // 客户在当前查询维度下的购买次数（仅频次列表查询时返回）
 };
 

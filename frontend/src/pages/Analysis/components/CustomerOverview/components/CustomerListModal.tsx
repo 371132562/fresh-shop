@@ -25,6 +25,7 @@ const CustomerListModal: React.FC = () => {
     key: string
     customerId: string
     customerName: string
+    customerAddressName?: string
     purchaseCount?: number
   }
 
@@ -34,6 +35,13 @@ const CustomerListModal: React.FC = () => {
       title: '客户姓名',
       dataIndex: 'customerName',
       key: 'customerName'
+    },
+    {
+      title: '客户地址',
+      dataIndex: 'customerAddressName',
+      key: 'customerAddressName',
+      width: 150,
+      render: (text: string) => text || '-'
     }
   ]
 
@@ -84,6 +92,7 @@ const CustomerListModal: React.FC = () => {
             key: item.customerId,
             customerId: item.customerId,
             customerName: item.customerName,
+            customerAddressName: item.customerAddressName,
             purchaseCount: item.purchaseCount
           }))}
           loading={loading}

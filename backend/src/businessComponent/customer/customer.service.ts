@@ -67,6 +67,7 @@ export class CustomerService {
     };
     // 根据类型验证资源是否存在并获取基本信息
     let resourceName: string;
+    let resourceAddressName: string | undefined;
     let orders: SelectedOrder[];
     // 用于15天窗口对比的全量订单（不受 startDate/endDate 限制）
     let ordersAllFor15d: SelectedOrder[];
@@ -75,6 +76,13 @@ export class CustomerService {
       // 客户维度查询
       const customer = await this.prisma.customer.findUnique({
         where: { id },
+        include: {
+          customerAddress: {
+            select: {
+              name: true,
+            },
+          },
+        },
       });
 
       if (!customer) {
@@ -82,6 +90,7 @@ export class CustomerService {
       }
 
       resourceName = customer.name;
+      resourceAddressName = customer.customerAddress?.name;
 
       // 查询该客户的订单（受时间过滤）
       orders = (await this.prisma.order.findMany({
@@ -244,6 +253,7 @@ export class CustomerService {
       if (type === 'customer') {
         return {
           customerName: resourceName,
+          customerAddressName: resourceAddressName,
           ...baseResult,
         } as CustomerConsumptionDetailDto;
       } else {
@@ -732,6 +742,7 @@ export class CustomerService {
     if (type === 'customer') {
       return {
         customerName: resourceName,
+        customerAddressName: resourceAddressName,
         ...baseResult,
       } as CustomerConsumptionDetailDto;
     } else {
@@ -1249,6 +1260,11 @@ export class CustomerService {
                 id: true,
                 name: true,
                 phone: true,
+                customerAddress: {
+                  select: {
+                    name: true,
+                  },
+                },
               },
             },
           },
@@ -1271,6 +1287,7 @@ export class CustomerService {
         const customerInfo = {
           customerId: order.customer.id,
           customerName: order.customer.name,
+          customerAddressName: order.customer.customerAddress?.name,
         };
 
         if (customerPurchaseCounts.has(customerId)) {

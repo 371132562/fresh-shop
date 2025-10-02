@@ -1785,6 +1785,7 @@ export class ProductService {
           filteredCustomers.push({
             customerId: customer.id,
             customerName: customer.name,
+            customerAddressName: customer.customerAddress?.name,
             purchaseCount: count,
           });
         }
@@ -1884,6 +1885,7 @@ export class ProductService {
             customerMap.set(order.customerId, {
               customerId: order.customer.id,
               customerName: order.customer.name,
+              customerAddressName: order.customer.customerAddress?.name,
               purchaseCount: 0,
             });
           }
