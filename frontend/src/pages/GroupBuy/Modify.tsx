@@ -1,14 +1,16 @@
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import type { UploadFile } from 'antd'
-import { Button, DatePicker, Form, Input, InputNumber, message, Modal, Select, Space } from 'antd'
+import { Button, DatePicker, Form, Input, InputNumber, message, Modal, Space } from 'antd'
 import { GroupBuy, GroupBuyUnit } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid' // 用于生成单位ID
 
 import ImagesUpload from '@/components/ImagesUpload'
+import ProductSelector from '@/components/ProductSelector'
+import SupplierSelector from '@/components/SupplierSelector'
 import useGroupBuyStore, { GroupBuyCreate, GroupBuyId } from '@/stores/groupBuyStore.ts'
 import useProductStore from '@/stores/productStore.ts'
-import useSupplierStore from '@/stores/supplierStore.ts'
+// import useSupplierStore from '@/stores/supplierStore.ts'
 import { buildImageUrl } from '@/utils'
 import dayjs from '@/utils/day'
 
@@ -34,15 +36,9 @@ const Modify = (props: params) => {
   const createGroupBuy = useGroupBuyStore(state => state.createGroupBuy)
   const updateGroupBuy = useGroupBuyStore(state => state.updateGroupBuy)
   const groupBuy = useGroupBuyStore(state => state.groupBuy)
-  const allSupplierList = useSupplierStore(state => state.allSupplierList)
-  const getAllSuppliers = useSupplierStore(state => state.getAllSuppliers)
-  const getAllSuppliersLoading = useSupplierStore(state => state.getAllSuppliersLoading)
-  const allProductsList = useProductStore(state => state.allProductsList)
   const getAllProducts = useProductStore(state => state.getAllProducts)
-  const getAllProductsListLoading = useProductStore(state => state.getAllProductsListLoading)
 
   useEffect(() => {
-    getAllSuppliers()
     getAllProducts()
     if (id && groupBuy) {
       const formVal = {
@@ -185,10 +181,6 @@ const Modify = (props: params) => {
     setVisible(false)
   }
 
-  const filterOption = (input: string, option?: { children?: string }) => {
-    return (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
-  }
-
   return (
     <>
       <Modal
@@ -230,48 +222,14 @@ const Modify = (props: params) => {
             name="supplierId"
             rules={[{ required: true, message: '请选择供货商' }]}
           >
-            <Select
-              loading={getAllSuppliersLoading}
-              showSearch
-              allowClear
-              placeholder="请选择供货商"
-              filterOption={filterOption}
-            >
-              {allSupplierList.map(item => {
-                return (
-                  <Select.Option
-                    key={item.id}
-                    value={item.id}
-                  >
-                    {item.name}
-                  </Select.Option>
-                )
-              })}
-            </Select>
+            <SupplierSelector />
           </Form.Item>
           <Form.Item
             label="商品"
             name="productId"
             rules={[{ required: true, message: '请选择商品' }]}
           >
-            <Select
-              loading={getAllProductsListLoading}
-              showSearch
-              allowClear
-              placeholder="请选择商品"
-              filterOption={filterOption}
-            >
-              {allProductsList.map(item => {
-                return (
-                  <Select.Option
-                    key={item.id}
-                    value={item.id}
-                  >
-                    {item.name}
-                  </Select.Option>
-                )
-              })}
-            </Select>
+            <ProductSelector />
           </Form.Item>
           <Form.List name="units">
             {(fields, { add, remove }) => (

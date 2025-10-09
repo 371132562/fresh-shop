@@ -1,4 +1,4 @@
-import { Button, Card, Col, Form, Input, List, Row, Select } from 'antd'
+import { Button, Card, Col, Form, Input, List, Row } from 'antd'
 import type {
   MergedGroupBuyOverviewDetailParams,
   MergedGroupBuyOverviewListItem,
@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
 import SearchToolbar from '@/components/SearchToolbar'
+import SupplierSelector from '@/components/SupplierSelector'
 import useAnalysisStore from '@/stores/analysisStore'
 import useGlobalSettingStore from '@/stores/globalSettingStore'
 import useSupplierStore from '@/stores/supplierStore'
@@ -57,9 +58,7 @@ export const MergedGroupBuyOverview = ({
   )
 
   // 供货商数据
-  const allSupplierList = useSupplierStore(state => state.allSupplierList)
   const getAllSuppliers = useSupplierStore(state => state.getAllSuppliers)
-  const getAllSuppliersLoading = useSupplierStore(state => state.getAllSuppliersLoading)
 
   useEffect(() => {
     // 当日期范围变化时，重新获取数据
@@ -219,28 +218,14 @@ export const MergedGroupBuyOverview = ({
                 name="supplierIds"
                 className="!mb-1"
               >
-                <Select
-                  loading={getAllSuppliersLoading}
-                  showSearch
+                <SupplierSelector
                   mode="multiple"
                   allowClear
                   placeholder="请选择供货商"
-                  filterOption={(input, option) =>
-                    String(option?.children || '')
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
+                  onChange={handleSearch}
+                  onClear={handleSearch}
                   popupMatchSelectWidth={300}
-                >
-                  {allSupplierList.map(item => (
-                    <Select.Option
-                      key={item.id}
-                      value={item.id}
-                    >
-                      {item.name}
-                    </Select.Option>
-                  ))}
-                </Select>
+                />
               </Form.Item>
             </Col>
           </Row>

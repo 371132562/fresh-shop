@@ -85,7 +85,7 @@ export class OrderService {
           );
         }
 
-        // 创建订单
+        // 创建订单（允许前端传入初始状态，不传则使用数据库默认值）
         const order = await this.prisma.order.create({
           data: {
             groupBuyId: orderData.groupBuyId,
@@ -93,7 +93,7 @@ export class OrderService {
             customerId: orderData.customerId,
             quantity: orderData.quantity,
             description: orderData.description || null,
-            // status 和 partialRefundAmount 由数据库默认值自动设置
+            ...(orderData.status ? { status: orderData.status } : {}),
           },
         });
 

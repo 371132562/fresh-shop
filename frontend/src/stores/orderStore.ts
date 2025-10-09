@@ -240,7 +240,7 @@ const useOrderStore = create<OrderStore>((set, get) => ({
   getOrder: async data => {
     try {
       set({ getLoading: true })
-      const res = await http.post(orderDetailApi, data)
+      const res: ResponseBody<OrderDetail> = await http.post(orderDetailApi, data)
       set({ order: res.data })
     } finally {
       set({ getLoading: false })
@@ -254,7 +254,7 @@ const useOrderStore = create<OrderStore>((set, get) => ({
   getAllOrder: async () => {
     try {
       set({ getAllOrderLoading: true })
-      const res = await http.post(orderListAllApi)
+      const res: ResponseBody<OrderDetail[]> = await http.post(orderListAllApi)
       set({
         allOrder: res.data || []
       })
@@ -299,7 +299,7 @@ const useOrderStore = create<OrderStore>((set, get) => ({
   getOrderStats: async () => {
     try {
       set({ statsLoading: true })
-      const res = await http.post(orderStatsApi)
+      const res: ResponseBody<OrderStatsResult> = await http.post(orderStatsApi)
       set({ orderStats: res.data })
     } catch (err) {
       console.error(err)

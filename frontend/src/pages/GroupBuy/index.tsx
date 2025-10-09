@@ -1,4 +1,4 @@
-import { Button, Card, Col, DatePicker, Form, Input, List, Row, Select, Tag } from 'antd'
+import { Button, Card, Col, DatePicker, Form, Input, List, Row, Tag } from 'antd'
 import {
   GroupBuyListItem,
   MergedGroupBuyOverviewDetailParams
@@ -6,18 +6,16 @@ import {
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
+import OrderStatusSelector from '@/components/OrderStatusSelector'
+import ProductSelector from '@/components/ProductSelector'
 import SearchToolbar from '@/components/SearchToolbar'
+import SupplierSelector from '@/components/SupplierSelector'
 import MergedGroupBuyDetailModal from '@/pages/Analysis/components/GroupBuyOverview/components/MergedGroupBuyDetailModal'
 import DeleteGroupBuyButton from '@/pages/GroupBuy/components/DeleteGroupBuyButton'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
-import {
-  ExtendedOrderStatusOptions,
-  OrderStatus,
-  OrderStatusMap,
-  OrderStatusOptions
-} from '@/stores/orderStore.ts'
+import { OrderStatus, OrderStatusMap } from '@/stores/orderStore.ts'
 import useProductStore from '@/stores/productStore.ts'
-import useSupplierStore from '@/stores/supplierStore.ts'
+// import useSupplierStore from '@/stores/supplierStore.ts'
 import { formatDate } from '@/utils'
 import dayjs from '@/utils/day'
 
@@ -35,17 +33,11 @@ export const Component = () => {
   const pageParams = useGroupBuyStore(state => state.pageParams)
   const setPageParams = useGroupBuyStore(state => state.setPageParams)
   const getGroupBuy = useGroupBuyStore(state => state.getGroupBuy)
-  const allSupplierList = useSupplierStore(state => state.allSupplierList)
-  const getAllSuppliers = useSupplierStore(state => state.getAllSuppliers)
-  const getAllSuppliersLoading = useSupplierStore(state => state.getAllSuppliersLoading)
-  const allProductsList = useProductStore(state => state.allProductsList)
   const getAllProducts = useProductStore(state => state.getAllProducts)
-  const getAllProductsListLoading = useProductStore(state => state.getAllProductsListLoading)
 
   // 详情模态框相关状态
 
   useEffect(() => {
-    getAllSuppliers()
     getAllProducts()
     pageChange()
     const { name, supplierIds, productIds, startDate, endDate, orderStatuses } = pageParams
@@ -171,30 +163,14 @@ export const Component = () => {
                 name="supplierIds"
                 className="!mb-1"
               >
-                <Select
-                  loading={getAllSuppliersLoading}
-                  showSearch
+                <SupplierSelector
                   mode="multiple"
                   allowClear
                   placeholder="请选择供货商"
                   onChange={handleSearch}
                   onClear={handleSearch}
-                  filterOption={(input, option) =>
-                    String(option?.children || '')
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
                   popupMatchSelectWidth={300}
-                >
-                  {allSupplierList.map(item => (
-                    <Select.Option
-                      key={item.id}
-                      value={item.id}
-                    >
-                      {item.name}
-                    </Select.Option>
-                  ))}
-                </Select>
+                />
               </Form.Item>
             </Col>
             <Col
@@ -207,30 +183,14 @@ export const Component = () => {
                 name="productIds"
                 className="!mb-1"
               >
-                <Select
-                  loading={getAllProductsListLoading}
-                  showSearch
+                <ProductSelector
                   mode="multiple"
                   allowClear
                   placeholder="请选择商品"
                   onChange={handleSearch}
                   onClear={handleSearch}
-                  filterOption={(input, option) =>
-                    String(option?.children || '')
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
                   popupMatchSelectWidth={300}
-                >
-                  {allProductsList.map(item => (
-                    <Select.Option
-                      key={item.id}
-                      value={item.id}
-                    >
-                      {item.name}
-                    </Select.Option>
-                  ))}
-                </Select>
+                />
               </Form.Item>
             </Col>
             <Col
@@ -243,23 +203,13 @@ export const Component = () => {
                 name="orderStatuses"
                 className="!mb-1"
               >
-                <Select
+                <OrderStatusSelector
                   mode="multiple"
-                  allowClear
-                  placeholder="请选择订单状态"
                   onChange={handleSearch}
                   onClear={handleSearch}
                   popupMatchSelectWidth={300}
-                >
-                  {(ExtendedOrderStatusOptions || OrderStatusOptions).map(option => (
-                    <Select.Option
-                      key={option.value}
-                      value={option.value}
-                    >
-                      <Tag color={option.color}>{option.label}</Tag>
-                    </Select.Option>
-                  ))}
-                </Select>
+                  useExtended={true}
+                />
               </Form.Item>
             </Col>
             <Col

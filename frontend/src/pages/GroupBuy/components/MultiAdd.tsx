@@ -4,7 +4,9 @@ import { BatchOrderItem, GroupBuyDetail, GroupBuyUnit } from 'fresh-shop-backend
 import { useEffect, useState } from 'react'
 
 import CustomerSelector from '@/components/CustomerSelector'
+import OrderStatusSelector from '@/components/OrderStatusSelector'
 import useOrderStore from '@/stores/orderStore.ts'
+import { OrderStatus } from '@/stores/orderStore.ts'
 import { formatDate } from '@/utils/day.ts'
 
 const { Title } = Typography
@@ -14,6 +16,7 @@ type OrderFormData = {
   customerId: string | undefined
   quantity: number
   description?: string
+  status?: OrderStatus
 }
 
 // 规格分组的表单数据类型
@@ -74,7 +77,9 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
               unitId: unitData.unitId,
               customerId: orderData.customerId,
               quantity: orderData.quantity,
-              description: orderData.description
+              description: orderData.description,
+              // 将前端选择的状态透传给后端；若未选择则由后端/DB默认
+              ...(orderData.status ? { status: orderData.status } : {})
             })
           }
         })
@@ -149,7 +154,7 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
       open={visible}
       onOk={handleOk}
       onCancel={handleCancel}
-      width={800}
+      width={1000}
       confirmLoading={createLoading}
       style={{ top: 20 }}
       maskClosable={false}
@@ -270,7 +275,7 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
                                     </div>
 
                                     {/* 客户选择 */}
-                                    <div className="md:col-span-4">
+                                    <div className="md:col-span-3">
                                       <Form.Item
                                         name={[orderField.name, 'customerId']}
                                         label="客户"
@@ -301,8 +306,23 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
                                       </Form.Item>
                                     </div>
 
+                                    {/* 订单状态（不包含部分退款） */}
+                                    <div className="md:col-span-3">
+                                      <Form.Item
+                                        name={[orderField.name, 'status']}
+                                        label="订单状态"
+                                        className="!mb-0"
+                                        rules={[{ required: true, message: '请选择订单状态' }]}
+                                      >
+                                        <OrderStatusSelector
+                                          useExtended={false}
+                                          allowClear={false}
+                                        />
+                                      </Form.Item>
+                                    </div>
+
                                     {/* 备注 */}
-                                    <div className="md:col-span-4">
+                                    <div className="md:col-span-2">
                                       <Form.Item
                                         name={[orderField.name, 'description']}
                                         label="备注"
@@ -333,7 +353,12 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
                               <Button
                                 type="dashed"
                                 onClick={() => {
-                                  addOrder({ customerId: undefined, quantity: 1, description: '' })
+                                  addOrder({
+                                    customerId: undefined,
+                                    quantity: 1,
+                                    description: '',
+                                    status: OrderStatus.NOTPAID
+                                  })
                                   setFormVersion(prev => prev + 1)
                                 }}
                                 block

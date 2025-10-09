@@ -778,6 +778,7 @@ export type BatchOrderItem = {
   customerId: string; // 客户ID
   quantity: number; // 购买数量
   description?: string; // 备注
+  status?: OrderStatus; // 可选：初始订单状态（默认由服务端/数据库决定）
 };
 
 /**

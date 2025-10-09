@@ -204,6 +204,8 @@ export const ProductOverview = ({ startDate, endDate }: ProductOverviewProps) =>
                   placeholder="请选择商品类型"
                   allowClear
                   style={{ width: '100%' }}
+                  onChange={handleSearch}
+                  onClear={handleSearch}
                   options={productTypeList.map((type: { id: string; name: string }) => ({
                     label: type.name,
                     value: type.id

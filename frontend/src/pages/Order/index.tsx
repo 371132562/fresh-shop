@@ -1,16 +1,13 @@
-import { Button, Card, Col, Form, List, Popconfirm, Row, Select, Tag } from 'antd'
+import { Button, Card, Col, Form, List, Popconfirm, Row, Tag } from 'antd'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
 
 import CustomerSelector from '@/components/CustomerSelector'
 import GroupBuySelector from '@/components/GroupBuySelector'
+import OrderStatusSelector from '@/components/OrderStatusSelector'
 import SearchToolbar from '@/components/SearchToolbar'
 import UpdateOrderStatusButton from '@/pages/Order/components/UpdateOrderStatusButton.tsx'
-import useOrderStore, {
-  ExtendedOrderStatusOptions,
-  OrderStatusMap,
-  OrderStatusOptions
-} from '@/stores/orderStore.ts'
+import useOrderStore, { OrderStatusMap } from '@/stores/orderStore.ts'
 import { formatDate } from '@/utils'
 
 import RefundButton from './components/RefundButton.tsx'
@@ -142,23 +139,13 @@ export const Component = () => {
                 name="statuses"
                 className="!mb-1"
               >
-                <Select
+                <OrderStatusSelector
                   mode="multiple"
-                  allowClear
-                  placeholder="请选择订单状态"
                   onChange={handleSearch}
                   onClear={handleSearch}
                   popupMatchSelectWidth={300}
-                >
-                  {(ExtendedOrderStatusOptions || OrderStatusOptions).map(option => (
-                    <Select.Option
-                      key={option.value}
-                      value={option.value}
-                    >
-                      <Tag color={option.color}>{option.label}</Tag>
-                    </Select.Option>
-                  ))}
-                </Select>
+                  useExtended={true}
+                />
               </Form.Item>
             </Col>
           </Row>
