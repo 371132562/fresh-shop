@@ -13,7 +13,6 @@
     "@ant-design/icons": "5.x",
     "antd": "^5.26.1",
     "antd-mobile": "^5.39.0",
-    "axios": "^1.10.0",
     "echarts": "^5.6.0",
     "fresh-shop-backend": "workspace:^",
     "less": "^4.3.0",

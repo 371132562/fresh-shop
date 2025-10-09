@@ -1,42 +1,103 @@
-// 基于axios封装的请求模块
+// 基于fetch封装的请求模块
 import { notification } from 'antd' // 导入 Ant Design 的 notification 组件
-import axios from 'axios'
-import { ErrorCode } from 'fresh-shop-backend/types/response.ts'
+import { ErrorCode, ResponseBody } from 'fresh-shop-backend/types/response.ts'
 
-// 创建axios实例
-const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL, // API基础URL（从环境变量获取）
-  timeout: 10000 // 请求超时时间（毫秒）
-})
+// 请求配置类型
+type RequestConfig = {
+  baseURL?: string
+  timeout?: number
+  headers?: Record<string, string>
+}
 
-// 请求拦截器
-http.interceptors.request.use(
-  config => {
-    // 添加token到请求头
-    // const token = localStorage.getItem('token')
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`
-    // }
-    return config
-  },
-  error => {
-    // 处理请求错误，例如网络不通，请求被取消等
-    notification.error({
-      message: '错误',
-      description: '网络请求失败，请稍后再试！'
-    })
-    return Promise.reject(error)
+// 请求拦截器类型
+type RequestInterceptor = (config: RequestConfig) => RequestConfig | Promise<RequestConfig>
+
+// 响应拦截器类型
+type ResponseInterceptor = (response: Response) => unknown | Promise<unknown>
+
+// 错误拦截器类型
+type ErrorInterceptor = (error: unknown) => unknown | Promise<unknown>
+
+// HTTP 客户端类
+class HttpClient {
+  private baseURL: string
+  private timeout: number
+  private requestInterceptors: RequestInterceptor[] = []
+  private responseInterceptors: ResponseInterceptor[] = []
+  private errorInterceptors: ErrorInterceptor[] = []
+
+  constructor(config: RequestConfig = {}) {
+    this.baseURL = config.baseURL || import.meta.env.VITE_API_BASE_URL || ''
+    this.timeout = config.timeout || 10000
   }
-)
 
-// 响应拦截器
-http.interceptors.response.use(
-  response => {
-    // 处理响应数据
-    const { status, data } = response
-    const { code, msg } = data // 解构后端返回的 code, msg, data
+  // 添加请求拦截器
+  addRequestInterceptor(interceptor: RequestInterceptor) {
+    this.requestInterceptors.push(interceptor)
+  }
+
+  // 添加响应拦截器
+  addResponseInterceptor(interceptor: ResponseInterceptor) {
+    this.responseInterceptors.push(interceptor)
+  }
+
+  // 添加错误拦截器
+  addErrorInterceptor(interceptor: ErrorInterceptor) {
+    this.errorInterceptors.push(interceptor)
+  }
+
+  // 处理请求拦截器
+  private async processRequestInterceptors(config: RequestConfig): Promise<RequestConfig> {
+    let processedConfig = { ...config }
+
+    for (const interceptor of this.requestInterceptors) {
+      processedConfig = await interceptor(processedConfig)
+    }
+
+    return processedConfig
+  }
+
+  // 处理响应拦截器
+  private async processResponseInterceptors(response: Response): Promise<Response> {
+    let processedResponse: Response = response
+
+    for (const interceptor of this.responseInterceptors) {
+      const result = await interceptor(processedResponse)
+      if (result instanceof Response) {
+        processedResponse = result
+      }
+    }
+
+    return processedResponse
+  }
+
+  // 处理错误拦截器
+  private async processErrorInterceptors(error: unknown): Promise<unknown> {
+    let processedError = error
+
+    for (const interceptor of this.errorInterceptors) {
+      processedError = await interceptor(processedError)
+    }
+
+    return processedError
+  }
+
+  // 创建 AbortController 用于超时控制
+  private createAbortController(): AbortController {
+    const controller = new AbortController()
+    setTimeout(() => controller.abort(), this.timeout)
+    return controller
+  }
+
+  // 处理响应数据
+  private async handleResponse<T = unknown>(response: Response): Promise<ResponseBody<T>> {
+    const { status } = response
+
     // 统一处理后端返回的成功状态（HTTP Status 200）
     if (status === 200) {
+      const data = await response.json()
+      const { code, msg } = data // 解构后端返回的 code, msg, data
+
       if (code === ErrorCode.SUCCESS) {
         // 业务成功，直接返回后端 data 字段的数据
         return data
@@ -78,19 +139,30 @@ http.interceptors.response.use(
     } else {
       // 理论上，如果后端异常过滤器设置得好，不会出现 status 不是 200 的情况
       // 但为了健壮性，仍然保留这部分处理
+      const errorData = await response.json().catch(() => ({}))
+      const msg = errorData.msg || '未知错误'
       notification.error({
         message: '错误',
-        description: `HTTP 错误: ${status} - ${msg || '未知错误'}`
+        description: `HTTP 错误: ${status} - ${msg}`
       })
       return Promise.reject(new Error(msg || 'HTTP Error'))
     }
-  },
-  error => {
-    // 处理网络错误、请求超时、HTTP 非 2xx 响应等
-    if (error.response) {
+  }
+
+  // 处理错误
+  private async handleError(error: unknown): Promise<never> {
+    let errorMessage = '未知错误'
+
+    if (error instanceof Error && error.name === 'AbortError') {
+      // 请求超时
+      errorMessage = '请求超时，请稍后再试！'
+    } else if (error && typeof error === 'object' && 'response' in error) {
       // 请求已发出，但服务器响应的状态码不在 2xx 范围内
-      const { status, data } = error.response
-      let errorMessage = data.msg || data.message || '未知错误'
+      const errorWithResponse = error as {
+        response: { status: number; data: { msg?: string; message?: string; data?: unknown } }
+      }
+      const { status, data } = errorWithResponse.response
+      errorMessage = data.msg || data.message || '未知错误'
 
       // 根据 HTTP 状态码进行提示
       switch (status) {
@@ -118,25 +190,130 @@ http.interceptors.response.use(
         default:
           errorMessage = `网络错误: ${status}`
       }
-      notification.error({
-        message: '错误',
-        description: errorMessage
-      })
-    } else if (error.request) {
+    } else if (error && typeof error === 'object' && 'request' in error) {
       // 请求已发出但没有收到响应 (例如网络断开或服务器没有响应)
-      notification.error({
-        message: '错误',
-        description: '服务器无响应，请检查网络或稍后再试！'
-      })
-    } else {
+      errorMessage = '服务器无响应，请检查网络或稍后再试！'
+    } else if (error instanceof Error) {
       // 发送请求时出了问题
-      notification.error({
-        message: '错误',
-        description: '请求发送失败：' + error.message
-      })
+      errorMessage = '请求发送失败：' + error.message
     }
+
+    notification.error({
+      message: '错误',
+      description: errorMessage
+    })
+
     return Promise.reject(error)
   }
-)
+
+  // 通用请求方法
+  async request<T = unknown>(url: string, options: RequestInit = {}): Promise<ResponseBody<T>> {
+    try {
+      // 构建完整URL
+      const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`
+
+      // 默认请求配置
+      const defaultOptions: RequestInit = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers
+        },
+        ...options
+      }
+
+      // 处理请求拦截器
+      const config = await this.processRequestInterceptors({
+        baseURL: this.baseURL,
+        timeout: this.timeout,
+        headers: defaultOptions.headers as Record<string, string>
+      })
+
+      // 创建 AbortController
+      const controller = this.createAbortController()
+
+      // 执行请求
+      const response = await fetch(fullUrl, {
+        ...defaultOptions,
+        headers: config.headers,
+        signal: controller.signal
+      })
+
+      // 处理响应拦截器
+      const processedResponse = await this.processResponseInterceptors(response)
+
+      // 处理响应数据
+      return await this.handleResponse<T>(processedResponse)
+    } catch (error) {
+      // 处理错误拦截器
+      const processedError = await this.processErrorInterceptors(error)
+      return await this.handleError(processedError)
+    }
+  }
+
+  // GET 请求
+  get<T = unknown>(url: string, options: RequestInit = {}): Promise<ResponseBody<T>> {
+    return this.request<T>(url, { ...options, method: 'GET' })
+  }
+
+  // POST 请求
+  post<T = unknown>(
+    url: string,
+    data?: unknown,
+    options: RequestInit = {}
+  ): Promise<ResponseBody<T>> {
+    return this.request<T>(url, {
+      ...options,
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined
+    })
+  }
+
+  // PUT 请求
+  put<T = unknown>(
+    url: string,
+    data?: unknown,
+    options: RequestInit = {}
+  ): Promise<ResponseBody<T>> {
+    return this.request<T>(url, {
+      ...options,
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined
+    })
+  }
+
+  // DELETE 请求
+  delete<T = unknown>(url: string, options: RequestInit = {}): Promise<ResponseBody<T>> {
+    return this.request<T>(url, { ...options, method: 'DELETE' })
+  }
+}
+
+// 创建 HTTP 客户端实例
+const http = new HttpClient({
+  baseURL: import.meta.env.VITE_API_BASE_URL, // API基础URL（从环境变量获取）
+  timeout: 10000 // 请求超时时间（毫秒）
+})
+
+// 添加请求拦截器
+http.addRequestInterceptor(config => {
+  // 添加token到请求头
+  // const token = localStorage.getItem('token')
+  // if (token) {
+  //   config.headers.Authorization = `Bearer ${token}`
+  // }
+  return config
+})
+
+// 添加错误拦截器
+http.addErrorInterceptor(error => {
+  // 处理请求错误，例如网络不通，请求被取消等
+  if (error instanceof Error && error.name === 'AbortError') {
+    notification.error({
+      message: '错误',
+      description: '网络请求失败，请稍后再试！'
+    })
+  }
+  return error
+})
 
 export default http
