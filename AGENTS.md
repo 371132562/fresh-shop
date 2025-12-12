@@ -7,15 +7,6 @@ fresh-shop 是一个基于 pnpm workspace 的前后端一体仓库：
 
 约定：所有注释与交互文案使用中文；整体 UI 风格简洁清晰、重点突出、功能易发现（具体 UI/UE 规范参考 `frontend/DESIGN_GUIDE.md`）。
 
-## 常用命令（以实际 package.json 为准）
-
-- 安装依赖：`pnpm install`（在仓库根目录）
-- 前端开发：`pnpm -C frontend start`
-- 前端校验：`pnpm -C frontend lint`
-- 后端开发：`pnpm -C backend start:dev`
-- 后端测试：`pnpm -C backend test`
-- 后端 lint：`pnpm -C backend lint`
-
 ## Agent 工作规范
 
 - **优先复用**：在实现前先研读现有代码与文档，优先复用项目中已有的工具函数、组件、Hook、服务和通用模块，避免重复造轮子或引入炫技实现
