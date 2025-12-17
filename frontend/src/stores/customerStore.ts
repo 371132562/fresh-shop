@@ -68,167 +68,174 @@ type CustomerStore = {
   setAddressConsumptionDetail: (data: CustomerAddressConsumptionDetailDto | null) => void
 }
 
-const useCustomerStore = create<CustomerStore>((set, get) => ({
-  customersList: [],
-  listCount: {
-    totalCount: 0,
-    totalPages: 0
-  },
-  pageParams: {
-    name: '',
-    phone: '',
-    wechat: '',
-    customerAddressIds: [],
-    page: 1,
-    pageSize: 10,
-    sortField: 'createdAt' as CustomerPageParams['sortField'],
-    sortOrder: 'desc' as CustomerPageParams['sortOrder']
-  },
-  getCustomerList: async (data = get().pageParams) => {
-    try {
-      set({ listLoading: true })
-      const res = await http.post<ListByPage<CustomerListItem[]>>(customerListApi, data)
-      if (res.data.page > res.data.totalPages && res.data.totalPages) {
-        get().setPageParams({ page: res.data.totalPages || 1 })
-        return
+const useCustomerStore = create<CustomerStore>((set, get) => {
+  const refreshCustomerCaches = () => {
+    // 客户新增/编辑/删除会影响全局“客户选择器”的数据源（allCustomer），这里同步刷新一次，保证跨页面选择客户时拿到最新数据
+    get().getAllCustomer()
+    get().getCustomerList(get().pageParams)
+  }
+
+  return {
+    customersList: [],
+    listCount: {
+      totalCount: 0,
+      totalPages: 0
+    },
+    pageParams: {
+      name: '',
+      phone: '',
+      wechat: '',
+      customerAddressIds: [],
+      page: 1,
+      pageSize: 10,
+      sortField: 'createdAt' as CustomerPageParams['sortField'],
+      sortOrder: 'desc' as CustomerPageParams['sortOrder']
+    },
+    getCustomerList: async (data = get().pageParams) => {
+      try {
+        set({ listLoading: true })
+        const res = await http.post<ListByPage<CustomerListItem[]>>(customerListApi, data)
+        if (res.data.page > res.data.totalPages && res.data.totalPages) {
+          get().setPageParams({ page: res.data.totalPages || 1 })
+          return
+        }
+        set({
+          customersList: res.data.data,
+          listCount: { totalCount: res.data.totalCount, totalPages: res.data.totalPages }
+        })
+      } finally {
+        set({ listLoading: false })
+      }
+    },
+    setPageParams: (data = get().pageParams) => {
+      const originalPageParams = get().pageParams
+      const newPageParams = {
+        ...originalPageParams,
+        ...data
       }
       set({
-        customersList: res.data.data,
-        listCount: { totalCount: res.data.totalCount, totalPages: res.data.totalPages }
+        pageParams: newPageParams
       })
-    } finally {
-      set({ listLoading: false })
-    }
-  },
-  setPageParams: (data = get().pageParams) => {
-    const originalPageParams = get().pageParams
-    const newPageParams = {
-      ...originalPageParams,
-      ...data
-    }
-    set({
-      pageParams: newPageParams
-    })
-    get().getCustomerList(newPageParams)
-  },
-  listLoading: false,
+      get().getCustomerList(newPageParams)
+    },
+    listLoading: false,
 
-  createLoading: false,
-  createCustomer: async data => {
-    try {
-      set({ createLoading: true })
-      await http.post(customerCreateApi, data)
-      return true
-    } catch (err) {
-      console.error(err)
-      return false
-    } finally {
-      set({ createLoading: false })
-      get().getCustomerList(get().pageParams)
-    }
-  },
+    createLoading: false,
+    createCustomer: async data => {
+      try {
+        set({ createLoading: true })
+        await http.post(customerCreateApi, data)
+        return true
+      } catch (err) {
+        console.error(err)
+        return false
+      } finally {
+        set({ createLoading: false })
+        refreshCustomerCaches()
+      }
+    },
 
-  updateCustomer: async data => {
-    try {
-      set({ createLoading: true })
-      await http.post(customerUpdateApi, data)
-      return true
-    } catch (err) {
-      console.error(err)
-      return false
-    } finally {
-      set({ createLoading: false })
-      get().getCustomerList(get().pageParams)
-    }
-  },
+    updateCustomer: async data => {
+      try {
+        set({ createLoading: true })
+        await http.post(customerUpdateApi, data)
+        return true
+      } catch (err) {
+        console.error(err)
+        return false
+      } finally {
+        set({ createLoading: false })
+        refreshCustomerCaches()
+      }
+    },
 
-  deleteLoading: false,
-  deleteCustomer: async data => {
-    try {
-      set({ deleteLoading: true })
-      await http.post(customerDeleteApi, data)
-      get().getCustomerList(get().pageParams)
-      return true
-    } catch (err) {
-      console.error(err)
-      return false
-    } finally {
-      get().getCustomerList(get().pageParams)
-      set({ deleteLoading: false })
-    }
-  },
+    deleteLoading: false,
+    deleteCustomer: async data => {
+      try {
+        set({ deleteLoading: true })
+        await http.post(customerDeleteApi, data)
+        return true
+      } catch (err) {
+        console.error(err)
+        return false
+      } finally {
+        refreshCustomerCaches()
+        set({ deleteLoading: false })
+      }
+    },
 
-  customer: null,
-  getCustomer: async data => {
-    try {
-      set({ getLoading: true })
-      const res = await http.post<Customer>(customerDetailApi, data)
-      set({ customer: res.data })
-    } catch (err) {
-      console.error(err)
-    }
-  },
-  setCustomer: data => {
-    set({
-      customer: data
-    })
-  },
-  getLoading: false,
-
-  getAllCustomerLoading: false,
-  getAllCustomer: async () => {
-    try {
-      set({ getAllCustomerLoading: true })
-      const res = await http.post<Customer[]>(customerListAllApi)
+    customer: null,
+    getCustomer: async data => {
+      try {
+        set({ getLoading: true })
+        const res = await http.post<Customer>(customerDetailApi, data)
+        set({ customer: res.data })
+      } catch (err) {
+        console.error(err)
+      }
+    },
+    setCustomer: data => {
       set({
-        allCustomer: res.data || []
+        customer: data
       })
-    } catch (err) {
-      console.error(err)
-    } finally {
-      set({ getAllCustomerLoading: false })
-    }
-  },
-  allCustomer: [],
+    },
+    getLoading: false,
 
-  consumptionDetail: null as CustomerConsumptionDetailDto | null,
-  consumptionDetailLoading: false,
-  getConsumptionDetail: async (data: { id: string; startDate?: Date; endDate?: Date }) => {
-    set({ consumptionDetailLoading: true })
-    try {
-      const res = await http.post<CustomerConsumptionDetailDto>(customerConsumptionDetailApi, data)
-      set({ consumptionDetail: res.data, consumptionDetailLoading: false })
-    } catch (error) {
-      console.error(error)
-      set({ consumptionDetailLoading: false })
-    }
-  },
-  resetConsumptionDetail: () => {
-    set({
-      consumptionDetail: null,
-      consumptionDetailLoading: false
-    })
-  },
+    getAllCustomerLoading: false,
+    getAllCustomer: async () => {
+      try {
+        set({ getAllCustomerLoading: true })
+        const res = await http.post<Customer[]>(customerListAllApi)
+        set({
+          allCustomer: res.data || []
+        })
+      } catch (err) {
+        console.error(err)
+      } finally {
+        set({ getAllCustomerLoading: false })
+      }
+    },
+    allCustomer: [],
 
-  // 地址消费详情相关
-  addressConsumptionDetail: null as CustomerAddressConsumptionDetailDto | null,
-  addressConsumptionDetailLoading: false,
-  getAddressConsumptionDetail: async (data: { id: string; startDate?: Date; endDate?: Date }) => {
-    set({ addressConsumptionDetailLoading: true })
-    try {
-      const res = await http.post<CustomerAddressConsumptionDetailDto>(
-        customerAddressConsumptionDetailApi,
-        data
-      )
-      set({ addressConsumptionDetail: res.data, addressConsumptionDetailLoading: false })
-    } catch (error) {
-      console.error(error)
-      set({ addressConsumptionDetailLoading: false })
+    consumptionDetail: null as CustomerConsumptionDetailDto | null,
+    consumptionDetailLoading: false,
+    getConsumptionDetail: async (data: { id: string; startDate?: Date; endDate?: Date }) => {
+      set({ consumptionDetailLoading: true })
+      try {
+        const res = await http.post<CustomerConsumptionDetailDto>(customerConsumptionDetailApi, data)
+        set({ consumptionDetail: res.data, consumptionDetailLoading: false })
+      } catch (error) {
+        console.error(error)
+        set({ consumptionDetailLoading: false })
+      }
+    },
+    resetConsumptionDetail: () => {
+      set({
+        consumptionDetail: null,
+        consumptionDetailLoading: false
+      })
+    },
+
+    // 地址消费详情相关
+    addressConsumptionDetail: null as CustomerAddressConsumptionDetailDto | null,
+    addressConsumptionDetailLoading: false,
+    getAddressConsumptionDetail: async (data: { id: string; startDate?: Date; endDate?: Date }) => {
+      set({ addressConsumptionDetailLoading: true })
+      try {
+        const res = await http.post<CustomerAddressConsumptionDetailDto>(
+          customerAddressConsumptionDetailApi,
+          data
+        )
+        set({ addressConsumptionDetail: res.data, addressConsumptionDetailLoading: false })
+      } catch (error) {
+        console.error(error)
+        set({ addressConsumptionDetailLoading: false })
+      }
+    },
+    setAddressConsumptionDetail: (data: CustomerAddressConsumptionDetailDto | null) => {
+      set({ addressConsumptionDetail: data })
     }
-  },
-  setAddressConsumptionDetail: (data: CustomerAddressConsumptionDetailDto | null) => {
-    set({ addressConsumptionDetail: data })
   }
-}))
+})
 
 export default useCustomerStore
