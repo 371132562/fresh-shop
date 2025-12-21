@@ -45,3 +45,7 @@ backend/db
 
 # macOS 特有的文件
 .DS_Store
+
+# AI相关
+.kiro
+.agent

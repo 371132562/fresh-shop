@@ -9,36 +9,23 @@ fresh-shop 是一个基于 pnpm workspace 的前后端一体仓库：
 
 ## Agent 工作规范
 
-- **优先复用**：在实现前先研读现有代码与文档，优先复用项目中已有的工具函数、组件、Hook、服务和通用模块，避免重复造轮子或引入炫技实现
-- **学习借鉴**：开发前需主动查找至少 3 个项目内相似特性或组件，学习并沿用其复用方式与测试编排模式，保证一致的用户体验与工程实践
-- **简单优先**：坚持单一责任原则，相同或相似逻辑至少出现三次再考虑抽象，避免过早设计复杂框架或通用层
-- **及时清理**：对于冗余与过时实现，在确认不再需要后应及时删除，而不是长期保留多个分支逻辑；需要破坏性变更时，必须通过阶段 0/1 向用户说明影响范围并取得确认
-- **渐进式迭代**：小步快跑，保持每次改动可编译、可验证，优先让小范围变更尽早通过类型检查和测试再继续扩展
-- **不自动提交代码**：Agent运行时不需要进行git提交，除非用户明确要求
-- **不执行长时间任务**：不执行长时间dev运行、build构建，除非用户明确要求
-- **破坏性变更需确认**：涉及以下操作前必须先征求用户确认：
-  - 删除核心配置文件
-  - 修改数据库结构
-  - 大范围重构代码
-  - 破坏性数据库迁移
-- 代码中必须尽可能详细书写**中文注释**，核心业务逻辑与易踩坑部分必须配简洁明了的中文功能解释注释，避免后续维护者只能从实现细节反推意图
+### AGENT文档规范
 
-### 目录与临时文件
-
+- 除非用户明确要求，否则不要生成新的文档，但是允许修订旧文档。
 - 所有由 Agent 在本项目工作过程中产生的临时文件（中间产物、缓存、日志、草稿等）必须创建在项目根目录的 `.agent` 目录下，不得在其他目录散落生成临时文件，除非用户明确要求。
-- 建议为每个任务使用独立子目录（例如 `.agent/<date>-<task-name>/`）归档该任务的记录和中间文件，便于追踪与清理。
-- 若需要记录关键决策、问题与尝试路径，统一写入 `.agent/operations-log.md` 或对应任务子目录下的日志文件。
+- 如果用户明确要求生成文档，那么每个任务使用独立子目录（例如 `.agent/<date>-<task-name>/`）归档该任务的记录和中间文件，便于追踪与清理。
 
 ### 工作流程（4 阶段）
 
 #### 阶段 0：需求理解与上下文收集
 
-- 在开始任何开发或修改前，先对仓库进行结构化快速扫描：确认本次任务涉及的子项目（`frontend/`、`backend/`）、关键目录、主要技术栈以及现有测试/脚本入口（如 `pnpm -C frontend ...`、`pnpm -C backend ...`）。
+- 在开始任何开发或修改前，先对仓库进行结构化快速扫描：确认本次任务涉及的子项目、关键目录、所要参考的代码风格。
 - 与用户确认本次任务的业务目标和边界：包括接口契约（输入/输出、错误码）、数据流向、性能或安全要求等；对不明确部分必须用清单形式向用户提问澄清。
 - 检查现有文档、代码注释和类似功能实现，记录当前实现现状与潜在风险点（例如：业务规则不一致、缺少测试、数据库变更风险等）。
 
 #### 阶段 1：任务规划
 
+- 深度思考（sequential-thinking）
 - 基于阶段 0 的信息，先输出本次任务的验收契约：
   - 预期输入与输出（包括边界与异常场景）。
   - 覆盖的模块/接口/页面列表。
@@ -60,37 +47,16 @@ fresh-shop 是一个基于 pnpm workspace 的前后端一体仓库：
 - 在最终回复中用结构化方式列出：本次改动影响的文件/模块列表、主要变更点、新增/修改的测试及其验证结论，以及后续建议或已知限制。
 - 清理不再需要的临时文件与实验性代码片段，保证工作结果可直接被接手和继续迭代。
 
-## 开发规范
+### 开发哲学
 
-### TypeScript 规范
-
-- 尽量避免使用 `any`；接口 DTO/响应类型优先复用 `fresh-shop-backend/types/*`，避免在前端重复定义。
-- 仅前端视图专用的临时类型，才在对应模块就近定义。
-- 前端路径别名 `@` 指向 `frontend/src`（见 `frontend/vite.config.ts`）。
-- 组件命名使用 PascalCase。
-
-### 共享类型（前后端）
-
-前端通过 workspace 依赖直接引用后端导出的类型（例如 `fresh-shop-backend/types/dto.ts`、`fresh-shop-backend/types/response.ts`）。
-新增/调整接口入参出参时，优先在后端 `backend/types/` 同步更新类型定义，并保持前后端一致。
-
-### 样式规范
-
-- 样式方案优先级：Ant Design 组件/Token > TailwindCSS（布局/间距/细节）> 少量自定义 CSS/less（必要时）。
-- UI/UE 细则以 `frontend/DESIGN_GUIDE.md` 为准（配色、布局、常用组件组合方式等）。
-- 表情与图标：避免在界面中使用 emoji 作为视觉元素或状态表达，统一使用图标（优先 `@ant-design/icons`）+ 文本来传达含义。
-- 间距与密度：统一使用 Ant Design 的 `Space`/组件间距与 Tailwind 的 spacing 体系，保证组件间距“紧凑但不拥挤”，避免过近导致压迫感或过松造成空间浪费。
-- 视觉气质：整体追求利落、高级、极简的专业质感（克制装饰与动效），页面信息层级清晰、重点突出，让功能更易发现。
-- 用色策略：减少不必要的颜色使用，从一套一致且协调的配色体系中取色并保持统一（优先使用 Ant Design Token）；颜色仅用于强调关键信息与关键操作，避免“到处都是强调色”。
-- 响应式与细节：确保桌面端与移动端都排版优雅、可读性良好，避免横向溢出；关键操作在小屏也易点击、易理解。
-- 避免使用全局样式，保持全局风格一致。
-- 加载效果优先使用骨架屏。
-- 风格要求：简洁、清晰、克制用色，避免花哨配色与过度动效。
-
-### Git 提交规范
-
-- commit message 必须符合规范：`feat/fix/chore` 开头 + 中文具体内容。
-- 示例：`feat: 添加用户管理页面`、`fix: 修复登录验证码显示问题`。
+- 渐进式迭代，小步快跑，保持每次改动可编译、可验证，优先让小范围变更尽早通过类型检查和测试再继续扩展。
+- 实现前先研读现有代码与文档，优先复用官方或主流生态方案以及项目中已有的通用模块，避免不必要的自研与炫技式实现。
+- 简单优先：坚持单一责任原则，相同或相似逻辑至少出现三次再考虑抽象，避免过早设计复杂框架或通用层。
+- 严格遵循既有风格与约定（导入顺序、命名方式、格式化规则、构建与测试框架）。
+- 开发前需主动查找至少 3 个项目内相似特性或组件，学习并沿用其复用方式与测试编排模式，保证一致的用户体验与工程实践。
+- 对于冗余与过时实现，在确认不再需要后应及时删除，而不是长期保留多个分支逻辑；需要破坏性变更时，通过阶段 0/1 提前向用户说明影响范围并取得确认。 
+- 核心业务逻辑与易踩坑部分必须配简洁明了的中文功能解释注释，避免后续维护者只能从实现细节反推意图。
+- 当需要提交代码时，git commit 信息应以 `feat`、`dix`、`chore` 等前缀开头，并用简体中文描述具体改动内容。
 
 ## 项目架构
 
@@ -118,6 +84,41 @@ fresh-shop/
 │   └── types/                 # 共享类型（DTO/Response，前端会直接引用）
 └── pnpm-workspace.yaml
 ```
+
+## 开发规范
+
+### TypeScript 规范
+
+- 尽量避免使用 `any`；接口 DTO/响应类型优先复用 `fresh-shop-backend/types/*`，避免在前端重复定义。
+- 仅前端视图专用的临时类型，才在对应模块就近定义。
+- 前端路径别名 `@` 指向 `frontend/src`（见 `frontend/vite.config.ts`）。
+- 组件命名使用 PascalCase。
+
+### 共享类型（前后端）
+
+前端通过 workspace 依赖直接引用后端导出的类型（例如 `fresh-shop-backend/types/dto.ts`、`fresh-shop-backend/types/response.ts`）。
+新增/调整接口入参出参时，优先在后端 `backend/types/` 同步更新类型定义，并保持前后端一致。
+
+## 前端样式规范
+
+- 样式方案优先级：Ant Design > Tailwind CSS > CSS Modules。
+- Avoid using global styles and keep the global visual style consistent.
+- Prefer skeleton screens for loading states.
+
+### Core Design Principles
+
+- The goal of the site is to look sleek, premium, and minimalist, like a spa in Switzerland.
+- Design this in a way that matches what a working professional would reasonably pay thousands of dollars a month for, in a way that would make Steve Jobs smile.
+
+### Visual and Interaction Guidelines
+
+- Iconography: Use icons instead of emojis.
+- Color Palette: Avoid using colors unnecessarily; instead, pick from a cohesive palette and stick to it.
+- Spacing and Padding Guidelines: Fix the padding so every component is spaced perfectly—not too close to other components but not too dispersed to waste space.
+
+### Responsiveness
+
+- Ensure the site is responsive and elegant on both desktop and mobile.
 
 ### 前端分层约定
 
