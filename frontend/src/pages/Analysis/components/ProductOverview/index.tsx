@@ -266,12 +266,17 @@ export const ProductOverview = ({ startDate, endDate }: ProductOverviewProps) =>
                   {/* 标题：商品名称与类型标签同行，名称小屏单行省略，md起换行 */}
                   <div className="mb-1">
                     <div className="flex min-w-0 flex-row flex-wrap items-center gap-2">
-                      <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all">
+                      <span className="block max-w-full overflow-hidden text-lg font-medium text-ellipsis whitespace-nowrap md:overflow-visible md:break-all md:whitespace-normal">
                         {item.productName}
                       </span>
                       {item.productTypeName && (
                         <span className="shrink-0">
-                          <Tag color="#55acee">{item.productTypeName}</Tag>
+                          <Tag
+                            variant="solid"
+                            color="#55acee"
+                          >
+                            {item.productTypeName}
+                          </Tag>
                         </span>
                       )}
                     </div>

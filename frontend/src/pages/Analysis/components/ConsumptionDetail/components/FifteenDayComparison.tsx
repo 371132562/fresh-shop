@@ -202,8 +202,18 @@ const FifteenDayComparison: React.FC<FifteenDayComparisonProps> = ({
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-1">
-            <Tag color="blue">近15天（含今日）：{ranges.currentLabel}</Tag>
-            <Tag color="blue">前15天：{ranges.previousLabel}</Tag>
+            <Tag
+              variant="solid"
+              color="blue"
+            >
+              近15天（含今日）：{ranges.currentLabel}
+            </Tag>
+            <Tag
+              variant="solid"
+              color="blue"
+            >
+              前15天：{ranges.previousLabel}
+            </Tag>
           </div>
         </div>
       }

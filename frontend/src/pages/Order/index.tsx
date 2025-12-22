@@ -201,11 +201,14 @@ export const Component = () => {
                           style={{ padding: 0, height: 'auto' }}
                         >
                           <div className="flex min-w-0 flex-row flex-wrap items-center gap-2">
-                            <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all">
+                            <span className="block max-w-full overflow-hidden text-lg font-medium text-ellipsis whitespace-nowrap md:overflow-visible md:break-all md:whitespace-normal">
                               {item.customer.name}
                             </span>
                             <span className="shrink-0">
-                              <Tag color={OrderStatusMap[item.status].color}>
+                              <Tag
+                                variant="solid"
+                                color={OrderStatusMap[item.status].color}
+                              >
                                 {OrderStatusMap[item.status].label}
                               </Tag>
                             </span>

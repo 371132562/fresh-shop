@@ -163,6 +163,7 @@ const ProductConsumptionRanks: React.FC<ProductConsumptionRanksProps> = ({ ranks
                         </div>
                         {isLatestConsumption && type === 'customer' && (
                           <Tag
+                            variant="solid"
                             color="red"
                             className="text-xs"
                           >
@@ -203,7 +204,7 @@ const ProductConsumptionRanks: React.FC<ProductConsumptionRanksProps> = ({ ranks
               {product.groupBuys &&
                 product.groupBuys.length > 0 &&
                 expandedProducts.has(product.productId) && (
-                  <div className="ml-6 mt-3 space-y-2">
+                  <div className="mt-3 ml-6 space-y-2">
                     <div className="border-l-2 border-blue-200 pl-4">
                       {product.groupBuys.map((groupBuy: GroupBuyItem, gbIndex: number) => {
                         const isRefundedOrder =

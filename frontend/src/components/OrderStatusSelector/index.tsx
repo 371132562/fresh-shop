@@ -47,7 +47,12 @@ const OrderStatusSelector = ({
           key={option.value}
           value={option.value}
         >
-          <Tag color={option.color}>{option.label}</Tag>
+          <Tag
+            variant="solid"
+            color={option.color}
+          >
+            {option.label}
+          </Tag>
         </Select.Option>
       ))}
     </Select>

@@ -240,7 +240,12 @@ export const Component = () => {
                         </span>
                         {item.productTypeName && (
                           <span className="shrink-0">
-                            <Tag color="#55acee">{item.productTypeName}</Tag>
+                            <Tag
+                              variant="solid"
+                              color="#55acee"
+                            >
+                              {item.productTypeName}
+                            </Tag>
                           </span>
                         )}
                       </div>

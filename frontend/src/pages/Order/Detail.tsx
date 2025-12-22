@@ -70,7 +70,10 @@ export const Component = () => {
               {order?.status ? (
                 <div className="flex items-center">
                   <span className="mr-2">订单状态</span>
-                  <Tag color={OrderStatusMap[order.status].color}>
+                  <Tag
+                    variant="solid"
+                    color={OrderStatusMap[order.status].color}
+                  >
                     {OrderStatusMap[order.status].label}
                   </Tag>
                 </div>
@@ -138,7 +141,7 @@ export const Component = () => {
             <div className="flex items-start text-base">
               <span className="w-20 flex-shrink-0 font-medium text-gray-500">客户：</span>
               <span className="word-break-all flex-grow break-words text-gray-700">
-                {order?.customer?.name || <span className="italic text-gray-400">无</span>}
+                {order?.customer?.name || <span className="text-gray-400 italic">无</span>}
               </span>
             </div>
 
@@ -159,7 +162,7 @@ export const Component = () => {
                     )}
                   </NavLink>
                 ) : (
-                  <span className="italic text-gray-400">无</span>
+                  <span className="text-gray-400 italic">无</span>
                 )}
               </span>
             </div>
@@ -167,8 +170,8 @@ export const Component = () => {
             {/* 数量 */}
             <div className="flex items-start text-base">
               <span className="w-20 flex-shrink-0 font-medium text-gray-500">购买数量：</span>
-              <span className="word-break-all flex-grow break-words font-bold text-blue-600">
-                {order?.quantity || <span className="italic text-gray-400">无</span>}
+              <span className="word-break-all flex-grow font-bold break-words text-blue-600">
+                {order?.quantity || <span className="text-gray-400 italic">无</span>}
               </span>
             </div>
 
@@ -193,7 +196,7 @@ export const Component = () => {
             <div className="flex items-start text-base">
               <span className="w-20 flex-shrink-0 font-medium text-gray-500">备注：</span>
               <span className="word-break-all flex-grow break-words text-gray-700">
-                {order?.description || <span className="italic text-gray-400">无</span>}
+                {order?.description || <span className="text-gray-400 italic">无</span>}
               </span>
             </div>
           </div>
@@ -228,7 +231,7 @@ export const Component = () => {
               </div>
             ) : (
               <div className="py-2 text-base text-gray-700">
-                <span className="italic text-gray-400">无规格信息</span>
+                <span className="text-gray-400 italic">无规格信息</span>
               </div>
             )}
           </div>

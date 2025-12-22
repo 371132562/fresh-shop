@@ -335,6 +335,7 @@ export const Component = () => {
                           const statusInfo = OrderStatusMap[status as OrderStatus]
                           return (
                             <Tag
+                              variant="solid"
                               color={statusInfo.color}
                               key={status}
                             >

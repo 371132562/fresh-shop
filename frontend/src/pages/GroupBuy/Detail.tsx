@@ -151,7 +151,7 @@ export const Component = () => {
                   {groupBuy?.groupBuyStartDate ? (
                     formatDate(groupBuy.groupBuyStartDate)
                   ) : (
-                    <span className="italic text-gray-400">无</span>
+                    <span className="text-gray-400 italic">无</span>
                   )}
                 </span>
               </div>
@@ -160,7 +160,7 @@ export const Component = () => {
               <div className="flex items-start text-base">
                 <span className="w-20 flex-shrink-0 font-medium text-gray-500">供货商：</span>
                 <span className="word-break-all flex-grow break-words text-gray-700">
-                  {groupBuy?.supplier?.name || <span className="italic text-gray-400">无</span>}
+                  {groupBuy?.supplier?.name || <span className="text-gray-400 italic">无</span>}
                 </span>
               </div>
 
@@ -168,7 +168,7 @@ export const Component = () => {
               <div className="flex items-start text-base">
                 <span className="w-20 flex-shrink-0 font-medium text-gray-500">商品：</span>
                 <span className="word-break-all flex-grow break-words text-gray-700">
-                  {groupBuy?.product?.name || <span className="italic text-gray-400">无</span>}
+                  {groupBuy?.product?.name || <span className="text-gray-400 italic">无</span>}
                 </span>
               </div>
 
@@ -185,7 +185,7 @@ export const Component = () => {
               {/* 订单量 */}
               <div className="flex items-start text-base">
                 <span className="w-20 flex-shrink-0 font-medium text-gray-500">订单量：</span>
-                <span className="word-break-all flex-grow break-words font-bold text-blue-600">
+                <span className="word-break-all flex-grow font-bold break-words text-blue-600">
                   {groupBuy?.totalOrderCount || <span className="text-gray-500">0</span>}
                 </span>
               </div>
@@ -258,7 +258,7 @@ export const Component = () => {
                 ))
               ) : (
                 <div className="py-2 text-base text-gray-700">
-                  <span className="italic text-gray-400">无规格信息</span>
+                  <span className="text-gray-400 italic">无规格信息</span>
                 </div>
               )}
             </div>
@@ -372,7 +372,10 @@ export const Component = () => {
                           <p className="flex items-center">
                             <span className="w-20 flex-shrink-0">订单状态:</span>
                             <span className="flex-grow">
-                              <Tag color={OrderStatusMap[order.status].color}>
+                              <Tag
+                                variant="solid"
+                                color={OrderStatusMap[order.status].color}
+                              >
                                 {OrderStatusMap[order.status].label}
                               </Tag>
                             </span>
@@ -400,7 +403,7 @@ export const Component = () => {
             />
             {!groupBuy?.order?.length && (
               <div className="py-2 text-base text-gray-700">
-                <span className="italic text-gray-400">无订单信息</span>
+                <span className="text-gray-400 italic">无订单信息</span>
               </div>
             )}
           </div>

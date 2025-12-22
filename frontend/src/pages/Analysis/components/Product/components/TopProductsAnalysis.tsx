@@ -128,6 +128,7 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                           </span>
                           {item.categoryName && (
                             <Tag
+                              variant="solid"
                               color="blue"
                               className="m-0 flex-shrink-0"
                             >
@@ -135,7 +136,7 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                             </Tag>
                           )}
                         </div>
-                        <div className="whitespace-nowrap text-base font-bold text-blue-400">
+                        <div className="text-base font-bold whitespace-nowrap text-blue-400">
                           {formatCurrency(titleAmount)}
                         </div>
                       </div>
@@ -159,6 +160,7 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                       <div className="mt-3 flex flex-wrap gap-2">
                         {!globalSetting?.value?.sensitive && (
                           <Tag
+                            variant="solid"
                             color="blue"
                             className="m-0"
                           >
@@ -166,12 +168,14 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                           </Tag>
                         )}
                         <Tag
+                          variant="solid"
                           color="blue"
                           className="m-0"
                         >
                           团购单 {groupBuys}
                         </Tag>
                         <Tag
+                          variant="solid"
                           color="blue"
                           className="m-0"
                         >
@@ -179,6 +183,7 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                         </Tag>
                         {item.totalRefundAmount > 0 && (
                           <Tag
+                            variant="solid"
                             color="orange"
                             className="m-0"
                           >
@@ -188,6 +193,7 @@ const TopProductsAnalysis: React.FC<TopProductsAnalysisProps> = ({
                         {(item.totalPartialRefundOrderCount > 0 ||
                           item.totalRefundedOrderCount > 0) && (
                           <Tag
+                            variant="solid"
                             color="orange"
                             className="m-0"
                           >

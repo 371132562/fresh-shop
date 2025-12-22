@@ -97,6 +97,7 @@ const DeleteGroupBuyButton = ({
                   className="flex items-center justify-between rounded border border-orange-100 bg-white px-3 py-2"
                 >
                   <Tag
+                    variant="solid"
                     color={color}
                     className="text-xs"
                   >

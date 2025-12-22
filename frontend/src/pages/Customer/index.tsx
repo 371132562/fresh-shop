@@ -289,7 +289,12 @@ export const Component = () => {
                         </span>
                         {item.customerAddressName && (
                           <span className="shrink-0">
-                            <Tag color="#55acee">{item.customerAddressName}</Tag>
+                            <Tag
+                              variant="solid"
+                              color="#55acee"
+                            >
+                              {item.customerAddressName}
+                            </Tag>
                           </span>
                         )}
                       </div>

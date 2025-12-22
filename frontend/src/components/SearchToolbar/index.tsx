@@ -71,7 +71,10 @@ const SearchToolbar = ({
               共 {totalCount} {countLabel}
             </span>
             {noOrderCount !== undefined && noOrderCount > 0 && (
-              <Tag color="orange">
+              <Tag
+                variant="solid"
+                color="orange"
+              >
                 共 {noOrderCount} {countLabel}
                 {noOrderLabel}
               </Tag>

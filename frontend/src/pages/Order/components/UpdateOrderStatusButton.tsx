@@ -26,6 +26,7 @@ const UpdateOrderStatusButton: React.FC<Props> = ({ orderId, status, onSuccess }
             const next = getNextOrderStatus(status)
             return next ? (
               <Tag
+                variant="solid"
                 className="!text-base"
                 color={OrderStatusMap[next].color}
               >
@@ -51,7 +52,12 @@ const UpdateOrderStatusButton: React.FC<Props> = ({ orderId, status, onSuccess }
             content: (
               <div>
                 订单状态已更新为：
-                <Tag color={OrderStatusMap[next].color}>{OrderStatusMap[next].label}</Tag>
+                <Tag
+                  variant="solid"
+                  color={OrderStatusMap[next].color}
+                >
+                  {OrderStatusMap[next].label}
+                </Tag>
               </div>
             )
           })

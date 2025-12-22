@@ -115,7 +115,7 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
                         <div className="truncate text-base font-medium text-gray-800">
                           {item.categoryName}
                         </div>
-                        <div className="whitespace-nowrap text-base font-bold text-blue-400">
+                        <div className="text-base font-bold whitespace-nowrap text-blue-400">
                           {formatCurrency(titleAmount)}
                         </div>
                       </div>
@@ -139,6 +139,7 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
                       <div className="mt-3 flex flex-wrap gap-2">
                         {!globalSetting?.value?.sensitive && (
                           <Tag
+                            variant="solid"
                             color="blue"
                             className="m-0"
                           >
@@ -147,6 +148,7 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
                         )}
                         {products ? (
                           <Tag
+                            variant="solid"
                             color="blue"
                             className="m-0"
                           >
@@ -155,6 +157,7 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
                         ) : null}
                         {groupBuys ? (
                           <Tag
+                            variant="solid"
                             color="blue"
                             className="m-0"
                           >
@@ -163,6 +166,7 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
                         ) : null}
                         {orders ? (
                           <Tag
+                            variant="solid"
                             color="blue"
                             className="m-0"
                           >
@@ -171,6 +175,7 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
                         ) : null}
                         {item.totalRefundAmount > 0 && (
                           <Tag
+                            variant="solid"
                             color="orange"
                             className="m-0"
                           >
@@ -180,6 +185,7 @@ const ProductCategoryAnalysis: React.FC<ProductCategoryAnalysisProps> = ({
                         {(item.totalPartialRefundOrderCount > 0 ||
                           item.totalRefundedOrderCount > 0) && (
                           <Tag
+                            variant="solid"
                             color="orange"
                             className="m-0"
                           >

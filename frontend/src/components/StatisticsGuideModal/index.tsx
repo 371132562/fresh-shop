@@ -42,6 +42,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-blue-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="blue"
                   className="!text-base font-medium"
                 >
@@ -54,6 +55,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-blue-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="blue"
                   className="!text-base font-medium"
                 >
@@ -68,6 +70,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-green-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="green"
                   className="!text-base font-medium"
                 >
@@ -82,6 +85,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-red-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="red"
                   className="!text-base font-medium"
                 >
@@ -96,6 +100,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-orange-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="orange"
                   className="!text-base font-medium"
                 >
@@ -110,6 +115,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-purple-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="purple"
                   className="!text-base font-medium"
                 >
@@ -138,6 +144,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-blue-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="blue"
                   className="!text-base font-medium"
                 >
@@ -152,6 +159,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-green-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="green"
                   className="!text-base font-medium"
                 >
@@ -166,6 +174,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-yellow-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="gold"
                   className="!text-base font-medium"
                 >
@@ -180,6 +189,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-indigo-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="geekblue"
                   className="!text-base font-medium"
                 >
@@ -208,6 +218,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-red-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="red"
                   className="!text-base font-medium"
                 >
@@ -222,6 +233,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-cyan-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="cyan"
                   className="!text-base font-medium"
                 >
@@ -250,6 +262,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-teal-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="cyan"
                   className="!text-base font-medium"
                 >
@@ -278,6 +291,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-orange-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="orange"
                   className="!text-base font-medium"
                 >
@@ -292,6 +306,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-green-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="green"
                   className="!text-base font-medium"
                 >
@@ -306,6 +321,7 @@ const StatisticsGuideModal: React.FC<StatisticsGuideModalProps> = ({ visible, on
             <div className="flex h-full flex-col rounded-lg bg-purple-50 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Tag
+                  variant="solid"
                   color="purple"
                   className="!text-base font-medium"
                 >
