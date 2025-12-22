@@ -1539,3 +1539,79 @@ export type ProductOverviewDetail = {
   regionalSales: RegionalSalesItem[]; // 地域销售分布
   groupBuyHistory: GroupBuyLaunchHistory[]; // 团购历史
 };
+
+// ===================================================================
+// 数据迁移模块
+// 包含商品类型和商品的数据迁移相关类型
+// ===================================================================
+
+/**
+ * 商品类型迁移预览参数
+ */
+export type ProductTypeMigratePreviewParams = {
+  sourceId: string; // 源商品类型ID
+};
+
+/**
+ * 商品类型迁移预览结果
+ */
+export type ProductTypeMigratePreviewResult = {
+  sourceId: string; // 源商品类型ID
+  sourceName: string; // 源商品类型名称
+  products: {
+    // 将被迁移的商品列表
+    id: string;
+    name: string;
+  }[];
+};
+
+/**
+ * 商品类型迁移参数
+ */
+export type ProductTypeMigrateParams = {
+  sourceId: string; // 源商品类型ID
+  targetId: string; // 目标商品类型ID
+};
+
+/**
+ * 商品类型迁移结果
+ */
+export type ProductTypeMigrateResult = {
+  migratedCount: number; // 迁移的商品数量
+};
+
+/**
+ * 商品迁移预览参数
+ */
+export type ProductMigratePreviewParams = {
+  sourceId: string; // 源商品ID
+};
+
+/**
+ * 商品迁移预览结果
+ */
+export type ProductMigratePreviewResult = {
+  sourceId: string; // 源商品ID
+  sourceName: string; // 源商品名称
+  groupBuys: {
+    // 将被迁移的团购单列表
+    id: string;
+    name: string;
+    groupBuyStartDate: Date;
+  }[];
+};
+
+/**
+ * 商品迁移参数
+ */
+export type ProductMigrateParams = {
+  sourceId: string; // 源商品ID
+  targetId: string; // 目标商品ID
+};
+
+/**
+ * 商品迁移结果
+ */
+export type ProductMigrateResult = {
+  migratedCount: number; // 迁移的团购单数量
+};

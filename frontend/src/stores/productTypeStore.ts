@@ -1,3 +1,9 @@
+import type {
+  ProductTypeMigrateParams,
+  ProductTypeMigratePreviewParams,
+  ProductTypeMigratePreviewResult,
+  ProductTypeMigrateResult
+} from 'fresh-shop-backend/types/dto.ts'
 import { ProductType, ProductTypeListItem } from 'fresh-shop-backend/types/dto.ts'
 import { ListByPage, ProductTypePageParams } from 'fresh-shop-backend/types/dto.ts'
 import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
@@ -9,6 +15,8 @@ import {
   productTypeDetailApi,
   productTypeListAllApi,
   productTypeListApi,
+  productTypeMigrateApi,
+  productTypeMigratePreviewApi,
   productTypeUpdateApi
 } from '@/services/apis.ts'
 import http from '@/services/base.ts'
@@ -45,6 +53,14 @@ type ProductTypeStore = {
   getAllProductTypesLoading: boolean
   getAllProductTypes: () => Promise<void>
   allProductTypes: ProductType[]
+
+  // 迁移相关
+  migratePreviewLoading: boolean
+  migratePreview: (
+    data: ProductTypeMigratePreviewParams
+  ) => Promise<ProductTypeMigratePreviewResult | null>
+  migrateLoading: boolean
+  migrate: (data: ProductTypeMigrateParams) => Promise<ProductTypeMigrateResult | null>
 }
 
 const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
@@ -169,6 +185,45 @@ const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
       console.error(err)
     } finally {
       set({ getAllProductTypesLoading: false })
+    }
+  },
+
+  // 迁移预览
+  migratePreviewLoading: false,
+  migratePreview: async data => {
+    try {
+      set({ migratePreviewLoading: true })
+      const res: ResponseBody<ProductTypeMigratePreviewResult> = await http.post(
+        productTypeMigratePreviewApi,
+        data
+      )
+      return res.data
+    } catch (err) {
+      console.error(err)
+      return null
+    } finally {
+      set({ migratePreviewLoading: false })
+    }
+  },
+
+  // 迁移执行
+  migrateLoading: false,
+  migrate: async data => {
+    try {
+      set({ migrateLoading: true })
+      const res: ResponseBody<ProductTypeMigrateResult> = await http.post(
+        productTypeMigrateApi,
+        data
+      )
+      // 迁移成功后刷新列表
+      get().getProductTypeList(get().pageParams)
+      get().getAllProductTypes()
+      return res.data
+    } catch (err) {
+      console.error(err)
+      return null
+    } finally {
+      set({ migrateLoading: false })
     }
   }
 }))

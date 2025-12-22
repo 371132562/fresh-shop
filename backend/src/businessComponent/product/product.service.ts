@@ -25,6 +25,10 @@ import {
   ProductRegionalCustomersParams,
   ProductRegionalCustomersResult,
   CustomerBasicInfo,
+  ProductMigratePreviewParams,
+  ProductMigratePreviewResult,
+  ProductMigrateParams,
+  ProductMigrateResult,
 } from '../../../types/dto';
 import { BusinessException } from '../../exceptions/businessException';
 import { ErrorCode } from '../../../types/response';
@@ -1967,5 +1971,85 @@ export class ProductService {
     }
 
     return { customers: Array.from(customerMap.values()) };
+  }
+
+  /**
+   * 迁移预览：获取源商品下将被迁移的团购单列表
+   */
+  async migratePreview(
+    params: ProductMigratePreviewParams,
+  ): Promise<ProductMigratePreviewResult> {
+    const { sourceId } = params;
+
+    // 校验源商品存在且未删除
+    const source = await this.prisma.product.findFirst({
+      where: { id: sourceId, delete: 0 },
+    });
+    if (!source) {
+      throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, '源商品不存在');
+    }
+
+    // 查询该商品下所有未删除的团购单
+    const groupBuys = await this.prisma.groupBuy.findMany({
+      where: { productId: sourceId, delete: 0 },
+      select: { id: true, name: true, groupBuyStartDate: true },
+      orderBy: { groupBuyStartDate: 'desc' },
+    });
+
+    return {
+      sourceId,
+      sourceName: source.name,
+      groupBuys,
+    };
+  }
+
+  /**
+   * 迁移：将源商品下的所有团购单迁移到目标商品，并删除源商品
+   */
+  async migrate(params: ProductMigrateParams): Promise<ProductMigrateResult> {
+    const { sourceId, targetId } = params;
+
+    // 校验源和目标不能相同
+    if (sourceId === targetId) {
+      throw new BusinessException(ErrorCode.INVALID_INPUT, '源和目标不能相同');
+    }
+
+    // 校验源商品存在且未删除
+    const source = await this.prisma.product.findFirst({
+      where: { id: sourceId, delete: 0 },
+    });
+    if (!source) {
+      throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, '源商品不存在');
+    }
+
+    // 校验目标商品存在且未删除
+    const target = await this.prisma.product.findFirst({
+      where: { id: targetId, delete: 0 },
+    });
+    if (!target) {
+      throw new BusinessException(
+        ErrorCode.RESOURCE_NOT_FOUND,
+        '目标商品不存在',
+      );
+    }
+
+    // 使用事务：迁移团购单 + 软删除源商品
+    const result = await this.prisma.$transaction(async (tx) => {
+      // 迁移：更新所有团购单的 productId
+      const updateResult = await tx.groupBuy.updateMany({
+        where: { productId: sourceId, delete: 0 },
+        data: { productId: targetId },
+      });
+
+      // 软删除源商品
+      await tx.product.update({
+        where: { id: sourceId },
+        data: { delete: 1 },
+      });
+
+      return updateResult.count;
+    });
+
+    return { migratedCount: result };
   }
 }

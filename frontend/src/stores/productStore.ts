@@ -1,3 +1,9 @@
+import type {
+  ProductMigrateParams,
+  ProductMigratePreviewParams,
+  ProductMigratePreviewResult,
+  ProductMigrateResult
+} from 'fresh-shop-backend/types/dto.ts'
 import { Product, ProductListItem } from 'fresh-shop-backend/types/dto.ts'
 import { ListByPage, ProductPageParams } from 'fresh-shop-backend/types/dto.ts'
 import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
@@ -9,6 +15,8 @@ import {
   productDetailApi,
   productListAllApi,
   productListApi,
+  productMigrateApi,
+  productMigratePreviewApi,
   productUpdateApi
 } from '@/services/apis.ts'
 import http from '@/services/base.ts'
@@ -45,6 +53,12 @@ type ProductStore = {
   getAllProductsListLoading: boolean
   getAllProducts: () => Promise<void>
   allProductsList: ProductListItem[]
+
+  // 迁移相关
+  migratePreviewLoading: boolean
+  migratePreview: (data: ProductMigratePreviewParams) => Promise<ProductMigratePreviewResult | null>
+  migrateLoading: boolean
+  migrate: (data: ProductMigrateParams) => Promise<ProductMigrateResult | null>
 }
 
 const useProductStore = create<ProductStore>((set, get) => ({
@@ -144,7 +158,7 @@ const useProductStore = create<ProductStore>((set, get) => ({
   getProduct: async data => {
     try {
       set({ getLoading: true })
-      const res = await http.post(productDetailApi, data)
+      const res: ResponseBody<Product> = await http.post(productDetailApi, data)
       set({ product: res.data })
     } catch (err) {
       console.error(err)
@@ -161,7 +175,7 @@ const useProductStore = create<ProductStore>((set, get) => ({
   getAllProducts: async () => {
     try {
       set({ getAllProductsListLoading: true })
-      const res = await http.post(productListAllApi)
+      const res: ResponseBody<ProductListItem[]> = await http.post(productListAllApi)
       set({ allProductsList: res.data })
     } catch (err) {
       console.error(err)
@@ -169,7 +183,43 @@ const useProductStore = create<ProductStore>((set, get) => ({
       set({ getAllProductsListLoading: false })
     }
   },
-  allProductsList: []
+  allProductsList: [],
+
+  // 迁移预览
+  migratePreviewLoading: false,
+  migratePreview: async data => {
+    try {
+      set({ migratePreviewLoading: true })
+      const res: ResponseBody<ProductMigratePreviewResult> = await http.post(
+        productMigratePreviewApi,
+        data
+      )
+      return res.data
+    } catch (err) {
+      console.error(err)
+      return null
+    } finally {
+      set({ migratePreviewLoading: false })
+    }
+  },
+
+  // 迁移执行
+  migrateLoading: false,
+  migrate: async data => {
+    try {
+      set({ migrateLoading: true })
+      const res: ResponseBody<ProductMigrateResult> = await http.post(productMigrateApi, data)
+      // 迁移成功后刷新列表
+      get().getProductList(get().pageParams)
+      get().getAllProducts()
+      return res.data
+    } catch (err) {
+      console.error(err)
+      return null
+    } finally {
+      set({ migrateLoading: false })
+    }
+  }
 }))
 
 export default useProductStore

@@ -2,7 +2,11 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { Prisma } from '@prisma/client';
 
-import { ProductPageParams } from '../../../types/dto';
+import {
+  ProductPageParams,
+  ProductMigratePreviewParams,
+  ProductMigrateParams,
+} from '../../../types/dto';
 
 @Controller('product')
 export class ProductController {
@@ -36,5 +40,15 @@ export class ProductController {
   @Post('listAll')
   listAll() {
     return this.productService.listAll();
+  }
+
+  @Post('migratePreview')
+  migratePreview(@Body() data: ProductMigratePreviewParams) {
+    return this.productService.migratePreview(data);
+  }
+
+  @Post('migrate')
+  migrate(@Body() data: ProductMigrateParams) {
+    return this.productService.migrate(data);
   }
 }

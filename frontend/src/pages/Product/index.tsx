@@ -7,6 +7,7 @@ import useProductStore from '@/stores/productStore.ts'
 import useProductTypeStore from '@/stores/productTypeStore.ts'
 
 import ProductDetailModal from '../Analysis/components/ProductOverview/components/ProductDetailModal'
+import MigrateModal from './MigrateModal'
 import Modify from './Modify.tsx'
 
 export const Component = () => {
@@ -17,6 +18,10 @@ export const Component = () => {
   // 商品详情模态框状态
   const [detailVisible, setDetailVisible] = useState(false)
   const [detailParams, setDetailParams] = useState<ProductOverviewDetailParams | undefined>()
+
+  // 迁移弹窗状态
+  const [migrateVisible, setMigrateVisible] = useState(false)
+  const [migrateSource, setMigrateSource] = useState<{ id: string; name: string } | null>(null)
 
   const listLoading = useProductStore(state => state.listLoading)
   const productsList = useProductStore(state => state.productsList)
@@ -300,6 +305,17 @@ export const Component = () => {
                   >
                     编辑
                   </Button>
+                  <Button
+                    key="migrate"
+                    color="danger"
+                    variant="solid"
+                    onClick={() => {
+                      setMigrateSource({ id: item.id, name: item.name })
+                      setMigrateVisible(true)
+                    }}
+                  >
+                    迁移
+                  </Button>
                   <Popconfirm
                     key="delete"
                     title="确定要删除这个商品吗？"
@@ -335,6 +351,18 @@ export const Component = () => {
           visible={detailVisible}
           onClose={() => setDetailVisible(false)}
           params={detailParams}
+        />
+      )}
+      {migrateVisible && migrateSource && (
+        <MigrateModal
+          visible={migrateVisible}
+          setVisible={(value: boolean) => {
+            setMigrateVisible(value)
+            if (!value) setMigrateSource(null)
+          }}
+          sourceId={migrateSource.id}
+          sourceName={migrateSource.name}
+          onSuccess={() => pageChange()}
         />
       )}
     </>

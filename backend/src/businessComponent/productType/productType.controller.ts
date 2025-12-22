@@ -1,8 +1,12 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { ProductTypeService } from './productType.service';
-import { Prisma, ProductType } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
-import { ProductTypePageParams } from '../../../types/dto';
+import {
+  ProductTypePageParams,
+  ProductTypeMigratePreviewParams,
+  ProductTypeMigrateParams,
+} from '../../../types/dto';
 
 @Controller('productType')
 export class ProductTypeController {
@@ -14,7 +18,7 @@ export class ProductTypeController {
 
   @Post('update')
   update(@Body() data: { id: string } & Prisma.ProductTypeUpdateInput) {
-    const { id, ...updateData } = data;
+    const { id: _id, ...updateData } = data;
     return this.productTypeService.update(data.id, updateData);
   }
 
@@ -36,5 +40,15 @@ export class ProductTypeController {
   @Post('delete')
   delete(@Body('id') id: string) {
     return this.productTypeService.delete(id);
+  }
+
+  @Post('migratePreview')
+  migratePreview(@Body() data: ProductTypeMigratePreviewParams) {
+    return this.productTypeService.migratePreview(data);
+  }
+
+  @Post('migrate')
+  migrate(@Body() data: ProductTypeMigrateParams) {
+    return this.productTypeService.migrate(data);
   }
 }

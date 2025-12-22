@@ -7,6 +7,10 @@ import {
   ListByPage,
   ProductTypeListItem,
   GroupBuyUnit,
+  ProductTypeMigratePreviewParams,
+  ProductTypeMigratePreviewResult,
+  ProductTypeMigrateParams,
+  ProductTypeMigrateResult,
 } from '../../../types/dto';
 import { BusinessException } from '../../exceptions/businessException';
 import { ErrorCode } from '../../../types/response';
@@ -38,9 +42,10 @@ export class ProductTypeService {
   ): Promise<ProductType> {
     // 如果更新了名称，检查是否与其他商品类型重名
     if (data.name) {
+      const nameValue = typeof data.name === 'string' ? data.name : '';
       const existing = await this.prisma.productType.findFirst({
         where: {
-          name: data.name as string,
+          name: nameValue,
           delete: 0,
           id: { not: id }, // 排除自身
         },
@@ -48,7 +53,7 @@ export class ProductTypeService {
       if (existing) {
         throw new BusinessException(
           ErrorCode.DATA_EXIST,
-          `商品类型「${data.name}」已存在`,
+          `商品类型「${nameValue}」已存在`,
         );
       }
     }
@@ -333,5 +338,93 @@ export class ProductTypeService {
         delete: 1,
       },
     });
+  }
+
+  /**
+   * 迁移预览：获取源商品类型下将被迁移的商品列表
+   */
+  async migratePreview(
+    params: ProductTypeMigratePreviewParams,
+  ): Promise<ProductTypeMigratePreviewResult> {
+    const { sourceId } = params;
+
+    // 校验源商品类型存在且未删除
+    const source = await this.prisma.productType.findFirst({
+      where: { id: sourceId, delete: 0 },
+    });
+    if (!source) {
+      throw new BusinessException(
+        ErrorCode.RESOURCE_NOT_FOUND,
+        '源商品类型不存在',
+      );
+    }
+
+    // 查询该商品类型下所有未删除的商品
+    const products = await this.prisma.product.findMany({
+      where: { productTypeId: sourceId, delete: 0 },
+      select: { id: true, name: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return {
+      sourceId,
+      sourceName: source.name,
+      products,
+    };
+  }
+
+  /**
+   * 迁移：将源商品类型下的所有商品迁移到目标商品类型，并删除源商品类型
+   */
+  async migrate(
+    params: ProductTypeMigrateParams,
+  ): Promise<ProductTypeMigrateResult> {
+    const { sourceId, targetId } = params;
+
+    // 校验源和目标不能相同
+    if (sourceId === targetId) {
+      throw new BusinessException(ErrorCode.INVALID_INPUT, '源和目标不能相同');
+    }
+
+    // 校验源商品类型存在且未删除
+    const source = await this.prisma.productType.findFirst({
+      where: { id: sourceId, delete: 0 },
+    });
+    if (!source) {
+      throw new BusinessException(
+        ErrorCode.RESOURCE_NOT_FOUND,
+        '源商品类型不存在',
+      );
+    }
+
+    // 校验目标商品类型存在且未删除
+    const target = await this.prisma.productType.findFirst({
+      where: { id: targetId, delete: 0 },
+    });
+    if (!target) {
+      throw new BusinessException(
+        ErrorCode.RESOURCE_NOT_FOUND,
+        '目标商品类型不存在',
+      );
+    }
+
+    // 使用事务：迁移商品 + 软删除源商品类型
+    const result = await this.prisma.$transaction(async (tx) => {
+      // 迁移：更新所有商品的 productTypeId
+      const updateResult = await tx.product.updateMany({
+        where: { productTypeId: sourceId, delete: 0 },
+        data: { productTypeId: targetId },
+      });
+
+      // 软删除源商品类型
+      await tx.productType.update({
+        where: { id: sourceId },
+        data: { delete: 1 },
+      });
+
+      return updateResult.count;
+    });
+
+    return { migratedCount: result };
   }
 }
