@@ -34,10 +34,39 @@ export class ProductService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: Prisma.ProductCreateInput): Promise<Product> {
+    // 检查是否存在同名的商品（未删除）
+    const existing = await this.prisma.product.findFirst({
+      where: {
+        name: data.name,
+        delete: 0,
+      },
+    });
+    if (existing) {
+      throw new BusinessException(
+        ErrorCode.DATA_EXIST,
+        `商品「${data.name}」已存在`,
+      );
+    }
     return this.prisma.product.create({ data });
   }
 
   async update(id: string, data: Prisma.ProductUpdateInput): Promise<Product> {
+    // 如果更新了名称，检查是否与其他商品重名
+    if (data.name) {
+      const existing = await this.prisma.product.findFirst({
+        where: {
+          name: data.name as string,
+          delete: 0,
+          id: { not: id }, // 排除自身
+        },
+      });
+      if (existing) {
+        throw new BusinessException(
+          ErrorCode.DATA_EXIST,
+          `商品「${data.name}」已存在`,
+        );
+      }
+    }
     return this.prisma.product.update({
       where: { id },
       data,
