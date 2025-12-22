@@ -15,20 +15,20 @@
   "homepage": "https://github.com/371132562/fresh-shop#readme",
   "description": "",
   "devDependencies": {
-    "@eslint/js": "^9.29.0",
+    "@eslint/js": "^9.39.2",
     "@types/node": "^22.15.2",
-    "eslint": "^9.29.0",
-    "eslint-config-prettier": "^10.1.5",
-    "eslint-plugin-prettier": "^5.5.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "globals": "^16.0.0",
-    "prettier": "^3.4.2",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.34.1"
+    "globals": "^16.5.0",
+    "prettier": "^3.7.4",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.50.0"
   },
   "dependencies": {
-    "dayjs": "^1.11.13",
-    "prettier-plugin-tailwindcss": "^0.6.13",
-    "uuid": "^11.1.0"
+    "dayjs": "^1.11.19",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "uuid": "^13.0.0"
   }
 }

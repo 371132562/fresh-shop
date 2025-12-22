@@ -10,28 +10,28 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ant-design/icons": "5.x",
-    "antd": "^5.26.1",
-    "antd-mobile": "^5.39.0",
-    "echarts": "^5.6.0",
+    "@ant-design/icons": "6.x",
+    "antd": "^6.1.1",
+    "antd-mobile": "^5.41.1",
+    "echarts": "^6.0.0",
     "fresh-shop-backend": "workspace:^",
-    "less": "^4.3.0",
+    "less": "^4.5.1",
     "react": "^18.3.1",
     "react-countup": "^6.5.3",
     "react-dom": "^18.3.1",
     "react-error-boundary": "^6.0.0",
-    "react-router": "^7.6.2",
-    "tailwindcss": "^4.1.10",
-    "zustand": "^5.0.5"
+    "react-router": "^7.11.0",
+    "tailwindcss": "^4.1.18",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.10",
+    "@tailwindcss/vite": "^4.1.18",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.6",
-    "@vitejs/plugin-react": "^4.5.2",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
-    "rollup-plugin-visualizer": "^6.0.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "rollup-plugin-visualizer": "^6.0.5",
     "vite": "^6.3.5"
   }
 }
