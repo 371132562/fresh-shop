@@ -135,9 +135,26 @@ export const CustomerOverview = ({ startDate, endDate }: CustomerOverviewProps) 
             total: customerOverviewTotal,
             current: customerOverviewPage,
             pageSize: customerOverviewPageSize,
-            onChange: p => {
-              setCustomerOverviewPage(p)
-              fetchData(p)
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50'],
+            onChange: (page, pageSize) => {
+              setCustomerOverviewPage(page)
+              const fieldKey = sortField
+              const sortFieldMap = {
+                orderCount: 'totalOrderCount',
+                totalAmount: 'totalRevenue',
+                averageOrderAmount: 'averageOrderAmount',
+                totalRefundAmount: 'totalRefundAmount'
+              } as const
+              getCustomerOverview({
+                startDate,
+                endDate,
+                page,
+                pageSize,
+                customerName,
+                sortField: sortFieldMap[fieldKey],
+                sortOrder
+              })
             }
           }}
           dataSource={customerOverviewList}

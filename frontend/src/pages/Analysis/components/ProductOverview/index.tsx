@@ -67,11 +67,6 @@ export const ProductOverview = ({ startDate, endDate }: ProductOverviewProps) =>
     })
   }
 
-  const handlePageChange = (page: number) => {
-    setProductOverviewPage(page)
-    fetchData(page)
-  }
-
   // 搜索处理
   const handleSearch = () => {
     form
@@ -248,7 +243,18 @@ export const ProductOverview = ({ startDate, endDate }: ProductOverviewProps) =>
             total: productOverviewTotal,
             current: productOverviewPage,
             pageSize: productOverviewPageSize,
-            onChange: handlePageChange
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50'],
+            onChange: (page, pageSize) => {
+              setProductOverviewPage(page)
+              getProductOverview({
+                startDate,
+                endDate,
+                page,
+                pageSize,
+                ...searchParams
+              })
+            }
           }}
           dataSource={productOverviewList}
           renderItem={(item: ProductOverviewListItem) => (

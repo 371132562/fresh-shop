@@ -135,9 +135,26 @@ export const AddressOverview = ({ startDate, endDate }: AddressOverviewProps) =>
             total: addressOverviewTotal,
             current: addressOverviewPage,
             pageSize: addressOverviewPageSize,
-            onChange: p => {
-              setAddressOverviewPage(p)
-              fetchData(p)
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50'],
+            onChange: (page, pageSize) => {
+              setAddressOverviewPage(page)
+              const fieldKey = sortField
+              const sortFieldMap = {
+                orderCount: 'totalOrderCount',
+                totalAmount: 'totalRevenue',
+                averageOrderAmount: 'averageOrderAmount',
+                totalRefundAmount: 'totalRefundAmount'
+              } as const
+              getAddressOverview({
+                startDate,
+                endDate,
+                page,
+                pageSize,
+                addressName,
+                sortField: sortFieldMap[fieldKey],
+                sortOrder
+              })
             }
           }}
           dataSource={addressOverviewList}

@@ -174,8 +174,11 @@ export const Component = () => {
             align: 'end',
             total: listCount.totalCount,
             current: pageParams.page,
-            onChange: page => {
-              pageChange(page)
+            pageSize: pageParams.pageSize,
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50'],
+            onChange: (page, pageSize) => {
+              setPageParams({ page, pageSize })
             }
           }}
           dataSource={productTypesList}

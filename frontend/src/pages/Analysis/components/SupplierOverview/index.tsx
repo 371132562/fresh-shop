@@ -58,11 +58,6 @@ export const SupplierOverview = ({ startDate, endDate }: SupplierOverviewProps) 
     })
   }
 
-  const handlePageChange = (page: number) => {
-    setSupplierOverviewPage(page)
-    fetchData(page)
-  }
-
   // 搜索处理
   const handleSearch = () => {
     form
@@ -210,7 +205,18 @@ export const SupplierOverview = ({ startDate, endDate }: SupplierOverviewProps) 
             total: supplierOverviewTotal,
             current: supplierOverviewPage,
             pageSize: supplierOverviewPageSize,
-            onChange: handlePageChange
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50'],
+            onChange: (page, pageSize) => {
+              setSupplierOverviewPage(page)
+              getSupplierOverview({
+                startDate,
+                endDate,
+                page,
+                pageSize,
+                ...searchParams
+              })
+            }
           }}
           dataSource={supplierOverviewList}
           renderItem={(item: SupplierOverviewListItem) => (

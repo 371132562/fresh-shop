@@ -81,11 +81,6 @@ export const MergedGroupBuyOverview = ({
     })
   }
 
-  const handlePageChange = (page: number) => {
-    setMergedGroupBuyOverviewPage(page)
-    fetchData(page)
-  }
-
   const [detailParams, setDetailParams] = useState<MergedGroupBuyOverviewDetailParams | undefined>()
 
   const handleItemClick = (item: MergedGroupBuyOverviewListItem) => {
@@ -266,7 +261,19 @@ export const MergedGroupBuyOverview = ({
             total: mergedGroupBuyOverviewTotal,
             current: mergedGroupBuyOverviewPage,
             pageSize: mergedGroupBuyOverviewPageSize,
-            onChange: handlePageChange
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50'],
+            onChange: (page, pageSize) => {
+              setMergedGroupBuyOverviewPage(page)
+              getMergedGroupBuyOverview({
+                startDate,
+                endDate,
+                page,
+                pageSize,
+                ...searchParams,
+                mergeSameName
+              })
+            }
           }}
           dataSource={mergedGroupBuyOverviewList}
           renderItem={(item: MergedGroupBuyOverviewListItem) => (
