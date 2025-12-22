@@ -184,22 +184,26 @@ export const Component = () => {
             }
           }}
           dataSource={productTypesList}
+          rowKey="id"
           renderItem={item => (
-            <List.Item>
+            <List.Item key={item.id}>
               {/* 自定义容器：左侧信息 + 右侧操作，避免溢出导致响应式混乱 */}
               <div className="flex w-full flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
                 {/* 左侧信息区：可伸展，溢出隐藏，md起自动换行 */}
                 <div className="min-w-0 flex-1 overflow-hidden pr-0 md:pr-4">
                   {/* 标题：小屏单行省略，md起允许换行 */}
-                  <div className="mb-1">
+                  <div className="mb-1 max-w-full overflow-hidden text-lg font-medium text-ellipsis whitespace-nowrap md:overflow-visible md:break-all md:whitespace-normal">
                     <Button
                       type="link"
-                      style={{ padding: 0, height: 'auto' }}
+                      style={{
+                        padding: 0,
+                        height: 'auto',
+                        fontSize: 'inherit',
+                        fontWeight: 'inherit'
+                      }}
                       onClick={() => handleModify(item.id)}
                     >
-                      <span className="block max-w-full overflow-hidden text-lg font-medium text-ellipsis whitespace-nowrap md:overflow-visible md:break-all md:whitespace-normal">
-                        {item.name}
-                      </span>
+                      {item.name}
                     </Button>
                   </div>
                   {/* 描述/统计：提供商品数量、订单量与总额，保证不撑坏布局 */}

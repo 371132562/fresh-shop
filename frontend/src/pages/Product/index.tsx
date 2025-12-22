@@ -228,28 +228,31 @@ export const Component = () => {
                 {/* 左侧信息区：可伸展，溢出隐藏，md起自动换行 */}
                 <div className="min-w-0 flex-1 overflow-hidden pr-0 md:pr-4">
                   {/* 标题：名称与类型标签同行，名称小屏单行省略，md起换行 */}
-                  <div className="mb-1">
-                    <Button
-                      type="link"
-                      style={{ padding: 0, height: 'auto' }}
-                      onClick={() => handleModify(item.id)}
-                    >
-                      <div className="flex min-w-0 flex-row flex-wrap items-center gap-2">
-                        <span className="block max-w-full overflow-hidden text-lg font-medium text-ellipsis whitespace-nowrap md:overflow-visible md:break-all md:whitespace-normal">
-                          {item.name}
-                        </span>
-                        {item.productTypeName && (
-                          <span className="shrink-0">
-                            <Tag
-                              variant="solid"
-                              color="#55acee"
-                            >
-                              {item.productTypeName}
-                            </Tag>
-                          </span>
-                        )}
-                      </div>
-                    </Button>
+                  <div className="mb-1 flex min-w-0 flex-row flex-wrap items-center gap-2">
+                    <div className="max-w-full overflow-hidden text-lg font-medium text-ellipsis whitespace-nowrap md:overflow-visible md:break-all md:whitespace-normal">
+                      <Button
+                        type="link"
+                        style={{
+                          padding: 0,
+                          height: 'auto',
+                          fontSize: 'inherit',
+                          fontWeight: 'inherit'
+                        }}
+                        onClick={() => handleModify(item.id)}
+                      >
+                        {item.name}
+                      </Button>
+                    </div>
+                    {item.productTypeName && (
+                      <span className="shrink-0">
+                        <Tag
+                          variant="solid"
+                          color="#55acee"
+                        >
+                          {item.productTypeName}
+                        </Tag>
+                      </span>
+                    )}
                   </div>
                   {/* 描述/统计：提供订单量与总额，保证不撑坏布局 */}
                   <div className="space-y-1">

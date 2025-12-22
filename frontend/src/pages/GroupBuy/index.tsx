@@ -293,17 +293,18 @@ export const Component = () => {
                 {/* 左侧信息区 */}
                 <div className="min-w-0 flex-1 overflow-hidden pr-0 md:pr-4">
                   {/* 标题区：名称可点击编辑 */}
-                  <div className="mb-1">
+                  <div className="mb-1 max-w-full overflow-hidden text-lg font-medium text-ellipsis whitespace-nowrap md:overflow-visible md:break-all md:whitespace-normal">
                     <NavLink to={`/groupBuy/detail/${item.id}`}>
                       <Button
                         type="link"
-                        style={{ padding: 0, height: 'auto' }}
+                        style={{
+                          padding: 0,
+                          height: 'auto',
+                          fontSize: 'inherit',
+                          fontWeight: 'inherit'
+                        }}
                       >
-                        <div className="flex min-w-0 flex-row flex-wrap items-center gap-2">
-                          <span className="block max-w-full overflow-hidden text-lg font-medium text-ellipsis whitespace-nowrap md:overflow-visible md:break-all md:whitespace-normal">
-                            {item.name}
-                          </span>
-                        </div>
+                        {item.name}
                       </Button>
                     </NavLink>
                   </div>
