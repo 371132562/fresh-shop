@@ -1,7 +1,9 @@
 import { Button, Card, Col, DatePicker, Form, Input, List, Row, Tag } from 'antd'
-import {
+import type {
   GroupBuyListItem,
-  MergedGroupBuyOverviewDetailParams
+  GroupBuySortField,
+  MergedGroupBuyOverviewDetailParams,
+  SortOrder
 } from 'fresh-shop-backend/types/dto.ts'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router'
@@ -232,11 +234,34 @@ export const Component = () => {
           </Row>
           {/* 工具栏区域 */}
           <SearchToolbar
+            sortFieldOptions={[
+              { label: '发起时间', value: 'groupBuyStartDate' },
+              { label: '订单量', value: 'orderCount' },
+              { label: '订单总额', value: 'orderTotalAmount' }
+            ]}
+            sortFieldValue={pageParams.sortField}
+            onSortFieldChange={value => {
+              setPageParams({
+                sortField: value as GroupBuySortField,
+                sortOrder: pageParams.sortOrder,
+                page: 1
+              })
+            }}
+            sortOrderValue={pageParams.sortOrder}
+            onSortOrderChange={order => {
+              setPageParams({
+                sortField: pageParams.sortField,
+                sortOrder: order as SortOrder,
+                page: 1
+              })
+            }}
             onSearch={handleSearch}
             onReset={resetSearch}
             searchLoading={listLoading}
             totalCount={listCount.totalCount}
             countLabel="个团购单"
+            noOrderCount={listCount.noOrderCount}
+            noOrderLabel="无有效订单"
             onAdd={() => setVisible(true)}
           />
         </Form>
@@ -275,7 +300,7 @@ export const Component = () => {
                         style={{ padding: 0, height: 'auto' }}
                       >
                         <div className="flex min-w-0 flex-row flex-wrap items-center gap-2">
-                          <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all">
+                          <span className="block max-w-full overflow-hidden text-lg font-medium text-ellipsis whitespace-nowrap md:overflow-visible md:break-all md:whitespace-normal">
                             {item.name}
                           </span>
                         </div>
@@ -302,7 +327,7 @@ export const Component = () => {
                         ¥{(item.totalSalesAmount || 0).toFixed(2)}
                       </span>
                     </div>
-                    <div className="my-1 flex flex-wrap items-center">
+                    <div className="my-1 flex flex-wrap items-center gap-1">
                       {Object.entries(item.orderStats)
                         .filter(([key]) => key !== 'orderCount')
                         .map(([status, count]) => {

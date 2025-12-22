@@ -154,12 +154,18 @@ export class ProductTypeService {
         skip + pageSize,
       );
 
+      // 统计无订单商品类型数量（订单量为0的商品类型）
+      const noOrderCount = productTypesWithStats.filter(
+        (pt) => pt.orderCount === 0,
+      ).length;
+
       return {
         data: paginatedProductTypes,
         page: page,
         pageSize: pageSize,
         totalCount: totalCount,
         totalPages: Math.ceil(totalCount / pageSize),
+        noOrderCount,
       };
     } else {
       // 对于非统计字段（如createdAt），可以直接在数据库层面排序和分页
@@ -241,12 +247,18 @@ export class ProductTypeService {
         };
       });
 
+      // 统计无订单商品类型数量（订单量为0的商品类型）
+      const noOrderCount = productTypesWithStats.filter(
+        (pt) => pt.orderCount === 0,
+      ).length;
+
       return {
         data: productTypesWithStats,
         page: page,
         pageSize: pageSize,
         totalCount: totalCount,
         totalPages: Math.ceil(totalCount / pageSize),
+        noOrderCount,
       };
     }
   }

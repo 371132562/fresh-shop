@@ -30,6 +30,7 @@ type GroupBuyStore = {
   listCount: {
     totalCount: number
     totalPages: number
+    noOrderCount: number
   }
   pageParams: GroupBuyPageParams
   getGroupBuyList: (data: GroupBuyPageParams) => Promise<void>
@@ -58,7 +59,8 @@ const useGroupBuyStore = create<GroupBuyStore>((set, get) => ({
   groupBuyList: [],
   listCount: {
     totalCount: 0,
-    totalPages: 0
+    totalPages: 0,
+    noOrderCount: 0
   },
   pageParams: {
     page: 1,
@@ -68,7 +70,9 @@ const useGroupBuyStore = create<GroupBuyStore>((set, get) => ({
     productIds: [],
     startDate: null,
     endDate: null,
-    orderStatuses: [] // 订单状态筛选数组
+    orderStatuses: [], // 订单状态筛选数组
+    sortField: 'groupBuyStartDate', // 默认按发起时间排序
+    sortOrder: 'desc' // 默认降序
   },
   getGroupBuyList: async (data = get().pageParams) => {
     try {
@@ -92,7 +96,11 @@ const useGroupBuyStore = create<GroupBuyStore>((set, get) => ({
       }
       set({
         groupBuyList: res.data.data,
-        listCount: { totalCount: res.data.totalCount, totalPages: res.data.totalPages }
+        listCount: {
+          totalCount: res.data.totalCount,
+          totalPages: res.data.totalPages,
+          noOrderCount: res.data.noOrderCount ?? 0
+        }
       })
     } finally {
       set({ listLoading: false })

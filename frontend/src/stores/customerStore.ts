@@ -29,6 +29,7 @@ type CustomerStore = {
   listCount: {
     totalCount: number
     totalPages: number
+    noOrderCount: number
   }
   pageParams: CustomerPageParams
   getCustomerList: (data: CustomerPageParams) => Promise<void>
@@ -79,7 +80,8 @@ const useCustomerStore = create<CustomerStore>((set, get) => {
     customersList: [],
     listCount: {
       totalCount: 0,
-      totalPages: 0
+      totalPages: 0,
+      noOrderCount: 0
     },
     pageParams: {
       name: '',
@@ -101,7 +103,11 @@ const useCustomerStore = create<CustomerStore>((set, get) => {
         }
         set({
           customersList: res.data.data,
-          listCount: { totalCount: res.data.totalCount, totalPages: res.data.totalPages }
+          listCount: {
+            totalCount: res.data.totalCount,
+            totalPages: res.data.totalPages,
+            noOrderCount: res.data.noOrderCount ?? 0
+          }
         })
       } finally {
         set({ listLoading: false })
@@ -202,7 +208,10 @@ const useCustomerStore = create<CustomerStore>((set, get) => {
     getConsumptionDetail: async (data: { id: string; startDate?: Date; endDate?: Date }) => {
       set({ consumptionDetailLoading: true })
       try {
-        const res = await http.post<CustomerConsumptionDetailDto>(customerConsumptionDetailApi, data)
+        const res = await http.post<CustomerConsumptionDetailDto>(
+          customerConsumptionDetailApi,
+          data
+        )
         set({ consumptionDetail: res.data, consumptionDetailLoading: false })
       } catch (error) {
         console.error(error)

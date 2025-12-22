@@ -210,12 +210,16 @@ export class SupplierService {
       });
     }
 
+    // 统计无订单供货商数量（订单量为0的供货商）
+    const noOrderCount = items.filter((s) => s.orderCount === 0).length;
+
     return {
       data: items,
       page: page,
       pageSize: pageSize,
       totalCount: totalCount,
       totalPages: Math.ceil(totalCount / pageSize), // 计算总页数
+      noOrderCount,
     };
   }
 

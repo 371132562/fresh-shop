@@ -6,15 +6,19 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
-export default tseslint.config(
+export default [
   { ignores: ['dist'] },
   eslintPluginPrettierRecommended,
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser
+      globals: globals.browser,
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname
+      }
     },
     plugins: {
       'react-hooks': reactHooks,
@@ -23,7 +27,7 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-      '@typescript-eslint/no-explicit-any': ['warn'] // 修改这里
+      '@typescript-eslint/no-explicit-any': ['warn']
     }
   },
   {
@@ -37,4 +41,4 @@ export default tseslint.config(
       'react-hooks/exhaustive-deps': 'off'
     }
   }
-)
+]

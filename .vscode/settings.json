@@ -1,4 +1,8 @@
 {
   "files.eol": "\n",
-  "typescript.autoClosingTags": false
+  "typescript.autoClosingTags": false,
+  "eslint.workingDirectories": [
+    { "directory": "frontend", "changeProcessCWD": true },
+    { "directory": "backend", "changeProcessCWD": true }
+  ]
 }

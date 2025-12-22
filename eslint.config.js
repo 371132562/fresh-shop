@@ -2,20 +2,18 @@ import js from '@eslint/js'
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import globals from 'globals'
-import tseslint from 'typescript-eslint'
 
-export default tseslint.config(
-  { ignores: ['dist'] },
+// 根目录配置：仅处理根目录的 JS 配置文件，不涉及 TypeScript
+export default [
+  { ignores: ['dist', 'frontend/**', 'backend/**', 'node_modules/**'] },
   eslintPluginPrettierRecommended,
+  js.configs.recommended,
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    files: ['**/*.{ts,tsx}'],
+    files: ['**/*.js'],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser
-    },
-    rules: {
-      '@typescript-eslint/no-explicit-any': ['warn'] // 修改这里
+      globals: globals.node,
+      sourceType: 'module'
     }
   },
   {
@@ -28,4 +26,4 @@ export default tseslint.config(
       'linebreak-style': ['error', 'unix']
     }
   }
-)
+]

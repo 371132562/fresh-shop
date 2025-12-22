@@ -52,6 +52,7 @@ export type ListByPage<T> = {
   pageSize: number; // 每页数量
   totalCount: number; // 总记录数
   totalPages: number; // 总页数
+  noOrderCount?: number; // 无订单实体数量（可选，仅部分列表接口返回）
 };
 
 /**
@@ -406,6 +407,15 @@ export type CustomerPurchaseFrequency = {
 // ===================================================================
 
 /**
+ * 团购列表排序字段
+ * 定义团购列表支持的排序字段
+ */
+export type GroupBuySortField =
+  | 'groupBuyStartDate' // 发起时间
+  | 'orderCount' // 订单量
+  | 'orderTotalAmount'; // 订单总额
+
+/**
  * 团购分页查询参数
  * 用于团购列表的筛选和分页查询
  */
@@ -417,6 +427,8 @@ export type GroupBuyPageParams = CommonPageParams & {
   productIds: Product['id'][]; // 商品ID数组（精确匹配）
   orderStatuses: OrderStatus[]; // 订单状态数组（精确匹配）
   hasPartialRefund?: boolean; // 是否筛选包含部分退款（非已退款且部分退款金额>0）的订单
+  sortField?: GroupBuySortField; // 排序字段（可选）
+  sortOrder?: SortOrder; // 排序方向（可选）
 };
 
 /**

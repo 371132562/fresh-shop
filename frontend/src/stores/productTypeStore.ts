@@ -22,6 +22,7 @@ type ProductTypeStore = {
   listCount: {
     totalCount: number
     totalPages: number
+    noOrderCount: number
   }
   pageParams: ProductTypePageParams
   getProductTypeList: (data: Partial<ProductTypePageParams>) => Promise<void>
@@ -50,7 +51,8 @@ const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
   productTypesList: [],
   listCount: {
     totalCount: 0,
-    totalPages: 0
+    totalPages: 0,
+    noOrderCount: 0
   },
   pageParams: {
     name: '',
@@ -69,7 +71,11 @@ const useProductTypeStore = create<ProductTypeStore>((set, get) => ({
       }
       set({
         productTypesList: res.data.data,
-        listCount: { totalCount: res.data.totalCount, totalPages: res.data.totalPages }
+        listCount: {
+          totalCount: res.data.totalCount,
+          totalPages: res.data.totalPages,
+          noOrderCount: res.data.noOrderCount ?? 0
+        }
       })
     } finally {
       set({ listLoading: false })

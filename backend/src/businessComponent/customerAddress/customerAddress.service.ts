@@ -100,6 +100,8 @@ export class CustomerAddressService {
 
           // 计算订单总额（扣除部分退款；已退款订单不计入消费额）
           let totalAmount = 0;
+          // 有效订单数（仅 PAID/COMPLETED，用于"无订单"统计）
+          let validOrderCount = 0;
           orders.forEach((order) => {
             const units = order.groupBuy.units as GroupBuyUnit[];
             const unit = units.find((u) => u.id === order.unitId);
@@ -112,12 +114,20 @@ export class CustomerAddressService {
                   : originalAmount - partialRefundAmount;
               totalAmount += orderAmount;
             }
+            // 统计有效订单数
+            if (
+              order.status === OrderStatus.PAID ||
+              order.status === OrderStatus.COMPLETED
+            ) {
+              validOrderCount++;
+            }
           });
 
           return {
             ...address,
             orderCount: orders.length,
             orderTotalAmount: totalAmount,
+            validOrderCount, // 用于"无订单"统计
           };
         }),
       );
@@ -136,12 +146,23 @@ export class CustomerAddressService {
       // 分页处理
       const paginatedAddresses = sortedAddresses.slice(skip, skip + pageSize);
 
+      // 统计无订单地址数量（没有有效订单 PAID/COMPLETED 的地址）
+      const noOrderCount = addressesWithStats.filter(
+        (addr) => addr.validOrderCount === 0,
+      ).length;
+
+      // 移除 validOrderCount 字段，不返回给前端
+      const result = paginatedAddresses.map(
+        ({ validOrderCount: _, ...rest }) => rest,
+      );
+
       return {
-        data: paginatedAddresses,
+        data: result,
         page: page,
         pageSize: pageSize,
         totalCount: totalCount,
         totalPages: Math.ceil(totalCount / pageSize),
+        noOrderCount,
       };
     } else {
       // 对于非计算字段（如createdAt），可以直接在数据库层面排序和分页
@@ -196,6 +217,8 @@ export class CustomerAddressService {
 
           // 计算订单总额（扣除部分退款；已退款订单不计入消费额）
           let totalAmount = 0;
+          // 有效订单数（仅 PAID/COMPLETED，用于"无订单"统计）
+          let validOrderCount = 0;
           orders.forEach((order) => {
             const units = order.groupBuy.units as GroupBuyUnit[];
             const unit = units.find((u) => u.id === order.unitId);
@@ -208,22 +231,41 @@ export class CustomerAddressService {
                   : originalAmount - partialRefundAmount;
               totalAmount += orderAmount;
             }
+            // 统计有效订单数
+            if (
+              order.status === OrderStatus.PAID ||
+              order.status === OrderStatus.COMPLETED
+            ) {
+              validOrderCount++;
+            }
           });
 
           return {
             ...address,
             orderCount: orders.length,
             orderTotalAmount: totalAmount,
+            validOrderCount, // 用于"无订单"统计
           };
         }),
       );
 
+      // 统计无订单地址数量（没有有效订单 PAID/COMPLETED 的地址）
+      const noOrderCount = customerAddressesWithStats.filter(
+        (addr) => addr.validOrderCount === 0,
+      ).length;
+
+      // 移除 validOrderCount 字段，不返回给前端
+      const result = customerAddressesWithStats.map(
+        ({ validOrderCount: _, ...rest }) => rest,
+      );
+
       return {
-        data: customerAddressesWithStats,
+        data: result,
         page: page,
         pageSize: pageSize,
         totalCount: totalCount,
         totalPages: Math.ceil(totalCount / pageSize), // 计算总页数
+        noOrderCount,
       };
     }
   }

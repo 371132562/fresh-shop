@@ -151,6 +151,8 @@ export const Component = () => {
             searchLoading={listLoading}
             totalCount={listCount.totalCount}
             countLabel="个地址"
+            noOrderCount={listCount.noOrderCount}
+            noOrderLabel="无有效订单"
             onAdd={() => setVisible(true)}
           />
         </Form>
@@ -188,7 +190,7 @@ export const Component = () => {
                       style={{ padding: 0, height: 'auto' }}
                       onClick={() => handleModify(item.id)}
                     >
-                      <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all">
+                      <span className="block max-w-full overflow-hidden text-lg font-medium text-ellipsis whitespace-nowrap md:overflow-visible md:break-all md:whitespace-normal">
                         {item.name}
                       </span>
                     </Button>

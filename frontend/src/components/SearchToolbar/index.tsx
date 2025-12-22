@@ -5,7 +5,7 @@ import {
   SortAscendingOutlined,
   SortDescendingOutlined
 } from '@ant-design/icons'
-import { Button, Segmented, Select } from 'antd'
+import { Button, Segmented, Select, Tag } from 'antd'
 import type { ReactNode } from 'react'
 
 type SortOption = {
@@ -29,6 +29,8 @@ type SearchToolbarProps = {
   // 统计信息
   totalCount?: number
   countLabel?: string
+  noOrderCount?: number // 无订单实体数量
+  noOrderLabel?: string // 无订单实体标签，如"无有效订单"
 
   // 添加按钮
   onAdd?: () => void
@@ -49,6 +51,8 @@ const SearchToolbar = ({
   searchLoading = false,
   totalCount = 0,
   countLabel = '条',
+  noOrderCount,
+  noOrderLabel = '无有效订单',
   onAdd,
   addButtonText = '添加',
   extra
@@ -62,8 +66,16 @@ const SearchToolbar = ({
       <div className="flex w-full flex-col items-stretch justify-between gap-3 lg:flex-row lg:items-center">
         {/* 左侧组：统计信息与添加按钮 */}
         <div className="flex items-center justify-between gap-3 lg:justify-start">
-          <div className="whitespace-nowrap text-sm text-gray-600">
-            共 {totalCount} {countLabel}
+          <div className="flex items-center gap-2 text-sm whitespace-nowrap text-gray-600">
+            <span>
+              共 {totalCount} {countLabel}
+            </span>
+            {noOrderCount !== undefined && noOrderCount > 0 && (
+              <Tag color="orange">
+                共 {noOrderCount} {countLabel}
+                {noOrderLabel}
+              </Tag>
+            )}
           </div>
           {onAdd && (
             <Button
@@ -85,7 +97,7 @@ const SearchToolbar = ({
           !!sortOrderValue &&
           !!onSortOrderChange ? (
             <div className="flex w-full flex-col items-stretch gap-1 sm:flex-row sm:items-center sm:gap-2 md:w-auto">
-              <span className="whitespace-nowrap text-sm font-medium text-gray-700">排序：</span>
+              <span className="text-sm font-medium whitespace-nowrap text-gray-700">排序：</span>
 
               {/* 字段选择 + 顺序切换 */}
               {typeof sortFieldValue === 'string' &&

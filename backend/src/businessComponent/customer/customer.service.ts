@@ -349,9 +349,8 @@ export class CustomerService {
           // 更新最近一次团购发起时间（取最新的时间）
           const currentStartDate = new Date(order.groupBuy.groupBuyStartDate);
           const existingStartDate = new Date(
-            productCounts[order.groupBuy.productId].groupBuys[
-              groupBuyKey
-            ].latestGroupBuyStartDate,
+            productCounts[order.groupBuy.productId].groupBuys[groupBuyKey]
+              .latestGroupBuyStartDate,
           );
           if (currentStartDate > existingStartDate) {
             productCounts[order.groupBuy.productId].groupBuys[
@@ -924,12 +923,18 @@ export class CustomerService {
       // 分页处理
       const paginatedCustomers = sortedCustomers.slice(skip, skip + pageSize);
 
+      // 统计无订单客户数量（订单量为0的客户）
+      const noOrderCount = customersWithTotalAmount.filter(
+        (c) => c.orderCount === 0,
+      ).length;
+
       return {
         data: paginatedCustomers,
         page: page,
         pageSize: pageSize,
         totalCount: totalCount,
         totalPages: Math.ceil(totalCount / pageSize),
+        noOrderCount,
       };
     } else {
       // 对于非计算字段（如createdAt），可以直接在数据库层面排序和分页
@@ -1022,12 +1027,28 @@ export class CustomerService {
         }),
       );
 
+      // 统计无订单客户数量（符合当前筛选条件且订单量为0的客户）
+      const noOrderCount = await this.prisma.customer.count({
+        where: {
+          ...where,
+          orders: {
+            none: {
+              delete: 0,
+              status: {
+                in: [OrderStatus.PAID, OrderStatus.COMPLETED],
+              },
+            },
+          },
+        },
+      });
+
       return {
         data: customersWithTotalAmount,
         page: page,
         pageSize: pageSize,
         totalCount: totalCount,
         totalPages: Math.ceil(totalCount / pageSize),
+        noOrderCount,
       };
     }
   }

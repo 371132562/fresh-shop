@@ -161,12 +161,18 @@ export class ProductService {
       // 分页处理
       const paginatedProducts = sortedProducts.slice(skip, skip + pageSize);
 
+      // 统计无订单商品数量（订单量为0的商品）
+      const noOrderCount = productsWithStats.filter(
+        (p) => p.orderCount === 0,
+      ).length;
+
       return {
         data: paginatedProducts,
         page: page,
         pageSize: pageSize,
         totalCount: totalCount,
         totalPages: Math.ceil(totalCount / pageSize),
+        noOrderCount,
       };
     } else {
       // 对于非统计字段（如createdAt），可以直接在数据库层面排序和分页
@@ -243,12 +249,38 @@ export class ProductService {
         };
       });
 
+      // 统计无订单商品数量（符合当前筛选条件且没有有效订单的商品）
+      const noOrderCount = await this.prisma.product.count({
+        where: {
+          ...where,
+          OR: [
+            // 没有任何团购单
+            { groupBuy: { none: { delete: 0 } } },
+            // 有团购单但没有有效订单
+            {
+              groupBuy: {
+                every: {
+                  delete: 0,
+                  order: {
+                    none: {
+                      delete: 0,
+                      status: { in: [OrderStatus.PAID, OrderStatus.COMPLETED] },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      });
+
       return {
         data: productsWithStats,
         page: page,
         pageSize: pageSize,
         totalCount: totalCount,
         totalPages: Math.ceil(totalCount / pageSize),
+        noOrderCount,
       };
     }
   }
