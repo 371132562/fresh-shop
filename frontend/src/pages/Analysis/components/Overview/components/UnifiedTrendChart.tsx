@@ -122,6 +122,7 @@ export const UnifiedTrendChart = () => {
         }
       },
       legend: {
+        top: 0,
         data: [seriesConfig.name]
       },
       grid: {

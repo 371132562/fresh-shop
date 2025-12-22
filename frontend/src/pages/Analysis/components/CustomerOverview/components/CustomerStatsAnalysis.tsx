@@ -34,7 +34,7 @@ const CustomerStatsAnalysis: React.FC<CustomerStatsAnalysisProps> = ({
             title="参与客户数"
             value={uniqueCustomerCount}
             suffix="人"
-            valueStyle={{ color: '#2563eb', fontWeight: 700 }}
+            styles={{ content: { color: '#2563eb', fontWeight: 700 } }}
           />
         </Col>
         <Col span={12}>
@@ -43,7 +43,7 @@ const CustomerStatsAnalysis: React.FC<CustomerStatsAnalysisProps> = ({
             value={averageCustomerOrderValue}
             precision={2}
             prefix="¥"
-            valueStyle={{ color: '#60a5fa', fontWeight: 700 }}
+            styles={{ content: { color: '#60a5fa', fontWeight: 700 } }}
           />
         </Col>
       </Row>

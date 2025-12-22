@@ -1,4 +1,4 @@
-import { Button, Form, InputNumber, message, Modal, Popconfirm } from 'antd'
+import { Button, Form, InputNumber, message, Modal, Popconfirm, Space } from 'antd'
 import type { PartialRefundParams } from 'fresh-shop-backend/types/dto.ts'
 import { useState } from 'react'
 
@@ -168,51 +168,51 @@ const RefundModal = ({
             }
           ]}
         >
-          <InputNumber
-            placeholder="请输入退款金额"
-            min={0.01}
-            max={maxRefundAmount}
-            step={0.01}
-            precision={2}
-            className="w-full"
-            addonBefore="￥"
-            addonAfter={
-              <Popconfirm
-                title={<div className="text-base">确定对该订单进行全额退款吗？</div>}
-                onConfirm={async () => {
-                  const ok = await refundOrder({ id: orderId })
-                  if (ok) {
-                    message.success({
-                      content: (
-                        <div>
-                          已全额退款，金额：
-                          <span className="font-semibold text-orange-600">
-                            ￥{orderTotalAmount.toFixed(2)}
-                          </span>
-                        </div>
-                      )
-                    })
-                    form.resetFields()
-                    onClose()
-                    onSuccess?.(maxRefundAmount)
-                  } else {
-                    message.error('退款失败')
-                  }
-                }}
-                okText="确定"
-                cancelText="取消"
-                okButtonProps={{ size: 'middle', color: 'danger', variant: 'solid' }}
+          <Space.Compact className="w-full">
+            <Button disabled>￥</Button>
+            <InputNumber
+              placeholder="请输入退款金额"
+              min={0.01}
+              max={maxRefundAmount}
+              step={0.01}
+              precision={2}
+              className="flex-1"
+            />
+            <Popconfirm
+              title={<div className="text-base">确定对该订单进行全额退款吗？</div>}
+              onConfirm={async () => {
+                const ok = await refundOrder({ id: orderId })
+                if (ok) {
+                  message.success({
+                    content: (
+                      <div>
+                        已全额退款，金额：
+                        <span className="font-semibold text-orange-600">
+                          ￥{orderTotalAmount.toFixed(2)}
+                        </span>
+                      </div>
+                    )
+                  })
+                  form.resetFields()
+                  onClose()
+                  onSuccess?.(maxRefundAmount)
+                } else {
+                  message.error('退款失败')
+                }
+              }}
+              okText="确定"
+              cancelText="取消"
+              okButtonProps={{ size: 'middle', color: 'danger', variant: 'solid' }}
+            >
+              <Button
+                color="danger"
+                variant="link"
+                loading={refundLoading}
               >
-                <Button
-                  color="danger"
-                  variant="link"
-                  loading={refundLoading}
-                >
-                  全额退款
-                </Button>
-              </Popconfirm>
-            }
-          />
+                全额退款
+              </Button>
+            </Popconfirm>
+          </Space.Compact>
         </Form.Item>
       </Form>
     </Modal>

@@ -60,6 +60,7 @@ export const GroupBuyOrderTrendChart = () => {
         }
       },
       legend: {
+        top: 0,
         data: ['团购单', '订单']
       },
       grid: {

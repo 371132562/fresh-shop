@@ -85,7 +85,7 @@ const CustomerLoyaltyAnalysis: React.FC<CustomerLoyaltyAnalysisProps> = ({
             title="多次购买客户量"
             value={multiPurchaseCustomerCount}
             suffix="人"
-            valueStyle={{ color: '#2563eb', fontWeight: 700 }}
+            styles={{ content: { color: '#2563eb', fontWeight: 700 } }}
           />
         </Col>
         <Col span={12}>
@@ -94,7 +94,7 @@ const CustomerLoyaltyAnalysis: React.FC<CustomerLoyaltyAnalysisProps> = ({
             value={multiPurchaseCustomerRatio}
             precision={1}
             suffix="%"
-            valueStyle={{ color: '#2563eb', fontWeight: 700 }}
+            styles={{ content: { color: '#2563eb', fontWeight: 700 } }}
           />
         </Col>
       </Row>

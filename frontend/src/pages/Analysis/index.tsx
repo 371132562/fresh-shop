@@ -155,7 +155,7 @@ export const Component = () => {
                     : ''
                 }
                 icon={<CalendarOutlined />}
-                iconPosition="start"
+                iconPlacement="start"
               >
                 自定义日期
               </Button>

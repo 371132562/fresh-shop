@@ -84,11 +84,11 @@ const ImagesUpload = (props: params) => {
       </Upload>
       {previewImage && (
         <Image
-          wrapperStyle={{ display: 'none' }}
+          styles={{ root: { display: 'none' } }}
           preview={{
-            visible: previewOpen,
-            onVisibleChange: visible => setPreviewOpen(visible),
-            afterOpenChange: visible => !visible && setPreviewImage('')
+            open: previewOpen,
+            onOpenChange: open => setPreviewOpen(open),
+            afterOpenChange: open => !open && setPreviewImage('')
           }}
           src={previewImage}
         />

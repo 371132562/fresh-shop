@@ -202,7 +202,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
                 value={averageRevenue}
                 precision={2}
                 prefix="¥"
-                valueStyle={{ color: '#52c41a' }}
+                styles={{ content: { color: '#52c41a' } }}
               />
             </Col>
             {!useGlobalSettingStore.getState().globalSetting?.value?.sensitive && (
@@ -212,7 +212,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
                   value={averageProfit}
                   precision={2}
                   prefix="¥"
-                  valueStyle={{ color: '#fa8c16' }}
+                  styles={{ content: { color: '#fa8c16' } }}
                 />
               </Col>
             )}
@@ -222,7 +222,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
                 value={averageOrderCount}
                 precision={1}
                 suffix="单"
-                valueStyle={{ color: '#2563eb' }}
+                styles={{ content: { color: '#2563eb' } }}
               />
             </Col>
             <Col span={5}>
@@ -231,7 +231,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
                 value={refundAmount}
                 precision={2}
                 prefix="¥"
-                valueStyle={{ color: '#ea580c' }}
+                styles={{ content: { color: '#ea580c' } }}
               />
             </Col>
             <Col span={4}>
@@ -239,7 +239,7 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
                 title="部分退款/退款订单量"
                 value={`${partialRefundOrderCount}/${refundedOrderCount}`}
                 suffix="单"
-                valueStyle={{ color: '#ea580c' }}
+                styles={{ content: { color: '#ea580c' } }}
               />
             </Col>
           </Row>

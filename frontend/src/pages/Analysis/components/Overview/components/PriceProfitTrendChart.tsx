@@ -111,6 +111,7 @@ export const PriceProfitTrendChart = () => {
         }
       },
       legend: {
+        top: 0,
         data: ['销售额', sensitive ? '' : '利润']
       },
       grid: {

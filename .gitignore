@@ -50,3 +50,6 @@ backend/db
 # AI相关
 .kiro
 .agent
+
+# Prisma 生成的客户端（包含平台相关的二进制文件）
+backend/prisma/generated
