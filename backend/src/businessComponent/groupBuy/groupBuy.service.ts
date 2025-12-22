@@ -43,6 +43,220 @@ export class GroupBuyService {
     });
   }
 
+  // ============================================================================
+  // 以下四个私有方法用于团购列表接口的统计数据计算
+  // 背景：团购列表需要展示每个团购单的订单统计、退款金额、销售额等聚合数据
+  // 这些数据无法通过 Prisma 的 include 直接获取，需要单独查询并聚合
+  // 提取为独立方法的目的：
+  //   1. 消除 list 方法中两个分支（计算字段排序 vs 数据库字段排序）的重复代码
+  //   2. 支持 Promise.all 并行查询，提升接口性能
+  //   3. 提高代码可读性和可维护性
+  // ============================================================================
+
+  /**
+   * 构建订单状态统计 Map
+   * 用途：统计每个团购单下各状态（NOTPAID/PAID/COMPLETED/REFUNDED）的订单数量
+   * 场景：列表页展示订单状态分布、按有效订单量排序
+   * @param groupBuyIds 团购单 ID 列表
+   * @returns Map<groupBuyId, GroupBuyOrderStats>
+   */
+  private async buildOrderStatsMap(
+    groupBuyIds: string[],
+  ): Promise<Map<string, GroupBuyOrderStats>> {
+    if (groupBuyIds.length === 0) return new Map();
+
+    const orderStats = await this.prisma.order.groupBy({
+      by: ['groupBuyId', 'status'],
+      where: {
+        groupBuyId: { in: groupBuyIds },
+        delete: 0,
+      },
+      _count: { id: true },
+    });
+
+    const statsMap = new Map<string, GroupBuyOrderStats>();
+    orderStats.forEach((stat) => {
+      const { groupBuyId, status, _count } = stat;
+      if (!statsMap.has(groupBuyId)) {
+        statsMap.set(groupBuyId, {
+          orderCount: 0,
+          NOTPAID: 0,
+          PAID: 0,
+          COMPLETED: 0,
+          REFUNDED: 0,
+        });
+      }
+      const currentStats = statsMap.get(groupBuyId)!;
+      currentStats[status] = _count.id;
+      currentStats.orderCount += _count.id;
+    });
+
+    return statsMap;
+  }
+
+  /**
+   * 构建退款金额 Map
+   * 用途：计算每个团购单的总退款金额
+   * 口径：部分退款（非已退款订单的 partialRefundAmount）+ 全额退款（已退款订单的订单总额）
+   * 场景：列表页展示退款金额、财务统计
+   * @param groupBuyIds 团购单 ID 列表
+   * @returns Map<groupBuyId, totalRefundAmount>
+   */
+  private async buildRefundAmountMap(
+    groupBuyIds: string[],
+  ): Promise<Map<string, number>> {
+    if (groupBuyIds.length === 0) return new Map();
+
+    // 1) 统计非已退款订单的部分退款金额
+    const partialRefundStats = await this.prisma.order.groupBy({
+      by: ['groupBuyId'],
+      where: {
+        groupBuyId: { in: groupBuyIds },
+        delete: 0,
+        status: { not: 'REFUNDED' },
+      },
+      _sum: { partialRefundAmount: true },
+    });
+
+    const partialRefundMap = new Map<string, number>();
+    partialRefundStats.forEach((stat) => {
+      partialRefundMap.set(stat.groupBuyId, stat._sum.partialRefundAmount || 0);
+    });
+
+    // 2) 统计已退款订单的应退金额（按规格单价*数量计算）
+    const refundedOrders = await this.prisma.order.findMany({
+      where: {
+        groupBuyId: { in: groupBuyIds },
+        status: 'REFUNDED',
+        delete: 0,
+      },
+      select: {
+        groupBuyId: true,
+        quantity: true,
+        unitId: true,
+        groupBuy: { select: { units: true } },
+      },
+    });
+
+    const fullRefundMap = new Map<string, number>();
+    refundedOrders.forEach((order) => {
+      const units = order.groupBuy.units as Array<{
+        id: string;
+        price: number;
+      }>;
+      const unit = units.find((u) => u.id === order.unitId);
+      if (unit) {
+        const gross = unit.price * order.quantity;
+        fullRefundMap.set(
+          order.groupBuyId,
+          (fullRefundMap.get(order.groupBuyId) || 0) + gross,
+        );
+      }
+    });
+
+    // 3) 合并部分退款和全额退款
+    const totalRefundMap = new Map<string, number>();
+    groupBuyIds.forEach((id) => {
+      const partial = partialRefundMap.get(id) || 0;
+      const full = fullRefundMap.get(id) || 0;
+      totalRefundMap.set(id, partial + full);
+    });
+
+    return totalRefundMap;
+  }
+
+  /**
+   * 构建销售额 Map
+   * 用途：计算每个团购单的有效销售额
+   * 口径：PAID/COMPLETED 订单的（单价×数量）扣除部分退款；已退款订单记 0
+   * 场景：列表页展示销售额、按销售额排序
+   * @param groupBuyIds 团购单 ID 列表
+   * @returns Map<groupBuyId, totalSalesAmount>
+   */
+  private async buildSalesAmountMap(
+    groupBuyIds: string[],
+  ): Promise<Map<string, number>> {
+    if (groupBuyIds.length === 0) return new Map();
+
+    const validOrders = await this.prisma.order.findMany({
+      where: {
+        groupBuyId: { in: groupBuyIds },
+        delete: 0,
+        status: {
+          in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
+        },
+      },
+      select: {
+        groupBuyId: true,
+        unitId: true,
+        quantity: true,
+        status: true,
+        partialRefundAmount: true,
+        groupBuy: { select: { units: true } },
+      },
+    });
+
+    const salesMap = new Map<string, number>();
+    validOrders.forEach((order) => {
+      const units = order.groupBuy.units as Array<{
+        id: string;
+        price: number;
+      }>;
+      const unit = units.find((u) => u.id === order.unitId);
+      if (!unit) return;
+
+      const gross = unit.price * order.quantity;
+      const net =
+        order.status === OrderStatus.REFUNDED
+          ? 0
+          : Math.max(0, gross - (order.partialRefundAmount || 0));
+      salesMap.set(
+        order.groupBuyId,
+        (salesMap.get(order.groupBuyId) || 0) + net,
+      );
+    });
+
+    return salesMap;
+  }
+
+  /**
+   * 统计无订单团购单数量（全局统计）
+   * 用途：在列表页顶部展示"无有效订单"的团购单数量，帮助用户快速识别需关注的团购
+   * 口径：有效订单 = PAID + COMPLETED，无订单即有效订单数为 0
+   * 注意：此统计基于全量筛选结果，而非当前页数据，确保分页切换时数值一致
+   * @param where 筛选条件
+   * @returns 无有效订单的团购单数量
+   */
+  private async countNoOrderGroupBuys(
+    where: Prisma.GroupBuyWhereInput,
+  ): Promise<number> {
+    // 获取所有符合筛选条件的团购单 ID
+    const allGroupBuys = await this.prisma.groupBuy.findMany({
+      where,
+      select: { id: true },
+    });
+    const allIds = allGroupBuys.map((g) => g.id);
+
+    if (allIds.length === 0) return 0;
+
+    // 统计有有效订单的团购单
+    const validOrderStats = await this.prisma.order.groupBy({
+      by: ['groupBuyId'],
+      where: {
+        groupBuyId: { in: allIds },
+        delete: 0,
+        status: { in: ['PAID', 'COMPLETED'] },
+      },
+      _count: { id: true },
+    });
+
+    const groupBuyIdsWithValidOrders = new Set(
+      validOrderStats.map((s) => s.groupBuyId),
+    );
+
+    return allIds.length - groupBuyIdsWithValidOrders.size;
+  }
+
   async list(
     data: GroupBuyPageParams,
   ): Promise<ListByPage<GroupBuyListItem[]>> {
@@ -59,10 +273,11 @@ export class GroupBuyService {
       sortField = 'groupBuyStartDate',
       sortOrder = 'desc',
     } = data;
-    const skip = (page - 1) * pageSize; // 计算要跳过的记录数
+    const skip = (page - 1) * pageSize;
 
+    // 构建筛选条件
     const where: Prisma.GroupBuyWhereInput = {
-      delete: 0, // 仅查询未删除的供货商
+      delete: 0,
     };
 
     if (name) {
@@ -141,140 +356,21 @@ export class GroupBuyService {
         this.prisma.groupBuy.findMany({
           orderBy: [{ groupBuyStartDate: 'desc' }, { createdAt: 'desc' }],
           where,
-          include: {
-            supplier: true,
-            product: true,
-          },
+          include: { supplier: true, product: true },
         }),
         this.prisma.groupBuy.count({ where }),
       ]);
 
       const groupBuyIds = allGroupBuys.map((item) => item.id);
 
-      // 统计订单状态
-      const orderStats = await this.prisma.order.groupBy({
-        by: ['groupBuyId', 'status'],
-        where: {
-          groupBuyId: { in: groupBuyIds },
-          delete: 0,
-        },
-        _count: { id: true },
-      });
+      // 并行获取统计数据
+      const [statsMap, refundMap, salesMap] = await Promise.all([
+        this.buildOrderStatsMap(groupBuyIds),
+        this.buildRefundAmountMap(groupBuyIds),
+        this.buildSalesAmountMap(groupBuyIds),
+      ]);
 
-      const statsMap = new Map<string, GroupBuyOrderStats>();
-      orderStats.forEach((stat) => {
-        const { groupBuyId, status, _count } = stat;
-        if (!statsMap.has(groupBuyId)) {
-          statsMap.set(groupBuyId, {
-            orderCount: 0,
-            NOTPAID: 0,
-            PAID: 0,
-            COMPLETED: 0,
-            REFUNDED: 0,
-          });
-        }
-        const currentStats = statsMap.get(groupBuyId);
-        if (currentStats) {
-          currentStats[status] = _count.id;
-          currentStats.orderCount += _count.id;
-        }
-      });
-
-      // 计算退款金额
-      const nonRefundedPartialRefundStats = await this.prisma.order.groupBy({
-        by: ['groupBuyId'],
-        where: {
-          groupBuyId: { in: groupBuyIds },
-          delete: 0,
-          status: { not: 'REFUNDED' },
-        },
-        _sum: { partialRefundAmount: true },
-      });
-
-      const nonRefundedPartialRefundMap = new Map<string, number>();
-      nonRefundedPartialRefundStats.forEach((stat) => {
-        nonRefundedPartialRefundMap.set(
-          stat.groupBuyId,
-          stat._sum.partialRefundAmount || 0,
-        );
-      });
-
-      const refundedOrders = await this.prisma.order.findMany({
-        where: {
-          groupBuyId: { in: groupBuyIds },
-          status: 'REFUNDED',
-          delete: 0,
-        },
-        select: {
-          groupBuyId: true,
-          quantity: true,
-          unitId: true,
-          groupBuy: { select: { units: true } },
-        },
-      });
-
-      const refundedGrossMap = new Map<string, number>();
-      refundedOrders.forEach((order) => {
-        const units = order.groupBuy.units as Array<{
-          id: string;
-          price: number;
-        }>;
-        const unit = units.find((u) => u.id === order.unitId);
-        if (unit) {
-          const gross = unit.price * order.quantity;
-          refundedGrossMap.set(
-            order.groupBuyId,
-            (refundedGrossMap.get(order.groupBuyId) || 0) + gross,
-          );
-        }
-      });
-
-      const totalRefundAmountMap = new Map<string, number>();
-      groupBuyIds.forEach((id) => {
-        const partialRefund = nonRefundedPartialRefundMap.get(id) || 0;
-        const fullRefund = refundedGrossMap.get(id) || 0;
-        totalRefundAmountMap.set(id, partialRefund + fullRefund);
-      });
-
-      // 计算销售额
-      const validOrders = await this.prisma.order.findMany({
-        where: {
-          groupBuyId: { in: groupBuyIds },
-          delete: 0,
-          status: {
-            in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
-          },
-        },
-        select: {
-          groupBuyId: true,
-          unitId: true,
-          quantity: true,
-          status: true,
-          partialRefundAmount: true,
-          groupBuy: { select: { units: true } },
-        },
-      });
-
-      const salesMap = new Map<string, number>();
-      validOrders.forEach((order) => {
-        const units = order.groupBuy.units as Array<{
-          id: string;
-          price: number;
-        }>;
-        const unit = units.find((u) => u.id === order.unitId);
-        if (!unit) return;
-        const gross = unit.price * order.quantity;
-        const net =
-          order.status === OrderStatus.REFUNDED
-            ? 0
-            : Math.max(0, gross - (order.partialRefundAmount || 0));
-        salesMap.set(
-          order.groupBuyId,
-          (salesMap.get(order.groupBuyId) || 0) + net,
-        );
-      });
-
-      // 组装数据
+      // 组装数据并添加排序字段
       const groupBuysWithStats = allGroupBuys.map((gb) => {
         const stats = statsMap.get(gb.id) || {
           orderCount: 0,
@@ -283,12 +379,11 @@ export class GroupBuyService {
           COMPLETED: 0,
           REFUNDED: 0,
         };
-        // 有效订单量（PAID + COMPLETED）
         const validOrderCount = stats.PAID + stats.COMPLETED;
         return {
           ...gb,
           orderStats: stats,
-          totalRefundAmount: totalRefundAmountMap.get(gb.id) || 0,
+          totalRefundAmount: refundMap.get(gb.id) || 0,
           totalSalesAmount: salesMap.get(gb.id) || 0,
           _validOrderCount: validOrderCount,
         };
@@ -296,38 +391,29 @@ export class GroupBuyService {
 
       // 全局排序
       const sortedGroupBuys = groupBuysWithStats.sort((a, b) => {
-        let aValue: number;
-        let bValue: number;
-        if (sortField === 'orderCount') {
-          // 按有效订单量排序（PAID + COMPLETED）
-          aValue = a._validOrderCount;
-          bValue = b._validOrderCount;
-        } else {
-          // orderTotalAmount
-          aValue = a.totalSalesAmount;
-          bValue = b.totalSalesAmount;
-        }
+        const aValue =
+          sortField === 'orderCount' ? a._validOrderCount : a.totalSalesAmount;
+        const bValue =
+          sortField === 'orderCount' ? b._validOrderCount : b.totalSalesAmount;
         return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
       });
 
-      // 分页处理
+      // 分页并移除临时排序字段
       const paginatedGroupBuys = sortedGroupBuys.slice(skip, skip + pageSize);
-
-      // 移除临时排序字段，返回结果
       const result = paginatedGroupBuys.map(
         ({ _validOrderCount, ...rest }) => rest,
       );
 
-      // 统计无订单团购单数量
+      // 统计无订单团购单数量（基于全量数据）
       const noOrderCount = groupBuysWithStats.filter(
-        (gb) => gb.orderStats.PAID + gb.orderStats.COMPLETED === 0,
+        (gb) => gb._validOrderCount === 0,
       ).length;
 
       return {
         data: result,
-        page: page,
-        pageSize: pageSize,
-        totalCount: totalCount,
+        page,
+        pageSize,
+        totalCount,
         totalPages: Math.ceil(totalCount / pageSize),
         noOrderCount,
       };
@@ -336,184 +422,45 @@ export class GroupBuyService {
     // 对于数据库字段（groupBuyStartDate），直接在数据库层面排序和分页
     const [groupBuys, totalCount] = await this.prisma.$transaction([
       this.prisma.groupBuy.findMany({
-        skip: skip,
+        skip,
         take: pageSize,
-        orderBy: [
-          {
-            groupBuyStartDate: sortOrder,
-          },
-          {
-            createdAt: 'desc',
-          },
-        ],
+        orderBy: [{ groupBuyStartDate: sortOrder }, { createdAt: 'desc' }],
         where,
-        include: {
-          supplier: true,
-          product: true,
-        },
+        include: { supplier: true, product: true },
       }),
       this.prisma.groupBuy.count({ where }),
     ]);
 
     const groupBuyIds = groupBuys.map((item) => item.id);
 
-    const orderStats = await this.prisma.order.groupBy({
-      by: ['groupBuyId', 'status'],
-      where: {
-        groupBuyId: {
-          in: groupBuyIds,
-        },
-        delete: 0,
-      },
-      _count: {
-        id: true,
-      },
-    });
+    // 并行获取统计数据和无订单数量
+    const [statsMap, refundMap, salesMap, noOrderCount] = await Promise.all([
+      this.buildOrderStatsMap(groupBuyIds),
+      this.buildRefundAmountMap(groupBuyIds),
+      this.buildSalesAmountMap(groupBuyIds),
+      this.countNoOrderGroupBuys(where),
+    ]);
 
-    const statsMap = new Map<string, GroupBuyOrderStats>();
-    orderStats.forEach((stat) => {
-      const { groupBuyId, status, _count } = stat;
-      if (!statsMap.has(groupBuyId)) {
-        statsMap.set(groupBuyId, {
-          orderCount: 0,
-          NOTPAID: 0,
-          PAID: 0,
-          COMPLETED: 0,
-          REFUNDED: 0,
-        });
-      }
-      const currentStats = statsMap.get(groupBuyId);
-      if (currentStats) {
-        currentStats[status] = _count.id;
-        currentStats.orderCount += _count.id;
-      }
-    });
-
-    // 计算总退款金额：部分退款（非已退款订单）+ 全额退款（已退款订单的订单总额）
-    // 1) 统计非已退款订单的部分退款金额
-    const nonRefundedPartialRefundStats = await this.prisma.order.groupBy({
-      by: ['groupBuyId'],
-      where: {
-        groupBuyId: { in: groupBuyIds },
-        delete: 0,
-        status: { not: 'REFUNDED' },
-      },
-      _sum: {
-        partialRefundAmount: true,
-      },
-    });
-
-    const nonRefundedPartialRefundMap = new Map<string, number>();
-    nonRefundedPartialRefundStats.forEach((stat) => {
-      nonRefundedPartialRefundMap.set(
-        stat.groupBuyId,
-        stat._sum.partialRefundAmount || 0,
-      );
-    });
-
-    // 2) 统计已退款订单的应退金额（按规格单价*数量计算）
-    const refundedOrders = await this.prisma.order.findMany({
-      where: {
-        groupBuyId: { in: groupBuyIds },
-        status: 'REFUNDED',
-        delete: 0,
-      },
-      select: {
-        groupBuyId: true,
-        quantity: true,
-        unitId: true,
-        groupBuy: { select: { units: true } },
-      },
-    });
-
-    const refundedGrossMap = new Map<string, number>();
-    refundedOrders.forEach((order) => {
-      const units = order.groupBuy.units as Array<{
-        id: string;
-        price: number;
-      }>;
-      const unit = units.find((u) => u.id === order.unitId);
-      if (unit) {
-        const gross = unit.price * order.quantity;
-        refundedGrossMap.set(
-          order.groupBuyId,
-          (refundedGrossMap.get(order.groupBuyId) || 0) + gross,
-        );
-      }
-    });
-
-    const totalRefundAmountMap = new Map<string, number>();
-    groupBuyIds.forEach((id) => {
-      const partialRefund = nonRefundedPartialRefundMap.get(id) || 0;
-      const fullRefund = refundedGrossMap.get(id) || 0;
-      totalRefundAmountMap.set(id, partialRefund + fullRefund);
-    });
-
-    // 统计每个团购的有效销售额（PAID/COMPLETED，扣除部分退款；已退款记0）
-    const validOrders = await this.prisma.order.findMany({
-      where: {
-        groupBuyId: { in: groupBuyIds },
-        delete: 0,
-        status: {
-          in: [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.REFUNDED],
-        },
-      },
-      select: {
-        groupBuyId: true,
-        unitId: true,
-        quantity: true,
-        status: true,
-        partialRefundAmount: true,
-        groupBuy: { select: { units: true } },
-      },
-    });
-
-    const salesMap = new Map<string, number>();
-    validOrders.forEach((order) => {
-      const units = order.groupBuy.units as Array<{
-        id: string;
-        price: number;
-      }>;
-      const unit = units.find((u) => u.id === order.unitId);
-      if (!unit) return;
-      const gross = unit.price * order.quantity;
-      const net =
-        order.status === OrderStatus.REFUNDED
-          ? 0
-          : Math.max(0, gross - (order.partialRefundAmount || 0));
-      salesMap.set(
-        order.groupBuyId,
-        (salesMap.get(order.groupBuyId) || 0) + net,
-      );
-    });
-
-    const groupBuysWithStats = groupBuys.map((gb) => {
-      const stats = statsMap.get(gb.id) || {
+    // 组装数据
+    const groupBuysWithStats = groupBuys.map((gb) => ({
+      ...gb,
+      orderStats: statsMap.get(gb.id) || {
         orderCount: 0,
         NOTPAID: 0,
         PAID: 0,
         COMPLETED: 0,
         REFUNDED: 0,
-      };
-      return {
-        ...gb,
-        orderStats: stats,
-        totalRefundAmount: totalRefundAmountMap.get(gb.id) || 0,
-        totalSalesAmount: salesMap.get(gb.id) || 0,
-      };
-    });
-
-    // 统计无订单团购单数量（有效订单量为0的团购单，即 PAID + COMPLETED = 0）
-    const noOrderCount = groupBuysWithStats.filter(
-      (gb) => gb.orderStats.PAID + gb.orderStats.COMPLETED === 0,
-    ).length;
+      },
+      totalRefundAmount: refundMap.get(gb.id) || 0,
+      totalSalesAmount: salesMap.get(gb.id) || 0,
+    }));
 
     return {
       data: groupBuysWithStats,
-      page: page,
-      pageSize: pageSize,
-      totalCount: totalCount,
-      totalPages: Math.ceil(totalCount / pageSize), // 计算总页数
+      page,
+      pageSize,
+      totalCount,
+      totalPages: Math.ceil(totalCount / pageSize),
       noOrderCount,
     };
   }
