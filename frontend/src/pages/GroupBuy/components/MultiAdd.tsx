@@ -64,15 +64,22 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
   const handleOk = async () => {
     try {
       const values = await form.validateFields()
+      console.log('[MultiAdd] 表单原始数据 values:', JSON.stringify(values, null, 2))
+      console.log('[MultiAdd] 当前团购信息 groupBuy:', JSON.stringify(groupBuy, null, 2))
       setCreateLoading(true)
 
       // 收集所有订单数据
       const ordersToCreate: BatchOrderItem[] = []
 
-      values.units.forEach(unitData => {
-        unitData.orders.forEach(orderData => {
+      values.units.forEach((unitData, unitIndex) => {
+        console.log(`[MultiAdd] 处理规格[${unitIndex}]:`, JSON.stringify(unitData, null, 2))
+        unitData.orders.forEach((orderData, orderIndex) => {
+          console.log(
+            `[MultiAdd] 处理订单[${unitIndex}][${orderIndex}]:`,
+            JSON.stringify(orderData, null, 2)
+          )
           if (orderData.customerId && orderData.quantity > 0) {
-            ordersToCreate.push({
+            const orderItem = {
               groupBuyId: groupBuy!.id,
               unitId: unitData.unitId,
               customerId: orderData.customerId,
@@ -80,10 +87,20 @@ const MultiAdd = ({ visible, setVisible, groupBuy, onSuccess }: MultiAddProps) =
               description: orderData.description,
               // 将前端选择的状态透传给后端；若未选择则由后端/DB默认
               ...(orderData.status ? { status: orderData.status } : {})
-            })
+            }
+            console.log(
+              `[MultiAdd] 组装订单项[${unitIndex}][${orderIndex}]:`,
+              JSON.stringify(orderItem, null, 2)
+            )
+            ordersToCreate.push(orderItem)
           }
         })
       })
+
+      console.log(
+        '[MultiAdd] 最终提交数据 ordersToCreate:',
+        JSON.stringify(ordersToCreate, null, 2)
+      )
 
       if (ordersToCreate.length === 0) {
         message.warning('请至少添加一个有效订单')
