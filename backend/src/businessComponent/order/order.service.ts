@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Order, OrderStatus, Prisma } from '@prisma/client';
+import { Decimal } from 'decimal.js';
 
 import {
   OrderPageParams,
@@ -317,31 +318,37 @@ export class OrderService {
       );
     }
 
-    const totalAmount = selectedUnit.price * order.quantity;
-    const currentRefundAmount = order.partialRefundAmount || 0;
-    const maxRefundAmount = totalAmount - currentRefundAmount;
+    // 使用 decimal.js 解决浮点数精度问题
+    const price = new Decimal(selectedUnit.price);
+    const quantity = new Decimal(order.quantity);
+    const totalAmount = price.mul(quantity);
+
+    const currentRefundAmount = new Decimal(order.partialRefundAmount || 0);
+    const maxRefundAmount = totalAmount.minus(currentRefundAmount);
 
     // 检查退款金额是否有效
-    if (refundAmount <= 0) {
+    const refundAmountDecimal = new Decimal(refundAmount);
+    if (refundAmountDecimal.lte(0)) {
       throw new BusinessException(ErrorCode.INVALID_INPUT, '退款金额必须大于0');
     }
 
-    if (refundAmount > maxRefundAmount) {
+    if (refundAmountDecimal.gt(maxRefundAmount)) {
       throw new BusinessException(
         ErrorCode.INVALID_INPUT,
-        `退款金额不能超过剩余可退款金额 ${maxRefundAmount} 元`,
+        `退款金额不能超过剩余可退款金额 ${maxRefundAmount.toFixed(2)} 元`,
       );
     }
 
     // 更新订单的部分退款金额
-    const newRefundAmount = currentRefundAmount + refundAmount;
+    const newRefundAmount = currentRefundAmount.plus(refundAmountDecimal);
+    const isFullRefund = newRefundAmount.gte(totalAmount);
 
     return this.prisma.order.update({
       where: { id: orderId },
       data: {
-        partialRefundAmount: newRefundAmount,
+        partialRefundAmount: newRefundAmount.toNumber(),
         // 如果退款金额等于总金额，则将订单状态改为已退款
-        ...(newRefundAmount >= totalAmount && { status: OrderStatus.REFUNDED }),
+        ...(isFullRefund && { status: OrderStatus.REFUNDED }),
       },
     });
   }

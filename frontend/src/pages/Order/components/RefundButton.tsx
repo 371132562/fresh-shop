@@ -1,4 +1,5 @@
-import { Button, Form, InputNumber, message, Modal, Popconfirm, Space } from 'antd'
+import { Button, Divider, InputNumber, message, Modal, Popconfirm } from 'antd'
+import { Decimal } from 'decimal.js'
 import type { PartialRefundParams } from 'fresh-shop-backend/types/dto.ts'
 import { useState } from 'react'
 
@@ -30,69 +31,104 @@ const RefundModal = ({
   orderTotalAmount,
   currentRefundAmount = 0
 }: RefundModalProps) => {
-  const [form] = Form.useForm()
+  const [refundAmount, setRefundAmount] = useState<number | null>(null)
+  const [error, setError] = useState<string>('')
 
   const partialRefundOrder = useOrderStore(state => state.partialRefundOrder)
   const partialRefundLoading = useOrderStore(state => state.partialRefundLoading)
   const refundOrder = useOrderStore(state => state.refundOrder)
   const refundLoading = useOrderStore(state => state.refundLoading)
 
-  const maxRefundAmount = orderTotalAmount - currentRefundAmount
+  // 使用 decimal.js 计算剩余可退款金额
+  const maxRefundAmount = new Decimal(orderTotalAmount).minus(currentRefundAmount).toNumber()
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields()
+  // 校验退款金额
+  const validateAmount = (value: number | null): string => {
+    if (value === null || value === undefined) {
+      return '请输入退款金额'
+    }
+    const valDecimal = new Decimal(value)
+    if (valDecimal.lte(0)) {
+      return '退款金额必须大于0'
+    }
+    if (valDecimal.gt(maxRefundAmount)) {
+      return `退款金额不能超过剩余可退款金额 ￥${maxRefundAmount.toFixed(2)}`
+    }
+    return ''
+  }
 
-      const params: PartialRefundParams = {
-        orderId,
-        refundAmount: values.refundAmount
-      }
+  const handleAmountChange = (value: number | null) => {
+    setRefundAmount(value)
+    setError(validateAmount(value))
+  }
 
-      const success = await partialRefundOrder(params)
+  const handlePartialRefund = async () => {
+    const errorMsg = validateAmount(refundAmount)
+    if (errorMsg) {
+      setError(errorMsg)
+      return
+    }
 
-      if (success) {
-        const isFullAfterThis = values.refundAmount >= maxRefundAmount
-        if (isFullAfterThis) {
-          message.success({
-            content: (
-              <div>
-                已达到全额退款金额，本单已全额退款，金额：
-                <span className="font-semibold text-orange-600">
-                  ￥{orderTotalAmount.toFixed(2)}
-                </span>
-              </div>
-            )
-          })
-        } else {
-          message.success({
-            content: (
-              <div>
-                已部分退款，金额：
-                <span className="font-semibold text-orange-600">
-                  ￥{values.refundAmount.toFixed(2)}
-                </span>
-                ，剩余可退：
-                <span className="font-semibold text-blue-600">
-                  ￥{(maxRefundAmount - values.refundAmount).toFixed(2)}
-                </span>
-              </div>
-            )
-          })
-        }
-        form.resetFields()
-        onClose()
-        onSuccess?.(values.refundAmount)
+    const params: PartialRefundParams = {
+      orderId,
+      refundAmount: Number(refundAmount!.toFixed(2))
+    }
+
+    const success = await partialRefundOrder(params)
+
+    if (success) {
+      const isFullAfterThis = new Decimal(refundAmount!).gte(maxRefundAmount)
+      if (isFullAfterThis) {
+        message.success({
+          content: (
+            <div>
+              已达到全额退款金额，本单已全额退款，金额：
+              <span className="font-semibold text-orange-600">￥{orderTotalAmount.toFixed(2)}</span>
+            </div>
+          )
+        })
       } else {
-        message.error('部分退款操作失败')
+        message.success({
+          content: (
+            <div>
+              已部分退款，金额：
+              <span className="font-semibold text-orange-600">￥{refundAmount!.toFixed(2)}</span>
+              ，剩余可退：
+              <span className="font-semibold text-blue-600">
+                ￥{new Decimal(maxRefundAmount).minus(refundAmount!).toFixed(2)}
+              </span>
+            </div>
+          )
+        })
       }
-    } catch (error: unknown) {
-      console.error('部分退款失败:', error)
+      handleClose()
+      onSuccess?.(refundAmount!)
+    } else {
       message.error('部分退款操作失败')
     }
   }
 
-  const handleCancel = () => {
-    form.resetFields()
+  const handleFullRefund = async () => {
+    const ok = await refundOrder({ id: orderId })
+    if (ok) {
+      message.success({
+        content: (
+          <div>
+            已全额退款，金额：
+            <span className="font-semibold text-orange-600">￥{orderTotalAmount.toFixed(2)}</span>
+          </div>
+        )
+      })
+      handleClose()
+      onSuccess?.(maxRefundAmount)
+    } else {
+      message.error('退款失败')
+    }
+  }
+
+  const handleClose = () => {
+    setRefundAmount(null)
+    setError('')
     onClose()
   }
 
@@ -100,121 +136,80 @@ const RefundModal = ({
     <Modal
       title="退款"
       open={visible}
-      onCancel={handleCancel}
-      footer={[
-        <Button
-          key="cancel"
-          onClick={handleCancel}
-        >
-          取消
-        </Button>,
-        <Button
-          key="submit"
-          type="primary"
-          loading={partialRefundLoading}
-          onClick={handleSubmit}
-        >
-          确认退款
-        </Button>
-      ]}
+      onCancel={handleClose}
+      footer={null}
       width={500}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        className="mt-1"
-      >
-        <div className="mb-4 rounded-lg bg-gray-50 p-3">
-          <div className="text-sm text-gray-600">
-            <p>
-              订单总金额：
-              <span className="font-semibold text-cyan-600">￥{orderTotalAmount.toFixed(2)}</span>
-            </p>
-            <p>
-              已退款金额：
-              <span className="font-semibold text-orange-600">
-                ￥{currentRefundAmount.toFixed(2)}
-              </span>
-            </p>
-            <p>
-              剩余可退款：
-              <span className="font-semibold text-green-600">￥{maxRefundAmount.toFixed(2)}</span>
-            </p>
-          </div>
+      {/* 订单金额信息 */}
+      <div className="mb-4 rounded-lg bg-gray-50 p-3">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-500">订单总金额</span>
+          <span className="font-medium text-blue-600">￥{orderTotalAmount.toFixed(2)}</span>
         </div>
-        <Form.Item
-          label="退款金额"
-          name="refundAmount"
-          rules={[
-            { required: true, message: '请输入退款金额' },
-            { type: 'number', min: 0.01, message: '退款金额必须大于0' },
-            {
-              validator: (_, value) => {
-                if (value && value <= 0) {
-                  return Promise.reject(new Error('退款金额必须大于0'))
-                }
-                if (value && value > maxRefundAmount) {
-                  return Promise.reject(
-                    new Error(`退款金额不能超过剩余可退款金额 ￥${maxRefundAmount.toFixed(2)}`)
-                  )
-                }
-                if (value && value > orderTotalAmount) {
-                  return Promise.reject(
-                    new Error(`退款金额不能超过订单总金额 ￥${orderTotalAmount.toFixed(2)}`)
-                  )
-                }
-                return Promise.resolve()
-              }
-            }
-          ]}
+        <div className="mt-2 flex justify-between text-sm">
+          <span className="text-gray-500">已退款金额</span>
+          <span className="font-medium text-orange-600">￥{currentRefundAmount.toFixed(2)}</span>
+        </div>
+        <div className="mt-2 flex justify-between text-sm">
+          <span className="text-gray-500">剩余可退款</span>
+          <span className="font-medium text-green-600">￥{maxRefundAmount.toFixed(2)}</span>
+        </div>
+      </div>
+
+      {/* 部分退款区域 */}
+      <div className="rounded-lg border border-gray-200 p-4">
+        <div className="mb-3 text-sm font-medium text-gray-700">部分退款</div>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-500">￥</span>
+          <InputNumber
+            className="flex-1"
+            placeholder="请输入退款金额"
+            min={0.01}
+            max={maxRefundAmount}
+            step={0.01}
+            precision={2}
+            value={refundAmount}
+            onChange={handleAmountChange}
+            status={error ? 'error' : undefined}
+          />
+          <Button
+            type="primary"
+            loading={partialRefundLoading}
+            disabled={!refundAmount || !!error}
+            onClick={handlePartialRefund}
+          >
+            确认退款
+          </Button>
+        </div>
+        {error && <div className="mt-2 text-xs text-red-500">{error}</div>}
+      </div>
+
+      <Divider className="!my-4">
+        <span className="text-xs text-gray-400">或</span>
+      </Divider>
+
+      {/* 全额退款区域 */}
+      <Popconfirm
+        title={<div className="text-base">确定对该订单进行全额退款吗？</div>}
+        description={
+          <div className="text-sm text-gray-500">
+            将退还剩余可退金额 ￥{maxRefundAmount.toFixed(2)}
+          </div>
+        }
+        onConfirm={handleFullRefund}
+        okText="确定"
+        cancelText="取消"
+        okButtonProps={{ danger: true }}
+      >
+        <Button
+          block
+          color="danger"
+          variant="outlined"
+          loading={refundLoading}
         >
-          <Space.Compact className="w-full">
-            <Button disabled>￥</Button>
-            <InputNumber
-              placeholder="请输入退款金额"
-              min={0.01}
-              max={maxRefundAmount}
-              step={0.01}
-              precision={2}
-              className="flex-1"
-            />
-            <Popconfirm
-              title={<div className="text-base">确定对该订单进行全额退款吗？</div>}
-              onConfirm={async () => {
-                const ok = await refundOrder({ id: orderId })
-                if (ok) {
-                  message.success({
-                    content: (
-                      <div>
-                        已全额退款，金额：
-                        <span className="font-semibold text-orange-600">
-                          ￥{orderTotalAmount.toFixed(2)}
-                        </span>
-                      </div>
-                    )
-                  })
-                  form.resetFields()
-                  onClose()
-                  onSuccess?.(maxRefundAmount)
-                } else {
-                  message.error('退款失败')
-                }
-              }}
-              okText="确定"
-              cancelText="取消"
-              okButtonProps={{ size: 'middle', color: 'danger', variant: 'solid' }}
-            >
-              <Button
-                color="danger"
-                variant="link"
-                loading={refundLoading}
-              >
-                全额退款
-              </Button>
-            </Popconfirm>
-          </Space.Compact>
-        </Form.Item>
-      </Form>
+          全额退款（￥{maxRefundAmount.toFixed(2)}）
+        </Button>
+      </Popconfirm>
     </Modal>
   )
 }

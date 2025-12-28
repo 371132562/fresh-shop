@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "dayjs": "^1.11.19",
+    "decimal.js": "^10.6.0",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "uuid": "^13.0.0"
   }
