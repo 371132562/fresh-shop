@@ -36,6 +36,7 @@ const Modify = (props: params) => {
   const createGroupBuy = useGroupBuyStore(state => state.createGroupBuy)
   const updateGroupBuy = useGroupBuyStore(state => state.updateGroupBuy)
   const groupBuy = useGroupBuyStore(state => state.groupBuy)
+  const checkUnitUsage = useGroupBuyStore(state => state.checkUnitUsage)
   const getAllProducts = useProductStore(state => state.getAllProducts)
 
   useEffect(() => {
@@ -181,6 +182,28 @@ const Modify = (props: params) => {
     setVisible(false)
   }
 
+  /**
+   * 删除规格处理函数
+   * 编辑模式下会先校验规格是否被订单使用，若被使用则阻止删除
+   */
+  const handleRemoveUnit = async (remove: (index: number) => void, name: number) => {
+    // 获取当前规格的 ID（仅编辑模式下已有规格才有 ID）
+    const units = form.getFieldValue('units') as Array<{ id?: string }> | undefined
+    const currentUnit = units?.[name]
+
+    // 如果是编辑模式且规格有 ID，需要校验是否被使用
+    if (id && currentUnit?.id) {
+      const isUsed = await checkUnitUsage({ groupBuyId: id, unitId: currentUnit.id })
+      if (isUsed) {
+        message.error('该规格已被订单使用，无法删除')
+        return
+      }
+    }
+
+    // 未使用或新增的规格，直接删除
+    remove(name)
+  }
+
   return (
     <>
       <Modal
@@ -269,7 +292,7 @@ const Modify = (props: params) => {
                         precision={2}
                       />
                     </Form.Item>
-                    <MinusCircleOutlined onClick={() => remove(name)} />
+                    <MinusCircleOutlined onClick={() => handleRemoveUnit(remove, name)} />
                   </Space>
                 ))}
                 <Form.Item>

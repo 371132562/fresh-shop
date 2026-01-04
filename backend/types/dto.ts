@@ -498,6 +498,21 @@ export type GroupBuyUnit = {
 };
 
 /**
+ * 规格使用状态校验请求参数
+ * 用于删除规格前校验该规格是否被订单使用
+ */
+export type CheckUnitUsageParams = {
+  groupBuyId: string; // 团购ID
+  unitId: string; // 规格ID
+};
+
+/**
+ * 规格使用状态校验响应
+ * 直接返回是否被使用（true=被使用，false=未使用）
+ */
+export type CheckUnitUsageResult = boolean;
+
+/**
  * 全部团购项
  * 用于下拉选择等场景的简化团购信息
  */

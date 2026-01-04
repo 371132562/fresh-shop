@@ -9,6 +9,7 @@ import { ResponseBody } from 'fresh-shop-backend/types/response.ts'
 import { create } from 'zustand'
 
 import {
+  groupBuyCheckUnitUsageApi,
   groupBuyCreateApi,
   groupBuyDeleteApi,
   groupBuyDetailApi,
@@ -53,6 +54,10 @@ type GroupBuyStore = {
   getAllGroupBuyLoading: boolean
   getAllGroupBuy: () => Promise<void>
   allGroupBuy: AllGroupBuyItem[]
+
+  // 规格使用状态校验
+  checkUnitUsageLoading: boolean
+  checkUnitUsage: (data: { groupBuyId: string; unitId: string }) => Promise<boolean>
 }
 
 const useGroupBuyStore = create<GroupBuyStore>((set, get) => ({
@@ -194,7 +199,22 @@ const useGroupBuyStore = create<GroupBuyStore>((set, get) => ({
       set({ getAllGroupBuyLoading: false })
     }
   },
-  allGroupBuy: []
+  allGroupBuy: [],
+
+  // 规格使用状态校验
+  checkUnitUsageLoading: false,
+  checkUnitUsage: async data => {
+    try {
+      set({ checkUnitUsageLoading: true })
+      const res = await http.post(groupBuyCheckUnitUsageApi, data)
+      return res.data as boolean
+    } catch (err) {
+      console.error(err)
+      return false
+    } finally {
+      set({ checkUnitUsageLoading: false })
+    }
+  }
 }))
 
 export default useGroupBuyStore

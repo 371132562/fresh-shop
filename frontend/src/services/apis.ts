@@ -45,6 +45,7 @@ export const groupBuyDeleteApi = '/groupBuy/delete'
 export const groupBuyDetailApi = '/groupBuy/detail'
 export const groupBuyListApi = '/groupBuy/list'
 export const groupBuyListAllApi = '/groupBuy/listAll'
+export const groupBuyCheckUnitUsageApi = '/groupBuy/checkUnitUsage'
 
 export const orderCreateApi = '/order/create'
 export const orderBatchCreateApi = '/order/batchCreate'

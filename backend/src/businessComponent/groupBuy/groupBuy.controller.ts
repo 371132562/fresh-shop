@@ -2,7 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { GroupBuyService } from './groupBuy.service';
 import { Prisma } from '@prisma/client';
 
-import { GroupBuyPageParams } from '../../../types/dto';
+import { GroupBuyPageParams, CheckUnitUsageParams } from '../../../types/dto';
 
 @Controller('groupBuy')
 export class GroupBuyController {
@@ -16,6 +16,11 @@ export class GroupBuyController {
   update(@Body() data: { id: string } & Prisma.GroupBuyUpdateInput) {
     const { id, ...updateData } = data;
     return this.groupBuyService.update(id, updateData);
+  }
+
+  @Post('checkUnitUsage')
+  checkUnitUsage(@Body() data: CheckUnitUsageParams) {
+    return this.groupBuyService.checkUnitUsage(data);
   }
 
   @Post('list')

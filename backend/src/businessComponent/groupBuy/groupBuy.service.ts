@@ -19,6 +19,8 @@ import {
   CustomerPurchaseFrequency,
   RegionalSalesItem,
   GroupBuyLaunchHistory,
+  CheckUnitUsageParams,
+  CheckUnitUsageResult,
 } from '../../../types/dto';
 import { UploadService } from 'src/upload/upload.service';
 
@@ -1358,5 +1360,28 @@ export class GroupBuyService {
       regionalSales: regionalSalesResult,
       groupBuyLaunchHistory,
     };
+  }
+
+  /**
+   * 校验规格是否被订单使用
+   * 用于删除规格前的校验，防止删除被引用的规格导致订单数据变成脏数据
+   * @param params 包含 groupBuyId 和 unitId
+   * @returns true=被使用，false=未使用
+   */
+  async checkUnitUsage(
+    params: CheckUnitUsageParams,
+  ): Promise<CheckUnitUsageResult> {
+    const { groupBuyId, unitId } = params;
+
+    // 统计该团购下使用该规格的有效订单数量（未删除）
+    const orderCount = await this.prisma.order.count({
+      where: {
+        groupBuyId,
+        unitId,
+        delete: 0,
+      },
+    });
+
+    return orderCount > 0;
   }
 }
