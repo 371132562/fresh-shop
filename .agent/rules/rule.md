@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 ## 项目概述
 
 fresh-shop 是一个基于 pnpm workspace 的前后端一体仓库：

@@ -265,6 +265,13 @@ const Modify = (props: params) => {
                   >
                     <Form.Item
                       {...restField}
+                      name={[name, 'id']}
+                      hidden
+                    >
+                      <Input />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
                       name={[name, 'unit']}
                       rules={[{ required: true, message: '请输入计量单位' }]}
                     >
