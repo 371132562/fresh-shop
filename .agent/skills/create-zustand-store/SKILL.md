@@ -1,9 +1,16 @@
 ---
 name: create-zustand-store
-description: 在 fresh-shop 中创建或修改 Zustand Store 时使用；约束 store 的文件粒度、状态职责、异步 action、loading 管理、列表刷新与共享类型复用方式。
+description: 在 fresh-shop 中创建或修改 Zustand Store 时使用；约束状态粒度、异步 action、列表刷新、共享类型复用与组件订阅方式。
 ---
 
-# Zustand Store 开发规范
+# Zustand Store 规范
+
+## 参考实现
+
+- `frontend/src/stores/supplierStore.ts`
+- `frontend/src/stores/orderStore.ts`
+- `frontend/src/stores/groupBuyStore.ts`
+- `frontend/src/stores/analysisStore.ts`
 
 ## 目录与命名
 
@@ -12,44 +19,23 @@ description: 在 fresh-shop 中创建或修改 Zustand Store 时使用；约束 
 - 每个文件默认导出一个 `useXxxStore`
 - 不要在 store 文件中拆散导出零碎 state 或 action
 
-## Store 职责
+## 执行检查单
 
-Store 负责：
+1. Store 负责页面级业务状态、分页筛选、详情读取、异步提交与提交后的刷新闭环。
+2. JSX 渲染、布局结构、强依赖具体 UI 组件的临时展示逻辑不要沉到 Store。
+3. 类型优先复用 `fresh-shop-backend/types/dto.ts` 与 `fresh-shop-backend/types/response.ts`。
+4. 请求统一走 `frontend/src/services/apis.ts` + `frontend/src/services/base.ts`。
+5. 查询参数优先收敛成 `pageParams` 一类对象，避免页面散落多个分页/筛选 state。
+6. 列表统计信息优先采用当前项目已有模式：`list + listCount + pageParams + listLoading`。
+7. 异步 action 统一使用 `try / catch / finally` 管理 loading。
+8. 需要向视图层返回结果时，优先返回 `Promise<boolean>` 或稳定对象，不要每个 action 各自漂移。
+9. 提交成功后刷新列表、详情或统计时，明确刷新顺序，避免“列表更新了但详情没更新”的不一致。
+10. 组件内按 selector 订阅，组件外使用 `useXxxStore.getState()`。
+11. 不在 Store 内重复实现请求层已经处理过的通用错误提示。
+12. 涉及状态派生、订阅优化、副作用收敛时，继续评估 `vercel-react-best-practices`。
 
-- 页面级业务状态
-- 分页、筛选、详情、统计等数据读取
-- 创建、更新、删除、状态流转等异步 action
-- 提交成功后的列表、详情、统计刷新
+## 反模式
 
-Store 不负责：
-
-- JSX 渲染
-- 组件布局
-- 大量依赖具体 UI 组件的临时展示逻辑
-
-## 类型与请求
-
-- 类型优先复用 `fresh-shop-backend/types/dto.ts` 与 `fresh-shop-backend/types/response.ts`
-- 接口常量来自 `frontend/src/services/apis.ts`
-- 请求统一走 `frontend/src/services/base.ts`
-- 不在 Store 内重复实现请求层已经处理过的通用错误提示
-
-## 状态设计
-
-- 使用 selector 消费 store，避免组件订阅整个 store
-- 页面筛选参数可集中在 `pageParams` 一类对象中管理
-- 每个异步 action 都要有明确的 loading 状态
-- 返回值保持稳定语义，例如成功返回 `true`，失败返回 `false` 或 `null`
-
-## 异步 action 约定
-
-- 使用 `try/catch/finally`
-- `finally` 中负责回收 loading，并按业务需要刷新列表、详情或统计
-- 多个刷新动作必须有明确顺序，避免出现“列表更新了但详情没更新”的不一致
-- 组件外读取状态使用 `useXxxStore.getState()`
-
-## 实现原则
-
-- 只在 Store 中放页面级可复用的业务逻辑，不要把一次性页面临时逻辑过度沉淀进去
-- 涉及状态派生、订阅优化、副作用收敛时，继续评估 `vercel-react-best-practices`
-- 涉及共享口径的统计数据时，与后端返回结构保持一致，不在前端私自重定义口径
+- 不要在页面里复制同一套 loading / list / pagination 状态。
+- 不要跳过 store 在多个组件里重复写请求逻辑。
+- 不要一次性订阅整个 store。
