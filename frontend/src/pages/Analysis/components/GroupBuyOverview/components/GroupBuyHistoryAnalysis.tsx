@@ -8,7 +8,10 @@ import { NavLink } from 'react-router'
 
 import useGlobalSettingStore from '@/stores/globalSettingStore'
 import dayjs from '@/utils/day'
+import { calculateProfitMarginPercent } from '@/utils/profitability'
 import { getProfitColor, getProfitMarginColor } from '@/utils/profitColor'
+
+import GroupBuyHistoryProfitChart from './GroupBuyHistoryProfitChart'
 
 type GroupBuyHistoryAnalysisProps = {
   groupBuyHistory: GroupBuyLaunchHistory[]
@@ -166,6 +169,8 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
   const refundAmount = totalRefundAmount || 0
   const partialRefundOrderCount = totalPartialRefundOrderCount || 0
   const refundedOrderCount = totalRefundedOrderCount || 0
+  const averageProfitMargin =
+    averageRevenue > 0 ? calculateProfitMarginPercent(averageRevenue, averageProfit) : 0
 
   // 处理表格排序变化
   const handleTableChange = (
@@ -196,7 +201,11 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
         <div className="space-y-2">
           {/* 团购历史统计 */}
           <Row gutter={16}>
-            <Col span={5}>
+            <Col
+              xs={24}
+              md={12}
+              lg={8}
+            >
               <Statistic
                 title="平均团购销售额"
                 value={averageRevenue}
@@ -205,8 +214,12 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
                 styles={{ content: { color: '#52c41a' } }}
               />
             </Col>
-            {!useGlobalSettingStore.getState().globalSetting?.value?.sensitive && (
-              <Col span={5}>
+            {!sensitive && (
+              <Col
+                xs={24}
+                md={12}
+                lg={8}
+              >
                 <Statistic
                   title="平均团购利润"
                   value={averageProfit}
@@ -216,7 +229,33 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
                 />
               </Col>
             )}
-            <Col span={5}>
+            {!sensitive && (
+              <Col
+                xs={24}
+                md={12}
+                lg={8}
+              >
+                <Statistic
+                  title="平均利润率"
+                  value={averageProfitMargin}
+                  precision={1}
+                  suffix="%"
+                  valueStyle={{
+                    color:
+                      averageProfitMargin > 0
+                        ? '#16a34a'
+                        : averageProfitMargin < 0
+                          ? '#dc2626'
+                          : '#6b7280'
+                  }}
+                />
+              </Col>
+            )}
+            <Col
+              xs={24}
+              md={12}
+              lg={8}
+            >
               <Statistic
                 title="平均团购订单量"
                 value={averageOrderCount}
@@ -225,7 +264,11 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
                 styles={{ content: { color: '#2563eb' } }}
               />
             </Col>
-            <Col span={5}>
+            <Col
+              xs={24}
+              md={12}
+              lg={8}
+            >
               <Statistic
                 title="退款金额"
                 value={refundAmount}
@@ -234,7 +277,11 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
                 styles={{ content: { color: '#ea580c' } }}
               />
             </Col>
-            <Col span={4}>
+            <Col
+              xs={24}
+              md={12}
+              lg={8}
+            >
               <Statistic
                 title="部分退款/退款订单量"
                 value={`${partialRefundOrderCount}/${refundedOrderCount}`}
@@ -243,6 +290,11 @@ const GroupBuyHistoryAnalysis: React.FC<GroupBuyHistoryAnalysisProps> = ({
               />
             </Col>
           </Row>
+
+          <GroupBuyHistoryProfitChart
+            groupBuyHistory={groupBuyHistory}
+            sensitive={sensitive}
+          />
 
           <Divider
             orientation="left"

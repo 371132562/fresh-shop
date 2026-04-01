@@ -1,5 +1,11 @@
-import { ArrowLeftOutlined } from '@ant-design/icons'
-import { Button, Flex, Image, List, Spin, Tag } from 'antd'
+import {
+  ArrowLeftOutlined,
+  DollarCircleOutlined,
+  LineChartOutlined,
+  RollbackOutlined,
+  ShoppingCartOutlined
+} from '@ant-design/icons'
+import { Button, Col, Flex, Image, List, Row, Spin, Tag } from 'antd'
 import {
   GroupBuy,
   GroupBuyUnit,
@@ -10,6 +16,7 @@ import { NavLink, useNavigate, useParams } from 'react-router'
 
 import MergedGroupBuyDetailModal from '@/pages/Analysis/components/GroupBuyOverview/components/MergedGroupBuyDetailModal'
 import DeleteGroupBuyButton from '@/pages/GroupBuy/components/DeleteGroupBuyButton'
+import GroupBuyUnitPricingAnalysis from '@/pages/GroupBuy/components/GroupBuyUnitPricingAnalysis'
 import MultiAdd from '@/pages/GroupBuy/components/MultiAdd'
 import Modify from '@/pages/GroupBuy/Modify.tsx'
 import RefundButton from '@/pages/Order/components/RefundButton.tsx'
@@ -18,7 +25,8 @@ import useGlobalSettingStore from '@/stores/globalSettingStore.ts'
 import useGroupBuyStore from '@/stores/groupBuyStore.ts'
 import { OrderStatusMap } from '@/stores/orderStore.ts'
 import { buildImageUrl, formatDate } from '@/utils'
-import { getProfitColor } from '@/utils/profitColor'
+import { calculateProfitMarginPercent } from '@/utils/profitability'
+import { getProfitColor, getProfitMarginColor } from '@/utils/profitColor'
 
 export const Component = () => {
   const { id } = useParams()
@@ -42,6 +50,10 @@ export const Component = () => {
           .map(image => buildImageUrl(image))
       : []
   }, [groupBuy])
+
+  const totalProfitMargin = useMemo(() => {
+    return calculateProfitMarginPercent(groupBuy?.totalSalesAmount || 0, groupBuy?.totalProfit || 0)
+  }, [groupBuy?.totalProfit, groupBuy?.totalSalesAmount])
 
   useEffect(() => {
     if (id) {
@@ -181,121 +193,123 @@ export const Component = () => {
                   </span>
                 </div>
               )}
-
-              {/* 订单量 */}
-              <div className="flex items-start text-base">
-                <span className="w-20 flex-shrink-0 font-medium text-gray-500">订单量：</span>
-                <span className="word-break-all flex-grow font-bold break-words text-blue-600">
-                  {groupBuy?.totalOrderCount || <span className="text-gray-500">0</span>}
-                </span>
-              </div>
-
-              {/* 销售额 */}
-              <div className="flex items-start text-base">
-                <span className="w-20 flex-shrink-0 font-medium text-gray-500">销售额：</span>
-                <span className="word-break-all flex-grow break-words text-gray-700">
-                  <span className="font-bold text-blue-400">
-                    ¥{(groupBuy?.totalSalesAmount || 0).toFixed(2)}
-                  </span>
-                </span>
-              </div>
-
-              {/* 利润 */}
-              <div className="flex items-start text-base">
-                <span className="w-20 flex-shrink-0 font-medium text-gray-500">利润：</span>
-                <span className="word-break-all flex-grow break-words text-gray-700">
-                  <span className={`font-bold ${getProfitColor(groupBuy?.totalProfit || 0)}`}>
-                    ¥{(groupBuy?.totalProfit || 0).toFixed(2)}
-                  </span>
-                </span>
-              </div>
-
-              {/* 退款金额 */}
-              {(groupBuy?.totalRefundAmount || 0) > 0 && (
-                <div className="flex items-start text-base">
-                  <span className="w-20 flex-shrink-0 font-medium text-gray-500">退款金额：</span>
-                  <span className="word-break-all flex-grow break-words text-gray-700">
-                    <span className="font-bold text-orange-600">
-                      ¥{(groupBuy?.totalRefundAmount || 0).toFixed(2)}
-                    </span>
-                  </span>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* 规格信息卡片 - 优化显示方式 */}
+          {/* 盈利概览卡片 */}
           <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
-            <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
-              所有规格
-            </h3>
-            <div className="space-y-4">
-              {/* 增加每项规格之间的垂直间距 */}
-              {groupBuy && Array.isArray(groupBuy?.units) ? (
-                (groupBuy.units as GroupBuyUnit[]).map((item, index: number) => (
-                  <div
-                    key={index}
-                    className="rounded-md bg-gray-50 p-3"
-                  >
-                    {/* 为每项规格添加背景和内边距，形成独立区块 */}
-                    <div className="mb-3 flex items-center">
-                      {/* 规格名称单独一行，更醒目 */}
-                      <span className="w-20 flex-shrink-0 text-gray-500">计量单位：</span>
-                      <span className="font-bold text-blue-500">{item.unit}</span>
-                      {/* 规格值加粗并使用蓝色强调 */}
-                    </div>
-                    <div className="mb-3 flex items-center">
-                      <span className="w-20 flex-shrink-0 text-gray-500">售价：</span>
-                      <span className="mr-2 font-bold text-blue-400">￥{item.price}</span>
-                    </div>
-                    {!globalSetting?.value?.sensitive && (
-                      <div className="flex items-center">
-                        <span className="w-20 flex-shrink-0 text-gray-500">成本价：</span>
-                        <span className="font-bold text-blue-400">￥{item.costPrice}</span>
-                      </div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="py-2 text-base text-gray-700">
-                  <span className="text-gray-400 italic">无规格信息</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 图片展示区卡片 */}
-          {images.length > 0 && (
-            <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
-              {/* 保持 p-4 */}
-              <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
-                相关图片
-              </h3>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                {/* 保持原有的图片网格布局 */}
-                <Image.PreviewGroup>
-                  {images.map((image, index) => (
-                    <div
-                      key={index}
-                      className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-gray-100" // 保持圆角 md
-                    >
-                      <Image
-                        src={image}
-                        alt={`商品图片 ${index + 1}`}
-                        className="h-full w-full object-cover"
-                        fallback="/placeholder.svg"
-                        placeholder={
-                          <div className="flex h-full w-full items-center justify-center bg-gray-200">
-                            <Spin size="small" />
-                          </div>
-                        }
-                      />
-                    </div>
-                  ))}
-                </Image.PreviewGroup>
+            <div className="mb-4 border-b border-gray-100 pb-3">
+              <h3 className="text-base font-semibold text-gray-700">盈利概览</h3>
+              <div className="mt-1 text-sm text-gray-500">
+                销售额已扣除退款影响；利润已包含退款订单的负成本与部分退款冲减。
               </div>
             </div>
-          )}
+
+            <Row gutter={[12, 12]}>
+              <Col
+                xs={24}
+                md={12}
+                lg={6}
+              >
+                <div className="rounded-lg bg-blue-50 p-4 transition-all hover:shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-gray-600">销售额</div>
+                      <div className="mt-1 text-xl font-bold text-blue-400">
+                        ¥{(groupBuy?.totalSalesAmount || 0).toFixed(2)}
+                      </div>
+                    </div>
+                    <DollarCircleOutlined className="text-2xl text-blue-500" />
+                  </div>
+                </div>
+              </Col>
+
+              {!globalSetting?.value?.sensitive && (
+                <Col
+                  xs={24}
+                  md={12}
+                  lg={6}
+                >
+                  <div className="rounded-lg bg-green-50 p-4 transition-all hover:shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm text-gray-600">利润</div>
+                        <div
+                          className={`mt-1 text-xl font-bold ${getProfitColor(groupBuy?.totalProfit || 0)}`}
+                        >
+                          ¥{(groupBuy?.totalProfit || 0).toFixed(2)}
+                        </div>
+                      </div>
+                      <LineChartOutlined className="text-2xl text-green-600" />
+                    </div>
+                  </div>
+                </Col>
+              )}
+
+              {!globalSetting?.value?.sensitive && (
+                <Col
+                  xs={24}
+                  md={12}
+                  lg={6}
+                >
+                  <div className="rounded-lg bg-indigo-50 p-4 transition-all hover:shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm text-gray-600">利润率</div>
+                        <div
+                          className={`mt-1 text-xl font-bold ${getProfitMarginColor(totalProfitMargin)}`}
+                        >
+                          {totalProfitMargin.toFixed(1)}%
+                        </div>
+                      </div>
+                      <LineChartOutlined className="text-2xl text-indigo-500" />
+                    </div>
+                  </div>
+                </Col>
+              )}
+
+              <Col
+                xs={24}
+                md={12}
+                lg={6}
+              >
+                <div className="rounded-lg bg-orange-50 p-4 transition-all hover:shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-gray-600">退款金额</div>
+                      <div className="mt-1 text-xl font-bold text-orange-600">
+                        ¥{(groupBuy?.totalRefundAmount || 0).toFixed(2)}
+                      </div>
+                    </div>
+                    <RollbackOutlined className="text-2xl text-orange-500" />
+                  </div>
+                </div>
+              </Col>
+
+              <Col
+                xs={24}
+                md={12}
+                lg={6}
+              >
+                <div className="rounded-lg bg-slate-50 p-4 transition-all hover:shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-gray-600">有效订单量</div>
+                      <div className="mt-1 text-xl font-bold text-blue-600">
+                        {groupBuy?.totalOrderCount || 0} 单
+                      </div>
+                    </div>
+                    <ShoppingCartOutlined className="text-2xl text-blue-500" />
+                  </div>
+                </div>
+              </Col>
+            </Row>
+          </div>
+
+          <GroupBuyUnitPricingAnalysis
+            units={Array.isArray(groupBuy?.units) ? (groupBuy.units as GroupBuyUnit[]) : []}
+            sensitive={globalSetting?.value?.sensitive}
+          />
 
           {/* 订单信息卡片 */}
           <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
@@ -414,6 +428,37 @@ export const Component = () => {
               {/* 保持 py-8 */}
               <p className="mb-2">暂无团购单信息。</p>
               <p className="text-sm">请检查ID或稍后重试。</p>
+            </div>
+          )}
+
+          {/* 图片展示区卡片 */}
+          {images.length > 0 && (
+            <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
+              <h3 className="mb-3 border-b border-gray-100 pb-2 text-base font-semibold text-gray-700">
+                相关图片
+              </h3>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <Image.PreviewGroup>
+                  {images.map((image, index) => (
+                    <div
+                      key={index}
+                      className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-gray-100"
+                    >
+                      <Image
+                        src={image}
+                        alt={`商品图片 ${index + 1}`}
+                        className="h-full w-full object-cover"
+                        fallback="/placeholder.svg"
+                        placeholder={
+                          <div className="flex h-full w-full items-center justify-center bg-gray-200">
+                            <Spin size="small" />
+                          </div>
+                        }
+                      />
+                    </div>
+                  ))}
+                </Image.PreviewGroup>
+              </div>
             </div>
           )}
         </>

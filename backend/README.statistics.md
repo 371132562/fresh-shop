@@ -50,6 +50,9 @@
 - 主键：团购名称 + 供货商（合并同名）。
 - 统计：`totalRevenue / totalOrderCount / totalRefundAmount …` 依据统一口径。
 - 排序/分页：支持按多字段排序与分页。
+- 补充：
+  - 当 `mergeSameName = false` 时，按单个团购单 ID 逐期返回。
+  - 当 `returnAll = true` 时，在聚合与排序完成后返回当前筛选条件下的全部结果，不再做分页切片。
 
 3) /analysis/mergedGroupBuyOverviewDetail（团购单概况详情）
 - 输入：`groupBuyName, supplierId, startDate?, endDate?`。
@@ -125,5 +128,4 @@
 - 确认“订单量”在所有列表/详情/图表中均只计 `PAID/COMPLETED`；
 - 确认“销售额与退款金额”的口径与上文一致（退款=0 销售额 / 退款金额记原始金额；部分退款按绝对额扣减/累计）；
 - 涉及利润的模块（供货商概览/详情）遵循“退款订单利润为负成本”的规则。
-
 

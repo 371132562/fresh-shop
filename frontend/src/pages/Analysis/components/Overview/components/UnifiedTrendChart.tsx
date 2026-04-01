@@ -8,6 +8,118 @@ import { FullscreenChart } from '@/components/FullscreenChart'
 import useAnalysisStore from '@/stores/analysisStore'
 import dayjs from '@/utils/day'
 
+type TrendPoint = AnalysisCountResult['groupBuyTrend'][number]
+
+const generateChartOption = (
+  data:
+    | AnalysisCountResult['groupBuyTrend']
+    | AnalysisCountResult['orderTrend']
+    | AnalysisCountResult['priceTrend']
+    | AnalysisCountResult['profitTrend'],
+  seriesConfig: {
+    name: string
+    color: string
+    formatter?: (params: { value: number }) => string
+  },
+  chartState: {
+    isAllData: boolean
+    showMonthly: boolean
+    showCumulative: boolean
+  }
+) => {
+  const safeData: TrendPoint[] = (data || []) as TrendPoint[]
+  const dateFormat = chartState.isAllData && chartState.showMonthly ? 'YYYY-MM' : 'MM-DD'
+  const dates = safeData.map((item: TrendPoint) => dayjs(item.date).format(dateFormat))
+  const counts = safeData.map((item: TrendPoint) => item.count)
+  // 为分桶场景准备起止日期，用于tooltip展示区间
+  const ranges = safeData.map((item: TrendPoint) => ({
+    start: item.startDate ? dayjs(item.startDate).format('YYYY-MM-DD') : null,
+    end: item.endDate ? dayjs(item.endDate).format('YYYY-MM-DD') : null,
+    label: dayjs(item.date).format(dateFormat)
+  }))
+  // 统一控制是否显示数值标签：按月 或 任意点有区间信息（分桶）
+  const labelShow = chartState.showMonthly || ranges.some(r => !!r.start && !!r.end)
+
+  return {
+    tooltip: {
+      trigger: 'axis' as const,
+      axisPointer: {
+        type: 'shadow' as const,
+        shadowStyle: {
+          color: 'rgba(150,150,150,0.15)'
+        }
+      },
+      connect: true,
+      formatter: (params: { dataIndex: number } | Array<{ dataIndex: number }>) => {
+        const p = Array.isArray(params) ? params[0] : params
+        const idx = p?.dataIndex ?? 0
+        const r = ranges[idx]
+        // 累计趋势或按月统计一律显示单日期/月份；仅当非累计且分桶生效时显示区间
+        const showRange =
+          !!r.start && !!r.end && !chartState.showCumulative && !chartState.showMonthly
+        const title = showRange ? `${r.start} ~ ${r.end}` : r.label
+        const val = counts[idx]
+        const valText = seriesConfig.formatter
+          ? seriesConfig.formatter({ value: val })
+          : String(val)
+        return `${title}<br/>${seriesConfig.name}: ${valText}`
+      }
+    },
+    legend: {
+      top: 0,
+      data: [seriesConfig.name]
+    },
+    grid: {
+      left: '2%',
+      right: '2%',
+      bottom: '0%',
+      top: '12%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category' as const,
+      boundaryGap: false,
+      data: dates
+    },
+    yAxis: {
+      type: 'value' as const
+    },
+    series: [
+      {
+        name: seriesConfig.name,
+        type: 'line' as const,
+        data: counts,
+        smooth: true,
+        itemStyle: { color: seriesConfig.color },
+        emphasis: {
+          focus: 'series' as const,
+          itemStyle: {
+            borderWidth: 2,
+            borderColor: seriesConfig.color
+          }
+        },
+        label: {
+          show: labelShow,
+          position: 'top' as const,
+          formatter: '{c}',
+          fontSize: 12,
+          color: seriesConfig.color,
+          backgroundColor: 'rgba(255, 255, 255, 0.85)',
+          borderColor: seriesConfig.color,
+          borderWidth: 0.5,
+          borderRadius: 3,
+          padding: [1, 4, 1, 4],
+          distance: 6
+        },
+        labelLayout: {
+          moveOverlap: 'shiftY' as const,
+          hideOverlap: true
+        }
+      }
+    ]
+  }
+}
+
 export const UnifiedTrendChart = () => {
   const getCountLoading = useAnalysisStore(state => state.getCountLoading)
   const groupBuyTrend = useAnalysisStore(state => state.count.groupBuyTrend)
@@ -70,178 +182,83 @@ export const UnifiedTrendChart = () => {
     }
   }
 
-  // 生成通用图表配置
-  type TrendPoint = AnalysisCountResult['groupBuyTrend'][number]
-  const generateChartOption = (
-    data:
-      | AnalysisCountResult['groupBuyTrend']
-      | AnalysisCountResult['orderTrend']
-      | AnalysisCountResult['priceTrend']
-      | AnalysisCountResult['profitTrend'],
-    seriesConfig: {
-      name: string
-      color: string
-      formatter?: (params: { value: number }) => string
-    }
-  ) => {
-    const safeData: TrendPoint[] = (data || []) as TrendPoint[]
-    const dateFormat = isAllData && showMonthly ? 'YYYY-MM' : 'MM-DD'
-    const dates = safeData.map((item: TrendPoint) => dayjs(item.date).format(dateFormat))
-    const counts = safeData.map((item: TrendPoint) => item.count)
-    // 为分桶场景准备起止日期，用于tooltip展示区间
-    const ranges = safeData.map((item: TrendPoint) => ({
-      start: item.startDate ? dayjs(item.startDate).format('YYYY-MM-DD') : null,
-      end: item.endDate ? dayjs(item.endDate).format('YYYY-MM-DD') : null,
-      label: dayjs(item.date).format(dateFormat)
-    }))
-    // 统一控制是否显示数值标签：按月 或 任意点有区间信息（分桶）
-    const labelShow = showMonthly || ranges.some(r => !!r.start && !!r.end)
+  const { groupBuyOption, orderOption, priceOption, profitOption } = useMemo(() => {
+    const chartState = { isAllData, showMonthly, showCumulative }
+    const currentData =
+      isAllData && showMonthly
+        ? {
+            groupBuy: monthlyGroupBuyTrend,
+            order: monthlyOrderTrend,
+            price: monthlyPriceTrend,
+            profit: monthlyProfitTrend
+          }
+        : showCumulative
+          ? {
+              groupBuy: cumulativeGroupBuyTrend,
+              order: cumulativeOrderTrend,
+              price: cumulativePriceTrend,
+              profit: cumulativeProfitTrend
+            }
+          : {
+              groupBuy: groupBuyTrend,
+              order: orderTrend,
+              price: priceTrend,
+              profit: profitTrend
+            }
 
     return {
-      tooltip: {
-        trigger: 'axis' as const,
-        axisPointer: {
-          type: 'shadow' as const,
-          shadowStyle: {
-            color: 'rgba(150,150,150,0.15)'
-          }
-        },
-        connect: true,
-        formatter: (params: { dataIndex: number } | Array<{ dataIndex: number }>) => {
-          const p = Array.isArray(params) ? params[0] : params
-          const idx = p?.dataIndex ?? 0
-          const r = ranges[idx]
-          // 累计趋势或按月统计一律显示单日期/月份；仅当非累计且分桶生效时显示区间
-          const showRange = !!r.start && !!r.end && !showCumulative && !showMonthly
-          const title = showRange ? `${r.start} ~ ${r.end}` : r.label
-          const val = counts[idx]
-          const valText = seriesConfig.formatter
-            ? seriesConfig.formatter({ value: val })
-            : String(val)
-          return `${title}<br/>${seriesConfig.name}: ${valText}`
-        }
-      },
-      legend: {
-        top: 0,
-        data: [seriesConfig.name]
-      },
-      grid: {
-        left: '2%',
-        right: '2%',
-        bottom: '0%',
-        top: '12%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category' as const,
-        boundaryGap: false,
-        data: dates
-      },
-      yAxis: {
-        type: 'value' as const
-      },
-      series: [
+      groupBuyOption: generateChartOption(
+        currentData.groupBuy,
         {
-          name: seriesConfig.name,
-          type: 'line' as const,
-          data: counts,
-          smooth: true,
-          itemStyle: { color: seriesConfig.color },
-          emphasis: {
-            focus: 'series' as const,
-            itemStyle: {
-              borderWidth: 2,
-              borderColor: seriesConfig.color
-            }
-          },
-          label: {
-            show: labelShow,
-            position: 'top' as const,
-            formatter: '{c}',
-            fontSize: 12,
-            color: seriesConfig.color,
-            backgroundColor: 'rgba(255, 255, 255, 0.85)',
-            borderColor: seriesConfig.color,
-            borderWidth: 0.5,
-            borderRadius: 3,
-            padding: [1, 4, 1, 4],
-            distance: 6
-          },
-          labelLayout: {
-            moveOverlap: 'shiftY' as const,
-            hideOverlap: true
-          }
-        }
-      ]
+          name: '团购单',
+          color: '#2563EB'
+        },
+        chartState
+      ),
+      orderOption: generateChartOption(
+        currentData.order,
+        {
+          name: '订单',
+          color: '#2563EB'
+        },
+        chartState
+      ),
+      priceOption: generateChartOption(
+        currentData.price,
+        {
+          name: '销售额',
+          color: '#2563EB',
+          formatter: (params: { value: number }) => `¥${params.value.toLocaleString()}`
+        },
+        chartState
+      ),
+      profitOption: generateChartOption(
+        currentData.profit,
+        {
+          name: '利润',
+          color: '#16A34A',
+          formatter: (params: { value: number }) => `¥${params.value.toLocaleString()}`
+        },
+        chartState
+      )
     }
-  }
-
-  // 获取当前使用的数据
-  const getCurrentData = () => {
-    if (isAllData && showMonthly) {
-      return {
-        groupBuy: monthlyGroupBuyTrend,
-        order: monthlyOrderTrend,
-        price: monthlyPriceTrend,
-        profit: monthlyProfitTrend
-      }
-    } else if (showCumulative) {
-      return {
-        groupBuy: cumulativeGroupBuyTrend,
-        order: cumulativeOrderTrend,
-        price: cumulativePriceTrend,
-        profit: cumulativeProfitTrend
-      }
-    } else {
-      return {
-        groupBuy: groupBuyTrend,
-        order: orderTrend,
-        price: priceTrend,
-        profit: profitTrend
-      }
-    }
-  }
-
-  const currentData = getCurrentData()
-
-  // 生成四个图表的配置
-  const groupBuyOption = useMemo(
-    () =>
-      generateChartOption(currentData.groupBuy, {
-        name: '团购单',
-        color: '#2563EB'
-      }),
-    [currentData.groupBuy, isAllData, showMonthly]
-  )
-
-  const orderOption = useMemo(
-    () =>
-      generateChartOption(currentData.order, {
-        name: '订单',
-        color: '#2563EB'
-      }),
-    [currentData.order, isAllData, showMonthly]
-  )
-
-  const priceOption = useMemo(
-    () =>
-      generateChartOption(currentData.price, {
-        name: '销售额',
-        color: '#2563EB',
-        formatter: (params: { value: number }) => `¥${params.value.toLocaleString()}`
-      }),
-    [currentData.price, isAllData, showMonthly]
-  )
-
-  const profitOption = useMemo(
-    () =>
-      generateChartOption(currentData.profit, {
-        name: '利润',
-        color: '#16A34A',
-        formatter: (params: { value: number }) => `¥${params.value.toLocaleString()}`
-      }),
-    [currentData.profit, isAllData, showMonthly]
-  )
+  }, [
+    groupBuyTrend,
+    orderTrend,
+    priceTrend,
+    profitTrend,
+    cumulativeGroupBuyTrend,
+    cumulativeOrderTrend,
+    cumulativePriceTrend,
+    cumulativeProfitTrend,
+    monthlyGroupBuyTrend,
+    monthlyOrderTrend,
+    monthlyPriceTrend,
+    monthlyProfitTrend,
+    isAllData,
+    showCumulative,
+    showMonthly
+  ])
 
   return (
     <div className="w-full !space-y-4">

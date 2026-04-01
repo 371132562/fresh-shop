@@ -683,6 +683,7 @@ export class GroupBuyService {
       endDate,
       page = 1,
       pageSize = 10,
+      returnAll = false,
       groupBuyName,
       supplierIds,
       sortField = 'totalRevenue',
@@ -932,6 +933,15 @@ export class GroupBuyService {
 
     // 7) 分页处理
     const total = mergedDataArray.length;
+    if (returnAll) {
+      return {
+        list: mergedDataArray,
+        total,
+        page: 1,
+        pageSize: total,
+      };
+    }
+
     const startIndex = (page - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     const paginatedData = mergedDataArray.slice(startIndex, endIndex);

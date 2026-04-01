@@ -30,8 +30,8 @@ type MergedGroupBuyDetailModalProps = {
 }
 
 /**
- * 团购单合并概况详情模态框组件
- * 展示团购单的详细数据分析，包括销售统计、客户分析、地域分布等
+ * 团购单合并概况详情模态框组件。
+ * 展示顺序遵循“先看盈利结果，再看退款压力与历史波动，最后看客户与区域解释因素”。
  */
 const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   visible,
@@ -41,9 +41,8 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   mergeSameName = true
 }: MergedGroupBuyDetailModalProps) => {
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
-  // 客户列表模态框状态
+  const sensitive = globalSetting?.value?.sensitive
 
-  // 从 Zustand store 中获取分析数据的方法和状态
   const getMergedGroupBuyOverviewDetail = useAnalysisStore(
     state => state.getMergedGroupBuyOverviewDetail
   )
@@ -58,19 +57,23 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   const handleFrequencyClick = useAnalysisStore(state => state.handleFrequencyClick)
   const handleRegionalClick = useAnalysisStore(state => state.handleRegionalClick)
 
-  // 当模态框打开且有参数时，获取详情数据
   useEffect(() => {
     if (visible && params) {
-      // 清理供货商详情数据，避免状态冲突
       resetSupplierOverviewDetail()
       getMergedGroupBuyOverviewDetail(params)
-    } else if (!visible) {
-      // 当模态框关闭时，清理数据
+      return
+    }
+
+    if (!visible) {
       resetMergedGroupBuyOverviewDetail()
     }
-  }, [visible, params])
-
-  // 转换团购发起历史数据为公共组件需要的格式
+  }, [
+    getMergedGroupBuyOverviewDetail,
+    params,
+    resetMergedGroupBuyOverviewDetail,
+    resetSupplierOverviewDetail,
+    visible
+  ])
 
   return (
     <Modal
@@ -82,8 +85,8 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
               <div style={{ maxWidth: 500, lineHeight: 1.6 }}>
                 <b>统计范围：</b>
                 {mergeSameName
-                  ? '按当前选择的时间；未选择则统计全部时间。只计算已支付和已完成的订单，范围为同一供货商下所有同名团购单的合并结果。'
-                  : '按当前选择的时间；未选择则统计全部时间。只计算已支付和已完成的订单，范围仅限当前这期团购单（不合并同名）。'}
+                  ? '按当前选择的时间；未选择则统计全部时间。订单量仅统计已支付和已完成；销售额、利润、退款金额按统一口径纳入退款订单影响，范围为同一供货商下所有同名团购单的合并结果。'
+                  : '按当前选择的时间；未选择则统计全部时间。订单量仅统计已支付和已完成；销售额、利润、退款金额按统一口径纳入退款订单影响，范围仅限当前这期团购单（不合并同名）。'}
               </div>
             }
           >
@@ -118,7 +121,6 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
         </div>
       ) : mergedGroupBuyOverviewDetail ? (
         <div className="!space-y-2">
-          {/* 团购单基本信息 */}
           <Card
             title={
               <div className="flex h-12 items-center justify-between">
@@ -145,7 +147,6 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
             className="overflow-hidden"
             styles={{ header: { background: '#e6f7ff' } }}
           >
-            {/* 核心指标区域 - 采用渐变背景和卡片式布局 */}
             <div className="mb-6 rounded-xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
               <div className="mb-4 text-center">
                 <h3 className="text-lg font-semibold text-gray-800">核心业绩指标</h3>
@@ -153,7 +154,6 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
               </div>
 
               <Row gutter={[12, 12]}>
-                {/* 总销售额 */}
                 <Col
                   xs={24}
                   md={12}
@@ -179,8 +179,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                   </div>
                 </Col>
 
-                {/* 总利润 */}
-                {!globalSetting?.value?.sensitive && (
+                {!sensitive && (
                   <Col
                     xs={24}
                     md={12}
@@ -215,8 +214,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                   </Col>
                 )}
 
-                {/* 利润率 */}
-                {!globalSetting?.value?.sensitive && (
+                {!sensitive && (
                   <Col
                     xs={24}
                     md={12}
@@ -246,7 +244,6 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                   </Col>
                 )}
 
-                {/* 总订单量 */}
                 <Col
                   xs={24}
                   md={12}
@@ -267,7 +264,6 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                   </div>
                 </Col>
 
-                {/* 发起次数 */}
                 <Col
                   xs={24}
                   md={12}
@@ -288,7 +284,6 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                   </div>
                 </Col>
 
-                {/* 退款金额 */}
                 <Col
                   xs={24}
                   md={12}
@@ -312,28 +307,23 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
             </div>
           </Card>
 
-          {/* 团购发起历史 */}
           <GroupBuyHistoryAnalysis
-            groupBuyHistory={mergedGroupBuyOverviewDetail?.groupBuyLaunchHistory || []}
+            groupBuyHistory={mergedGroupBuyOverviewDetail.groupBuyLaunchHistory || []}
             title="团购历史"
-            averageGroupBuyRevenue={mergedGroupBuyOverviewDetail?.averageGroupBuyRevenue}
-            averageGroupBuyProfit={mergedGroupBuyOverviewDetail?.averageGroupBuyProfit}
-            averageGroupBuyOrderCount={mergedGroupBuyOverviewDetail?.averageGroupBuyOrderCount}
-            totalRefundAmount={mergedGroupBuyOverviewDetail?.totalRefundAmount}
-            totalPartialRefundOrderCount={
-              mergedGroupBuyOverviewDetail?.totalPartialRefundOrderCount
-            }
-            totalRefundedOrderCount={mergedGroupBuyOverviewDetail?.totalRefundedOrderCount}
+            averageGroupBuyRevenue={mergedGroupBuyOverviewDetail.averageGroupBuyRevenue}
+            averageGroupBuyProfit={mergedGroupBuyOverviewDetail.averageGroupBuyProfit}
+            averageGroupBuyOrderCount={mergedGroupBuyOverviewDetail.averageGroupBuyOrderCount}
+            totalRefundAmount={mergedGroupBuyOverviewDetail.totalRefundAmount}
+            totalPartialRefundOrderCount={mergedGroupBuyOverviewDetail.totalPartialRefundOrderCount}
+            totalRefundedOrderCount={mergedGroupBuyOverviewDetail.totalRefundedOrderCount}
           />
 
-          {/* 客户统计信息 */}
           <CustomerStatsAnalysis
             uniqueCustomerCount={mergedGroupBuyOverviewDetail.uniqueCustomerCount}
             averageCustomerOrderValue={mergedGroupBuyOverviewDetail.averageCustomerOrderValue}
             title="客户统计"
           />
 
-          {/* 客户忠诚度分析（仅合并同名模式展示） */}
           {mergeSameName && (
             <CustomerLoyaltyAnalysis
               multiPurchaseCustomerCount={mergedGroupBuyOverviewDetail.multiPurchaseCustomerCount}
@@ -360,7 +350,6 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
             />
           )}
 
-          {/* 客户地址分布 */}
           <RegionalSalesAnalysis
             regionalSales={mergedGroupBuyOverviewDetail.regionalSales}
             onRegionalClick={handleRegionalClick}

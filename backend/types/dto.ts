@@ -599,6 +599,7 @@ export type MergedGroupBuyOverviewParams = {
   endDate?: Date; // 统计结束时间（可选，支持无时间参数查询全部数据）
   page?: number; // 页码（可选）
   pageSize?: number; // 每页数量（可选）
+  returnAll?: boolean; // 是否返回当前筛选条件下的全部结果（用于非分页可视化视图）
   // 搜索参数
   groupBuyName?: string; // 按团购名称搜索（模糊匹配）
   supplierIds?: Supplier['id'][]; // 按供货商ID数组搜索（精确匹配）

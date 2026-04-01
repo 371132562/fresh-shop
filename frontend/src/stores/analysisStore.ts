@@ -87,6 +87,9 @@ type AnalysisStore = {
   mergedGroupBuyOverviewPageSize: number
   mergedGroupBuyOverviewLoading: boolean
   getMergedGroupBuyOverview: (data: MergedGroupBuyOverviewParams) => Promise<void>
+  mergedGroupBuyOverviewMatrixList: MergedGroupBuyOverviewResult['list']
+  mergedGroupBuyOverviewMatrixLoading: boolean
+  getMergedGroupBuyOverviewMatrix: (data: MergedGroupBuyOverviewParams) => Promise<void>
   setMergedGroupBuyOverviewPage: (page: number) => void
 
   // 团购单合并概况详情数据
@@ -283,6 +286,22 @@ const useAnalysisStore = create<AnalysisStore>((set, get) => ({
       })
     } finally {
       set({ mergedGroupBuyOverviewLoading: false })
+    }
+  },
+  mergedGroupBuyOverviewMatrixList: [],
+  mergedGroupBuyOverviewMatrixLoading: false,
+  getMergedGroupBuyOverviewMatrix: async data => {
+    try {
+      set({ mergedGroupBuyOverviewMatrixLoading: true })
+      const res = await http.post<MergedGroupBuyOverviewResult>(analysisMergedGroupBuyOverviewApi, {
+        ...data,
+        returnAll: true
+      })
+      set({
+        mergedGroupBuyOverviewMatrixList: res.data.list
+      })
+    } finally {
+      set({ mergedGroupBuyOverviewMatrixLoading: false })
     }
   },
   setMergedGroupBuyOverviewPage: page => {
