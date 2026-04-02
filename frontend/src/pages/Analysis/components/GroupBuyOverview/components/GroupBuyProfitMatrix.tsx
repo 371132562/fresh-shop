@@ -45,8 +45,8 @@ type MatrixPointData = {
 
 type TooltipParams = TooltipComponentFormatterCallbackParams
 
-const MATRIX_MIN_SYMBOL_SIZE = 14
-const MATRIX_MAX_SYMBOL_SIZE = 38
+const MATRIX_MIN_SYMBOL_SIZE = 12
+const MATRIX_MAX_SYMBOL_SIZE = 54
 const MATRIX_ORDER_COUNT_VISUAL_QUANTILE = 0.95
 
 const getProfitPointColor = (item: MergedGroupBuyOverviewListItem) => {
@@ -88,7 +88,7 @@ const getQuantileValue = (values: number[], quantile: number) => {
  * 为矩阵气泡计算更稳定的视觉尺寸。
  * 这里同时做两件事：
  * 1. 用高分位值作为视觉上限，抑制极大订单量把其余点全部压扁；
- * 2. 用平方根映射代替线性映射，让接近的订单量仍能看出差异，但不会让大点过分膨胀。
+ * 2. 用幂函数拉开大小差距，让高订单量团购更容易从密集点位里被识别出来。
  */
 const calculateMatrixSymbolSize = (orderCount: number, visualOrderCountCap: number) => {
   if (visualOrderCountCap <= 0) {
@@ -96,7 +96,7 @@ const calculateMatrixSymbolSize = (orderCount: number, visualOrderCountCap: numb
   }
 
   const normalizedValue = Math.min(orderCount, visualOrderCountCap) / visualOrderCountCap
-  const scaledValue = Math.sqrt(normalizedValue)
+  const scaledValue = Math.pow(normalizedValue, 1.15)
 
   return Math.round(
     MATRIX_MIN_SYMBOL_SIZE + scaledValue * (MATRIX_MAX_SYMBOL_SIZE - MATRIX_MIN_SYMBOL_SIZE)
@@ -359,27 +359,11 @@ const GroupBuyProfitMatrix = ({
           name: '团购盈利矩阵',
           type: 'scatter' as const,
           data: chartData,
+          cursor: 'pointer',
           emphasis: {
-            focus: 'self' as const,
-            scale: true,
-            itemStyle: {
-              opacity: 0.96,
-              borderColor: '#0F172A',
-              borderWidth: 1,
-              shadowBlur: 18,
-              shadowColor: 'rgba(15, 23, 42, 0.2)'
-            },
-            label: {
-              show: true
-            }
-          },
-          blur: {
-            itemStyle: {
-              opacity: 0.14
-            },
-            label: {
-              show: false
-            }
+            // 散点在密集区域会互相覆盖，自动 emphasis/blur 容易在移出时反复切换命中目标。
+            // 这里直接禁用 hover 状态切换，保留 tooltip 与点击能力，优先消除闪烁。
+            disabled: true
           },
           markLine: {
             symbol: 'none' as const,
@@ -512,7 +496,7 @@ const GroupBuyProfitMatrix = ({
         <FullscreenChart
           title="团购盈利矩阵"
           option={option}
-          height="500px"
+          height="600px"
           onChartClick={params => {
             const payload = (params.data as MatrixPointData | undefined)?.rawItem
             if (payload) {
