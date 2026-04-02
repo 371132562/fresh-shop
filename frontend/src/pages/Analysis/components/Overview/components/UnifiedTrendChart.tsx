@@ -1,6 +1,6 @@
 import type { RadioChangeEvent } from 'antd'
 import { Card, Radio } from 'antd'
-import type { CallbackDataParams, EChartsOption } from 'echarts'
+import type { EChartsOption, TooltipComponentFormatterCallbackParams } from 'echarts'
 import * as echarts from 'echarts'
 import type { AnalysisCountResult } from 'fresh-shop-backend/types/dto'
 import { useMemo, useRef } from 'react'
@@ -10,6 +10,7 @@ import useAnalysisStore from '@/stores/analysisStore'
 import dayjs from '@/utils/day'
 
 type TrendPoint = AnalysisCountResult['groupBuyTrend'][number]
+type TooltipParams = TooltipComponentFormatterCallbackParams
 
 const generateChartOption = (
   data:
@@ -51,7 +52,7 @@ const generateChartOption = (
         }
       },
       connect: true,
-      formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+      formatter: (params: TooltipParams) => {
         const p = Array.isArray(params) ? params[0] : params
         const idx = p?.dataIndex ?? 0
         const r = ranges[idx]

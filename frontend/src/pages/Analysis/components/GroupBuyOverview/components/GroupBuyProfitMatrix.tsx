@@ -1,6 +1,6 @@
 import { DotChartOutlined } from '@ant-design/icons'
 import { Card, Empty, Tag } from 'antd'
-import type { CallbackDataParams, EChartsOption } from 'echarts'
+import type { EChartsOption, TooltipComponentFormatterCallbackParams } from 'echarts'
 import type { MergedGroupBuyOverviewListItem } from 'fresh-shop-backend/types/dto'
 import { useMemo, useState } from 'react'
 
@@ -42,6 +42,8 @@ type MatrixPointData = {
     padding: [number, number, number, number]
   }
 }
+
+type TooltipParams = TooltipComponentFormatterCallbackParams
 
 const MATRIX_MIN_SYMBOL_SIZE = 14
 const MATRIX_MAX_SYMBOL_SIZE = 38
@@ -256,7 +258,7 @@ const GroupBuyProfitMatrix = ({
     return {
       tooltip: {
         trigger: 'item' as const,
-        formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+        formatter: (params: TooltipParams) => {
           const currentParams = Array.isArray(params) ? params[0] : params
           const rawItem = (currentParams.data as MatrixPointData | undefined)?.rawItem
 

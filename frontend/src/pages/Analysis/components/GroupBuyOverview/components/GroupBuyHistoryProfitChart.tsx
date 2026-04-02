@@ -1,6 +1,6 @@
 import { BarChartOutlined } from '@ant-design/icons'
 import { Card, Empty } from 'antd'
-import type { CallbackDataParams, EChartsOption } from 'echarts'
+import type { EChartsOption, TooltipComponentFormatterCallbackParams } from 'echarts'
 import type { GroupBuyLaunchHistory } from 'fresh-shop-backend/types/dto'
 import { useMemo } from 'react'
 
@@ -12,6 +12,8 @@ type GroupBuyHistoryProfitChartProps = {
   groupBuyHistory: GroupBuyLaunchHistory[]
   sensitive?: boolean
 }
+
+type TooltipParams = TooltipComponentFormatterCallbackParams
 
 /**
  * 团购历史盈利趋势图。
@@ -48,7 +50,7 @@ const GroupBuyHistoryProfitChart = ({
             color: 'rgba(150,150,150,0.15)'
           }
         },
-        formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+        formatter: (params: TooltipParams) => {
           const currentParams = Array.isArray(params) ? params[0] : params
           const index = currentParams?.dataIndex ?? 0
           const item = sortedHistory[index]
