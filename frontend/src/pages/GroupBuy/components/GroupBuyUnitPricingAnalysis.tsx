@@ -101,7 +101,7 @@ const GroupBuyUnitPricingAnalysis = ({
       {
         key: 'pricingStatus',
         title: (
-          <div className="flex items-center justify-end gap-1">
+          <div className="flex items-center gap-1">
             <span>定价提示</span>
             <Tooltip
               placement="topRight"

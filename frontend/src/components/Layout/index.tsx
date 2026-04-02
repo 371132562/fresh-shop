@@ -244,7 +244,7 @@ export const Component: FC = () => {
           <div className="flex flex-col gap-4 lg:flex-row">
             {/* Sider 侧边栏：悬浮设计，白色背景，阴影效果，固定定位，防止滚动条影响布局 */}
             <aside
-              className="lg:w-70 hidden w-full rounded-xl bg-white p-6 shadow-lg lg:sticky lg:top-4 lg:block lg:h-fit"
+              className="hidden w-full rounded-xl bg-white p-6 shadow-lg lg:sticky lg:top-4 lg:block lg:h-fit lg:w-70"
               style={{ scrollbarGutter: 'stable' }}
             >
               <h2 className="mb-4 text-lg font-semibold text-black/80">功能菜单</h2>
@@ -291,7 +291,7 @@ export const Component: FC = () => {
           />
 
           {/* 下拉菜单 */}
-          <div className="absolute left-4 right-4 top-20 rounded-xl bg-white p-4 shadow-2xl">
+          <div className="absolute top-20 right-4 left-4 rounded-xl bg-white p-4 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">功能菜单</h3>
               <button

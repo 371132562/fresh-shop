@@ -110,7 +110,7 @@ export const FullscreenChart = ({
             variant="outlined"
             icon={<FullscreenOutlined />}
             onClick={() => setIsFullscreen(true)}
-            className={`absolute right-2 top-2 z-10 transition-all duration-200 ${
+            className={`absolute top-2 right-2 z-10 transition-all duration-200 ${
               isHovered ? 'opacity-100' : 'pointer-events-none opacity-0'
             }`}
             style={{

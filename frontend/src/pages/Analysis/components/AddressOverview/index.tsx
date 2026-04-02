@@ -166,7 +166,7 @@ export const AddressOverview = ({ startDate, endDate }: AddressOverviewProps) =>
                 <div className="min-w-0 flex-1 overflow-hidden pr-0 md:pr-4">
                   {/* 标题：地址名称，小屏单行省略，md起允许换行 */}
                   <div className="mb-1">
-                    <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium md:overflow-visible md:whitespace-normal md:break-all">
+                    <span className="block max-w-full overflow-hidden text-lg font-medium text-ellipsis whitespace-nowrap md:overflow-visible md:break-all md:whitespace-normal">
                       {item.addressName}
                     </span>
                   </div>

@@ -64,27 +64,18 @@ const GroupBuyProfitMatrix = ({
     return totalRevenue / items.length
   }, [items])
 
+  const profitMarginBenchmark = useMemo(() => {
+    if (!items.length) {
+      return 0
+    }
+
+    const totalMargin = items.reduce((sum, item) => sum + item.totalProfitMargin, 0)
+    return totalMargin / items.length
+  }, [items])
+
   const filteredItems = useMemo(() => {
     return items.filter(item => matchQuickFilter(item, quickFilter, revenueBenchmark))
   }, [items, quickFilter, revenueBenchmark])
-
-  const filteredRevenueAverage = useMemo(() => {
-    if (!filteredItems.length) {
-      return 0
-    }
-
-    const totalRevenue = filteredItems.reduce((sum, item) => sum + item.totalRevenue, 0)
-    return totalRevenue / filteredItems.length
-  }, [filteredItems])
-
-  const filteredProfitMarginAverage = useMemo(() => {
-    if (!filteredItems.length) {
-      return 0
-    }
-
-    const totalMargin = filteredItems.reduce((sum, item) => sum + item.totalProfitMargin, 0)
-    return totalMargin / filteredItems.length
-  }, [filteredItems])
 
   const quickFilterOptions = useMemo(
     () => [
@@ -146,11 +137,6 @@ const GroupBuyProfitMatrix = ({
             return ''
           }
 
-          const tags: string[] = []
-          if (isHighRefundPressure(rawItem.totalRefundAmount, rawItem.totalRevenue)) {
-            tags.push('退款偏高')
-          }
-
           return [
             `${rawItem.groupBuyName}（${rawItem.supplierName}）`,
             !mergeSameName && rawItem.groupBuyStartDate
@@ -160,8 +146,7 @@ const GroupBuyProfitMatrix = ({
             `利润：¥${rawItem.totalProfit.toFixed(2)}`,
             `利润率：${rawItem.totalProfitMargin.toFixed(1)}%`,
             `订单量：${rawItem.totalOrderCount} 单`,
-            `退款金额：¥${rawItem.totalRefundAmount.toFixed(2)}`,
-            tags.length ? `标签：${tags.join(' / ')}` : ''
+            `退款金额：¥${rawItem.totalRefundAmount.toFixed(2)}`
           ]
             .filter(Boolean)
             .join('<br/>')
@@ -227,7 +212,7 @@ const GroupBuyProfitMatrix = ({
             },
             data: [
               {
-                xAxis: filteredRevenueAverage,
+                xAxis: revenueBenchmark,
                 lineStyle: {
                   type: 'dashed',
                   color: '#2563EB',
@@ -236,11 +221,11 @@ const GroupBuyProfitMatrix = ({
                 label: {
                   color: '#2563EB',
                   borderColor: '#BFDBFE',
-                  formatter: `平均销售额 ¥${filteredRevenueAverage.toFixed(2)}`
+                  formatter: `平均销售额 ¥${revenueBenchmark.toFixed(2)}`
                 }
               },
               {
-                yAxis: filteredProfitMarginAverage,
+                yAxis: profitMarginBenchmark,
                 lineStyle: {
                   type: 'dashed',
                   color: '#16A34A',
@@ -249,7 +234,7 @@ const GroupBuyProfitMatrix = ({
                 label: {
                   color: '#16A34A',
                   borderColor: '#BBF7D0',
-                  formatter: `平均利润率 ${filteredProfitMarginAverage.toFixed(2)}%`
+                  formatter: `平均利润率 ${profitMarginBenchmark.toFixed(2)}%`
                 }
               }
             ]
@@ -257,7 +242,7 @@ const GroupBuyProfitMatrix = ({
         }
       ]
     }
-  }, [filteredItems, filteredProfitMarginAverage, filteredRevenueAverage, mergeSameName])
+  }, [filteredItems, mergeSameName, profitMarginBenchmark, revenueBenchmark])
 
   return (
     <Card
@@ -276,7 +261,7 @@ const GroupBuyProfitMatrix = ({
           <Tag color="blue">X 轴：销售额</Tag>
           <Tag color="green">Y 轴：利润率</Tag>
           <Tag color="purple">气泡大小：订单量</Tag>
-          <Tag color="default">虚线：当前图中平均值</Tag>
+          <Tag color="default">虚线：当前筛选结果平均值</Tag>
         </div>
       </div>
 
@@ -331,14 +316,9 @@ const GroupBuyProfitMatrix = ({
         )}
       </div>
 
-      {!mergeSameName && (
-        <div className="mb-3 text-sm text-gray-500">
-          单期模式下，同名团购通过发起日期区分；点击点位后仍进入同名聚合统计详情。
-        </div>
-      )}
-
       <div className="mb-3 text-sm text-gray-500">
-        图中的两条虚线分别表示当前可见团购的平均销售额和平均利润率。
+        {!mergeSameName && '单期模式下，同名团购通过发起日期区分；'}
+        点击点位后进入同名团购聚合统计详情。
       </div>
 
       {filteredItems.length > 0 ? (
