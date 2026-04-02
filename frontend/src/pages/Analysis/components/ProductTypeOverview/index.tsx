@@ -43,11 +43,6 @@ export const ProductTypeOverview = ({ startDate, endDate }: ProductTypeOverviewP
 
   const [detailParams, setDetailParams] = useState<ProductOverviewDetailParams | undefined>()
 
-  useEffect(() => {
-    // 当日期范围变化时，重新获取数据
-    fetchData(1)
-  }, [startDate, endDate])
-
   const fetchData = (page: number = productTypeOverviewPage) => {
     getProductTypeOverview({
       startDate,
@@ -57,6 +52,11 @@ export const ProductTypeOverview = ({ startDate, endDate }: ProductTypeOverviewP
       ...searchParams
     })
   }
+
+  useEffect(() => {
+    // 当日期范围变化时，重新获取数据
+    fetchData(1)
+  }, [startDate, endDate])
 
   // 搜索处理
   const handleSearch = () => {

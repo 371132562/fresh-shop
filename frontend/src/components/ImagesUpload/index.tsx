@@ -5,10 +5,14 @@ import { useState } from 'react'
 import { DeleteImageType } from '@/services/common'
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0]
+export type ManagedUploadFile = UploadFile<{ data?: { filename?: string } }> & {
+  filename?: string
+}
+
 type params = {
   id: string
-  fileList: UploadFile[]
-  setFileList: (fileList: UploadFile[]) => void
+  fileList: ManagedUploadFile[]
+  setFileList: (fileList: ManagedUploadFile[]) => void
   type: DeleteImageType
 }
 
@@ -29,7 +33,7 @@ const ImagesUpload = (props: params) => {
       reader.onerror = error => reject(error)
     })
 
-  const handlePreview = async (file: UploadFile) => {
+  const handlePreview = async (file: ManagedUploadFile) => {
     if (!file.url && !file.preview) {
       file.preview = await getBase64(file.originFileObj as FileType)
     }
@@ -39,14 +43,14 @@ const ImagesUpload = (props: params) => {
   }
 
   const handleChange: UploadProps['onChange'] = ({ fileList: newFileList }) => {
-    setFileList(newFileList)
+    setFileList(newFileList as ManagedUploadFile[])
   }
 
-  const handleRemove = async (file: UploadFile) => {
+  const handleRemove = async (file: ManagedUploadFile) => {
     let filename: string
 
-    if ('filename' in file) {
-      filename = file.filename as string
+    if (typeof file.filename === 'string') {
+      filename = file.filename
     } else if (file.response?.data?.filename) {
       filename = file.response.data.filename
     } else {

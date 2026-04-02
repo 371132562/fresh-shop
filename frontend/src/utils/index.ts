@@ -1,7 +1,7 @@
 // dayjs 相关逻辑已迁移至 '@/utils/day'
 
 // 自定义手机号校验规则
-export const validatePhoneNumber = (_: any, value: string) => {
+export const validatePhoneNumber = (_: unknown, value?: string) => {
   // 如果没有输入，则不进行校验，这里你可以根据需求调整是否允许为空
   if (!value) {
     return Promise.resolve() // 允许为空

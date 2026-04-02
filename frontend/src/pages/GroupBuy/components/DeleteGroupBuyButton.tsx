@@ -75,7 +75,7 @@ const DeleteGroupBuyButton = ({
     }
   }
 
-  const DeleteSummary = () => {
+  const deleteSummary = useMemo(() => {
     if (!totalOrders) {
       return <div className="text-base">删除此团购单后将无法恢复。</div>
     }
@@ -114,7 +114,7 @@ const DeleteGroupBuyButton = ({
         </div>
       </div>
     )
-  }
+  }, [countsByLabel, name, totalOrders])
 
   return (
     <>
@@ -158,9 +158,7 @@ const DeleteGroupBuyButton = ({
         }
       >
         <div className="space-y-3">
-          <div className="rounded-md bg-white">
-            <DeleteSummary />
-          </div>
+          <div className="rounded-md bg-white">{deleteSummary}</div>
           <div className="rounded-md bg-red-50 p-3">
             <Checkbox
               checked={ack}

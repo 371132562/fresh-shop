@@ -43,11 +43,6 @@ export const SupplierOverview = ({ startDate, endDate }: SupplierOverviewProps) 
 
   const [detailParams, setDetailParams] = useState<SupplierOverviewDetailParams | undefined>()
 
-  useEffect(() => {
-    // 当日期范围变化时，重新获取数据
-    fetchData(1)
-  }, [startDate, endDate])
-
   const fetchData = (page: number = supplierOverviewPage) => {
     getSupplierOverview({
       startDate,
@@ -57,6 +52,11 @@ export const SupplierOverview = ({ startDate, endDate }: SupplierOverviewProps) 
       ...searchParams
     })
   }
+
+  useEffect(() => {
+    // 当日期范围变化时，重新获取数据
+    fetchData(1)
+  }, [startDate, endDate])
 
   // 搜索处理
   const handleSearch = () => {

@@ -1,11 +1,10 @@
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
-import type { UploadFile } from 'antd'
 import { Button, DatePicker, Form, Input, InputNumber, message, Modal, Space } from 'antd'
 import { GroupBuy, GroupBuyUnit } from 'fresh-shop-backend/types/dto.ts'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid' // 用于生成单位ID
 
-import ImagesUpload from '@/components/ImagesUpload'
+import ImagesUpload, { type ManagedUploadFile } from '@/components/ImagesUpload'
 import ProductSelector from '@/components/ProductSelector'
 import SupplierSelector from '@/components/SupplierSelector'
 import useGroupBuyStore, { GroupBuyCreate, GroupBuyId } from '@/stores/groupBuyStore.ts'
@@ -13,6 +12,7 @@ import useProductStore from '@/stores/productStore.ts'
 // import useSupplierStore from '@/stores/supplierStore.ts'
 import { buildImageUrl } from '@/utils'
 import dayjs from '@/utils/day'
+import { createManagedUploadFile } from '@/utils/uploadFiles'
 
 interface params {
   visible: boolean
@@ -25,7 +25,7 @@ const Modify = (props: params) => {
   const { visible, setVisible, id, againGroupBuy } = props
   const [form] = Form.useForm()
 
-  const [fileList, setFileList] = useState<UploadFile[] | Array<{ filename: string }>>([])
+  const [fileList, setFileList] = useState<ManagedUploadFile[] | null>(null)
   const [showPriceConfirm, setShowPriceConfirm] = useState(false)
   const [pendingFormData, setPendingFormData] = useState<GroupBuyCreate | null>(null)
   const [problematicUnits, setProblematicUnits] = useState<
@@ -39,6 +39,19 @@ const Modify = (props: params) => {
   const checkUnitUsage = useGroupBuyStore(state => state.checkUnitUsage)
   const getAllProducts = useProductStore(state => state.getAllProducts)
 
+  const initialFileList = useMemo<ManagedUploadFile[]>(() => {
+    const sourceImages = id ? groupBuy?.images : againGroupBuy?.images
+    if (!Array.isArray(sourceImages) || sourceImages.length === 0) {
+      return []
+    }
+
+    return sourceImages
+      .filter((image): image is string => typeof image === 'string')
+      .map(image => createManagedUploadFile(image, buildImageUrl(image)))
+  }, [againGroupBuy?.images, groupBuy?.images, id])
+
+  const resolvedFileList = fileList ?? initialFileList
+
   useEffect(() => {
     getAllProducts()
     if (id && groupBuy) {
@@ -47,39 +60,15 @@ const Modify = (props: params) => {
         groupBuyStartDate: dayjs(groupBuy.groupBuyStartDate)
       }
       form.setFieldsValue(formVal)
-      const { images } = groupBuy as GroupBuy
-      const imagesArr = images
-      if (Array.isArray(imagesArr) && imagesArr.length > 0) {
-        setFileList(
-          imagesArr
-            .filter((image): image is string => typeof image === 'string')
-            .map(image => ({
-              url: buildImageUrl(image),
-              filename: image
-            }))
-        )
-      }
     }
     if (againGroupBuy) {
       const formVal = {
-        ...groupBuy,
+        ...againGroupBuy,
         groupBuyStartDate: null
       }
       form.setFieldsValue(formVal)
-      const { images } = groupBuy as GroupBuy
-      const imagesArr = images
-      if (Array.isArray(imagesArr) && imagesArr.length > 0) {
-        setFileList(
-          imagesArr
-            .filter((image): image is string => typeof image === 'string')
-            .map(image => ({
-              url: buildImageUrl(image),
-              filename: image
-            }))
-        )
-      }
     }
-  }, [])
+  }, [againGroupBuy, form, getAllProducts, groupBuy, id])
 
   // 检查是否有售价低于成本价的情况，并收集有问题的规格信息
   const checkPriceValidation = (units: GroupBuyUnit[]) => {
@@ -122,13 +111,11 @@ const Modify = (props: params) => {
         }
         return item
       }),
-      images: fileList.map(item => {
-        if ('response' in item) {
-          // 检查 item 是否包含 'response' 属性
-          return (item as UploadFile).response.data.filename
-        } else {
-          return (item as { filename: string }).filename
+      images: resolvedFileList.map(item => {
+        if (item.response?.data?.filename) {
+          return item.response.data.filename
         }
+        return item.filename || ''
       })
     }
     const res = id
@@ -180,6 +167,7 @@ const Modify = (props: params) => {
 
   const handleCancel = () => {
     setVisible(false)
+    setFileList(null)
   }
 
   /**
@@ -323,7 +311,7 @@ const Modify = (props: params) => {
           </Form.Item>
           <ImagesUpload
             id={id || ''}
-            fileList={fileList as UploadFile[]}
+            fileList={resolvedFileList}
             setFileList={setFileList}
             type="groupBuy"
           />

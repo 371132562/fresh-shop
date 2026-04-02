@@ -96,6 +96,11 @@ const PurchaseFrequencyChart: React.FC<PurchaseFrequencyChartProps> = ({
     }
   }, [data])
 
+  type ChartClickPayload = {
+    frequencyMin?: number
+    frequencyMax?: number | null
+  }
+
   return (
     <Card
       size="small"
@@ -108,12 +113,9 @@ const PurchaseFrequencyChart: React.FC<PurchaseFrequencyChartProps> = ({
         option={option}
         height="250px"
         onChartClick={params => {
-          if (
-            onFrequencyClick &&
-            params.data &&
-            typeof (params.data as any).frequencyMin === 'number'
-          ) {
-            onFrequencyClick((params.data as any).frequencyMin, (params.data as any).frequencyMax)
+          const payload = (params as { data?: ChartClickPayload }).data
+          if (onFrequencyClick && typeof payload?.frequencyMin === 'number') {
+            onFrequencyClick(payload.frequencyMin, payload.frequencyMax)
           }
         }}
       />

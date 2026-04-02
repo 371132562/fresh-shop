@@ -47,16 +47,6 @@ export const ProductOverview = ({ startDate, endDate }: ProductOverviewProps) =>
 
   const [detailParams, setDetailParams] = useState<ProductOverviewDetailParams | undefined>()
 
-  useEffect(() => {
-    // 当日期范围变化时，重新获取数据
-    fetchData(1)
-  }, [startDate, endDate])
-
-  useEffect(() => {
-    // 获取商品类型列表
-    getProductTypeList({ page: 1, pageSize: 1000 })
-  }, [])
-
   const fetchData = (page: number = productOverviewPage) => {
     getProductOverview({
       startDate,
@@ -66,6 +56,16 @@ export const ProductOverview = ({ startDate, endDate }: ProductOverviewProps) =>
       ...searchParams
     })
   }
+
+  useEffect(() => {
+    // 当日期范围变化时，重新获取数据
+    fetchData(1)
+  }, [startDate, endDate])
+
+  useEffect(() => {
+    // 获取商品类型列表
+    getProductTypeList({ page: 1, pageSize: 1000 })
+  }, [])
 
   // 搜索处理
   const handleSearch = () => {

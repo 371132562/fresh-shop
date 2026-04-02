@@ -22,6 +22,10 @@ export const PriceProfitTrendChart = () => {
   const setShowCumulative = useAnalysisStore(state => state.setShowCumulative)
   const setShowMonthly = useAnalysisStore(state => state.setShowMonthly)
 
+  type LabelFormatterParams = {
+    value: number
+  }
+
   const option = useMemo(() => {
     let usingPriceTrend, usingProfitTrend
 
@@ -61,7 +65,7 @@ export const PriceProfitTrendChart = () => {
         label: {
           show: isAllData && showMonthly,
           position: 'top' as const,
-          formatter: (params: any) => `¥${params.value.toLocaleString()}`,
+          formatter: (params: LabelFormatterParams) => `¥${params.value.toLocaleString()}`,
           fontSize: 12,
           fontWeight: 'bold' as const,
           color: '#0fb82c',
@@ -85,7 +89,7 @@ export const PriceProfitTrendChart = () => {
         label: {
           show: isAllData && showMonthly,
           position: 'top' as const,
-          formatter: (params: any) => `¥${params.value.toLocaleString()}`,
+          formatter: (params: LabelFormatterParams) => `¥${params.value.toLocaleString()}`,
           fontSize: 12,
           fontWeight: 'bold' as const,
           color: '#EE6666',

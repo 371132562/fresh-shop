@@ -1,6 +1,6 @@
 import { Form, Input, InputNumber, message, Modal, Select } from 'antd'
 import { GroupBuyUnit } from 'fresh-shop-backend/types/dto.ts'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import CustomerSelector from '@/components/CustomerSelector'
 import GroupBuySelector from '@/components/GroupBuySelector'
@@ -16,8 +16,7 @@ interface params {
 const Modify = (props: params) => {
   const { visible, setVisible, id } = props
   const [form] = Form.useForm()
-
-  const [units, setUnits] = useState<GroupBuyUnit[]>([])
+  const selectedGroupBuyId = Form.useWatch('groupBuyId', form) as string | undefined
 
   const createLoading = useOrderStore(state => state.createLoading)
   const createOrder = useOrderStore(state => state.createOrder)
@@ -25,18 +24,32 @@ const Modify = (props: params) => {
   const order = useOrderStore(state => state.order)
   const allGroupBuy = useGroupBuyStore(state => state.allGroupBuy)
 
+  const units = useMemo(() => {
+    if (!selectedGroupBuyId) {
+      return []
+    }
+
+    const groupBuy = allGroupBuy.find(item => item.id === selectedGroupBuyId)
+    return ((groupBuy?.units as GroupBuyUnit[]) || []).slice()
+  }, [allGroupBuy, selectedGroupBuyId])
+
   useEffect(() => {
     if (id && order) {
       form.setFieldsValue(order)
     }
   }, [])
 
-  useEffect(() => {
-    if (id && order) {
-      groupBuyChange(order.groupBuyId)
-      form.setFieldsValue({ unitId: order.unitId })
+  const groupBuyChange = (val: string | string[] | undefined) => {
+    if (typeof val === 'string') {
+      const groupBuy = allGroupBuy.find(item => item.id === val)
+      const newUnits = (groupBuy?.units as GroupBuyUnit[]) || []
+      if (newUnits.length === 1) {
+        form.setFieldsValue({ unitId: newUnits[0].id })
+      } else {
+        form.setFieldsValue({ unitId: undefined })
+      }
     }
-  }, [allGroupBuy])
+  }
 
   const handleOk = () => {
     form
@@ -57,20 +70,6 @@ const Modify = (props: params) => {
   const handleCancel = () => {
     setVisible(false)
     form.resetFields()
-    setUnits([])
-  }
-
-  const groupBuyChange = (val: string | string[] | undefined) => {
-    if (typeof val === 'string') {
-      const groupBuy = allGroupBuy.find(item => item.id === val)
-      const newUnits = (groupBuy?.units as GroupBuyUnit[]) || []
-      setUnits(newUnits)
-      if (newUnits.length === 1) {
-        form.setFieldsValue({ unitId: newUnits[0].id })
-      } else {
-        form.setFieldsValue({ unitId: undefined })
-      }
-    }
   }
 
   return (

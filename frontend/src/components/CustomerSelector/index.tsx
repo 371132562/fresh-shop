@@ -1,3 +1,4 @@
+import type { SelectProps } from 'antd'
 import { Select } from 'antd'
 import { useEffect } from 'react'
 
@@ -50,7 +51,7 @@ const CustomerSelector = ({
 
   // 自定义选项渲染
   // 显示客户名称和手机号，手机号以灰色小字显示
-  const optionRender = (option: any) => (
+  const optionRender = (option: Parameters<NonNullable<SelectProps['optionRender']>>[0]) => (
     <div>
       <div className="font-medium">{option.label}</div>
       <div className="text-xs text-gray-500">{option.data?.phone}</div>

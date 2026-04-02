@@ -1,11 +1,10 @@
-import type { UploadFile } from 'antd'
 import { Form, Input, message, Modal } from 'antd'
-import { Supplier } from 'fresh-shop-backend/types/dto.ts'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
-import ImagesUpload from '@/components/ImagesUpload'
+import ImagesUpload, { type ManagedUploadFile } from '@/components/ImagesUpload'
 import useSupplierStore from '@/stores/supplierStore.ts'
 import { buildImageUrl, validatePhoneNumber } from '@/utils'
+import { createManagedUploadFile } from '@/utils/uploadFiles'
 
 interface params {
   visible: boolean
@@ -17,30 +16,31 @@ const Modify = (props: params) => {
   const { visible, setVisible, id } = props
   const [form] = Form.useForm()
 
-  const [fileList, setFileList] = useState<UploadFile[] | Array<{ filename: string }>>([])
+  const [fileList, setFileList] = useState<ManagedUploadFile[] | null>(null)
 
   const createLoading = useSupplierStore(state => state.createLoading)
   const createSupplier = useSupplierStore(state => state.createSupplier)
   const updateSupplier = useSupplierStore(state => state.updateSupplier)
   const supplier = useSupplierStore(state => state.supplier)
 
-  useEffect(() => {
-    if (id) {
-      form.setFieldsValue(supplier)
-      const { images } = supplier as Supplier
-      const imagesArr = images
-      if (Array.isArray(imagesArr) && imagesArr.length > 0) {
-        setFileList(
-          imagesArr
-            .filter((image): image is string => typeof image === 'string')
-            .map(image => ({
-              url: buildImageUrl(image),
-              filename: image
-            }))
-        )
-      }
+  const initialFileList = useMemo<ManagedUploadFile[]>(() => {
+    const sourceImages = supplier?.images
+    if (!Array.isArray(sourceImages) || sourceImages.length === 0) {
+      return []
     }
-  }, [])
+
+    return sourceImages
+      .filter((image): image is string => typeof image === 'string')
+      .map(image => createManagedUploadFile(image, buildImageUrl(image)))
+  }, [supplier?.images])
+
+  const resolvedFileList = fileList ?? initialFileList
+
+  useEffect(() => {
+    if (id && supplier) {
+      form.setFieldsValue(supplier)
+    }
+  }, [form, id, supplier])
 
   const handleOk = () => {
     form
@@ -48,13 +48,11 @@ const Modify = (props: params) => {
       .then(async val => {
         const params = {
           ...val,
-          images: fileList.map(item => {
-            if ('response' in item) {
-              // 检查 item 是否包含 'response' 属性
-              return (item as UploadFile).response.data.filename
-            } else {
-              return (item as { filename: string }).filename
+          images: resolvedFileList.map(item => {
+            if (item.response?.data?.filename) {
+              return item.response.data.filename
             }
+            return item.filename || ''
           })
         }
         const res = id ? await updateSupplier({ ...params, id }) : await createSupplier(params)
@@ -71,6 +69,7 @@ const Modify = (props: params) => {
 
   const handleCancel = () => {
     setVisible(false)
+    setFileList(null)
   }
 
   return (
@@ -137,7 +136,7 @@ const Modify = (props: params) => {
           </Form.Item>
           <ImagesUpload
             id={id || ''}
-            fileList={fileList as UploadFile[]}
+            fileList={resolvedFileList}
             setFileList={setFileList}
             type="supplier"
           />
