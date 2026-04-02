@@ -1,5 +1,6 @@
 import type { RadioChangeEvent } from 'antd'
 import { Card, Radio } from 'antd'
+import type { CallbackDataParams, EChartsOption } from 'echarts'
 import * as echarts from 'echarts'
 import type { AnalysisCountResult } from 'fresh-shop-backend/types/dto'
 import { useMemo, useRef } from 'react'
@@ -26,7 +27,7 @@ const generateChartOption = (
     showMonthly: boolean
     showCumulative: boolean
   }
-) => {
+): EChartsOption => {
   const safeData: TrendPoint[] = (data || []) as TrendPoint[]
   const dateFormat = chartState.isAllData && chartState.showMonthly ? 'YYYY-MM' : 'MM-DD'
   const dates = safeData.map((item: TrendPoint) => dayjs(item.date).format(dateFormat))
@@ -50,7 +51,7 @@ const generateChartOption = (
         }
       },
       connect: true,
-      formatter: (params: { dataIndex: number } | Array<{ dataIndex: number }>) => {
+      formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
         const p = Array.isArray(params) ? params[0] : params
         const idx = p?.dataIndex ?? 0
         const r = ranges[idx]

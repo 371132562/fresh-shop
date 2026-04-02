@@ -1,5 +1,6 @@
 import { BarChartOutlined } from '@ant-design/icons'
 import { Card, Empty } from 'antd'
+import type { CallbackDataParams, EChartsOption } from 'echarts'
 import type { GroupBuyLaunchHistory } from 'fresh-shop-backend/types/dto'
 import { useMemo } from 'react'
 
@@ -26,7 +27,7 @@ const GroupBuyHistoryProfitChart = ({
     )
   }, [groupBuyHistory])
 
-  const option = useMemo(() => {
+  const option = useMemo<EChartsOption>(() => {
     if (sortedHistory.length === 0) {
       return {}
     }
@@ -47,8 +48,9 @@ const GroupBuyHistoryProfitChart = ({
             color: 'rgba(150,150,150,0.15)'
           }
         },
-        formatter: (params: Array<{ dataIndex: number }>) => {
-          const index = params?.[0]?.dataIndex ?? 0
+        formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+          const currentParams = Array.isArray(params) ? params[0] : params
+          const index = currentParams?.dataIndex ?? 0
           const item = sortedHistory[index]
           const margin = calculateProfitMarginPercent(item.revenue, item.profit)
 
@@ -69,10 +71,33 @@ const GroupBuyHistoryProfitChart = ({
       grid: {
         left: '3%',
         right: sensitive ? '3%' : '8%',
-        bottom: '2%',
+        bottom: '14%',
         top: '16%',
         containLabel: true
       },
+      dataZoom: [
+        {
+          type: 'inside' as const,
+          xAxisIndex: 0,
+          filterMode: 'none' as const
+        },
+        {
+          type: 'slider' as const,
+          xAxisIndex: 0,
+          height: 18,
+          bottom: 10,
+          borderColor: 'transparent',
+          backgroundColor: '#E2E8F0',
+          fillerColor: 'rgba(99, 102, 241, 0.16)',
+          moveHandleStyle: {
+            color: '#4F46E5'
+          },
+          handleStyle: {
+            color: '#4F46E5',
+            borderColor: '#FFFFFF'
+          }
+        }
+      ],
       xAxis: {
         type: 'category' as const,
         data: dates,
@@ -176,7 +201,7 @@ const GroupBuyHistoryProfitChart = ({
       <FullscreenChart
         title="历史盈利趋势"
         option={option}
-        height="320px"
+        height="400px"
       />
     </Card>
   )

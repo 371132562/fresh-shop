@@ -1,5 +1,6 @@
 import { DotChartOutlined } from '@ant-design/icons'
 import { Card, Empty, Tag } from 'antd'
+import type { CallbackDataParams, EChartsOption } from 'echarts'
 import type { MergedGroupBuyOverviewListItem } from 'fresh-shop-backend/types/dto'
 import { useMemo, useState } from 'react'
 
@@ -19,6 +20,28 @@ type GroupBuyProfitMatrixProps = {
 }
 
 type QuickFilterKey = 'all' | 'highRefund' | 'lowMargin' | 'loss' | 'highRevenue'
+type MatrixPointData = {
+  value: [number, number, number]
+  rawItem: MergedGroupBuyOverviewListItem
+  symbolSize: number
+  z: number
+  itemStyle: {
+    color: string
+    opacity: number
+    borderColor: string
+    borderWidth: number
+  }
+  label: {
+    show: boolean
+    position: 'top'
+    formatter: string
+    color: string
+    fontSize: number
+    backgroundColor: string
+    borderRadius: number
+    padding: [number, number, number, number]
+  }
+}
 
 const MATRIX_MIN_SYMBOL_SIZE = 14
 const MATRIX_MAX_SYMBOL_SIZE = 38
@@ -225,7 +248,7 @@ const GroupBuyProfitMatrix = ({
 
   const activeQuickFilter = quickFilterOptions.find(option => option.value === quickFilter)
 
-  const option = useMemo(() => {
+  const option = useMemo<EChartsOption>(() => {
     if (!chartData.length) {
       return {}
     }
@@ -233,8 +256,9 @@ const GroupBuyProfitMatrix = ({
     return {
       tooltip: {
         trigger: 'item' as const,
-        formatter: (params: { data?: { rawItem?: MergedGroupBuyOverviewListItem } }) => {
-          const rawItem = params.data?.rawItem
+        formatter: (params: CallbackDataParams | CallbackDataParams[]) => {
+          const currentParams = Array.isArray(params) ? params[0] : params
+          const rawItem = (currentParams.data as MatrixPointData | undefined)?.rawItem
 
           if (!rawItem) {
             return ''
@@ -488,9 +512,9 @@ const GroupBuyProfitMatrix = ({
           option={option}
           height="500px"
           onChartClick={params => {
-            const payload = (params as { data?: { rawItem?: MergedGroupBuyOverviewListItem } }).data
-            if (payload?.rawItem) {
-              onItemClick(payload.rawItem)
+            const payload = (params.data as MatrixPointData | undefined)?.rawItem
+            if (payload) {
+              onItemClick(payload)
             }
           }}
         />
