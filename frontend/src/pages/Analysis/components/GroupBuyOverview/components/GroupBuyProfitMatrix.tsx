@@ -20,6 +20,64 @@ type GroupBuyProfitMatrixProps = {
 
 type QuickFilterKey = 'all' | 'highRefund' | 'lowMargin' | 'loss' | 'highRevenue'
 
+const MATRIX_MIN_SYMBOL_SIZE = 14
+const MATRIX_MAX_SYMBOL_SIZE = 38
+const MATRIX_ORDER_COUNT_VISUAL_QUANTILE = 0.95
+
+const getProfitPointColor = (item: MergedGroupBuyOverviewListItem) => {
+  if (item.totalProfit < 0) {
+    return '#EF4444'
+  }
+
+  if (item.totalProfit <= 0) {
+    return '#F59E0B'
+  }
+
+  return '#16A34A'
+}
+
+/**
+ * 计算分位值。
+ * 对订单量做上限截断时使用，避免个别超大团购把其余点都压成接近大小。
+ */
+const getQuantileValue = (values: number[], quantile: number) => {
+  if (!values.length) {
+    return 0
+  }
+
+  const sortedValues = [...values].sort((a, b) => a - b)
+  const index = (sortedValues.length - 1) * quantile
+  const lowerIndex = Math.floor(index)
+  const upperIndex = Math.ceil(index)
+
+  if (lowerIndex === upperIndex) {
+    return sortedValues[lowerIndex]
+  }
+
+  const weight = index - lowerIndex
+
+  return sortedValues[lowerIndex] + (sortedValues[upperIndex] - sortedValues[lowerIndex]) * weight
+}
+
+/**
+ * 为矩阵气泡计算更稳定的视觉尺寸。
+ * 这里同时做两件事：
+ * 1. 用高分位值作为视觉上限，抑制极大订单量把其余点全部压扁；
+ * 2. 用平方根映射代替线性映射，让接近的订单量仍能看出差异，但不会让大点过分膨胀。
+ */
+const calculateMatrixSymbolSize = (orderCount: number, visualOrderCountCap: number) => {
+  if (visualOrderCountCap <= 0) {
+    return MATRIX_MIN_SYMBOL_SIZE
+  }
+
+  const normalizedValue = Math.min(orderCount, visualOrderCountCap) / visualOrderCountCap
+  const scaledValue = Math.sqrt(normalizedValue)
+
+  return Math.round(
+    MATRIX_MIN_SYMBOL_SIZE + scaledValue * (MATRIX_MAX_SYMBOL_SIZE - MATRIX_MIN_SYMBOL_SIZE)
+  )
+}
+
 const matchQuickFilter = (
   item: MergedGroupBuyOverviewListItem,
   quickFilter: QuickFilterKey,
@@ -77,6 +135,53 @@ const GroupBuyProfitMatrix = ({
     return items.filter(item => matchQuickFilter(item, quickFilter, revenueBenchmark))
   }, [items, quickFilter, revenueBenchmark])
 
+  const chartData = useMemo(() => {
+    if (!filteredItems.length) {
+      return []
+    }
+
+    const visualOrderCountCap = Math.max(
+      getQuantileValue(
+        filteredItems.map(item => item.totalOrderCount),
+        MATRIX_ORDER_COUNT_VISUAL_QUANTILE
+      ),
+      1
+    )
+    const alwaysShowLabel = filteredItems.length <= 8
+
+    return [...filteredItems]
+      .map(item => {
+        const symbolSize = calculateMatrixSymbolSize(item.totalOrderCount, visualOrderCountCap)
+
+        return {
+          value: [item.totalRevenue, item.totalProfitMargin, item.totalOrderCount],
+          rawItem: item,
+          symbolSize,
+          z: symbolSize,
+          itemStyle: {
+            color: getProfitPointColor(item),
+            opacity: 0.66,
+            borderColor: '#FFFFFF',
+            borderWidth: 1
+          },
+          label: {
+            show: alwaysShowLabel,
+            position: 'top' as const,
+            formatter:
+              !mergeSameName && item.groupBuyStartDate
+                ? `${item.groupBuyName}\n${dayjs(item.groupBuyStartDate).format('MM-DD')}`
+                : item.groupBuyName,
+            color: '#374151',
+            fontSize: 12,
+            backgroundColor: 'rgba(255,255,255,0.92)',
+            borderRadius: 6,
+            padding: [3, 6, 3, 6]
+          }
+        }
+      })
+      .sort((a, b) => b.symbolSize - a.symbolSize)
+  }, [filteredItems, mergeSameName])
+
   const quickFilterOptions = useMemo(
     () => [
       {
@@ -121,11 +226,9 @@ const GroupBuyProfitMatrix = ({
   const activeQuickFilter = quickFilterOptions.find(option => option.value === quickFilter)
 
   const option = useMemo(() => {
-    if (!filteredItems.length) {
+    if (!chartData.length) {
       return {}
     }
-
-    const maxOrderCount = Math.max(...filteredItems.map(item => item.totalOrderCount), 1)
 
     return {
       tooltip: {
@@ -155,10 +258,63 @@ const GroupBuyProfitMatrix = ({
       grid: {
         left: '5%',
         right: '12%',
-        bottom: '4%',
+        bottom: '12%',
         top: '16%',
         containLabel: true
       },
+      toolbox: {
+        right: 0,
+        top: 0,
+        feature: {
+          restore: {
+            title: '重置缩放'
+          }
+        }
+      },
+      dataZoom: [
+        {
+          type: 'inside' as const,
+          xAxisIndex: 0,
+          filterMode: 'none' as const
+        },
+        {
+          type: 'inside' as const,
+          yAxisIndex: 0,
+          filterMode: 'none' as const
+        },
+        {
+          type: 'slider' as const,
+          xAxisIndex: 0,
+          height: 18,
+          bottom: 10,
+          borderColor: 'transparent',
+          backgroundColor: '#E2E8F0',
+          fillerColor: 'rgba(37, 99, 235, 0.16)',
+          moveHandleStyle: {
+            color: '#2563EB'
+          },
+          handleStyle: {
+            color: '#2563EB',
+            borderColor: '#FFFFFF'
+          }
+        },
+        {
+          type: 'slider' as const,
+          yAxisIndex: 0,
+          width: 18,
+          right: 10,
+          borderColor: 'transparent',
+          backgroundColor: '#E2E8F0',
+          fillerColor: 'rgba(22, 163, 74, 0.16)',
+          moveHandleStyle: {
+            color: '#16A34A'
+          },
+          handleStyle: {
+            color: '#16A34A',
+            borderColor: '#FFFFFF'
+          }
+        }
+      ],
       xAxis: {
         type: 'value' as const,
         name: '销售额(元)',
@@ -176,25 +332,29 @@ const GroupBuyProfitMatrix = ({
         {
           name: '团购盈利矩阵',
           type: 'scatter' as const,
-          data: filteredItems.map(item => ({
-            value: [item.totalRevenue, item.totalProfitMargin, item.totalOrderCount],
-            rawItem: item,
-            symbolSize: Math.max(18, Math.round((item.totalOrderCount / maxOrderCount) * 42)),
+          data: chartData,
+          emphasis: {
+            focus: 'self' as const,
+            scale: true,
             itemStyle: {
-              color:
-                item.totalProfit < 0 ? '#EF4444' : item.totalProfit <= 0 ? '#F59E0B' : '#16A34A'
+              opacity: 0.96,
+              borderColor: '#0F172A',
+              borderWidth: 1,
+              shadowBlur: 18,
+              shadowColor: 'rgba(15, 23, 42, 0.2)'
             },
             label: {
-              show: filteredItems.length <= 8,
-              position: 'top',
-              formatter:
-                !mergeSameName && item.groupBuyStartDate
-                  ? `${item.groupBuyName}\n${dayjs(item.groupBuyStartDate).format('MM-DD')}`
-                  : item.groupBuyName,
-              color: '#374151',
-              fontSize: 12
+              show: true
             }
-          })),
+          },
+          blur: {
+            itemStyle: {
+              opacity: 0.14
+            },
+            label: {
+              show: false
+            }
+          },
           markLine: {
             symbol: 'none' as const,
             silent: true,
@@ -242,7 +402,7 @@ const GroupBuyProfitMatrix = ({
         }
       ]
     }
-  }, [filteredItems, mergeSameName, profitMarginBenchmark, revenueBenchmark])
+  }, [chartData, mergeSameName, profitMarginBenchmark, revenueBenchmark])
 
   return (
     <Card
@@ -262,6 +422,7 @@ const GroupBuyProfitMatrix = ({
           <Tag color="green">Y 轴：利润率</Tag>
           <Tag color="purple">气泡大小：订单量</Tag>
           <Tag color="default">虚线：当前筛选结果平均值</Tag>
+          <Tag color="cyan">支持缩放查看密集区域</Tag>
         </div>
       </div>
 
@@ -318,14 +479,14 @@ const GroupBuyProfitMatrix = ({
 
       <div className="mb-3 text-sm text-gray-500">
         {!mergeSameName && '单期模式下，同名团购通过发起日期区分；'}
-        点击点位后进入同名团购聚合统计详情。
+        点击点位后进入同名团购聚合统计详情，滚轮或拖动滑块可放大密集区域，右上角可重置缩放。
       </div>
 
       {filteredItems.length > 0 ? (
         <FullscreenChart
           title="团购盈利矩阵"
           option={option}
-          height="420px"
+          height="500px"
           onChartClick={params => {
             const payload = (params as { data?: { rawItem?: MergedGroupBuyOverviewListItem } }).data
             if (payload?.rawItem) {
