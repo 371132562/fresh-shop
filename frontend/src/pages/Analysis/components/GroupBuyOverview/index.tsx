@@ -512,7 +512,6 @@ export const MergedGroupBuyOverview = ({
         visible={detailVisible}
         onClose={handleDetailClose}
         params={detailParams}
-        mergeSameName={mergeSameName}
       />
     </>
   )

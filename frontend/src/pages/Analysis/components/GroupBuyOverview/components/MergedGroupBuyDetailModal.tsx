@@ -25,8 +25,6 @@ type MergedGroupBuyDetailModalProps = {
   onClose: () => void
   params?: MergedGroupBuyOverviewDetailParams
   width?: number
-  // 是否合并同名团购单
-  mergeSameName?: boolean
 }
 
 /**
@@ -37,8 +35,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
   visible,
   onClose,
   params,
-  width = 1000,
-  mergeSameName = true
+  width = 1000
 }: MergedGroupBuyDetailModalProps) => {
   const globalSetting = useGlobalSettingStore(state => state.globalSetting)
   const sensitive = globalSetting?.value?.sensitive
@@ -79,14 +76,12 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
     <Modal
       title={
         <div className="flex items-center gap-2">
-          <span>{mergeSameName ? '团购单（合并同名）详细数据' : '团购单（单期）详细数据'}</span>
+          <span>团购单（合并同名）详细数据</span>
           <Tooltip
             title={
               <div style={{ maxWidth: 500, lineHeight: 1.6 }}>
                 <b>统计范围：</b>
-                {mergeSameName
-                  ? '按当前选择的时间；未选择则统计全部时间。订单量仅统计已支付和已完成；销售额、利润、退款金额按统一口径纳入退款订单影响，范围为同一供货商下所有同名团购单的合并结果。'
-                  : '按当前选择的时间；未选择则统计全部时间。订单量仅统计已支付和已完成；销售额、利润、退款金额按统一口径纳入退款订单影响，范围仅限当前这期团购单（不合并同名）。'}
+                按当前选择的时间；未选择则统计全部时间。订单量仅统计已支付和已完成；销售额、利润、退款金额按统一口径纳入退款订单影响，范围为同一供货商下所有同名团购单的合并结果。
               </div>
             }
           >
@@ -137,9 +132,7 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
                     {dayjs(mergedGroupBuyOverviewDetail.endDate).format('YYYY-MM-DD')}
                   </span>
                 ) : (
-                  <span className="text-sm text-orange-500">
-                    {mergeSameName ? '当前为全部同名团购单统计' : '当前为单期团购单统计'}
-                  </span>
+                  <span className="text-sm text-orange-500">当前为全部同名团购单统计</span>
                 )}
               </div>
             }
@@ -324,31 +317,24 @@ const MergedGroupBuyDetailModal: React.FC<MergedGroupBuyDetailModalProps> = ({
             title="客户统计"
           />
 
-          {mergeSameName && (
-            <CustomerLoyaltyAnalysis
-              multiPurchaseCustomerCount={mergedGroupBuyOverviewDetail.multiPurchaseCustomerCount}
-              multiPurchaseCustomerRatio={mergedGroupBuyOverviewDetail.multiPurchaseCustomerRatio}
-              customerPurchaseFrequency={mergedGroupBuyOverviewDetail.customerPurchaseFrequency}
-              onFrequencyClick={handleFrequencyClick}
-              title="客户忠诚度分析"
-              tooltip={
-                <div style={{ maxWidth: 320, lineHeight: 1.5 }}>
-                  <div>说明：</div>
-                  <div>1）时间：仅统计当前选择的时间范围；若未选择则统计全部时间。</div>
-                  <div>
-                    2）范围：
-                    {mergeSameName
-                      ? '同一供货商下、全部同名团购单合并计算。'
-                      : '仅当前这期团购单（不合并同名）。'}
-                  </div>
-                  <div>3）订单：只计算已支付/已完成的订单。</div>
-                  <div>4）去重：同一个客户只统计一次。</div>
-                  <div>5）判定：多次购买指有效订单笔数≥2。</div>
-                  <div>6）分布：按有效订单次数分段统计，如“3-4次”表示下过3到4单的客户量。</div>
-                </div>
-              }
-            />
-          )}
+          <CustomerLoyaltyAnalysis
+            multiPurchaseCustomerCount={mergedGroupBuyOverviewDetail.multiPurchaseCustomerCount}
+            multiPurchaseCustomerRatio={mergedGroupBuyOverviewDetail.multiPurchaseCustomerRatio}
+            customerPurchaseFrequency={mergedGroupBuyOverviewDetail.customerPurchaseFrequency}
+            onFrequencyClick={handleFrequencyClick}
+            title="客户忠诚度分析"
+            tooltip={
+              <div style={{ maxWidth: 320, lineHeight: 1.5 }}>
+                <div>说明：</div>
+                <div>1）时间：仅统计当前选择的时间范围；若未选择则统计全部时间。</div>
+                <div>2）范围：同一供货商下、全部同名团购单合并计算。</div>
+                <div>3）订单：只计算已支付/已完成的订单。</div>
+                <div>4）去重：同一个客户只统计一次。</div>
+                <div>5）判定：多次购买指有效订单笔数≥2。</div>
+                <div>6）分布：按有效订单次数分段统计，如“3-4次”表示下过3到4单的客户量。</div>
+              </div>
+            }
+          />
 
           <RegionalSalesAnalysis
             regionalSales={mergedGroupBuyOverviewDetail.regionalSales}
