@@ -4,9 +4,11 @@
 
 ## 进入前端任务前先选 Skill
 
-完整路由见根 `AGENTS.md`；前端常用 Skill：`create-ui-component`、`create-zustand-store`、`type-contract-guidelines`、`comment-detail-preservation`、`ant-design-docs`。
+完整路由见根 `AGENTS.md`；前端常用 Skill：`create-ui-component`、`create-zustand-store`、`type-contract-guidelines`、`comment-detail-preservation`、`demo-preintegration`、`ant-design-docs`。
 
 如果当前环境是 WSL、项目位于 `/mnt/<盘符>/...`，且要执行 `pnpm` / `vite` / `eslint` / `tsc` / `build` 等依赖相关命令，先参考根 `AGENTS.md` 中强制 Skill `/wsl-windows-command-bridge`。
+
+前端定向检查优先使用根脚本：`pnpm lint:frontend`、`pnpm typecheck:frontend`。如果在 `frontend/` 目录内执行，可使用本包脚本 `pnpm lint`、`pnpm typecheck`。
 
 ## 先看哪里
 
@@ -23,6 +25,7 @@
 
 - 请求统一走 `src/services/base.ts`，接口地址统一收敛到 `src/services/apis.ts`。
 - 页面与组件只负责展示、交互编排和少量本地 UI 状态；业务状态、列表查询、异步提交放 `stores/`。
+- 临时 demo、mock 页面、联调前占位入口必须先按根 `AGENTS.md` 使用 `/demo-preintegration`，不要把临时字段或 mock 流程伪装成正式接口契约。
 - 修改页面入口、详情页路径或导航承载关系时，同步检查 `src/router.tsx` 的懒加载与跳转路径。
 - 前后端共享类型优先从 `fresh-shop-backend/types/dto.ts` 与 `fresh-shop-backend/types/response.ts` 导入，不在前端重复抄一份业务字段。
 - 常规列表页优先复用当前项目已有模式：顶部 `Card + Form + SearchToolbar`，主体用 `List` 或现有容器承载分页与操作按钮。

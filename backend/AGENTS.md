@@ -4,9 +4,11 @@
 
 ## 进入后端任务前先选 Skill
 
-完整路由见根 `AGENTS.md`；后端常用 Skill：`create-backend-module`、`type-contract-guidelines`、`prisma-workflow`、`implement-audit-log`、`comment-detail-preservation`。
+完整路由见根 `AGENTS.md`；后端常用 Skill：`create-backend-module`、`type-contract-guidelines`、`prisma-workflow`、`implement-audit-log`、`comment-detail-preservation`、`demo-preintegration`。
 
 如果当前环境是 WSL、项目位于 `/mnt/<盘符>/...`，且要执行 `pnpm` / `node` / `prisma` / `nest` / `eslint` / `build` / `seed` / `generate` 等依赖相关命令，先参考根 `AGENTS.md` 中强制 Skill `/wsl-windows-command-bridge`。
+
+后端定向检查优先使用根脚本：`pnpm lint:backend`、`pnpm typecheck:backend`。如果在 `backend/` 目录内执行，可使用本包脚本 `pnpm lint`、`pnpm typecheck`。
 
 ## 先看哪里
 
@@ -24,6 +26,7 @@
 
 - 接口统一使用 `POST`，成功响应由统一拦截器包装成 `{ code, msg, data }`；controller 不手动拼响应外壳。
 - controller 保持轻量，业务规则、Prisma 查询、事务编排集中在 service。
+- 临时接口、联调前占位 service、临时 seed 或 mock 落库逻辑必须先按根 `AGENTS.md` 使用 `/demo-preintegration`，并标注替换点、清理点和数据库影响。
 - 当前项目已有模块中存在直接在 controller 使用 Prisma 输入类型的写法；新增或复杂改动默认优先补齐 DTO / Pipe / 共享类型，而不是继续扩散弱约束写法。
 - 数据库访问统一通过 `PrismaService`；修改 schema、seed、落库结构时转 `prisma-workflow`。
 - 软删除约定使用 `delete: 0/1`；查询、唯一性校验、引用检查必须显式带上软删除条件，不能依赖隐含默认值。

@@ -32,30 +32,18 @@ description: 在 fresh-shop 中创建或修改 React 页面、组件、布局、
 11. 涉及副作用设计、并发、列表渲染、高频交互或重渲染优化时，继续评估 `vercel-react-best-practices`。
 12. 涉及多个 boolean props、复合组件、状态与 UI 解耦时，再评估 `vercel-composition-patterns`。
 
-## 当前项目 UI 特化规范
+## 当前项目 UI 语言
 
 本项目不是通用后台模板，而是社区团购管理平台。迁移或新建 UI 时，不要只保留“能用”的通用后台骨架，要尽量延续当前仓库已经形成的视觉语言。
-
-### 整体视觉基调
 
 - 设计关键词：现代化、简洁、悬浮卡片式、偏运营看板。
 - 背景通常使用浅灰底色，主要内容通过白色卡片、圆角和阴影拉开层次。
 - 主色调以蓝色系为主，分析和统计区域允许使用浅色渐变提升信息层次。
 - 图标使用图标库，不用 emoji。
 - 间距要保持“信息密但不挤”，避免极端留白或过度紧凑。
-
-### 样式与响应式原则
-
 - 样式方案优先级：Ant Design 组件能力 > Tailwind 布局与响应式 > 少量局部样式。
 - 避免新增全局样式或破坏现有页面整体风格。
 - 响应式采用移动端优先：基础样式无前缀，`md`/`lg` 逐级增强。
-- 常用布局切换参考：
-  - `flex-col md:flex-row`
-  - `px-4 py-3 md:px-6 md:py-4`
-  - `hidden md:block`
-
-### 数值与统计文本配色
-
 - 列表页统计/描述区域：只用颜色强调，不默认加粗；备注字段维持普通文本样式。
 - 统计卡片、分析模块核心指标：可以使用 `font-bold` 强调数值。
 - 金额类：`text-blue-400`
@@ -66,75 +54,51 @@ description: 在 fresh-shop 中创建或修改 React 页面、组件、布局、
 
 ## 核心组件模式
 
-### 1. Layout 与功能菜单
+### Layout 与功能菜单
 
 - 顶部 Header 延续当前实现：蓝色渐变背景、白字、圆角、阴影，整体有“悬浮头部”感。
-- Header 常用样式参考：`rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3 shadow-lg md:px-6 md:py-4`
 - 页面外层优先使用浅灰背景，如 `min-h-screen bg-gray-100`。
-- 主容器保持大屏居中与最大宽度限制，例如 `mx-auto max-w-screen-2xl`。
+- 主容器保持大屏居中与最大宽度限制。
 - 侧边菜单保持白底卡片、圆角、阴影，选中态为高亮蓝色块，非选中态是低饱和文字配悬浮态背景。
 - 当前项目的菜单不是朴素树状后台菜单，而是较明显的运营面板风格；不要回退成默认 Ant Design 侧栏视觉。
 - 移动端菜单、设置、统计说明按钮应保留明显可点击的“半透明白底胶囊/按钮”风格。
 
-### 2. 常规列表页
+### 常规列表页
 
-#### 页面结构
-
-- 搜索区使用 `Card` 容器，通常是 `size="small"` + `className="mb-4 w-full"`。
+- 搜索区使用 `Card` 容器，通常是 `size="small"`。
 - 搜索表单统一使用 `Form layout="vertical"`。
 - 栅格优先复用 `Row gutter={[16, 8]}` + `Col xs={24} md={12} lg={8}`。
-- 表单项通常用 `className="!mb-1"` 控制密度。
 - 工具栏统一复用 `SearchToolbar`，不要每个页面重新拼搜索/重置/新增/统计条。
-
-#### 搜索区交互
-
 - `Input` 优先支持 `allowClear`、`onPressEnter={handleSearch}`、`onClear={handleSearch}`。
 - `Select` 优先支持 `allowClear`、`showSearch`；多选场景再加 `mode="multiple"`。
 - 搜索动作应在表单校验后统一写回 `pageParams`，并重置到第一页。
 - 重置动作应显式清空表单与筛选状态，而不是只重刷列表。
-
-#### 列表项布局
-
 - 当前项目大量列表采用 `List` 而不是 `Table`，这是现有风格的一部分，不要无必要改回通用表格后台。
-- 列表项外层优先复用：
-  - `flex w-full flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4`
-- 信息区优先复用：
-  - `min-w-0 flex-1 overflow-hidden pr-0 md:pr-4`
-- 标题文字优先复用：
-  - `block max-w-full overflow-hidden text-lg font-medium text-ellipsis whitespace-nowrap md:overflow-visible md:break-all md:whitespace-normal`
-- 操作区优先复用：
-  - `flex shrink-0 flex-row flex-wrap items-center justify-start gap-2 md:justify-end md:gap-3`
-
-#### 列表项内容规则
-
 - 标题可编辑或可跳转时，优先使用 `Button type="link"` 或 `NavLink`，并去掉默认大内边距。
 - 描述区常用 `space-y-1`，保证统计字段与备注字段分层展示。
 - 标签、状态、类型优先用 `Tag`，避免纯文本堆砌。
 - 危险操作必须配 `Popconfirm`。
-- 分页统一由 Store 管理页码和筛选参数；组件只负责触发变更。
 
-### 3. SearchToolbar
+### SearchToolbar
 
 - 统计信息放左侧，排序和操作按钮放右侧，这是当前项目的稳定模式。
 - 工具栏应适配窄屏换行，不假设桌面端宽度永远足够。
 - 排序区采用“字段选择 + 升降序切换”的组合，不要把多个排序条件散落到页面别处。
 - “总数 + 无有效订单/无订单”之类的统计标签是业务感知的一部分，能复用就复用，不要简化成只有分页总数。
 
-### 4. 统计详情与分析类 Modal
+### 统计详情与分析类 Modal
 
 - 统计详情类弹窗不是普通表单弹层，允许更强的视觉层次。
 - 标题通常由“主标题 + 说明 Tooltip”组成，Tooltip 内允许多行说明和强调关键信息。
 - 基本信息卡片可使用浅蓝背景头部或卡片式标题区，突出对象名称和时间信息。
-- 核心指标区允许使用浅色渐变背景，例如：
-  - `bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50`
 - 指标卡片保持白底、圆角、阴影、轻微 hover 提升，避免做成厚重仪表盘。
 - 时间信息、核心数字、图标应有明确主次关系，不要把统计弹窗做成纯文档列表。
 - 详细分析区域要优先复用现有分析组件，不要把所有统计逻辑直接写进单个弹窗组件。
 
-### 5. 加载、空态与反馈
+### 加载、空态与反馈
 
 - 分析类、详情类、结构较重的内容优先使用 `Skeleton`，不要只放一个小号 spinner。
-- 空态推荐使用居中弱提示，例如 `flex items-center justify-center py-8 text-gray-500`。
+- 空态推荐使用居中弱提示。
 - 成功、失败、提示反馈应维持中文，并和当前项目 `message` / `notification` 风格一致。
 
 ## 交互细节

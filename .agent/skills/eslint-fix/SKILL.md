@@ -17,15 +17,23 @@ description: 在 fresh-shop 中执行 ESLint 检查、TypeScript 检查与规范
 
 ## 常用命令
 
+命令以当前 `package.json` 脚本为准；根脚本负责分发到前端和后端。只有缺少脚本时，才使用 `pnpm --filter ... exec` 调用底层工具，并确认 tsconfig 覆盖了目标代码。
+
+### 根目录检查
+
+- 全量 ESLint：`pnpm lint`
+- 全量 TypeScript：`pnpm typecheck`
+- 根 JS 配置 ESLint：`pnpm lint:root`
+
 ### 前端检查
 
-- ESLint：`pnpm --filter fresh-shop-frontend lint`
-- TypeScript：`pnpm --filter fresh-shop-frontend exec tsc --noEmit`
+- ESLint：`pnpm lint:frontend`
+- TypeScript：`pnpm typecheck:frontend`
 
 ### 后端检查
 
-- ESLint：`pnpm --filter fresh-shop-backend lint`
-- TypeScript：`pnpm --filter fresh-shop-backend exec tsc -p tsconfig.json --noEmit`
+- ESLint：`pnpm lint:backend`
+- TypeScript：`pnpm typecheck:backend`
 
 ## 反模式
 

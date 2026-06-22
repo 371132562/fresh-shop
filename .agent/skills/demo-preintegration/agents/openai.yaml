@@ -1,0 +1,3 @@
+interface:
+  display_name: "Demo 与联调前开发"
+  short_description: "区分临时 demo 与后续联调依据，并约束占位代码边界"

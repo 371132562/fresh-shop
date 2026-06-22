@@ -28,6 +28,16 @@ fresh-shop 是一个基于 `pnpm workspace` 的前后端一体仓库：
 
 若目标明确、边界清晰、风险可控，则直接落地，不要把简单任务强行变成长流程审批。
 
+## 方案规范
+
+当需要给出修改、重构或实现方案时，必须遵循：
+
+- 不给补丁式兼容方案来掩盖真实问题；如果确实需要兼容，必须说明业务原因和退出条件。
+- 不额外扩展用户没有提出的业务口径，不通过“兜底”“降级”“顺手优化”改变原流程语义。
+- 不为了显得完整而过度设计；优先选择能闭环当前目标的最短路径。
+- 方案必须能落到当前代码链路：页面 / Store / services / 后端 controller / service / Prisma / 共享类型需要按实际影响逐层确认。
+- 若方案存在多个方向且会影响业务口径、数据库结构、审计边界或用户可见行为，先列出差异并等待确认。
+
 ## 强制使用的 Skills
 
 以下场景必须先调用对应 Skill，再进入实现：
@@ -35,13 +45,14 @@ fresh-shop 是一个基于 `pnpm workspace` 的前后端一体仓库：
 | 场景 | 必须调用的 Skill | 说明 |
 | --- | --- | --- |
 | 新功能开发、跨模块改动、较大改动、需要先做验收契约与 TODO 拆解 | `/project-workflow` | 用于澄清目标、边界、相似实现、执行计划与验证路径 |
+| 新增/修改 demo、前后端临时占位、联调前页面或原型功能 | `/demo-preintegration` | 先区分临时 demo 与后续联调依据，约束 mock、临时接口、seed 与清理边界 |
 | 创建/修改 React 组件、页面、布局、样式、路由承载页面 | `/create-ui-component` | 处理视图、交互、页面结构与样式约束 |
 | 创建/修改 Zustand Store 或页面级状态管理 | `/create-zustand-store` | 处理状态、数据流、异步 action 与页面联动 |
 | 创建/修改后端业务模块 | `/create-backend-module` | 处理 controller/service/module/DTO/Pipe/Prisma/共享类型约束 |
 | 创建/修改 DTO、共享 type、`backend/types/*` 导出与前后端契约 | `/type-contract-guidelines` | 处理类型放置边界、导出方式与命名 |
 | 修改 Prisma schema、seed、生成客户端、涉及数据库落库逻辑 | `/prisma-workflow` | 处理 schema 变更、SQLite 风险、同步项与最小必要命令 |
 | 实现日志上报、审计日志、关键操作留痕 | `/implement-audit-log` | 处理可追责操作日志、字段约定、写入时机与边界 |
-| 任意开发任务中会新增/修改类型定义、函数、方法、复杂 state/action，或会新增/修订注释 | `/comment-detail-preservation` | 约束注释详细程度与维护信息保留 |
+| 任意开发任务中会新增/修改类型定义、函数、方法、复杂 state/action，或会新增/修订注释 | `/comment-detail-preservation` | 约束注释业务语境、详细程度与维护信息保留 |
 | ESLint 检查、TypeScript 检查、修复代码规范问题 | `/eslint-fix` | 按改动范围做定向 lint/typecheck，不默认全量扫描 |
 | 当前环境是 WSL，项目位于 `/mnt/<盘符>/...`，且要执行 `pnpm` / `node` / `prisma` / `tsc` / `eslint` / `build` / `seed` 等依赖相关命令 | `/wsl-windows-command-bridge` | 避免宿主环境不一致导致原生依赖或 SQLite 问题 |
 
@@ -114,7 +125,7 @@ fresh-shop/
 - 请求封装与接口常量位于 `frontend/src/services/`，不要跳过 `services/base.ts` 自造请求协议。
 - 后端 controller 保持轻量，业务规则集中在 service；共享类型优先收敛到 `backend/types/`。
 - 涉及统计分析、销售额、退款、利润、订单量等口径时，以 `backend/README.statistics.md` 为准。
-- 注释必须帮助后续维护者理解“为什么这样做”；修订旧注释时优先保留其中有效细节，不把详细说明机械压缩成更短版本。
+- 注释必须帮助后续维护者理解上下游业务语境和“为什么这样做”；不要只解释 Promise、state、filter、map、request 等技术动作。
 - 非用户明确要求时，不自动提交代码，不新增无必要文档。
 - 破坏性变更必须先确认：删除核心配置、修改数据库结构、大范围重构、不可逆 git 操作。
 
@@ -129,11 +140,13 @@ fresh-shop/
 - `AGENTS.md` 负责长期稳定的项目规则。
 - `.agent/skills/*/SKILL.md` 负责可重复执行的任务规范。
 - 子目录 `AGENTS.md` 只写该目录独有的规则，不重复根规则全文。
+- 修订规范时优先整合、删减过时内容和消除重复，不要只追加新段落。
 
 ## 验证规范
 
-- 禁止默认执行 `dev`、`build`、`install` 类任务，除非用户明确要求，或该命令是完成当前任务不可缺少的一步。
+- 不默认执行 `install / dev / start / preview / build` 类任务，除非用户明确要求，或该命令是完成当前任务不可缺少的一步。
 - Lint 与 TypeScript 检查按改动范围执行，不默认全量运行。
+- 根目录提供分发脚本：`pnpm lint`、`pnpm typecheck`；定向检查优先使用 `pnpm lint:frontend`、`pnpm typecheck:frontend`、`pnpm lint:backend`、`pnpm typecheck:backend`。
 - 仅文案、注释、纯文档类修改时，通常不需要额外 lint/typecheck。
 - Prisma / 数据库结构相关任务属于例外：当修改了 `schema.prisma`、seed 或 Prisma Client 依赖时，可按最小必要范围执行 `generate / migrate / db push / seed` 等命令，但必须先确认执行目的、影响范围与回滚风险。
 
@@ -141,10 +154,15 @@ fresh-shop/
 
 - 不自动提交，除非用户明确要求。
 - 不撤销、不覆盖、不清理用户已有改动，除非用户明确要求。
+- 生成 Git 提交消息时必须使用中文，提交消息必须简洁但能讲清楚本次已暂存变更的核心内容。
+- 提交消息遵循 Conventional Commits：`<type>(<scope>): <中文摘要>`；`scope` 可选，`type` 使用英文，摘要和正文使用中文。
+- 首行只写一个提交标题，不超过 50 个中文字符，避免使用句号结尾；不要写“更新代码”“修复问题”“优化逻辑”这类空泛标题。
+- 标题后至少包含 1 条正文子行，每条以 `- ` 开头，基于已暂存变更说明具体改动、影响流程或修复点。
+- 允许的 `type`：`feat`、`fix`、`docs`、`style`、`refactor`、`perf`、`test`、`build`、`ci`、`chore`、`revert`。
+- 破坏性变更可在 `type` 或 `type(scope)` 后追加 `!`，例如 `feat!:`、`fix(order)!:`。
 
 ## 禁止操作
 
-- 禁止默认执行 `install / dev / start / preview / build` 类命令。
 - 禁止默认启动长时间驻留任务或无明确收敛条件的本地服务。
 - 禁止跳过 `frontend/src/services/base.ts` 或后端统一响应约定，直接自造请求/响应协议。
 - 禁止用 `any` 作为常规开发逃生口；需要共享类型时优先复用 `backend/types/*`。

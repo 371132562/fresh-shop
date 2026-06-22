@@ -2,7 +2,15 @@
   "name": "fresh-shop",
   "version": "1.0.0",
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "lint": "pnpm lint:root && pnpm lint:frontend && pnpm lint:backend",
+    "lint:root": "eslint . --fix",
+    "lint:frontend": "pnpm --filter fresh-shop-frontend lint",
+    "lint:backend": "pnpm --filter fresh-shop-backend lint",
+    "typecheck": "pnpm typecheck:frontend && pnpm typecheck:backend",
+    "typecheck:frontend": "pnpm --filter fresh-shop-frontend typecheck",
+    "typecheck:backend": "pnpm --filter fresh-shop-backend typecheck"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/371132562/fresh-shop.git"

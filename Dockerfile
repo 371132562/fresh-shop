@@ -27,9 +27,9 @@ RUN npm install -g pnpm
 COPY frontend ./frontend
 COPY backend ./backend
 
-# 安装所有项目的依赖（使用 pnpm workspace）
-# 切换到monorepo根目录执行 install，确保所有子项目依赖被安装
-RUN pnpm install --frozen-lockfile
+# 安装所有项目的依赖（使用 pnpm workspace）。
+# pnpm 10 会要求交互式 approve-builds；Docker 构建中先跳过脚本，再显式重建待构建依赖。
+RUN pnpm install --frozen-lockfile --ignore-scripts && pnpm rebuild --pending
 
 # --- 后端构建步骤 (在 builder 阶段完成) ---
 WORKDIR /app/backend
@@ -51,6 +51,9 @@ RUN pnpm build
 
 # --- 最终运行阶段 ---
 FROM node:22-alpine AS runner
+
+# 声明运行阶段也需要使用的构建参数；ARG 不会自动跨 stage 继承。
+ARG DATABASE_URL_BUILD
 
 # 设置时区为中国标准时间
 RUN apk add --no-cache tzdata
@@ -83,7 +86,7 @@ RUN chmod +x entrypoint.sh
 # 确保运行时也有 DATABASE_URL，因为 Prisma migrate 和你的应用都需要它
 # 如果你的应用在运行时也需要 DATABASE_URL，这一步非常关键。
 # 这里我们直接从构建阶段继承 DATABASE_URL_BUILD 的值
-ENV NODE_ENV production
+ENV NODE_ENV=production
 ENV DATABASE_URL=${DATABASE_URL_BUILD}
 
 # 暴露后端端口
